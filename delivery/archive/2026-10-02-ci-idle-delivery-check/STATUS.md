@@ -6,7 +6,7 @@
 - **kind:** bugfix
 - **repro_test:** delivery/evals/smoke/idle_overdue.sh::overdue_observation_is_red
 - **diagnosis:** n/a reason=причина известна до работы: шаблон CQG §8.3 пропускает delivery_check без активной поставки; тот же дефект тренер закрыл уроками L7, L15, L18
-- **phase:** implement
+- **phase:** handoff
 - **builder:** agent:claude-code
 - **verifier:** process:ci
 - **human_ok_spec:** n/a
@@ -27,6 +27,6 @@
 - **canon_drift_waiver:** no
 - **baseline_growth_waiver:** no
 - **observability:** 1
-- **observe_signal:** заполняется на handoff
+- **observe_signal:** прогон quality на main в простое печатает в шаге Delivery phase gate предупреждение idle от delivery_check, а не «skip»; S4 в smoke зелёный
 - **observe_until:** 2026-10-16
 - **circuit_breakers:** defaults from AGENT_DELIVERY_HARNESS.md §3.4
