@@ -1,0 +1,32 @@
+# Active delivery status
+
+- **slug:** ci-idle-delivery-check
+- **stack:** delivery@1.98, cqg@2.43, okf@1.19
+- **class:** S
+- **kind:** bugfix
+- **repro_test:** delivery/evals/smoke/idle_overdue.sh::overdue_observation_is_red
+- **diagnosis:** n/a reason=причина известна до работы: шаблон CQG §8.3 пропускает delivery_check без активной поставки; тот же дефект тренер закрыл уроками L7, L15, L18
+- **phase:** handoff
+- **builder:** agent:claude-code
+- **verifier:** process:ci
+- **human_ok_spec:** n/a
+- **human_ok_plan:** n/a
+- **shape-oracles:** cqg-deployed
+- **behavior-oracles:** tests-present
+- **artifact_oracle:** n/a reason=проект пока ничего не собирает: Xcode-проекта нет
+- **ci-oracles:** tooling
+- **worktree:** none (S)
+- **hooks:** not-deployed
+- **blockers:** none
+- **waivers:** none
+- **new_dependency:** none
+- **runtime_paths:** none reason=правка CI-конфига и smoke-сценария; кода продукта нет
+- **irreversible_surfaces:** none reason=продукт офлайн; правка не добавляет ни отправки, ни выкатки
+- **model_surface:** n/a reason=модель продукта ещё не вызывается
+- **rule_enforcers:** n/a reason=model_surface не объявлена списком
+- **canon_drift_waiver:** no
+- **baseline_growth_waiver:** no
+- **observability:** 1
+- **observe_signal:** прогон quality на main в простое печатает в шаге Delivery phase gate предупреждение idle от delivery_check, а не «skip»; S4 в smoke зелёный
+- **observe_until:** 2026-10-16
+- **circuit_breakers:** defaults from AGENT_DELIVERY_HARNESS.md §3.4
