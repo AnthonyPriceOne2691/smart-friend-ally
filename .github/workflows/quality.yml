@@ -195,7 +195,14 @@ jobs:
           if [ -f delivery/active/STATUS.md ]; then
             python scripts/delivery_check.py --require-ci --diff-base "$BASE"
           else
-            echo "no active delivery — skip"
+            # Между поставками проверка нужна ТЕМ БОЛЕЕ, а не «тем менее»: она
+            # ловит просроченное наблюдение (§13.1) и отсутствие delivery/active/
+            # в дереве (§2.3a) — оба состояния возникают именно тогда, когда
+            # активной поставки нет. Шаблон CQG §8.3 печатал здесь skip, и
+            # зелёное значило «никто не смотрел» (тренер: уроки L7, L15, L18).
+            # Без --require-ci и --diff-base: без активной поставки у них нет
+            # предмета. Регрессия — delivery/evals/smoke/idle_overdue.sh.
+            python scripts/delivery_check.py
           fi
 
       # if: always() — как у джобы gates: падение фазового гейта не уносит проверки ниже.

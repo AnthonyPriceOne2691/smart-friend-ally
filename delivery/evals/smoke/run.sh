@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Постоянные smoke-оракулы репозитория (Delivery §6.1): гоняет S1–S3 из README
+# Постоянные smoke-оракулы репозитория (Delivery §6.1): гоняет S1–S4 из README
 # и падает на первом провале. Пока кода продукта нет, это проверки контура;
 # продуктовые (swift test, сборка приложения) добавит первая поставка с кодом.
 set -uo pipefail
@@ -23,4 +23,5 @@ run() {
 run S1 "$PY" scripts/delivery_check.py
 run S2 bash scripts/lint/check_gate_coverage.sh
 run S3 "$PY" docs/canon/stack_selftest.py docs/canon
-echo "smoke: 3/3 PASS"
+run S4 bash delivery/evals/smoke/idle_overdue.sh
+echo "smoke: 4/4 PASS"
