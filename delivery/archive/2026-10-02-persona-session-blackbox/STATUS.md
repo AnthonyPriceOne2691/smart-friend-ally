@@ -6,7 +6,7 @@
 - **kind:** feature
 - **repro_test:** n/a reason=не bugfix
 - **diagnosis:** n/a reason=не bugfix
-- **phase:** implement
+- **phase:** handoff
 - **builder:** agent:claude-code
 - **verifier:** process:ci
 - **human_ok_spec:** n/a
@@ -27,6 +27,6 @@
 - **canon_drift_waiver:** no
 - **baseline_growth_waiver:** no
 - **observability:** 1
-- **observe_signal:** заполняется на handoff
+- **observe_signal:** первая поставка с синтезом и записью опирается на persona, session-limit и black-box без пересмотра; голос подруги выбран дочерью из вариантов F2
 - **observe_until:** 2026-10-16
 - **circuit_breakers:** defaults from AGENT_DELIVERY_HARNESS.md §3.4
