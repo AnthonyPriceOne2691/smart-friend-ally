@@ -88,11 +88,12 @@ Ally держится в полной синхронизации с каноно
 ## Состояние (2026-10-02)
 
 - **Контур развёрнут и слит** (squash `520cfa3`, PR #1 закрыт) и синхронизирован с каноном до
-  `delivery@1.99 · cqg@2.45 · okf@1.19 · stack-map@1.52` (Prepare `859152d`), снимок `docs/canon/` с провенансом и замком. Репозиторий — приватный `AnthonyPriceOne2691/smart-friend-ally`;
+  `delivery@1.99 · cqg@2.46 · okf@1.19 · stack-map@1.52` (Prepare `9323136`), снимок `docs/canon/` с провенансом и замком. Репозиторий — приватный `AnthonyPriceOne2691/smart-friend-ally`;
   `ci-oracles: tooling` (защиты ветки нет на бесплатном тарифе). Мерж — только
   `PATH="$PWD/.venv/bin:$PATH" bash scripts/merge_guard.sh <ветка> main` из основного клона, затем
   `git push origin main` и закрыть PR со ссылкой на сквош.
-- Разбор и уроки L1–L4 — `delivery/archive/2026-10-02-contour-bootstrap/`, `delivery/archive/INDEX.md`.
+- Разбор и уроки L1–L7 — `delivery/archive/`, указатель — `delivery/archive/INDEX.md`. Ally стоит в реестре флота
+  Prepare (`agent-canon-stack` `9323136`); три инцидента — в очереди судьи (BACKLOG Prepare, пункты 6–8).
 - **Обязательство:** до **2026-10-16** записать `delivery/archive/2026-10-02-contour-bootstrap/observed.md`
   (сигнал — в STATUS архива), иначе `delivery_check` покраснеет на следующей поставке.
 - **Первая поставка с кодом** подключает Swift-роли, объявленные `n/a`: `file-length` с маской `*.swift`
