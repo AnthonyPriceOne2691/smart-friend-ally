@@ -1,0 +1,121 @@
+# pre-commit hooks. Установка: .venv/bin/pre-commit install --allow-missing-config
+#                            && .venv/bin/pre-commit install --hook-type pre-push --allow-missing-config
+# Прогон по всему дереву: .venv/bin/pre-commit run --all-files --verbose.
+#
+# Адаптация под Smart Friend Ally (объявлена в scripts/lint/adapted.json).
+# Основа — Приложение B CODE_QUALITY_GATES.md, скопированное дословно; дальше по
+# правилу §5 «менять можно транспорт, пути, маски; нельзя — состав гейтов и
+# строку вызова»:
+#   - технологический стек продукта — Swift, кода пока нет. Хуки ruff, ruff-format,
+#     mypy, eslint, eslint-warning-ratchet, prettier сняты: python- и ts-кода продукта
+#     в репозитории нет (python здесь — только механика контура, её судит сьют канона);
+#   - check-скрипты без предмета на этом стеке (AST-правила, grep-правила с
+#     питоновскими паттернами, jscpd, layers, complexity, deps-audit, mutation)
+#     объявлены в scripts/lint/not-applicable.json с причиной — мета-гейт печатает её
+#     на каждом прогоне, чтобы устаревшее объявление попадалось на глаза;
+#   - file-length ждёт первого Swift-кода (объявлен n/a; форма хука с маской
+#     *.swift записана ниже комментарием — без маски гейт не увидит Swift, F16);
+#   - добавлен свой гейт child-data (CONSTITUTION, Non-negotiables) и pre-push
+#     фрагмент §8.5.1.
+#
+# ⚠ Пути с пробелом: корень репозитория — «Smart frend Ally». Каждый entry ниже
+# берёт корень через "$(git rev-parse --show-toplevel)" В КАВЫЧКАХ.
+
+default_install_hook_types: [pre-commit, pre-push]
+fail_fast: false
+
+repos:
+  # -------------------------------------------------------------------------
+  # 0. Базовая гигиена: конфиги ОБЯЗАНЫ парситься. Без этого сломанный YAML в
+  # .github/workflows/ живёт незамеченным: хостинг не кричит, а показывает
+  # workflow путём вместо имени и валит прогон (реальный случай 2026-07-28).
+  # Косметические хуки (trailing-whitespace, end-of-file-fixer) сознательно НЕ
+  # включены: они трогают все существующие файлы не по теме поставки.
+  # -------------------------------------------------------------------------
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-yaml
+      - id: check-json
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: [--maxkb=512]
+        # Снимок канонов (вариант C) весит больше порога: один
+        # CODE_QUALITY_GATES.md — 1,2 МБ. Без исключения развёртывание роняет
+        # собственный первый коммит (CQG §5 шаг 11).
+        exclude: ^docs/canon/
+
+  # -------------------------------------------------------------------------
+  # file-length (prod <= 500 / tests <= 1000) НЕ подключён, пока нет Swift-кода:
+  # подключённый гейт с нулём просмотренных доктор честно зовёт DEAD («роль
+  # объявлена закрытой, а гейт не видит кода»). Объявлен в not-applicable.json;
+  # первая поставка с кодом возвращает хук ровно в этой форме:
+  #   - id: file-length
+  #     entry: bash -c 'cd "$(git rev-parse --show-toplevel)" && LINT_LENGTH_GLOBS="*.swift" bash scripts/lint/check_file_length.sh'
+  #     language: system
+  #     types_or: [swift]
+  #     pass_filenames: false
+  # -------------------------------------------------------------------------
+
+  - repo: local
+    hooks:
+      # -----------------------------------------------------------------------
+      # Secrets — блок дословно из Приложения B (§2.7). venv инструментов лежит
+      # в корне (.venv), его находит третий кандидат лестницы.
+      # -----------------------------------------------------------------------
+      - id: detect-secrets-guard
+        name: secrets — ничего секретного в коммит (§2.7)
+        language: system
+        entry: |-
+          bash -c 'cd "$(git rev-parse --show-toplevel)" || exit 1; t=""; for c in "${LINT_VENV:-backend/.venv}/bin/detect-secrets-hook" "${LINT_BE_DIR:-backend}/.venv/bin/detect-secrets-hook" ".venv/bin/detect-secrets-hook"; do [ -x "$c" ] && { t="$c"; break; }; done; [ -n "$t" ] || t="$(command -v detect-secrets-hook || true)"; if [ -n "$t" ]; then [ -f .secrets.baseline ] || { printf "\033[31msecrets — baseline отсутствует. Сними его (порядок §5 шага 11: сначала git add): detect-secrets scan \$(git ls-files -c -o --exclude-standard) > .secrets.baseline\033[0m\n"; exit 1; }; "$t" --baseline .secrets.baseline "$@" || exit 1; printf "secrets — просканировано %d файл(ов)\n" "$#"; else if grep -qsiE "security-oracles:.*weak" delivery/active/STATUS.md; then printf "\033[33m⚠ detect-secrets не установлен; security-oracles: weak объявлен в STATUS — бедность названа, не спрятана (§2.7)\033[0m\n"; else printf "\033[31msecrets — инструмента НЕТ, а weak НЕ объявлен — гейт не смеет молча выйти нулём (lab-11 F10). Выходы: pip install detect-secrets (он в requirements-dev.txt шага 4) ИЛИ объяви security-oracles: weak в delivery/active/STATUS.md\033[0m\n"; exit 1; fi; fi' --
+        pass_filenames: true
+
+      # -----------------------------------------------------------------------
+      # Свой гейт проекта: данные ребёнка не попадают в git. Индекс и
+      # неигнорируемое дерево; расширение, каталог local/ и сигнатура
+      # содержимого. Допуск ноль, снимка и мягкого режима нет. Канарейка —
+      # scripts/lint/canaries.json.
+      # -----------------------------------------------------------------------
+      - id: child-data
+        name: данные ребёнка не попадают в git (CONSTITUTION)
+        language: system
+        entry: bash -c 'cd "$(git rev-parse --show-toplevel)" && python3 scripts/lint/check_child_data.py'
+        pass_filenames: false
+        always_run: true
+
+  # -------------------------------------------------------------------------
+  # pre-push (CQG §8.5.1 ③): только быстрые проверки, бюджет ≤ 10 c (§8.6).
+  # Блок дословно из канона.
+  # -------------------------------------------------------------------------
+  - repo: local
+    hooks:
+      - id: delivery-gate
+        name: delivery phase gate + breakers (pre-push)
+        entry: bash -c 'b(){ git symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null && return 0; for c in origin/main origin/master; do git rev-parse --verify --quiet "$c" >/dev/null 2>&1 && { echo "$c"; return 0; }; done; echo origin/main; }; PY=$(command -v python3 || command -v python); "$PY" scripts/delivery_check.py --diff-base "$(b)"'
+        language: system
+        stages: [pre-push]
+        pass_filenames: false
+      - id: baseline-ratchet
+        name: baseline only melts (pre-push)
+        entry: bash scripts/lint/check_baseline_ratchet.sh
+        language: system
+        stages: [pre-push]
+        pass_filenames: false
+      - id: new-dependency
+        name: новая зависимость объявлена в STATUS (pre-push)
+        entry: bash -c 'b(){ git symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null && return 0; for c in origin/main origin/master; do git rev-parse --verify --quiet "$c" >/dev/null 2>&1 && { echo "$c"; return 0; }; done; echo origin/main; }; PY=$(command -v python3 || command -v python); BASE="$(b)" "$PY" scripts/lint/check_new_dependency.py'
+        language: system
+        stages: [pre-push]
+        pass_filenames: false
+
+  # Мета-гейт — ПОСЛЕДНИМ. Проверяет, что все гейты выше вообще подключены:
+  # забытый в этом файле скрипт молча не работает (§3, gate-coverage).
+  - repo: local
+    hooks:
+      - id: gate-coverage
+        name: every gate script is wired into pre-commit/CI
+        entry: bash scripts/lint/check_gate_coverage.sh
+        language: system
+        pass_filenames: false
+        always_run: true

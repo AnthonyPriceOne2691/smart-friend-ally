@@ -1,0 +1,52 @@
+---
+type: Reference
+title: Repository map
+description: Где входные точки, где что лежит, где грабли.
+status: stable
+tags: [repo, onboarding]
+generated:
+  by: claude_code/opus-5.5
+  at: 2026-10-02T09:28:19Z
+stale_after: 2027-01-02T00:00:00Z
+# Только структурные якоря (OKF §3.5a): тронули файл — предложение карты стало
+# ложным. Появится Xcode-проект или Package.swift — вписать их сюда.
+implementation:
+  - requirements-dev.txt
+  - scripts/merge_guard.sh
+---
+
+# Входные точки
+
+- **Продукта пока нет** — Xcode-проект появится с первой продуктовой поставкой (спайк).
+- **Контур:** `python3 scripts/delivery_check.py` — фазы поставки;
+  `.venv/bin/pre-commit run --all-files --verbose` — гейты;
+  `python3 scripts/lint/contour_doctor.py` — судят ли гейты;
+  `bash scripts/merge_guard.sh <ветка> main` — единственный путь в `main`.
+- **Инструменты контура** ставятся из `requirements-dev.txt` в `.venv/` в корне
+  (`uv venv .venv && uv pip install --python .venv/bin/python -r requirements-dev.txt`).
+
+# Где что лежит
+
+| Путь | Что |
+|---|---|
+| `KNOWLEDGE.md` | база исследования и принципы П1–П37 — читать до решения о продукте |
+| `knowledge/` | канон домена (OKF v0.2) |
+| `delivery/` | поставки: `active/` — текущая, `archive/` — завершённые с уроками |
+| `scripts/`, `scripts/lint/` | механика контура; канонные файлы правятся только перевендориванием |
+| `docs/canon/` | снимок канонов с самопроверкой (вариант C) |
+| `local/` | данные ребёнка и прочее локальное — игнорируется, гейт не пускает в git |
+
+# Грабли
+
+- **Пробел в пути** (`Smart frend Ally`): пути в скриптах и `entry:` хуков — только в кавычках.
+- **Xcode не выбран**: активный developer dir — Command Line Tools. Команды Xcode
+  и SwiftLint — с `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer`.
+- **Гейт детских данных ловит по сигнатуре**: переименованная запись тоже
+  красная, а неигнорируемый аудиофайл в дереве блокирует коммит, даже не
+  добавленный. Записи держать в `local/`.
+- **Swift-гейты ждут кода**: `file-length`, роли линтера и сложности объявлены
+  `n/a`. Подключённый гейт с нулём просмотренных доктор зовёт DEAD, поэтому
+  первая поставка с кодом обязана подключить их сама (форма `file-length` с
+  маской `*.swift` — комментарием в `.pre-commit-config.yaml`).
+- **`raw.githubusercontent.com` из песочницы агента недоступен** (таймаут);
+  содержимое GitHub — через `gh api`.

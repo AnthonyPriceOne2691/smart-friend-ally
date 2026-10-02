@@ -1,0 +1,22 @@
+{
+  "_": "Провенанс снимка (AGENT_STACK §7.1). Отвечает на вопрос «откуда он», на который SHA256SUMS не отвечает: хеши держат «копию не правили ПОСЛЕ вендоринга» и молчат о том, из чего вендорили. Сверяет запись обход флота, а не сам проект: сравнить с источником может только тот, у кого к нему доступ. Пересоздавать при каждом перевендоривании.",
+  "upstream": "https://github.com/AnthonyPriceOne2691/agent-canon-stack.git",
+  "commit": "4c3caa1584ba17a380beaff6989c367f681e69ce",
+  "dirty": false,
+  "vendored_at": "2026-10-02",
+  "versions": {
+    "delivery": "1.98",
+    "stack-map": "1.52",
+    "cqg": "2.43",
+    "okf": "1.19"
+  },
+  "sha256": {
+    "AGENT_DELIVERY_HARNESS.md": "11ac1b483bfa37ad44c640c2afb75759b489e1cf23106d7eb3859556e8e0aaa0",
+    "AGENT_STACK.md": "9fa44ac80539242f5bb545b635d2adf62d024c22138a2a8f87147044453f2652",
+    "CODE_QUALITY_GATES.md": "b7edcb21f372439237185af2ccb60e814150b77d9c2d7e93b683de08fcf2d3f4",
+    "OKF_KNOWLEDGE_BUNDLE.md": "091e00774051e0d28ca3ff6e22fedb45fef770623d7f0e10aa7fddfe827a1b62",
+    "extract_payload.py": "9957f34a08280b42fa6a2756a47b01a8951ae7eaf390e1c7ef84a675e97dc73d",
+    "selftest_sizes.py": "166511867006a66b6f850209e0e3d6fff81fca4c5518cd8ec11a5d94ea694867",
+    "stack_selftest.py": "bccd7ed8a3c0b7268838d6426aae8b3c091afc0a809f50735f0ccbc34a69d3a6"
+  }
+}
