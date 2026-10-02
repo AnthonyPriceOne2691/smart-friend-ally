@@ -87,8 +87,8 @@ Ally держится в полной синхронизации с каноно
 
 ## Состояние (2026-10-02)
 
-- **Контур развёрнут и слит** (squash `520cfa3`, PR #1 закрыт): `delivery@1.98 · cqg@2.43 · okf@1.19 · stack-map@1.52`,
-  снимок `docs/canon/` с провенансом. Репозиторий — приватный `AnthonyPriceOne2691/smart-friend-ally`;
+- **Контур развёрнут и слит** (squash `520cfa3`, PR #1 закрыт) и синхронизирован с каноном до
+  `delivery@1.99 · cqg@2.45 · okf@1.19 · stack-map@1.52` (Prepare `859152d`), снимок `docs/canon/` с провенансом и замком. Репозиторий — приватный `AnthonyPriceOne2691/smart-friend-ally`;
   `ci-oracles: tooling` (защиты ветки нет на бесплатном тарифе). Мерж — только
   `PATH="$PWD/.venv/bin:$PATH" bash scripts/merge_guard.sh <ветка> main` из основного клона, затем
   `git push origin main` и закрыть PR со ссылкой на сквош.

@@ -8,5 +8,5 @@
 - [x] T1: три инцидента у хозяина: `delivery/incidents/2026-10-02-*.md` (симптом → что видел нашедший → воспроизведение → вердикт → куда уехало)
 - [x] T2: `adapted.json`: `kind: upstream-candidate` у `quality.yml` — обход флота собирает именно это поле
 - [x] T3: процедура синхронизации в `CLAUDE.md`: вниз (`plan_update.py` → `apply_update.py` → поставка), наверх (инцидент + кандидат + сообщение судье)
-- [ ] T5: первая синхронизация вниз: `cqg@2.43 · delivery@1.98` → `cqg@2.45 · delivery@1.99` (Prepare `859152d`) через `plan_update.py`/`apply_update.py`
+- [x] T5: первая синхронизация вниз: `cqg@2.43 · delivery@1.98` → `cqg@2.45 · delivery@1.99` (Prepare `859152d`) через `plan_update.py`/`apply_update.py`
 - [ ] T4: после мержа — сообщение сессии Prepare (судье): внести Ally в реестр флота, рассмотреть три находки
