@@ -1,8 +1,8 @@
 # Stack acceptance
 
 **Date:** 2026-10-02
-**Stack:** delivery@1.99 · cqg@2.45 · okf@1.19 · stack-map@1.52
-**Где лежат каноны:** снимок в `docs/canon/` (вариант C, коммитится), провенанс — `docs/canon/VENDORED.json` (`agent-canon-stack` @ `859152d`, `dirty: false`; обновлён с `4c3caa1` через `apply_update.py`, замок `scripts/lint/payload.lock.json`)
+**Stack:** delivery@1.99 · cqg@2.46 · okf@1.19 · stack-map@1.52
+**Где лежат каноны:** снимок в `docs/canon/` (вариант C, коммитится), провенанс — `docs/canon/VENDORED.json` (`agent-canon-stack` @ `9323136`, `dirty: false`; обновляется через `apply_update.py` — `4c3caa1` → `859152d` → `9323136`, замок `scripts/lint/payload.lock.json`)
 
 checked_at: 2026-10-02
 stale_after: 2026-12-31
@@ -62,7 +62,7 @@ Swift, кода продукта пока нет: роли, которым не�
 
 | Что | Число |
 |---|---|
-| `contour_doctor.py` | AUTO 36 · WEAK 12 · ABSENT 4 · TOOL 3 · SKIP 0 · DEAD 0 (после обновления до cqg@2.45; добавилась сверка записей с замком payload'а) |
+| `contour_doctor.py` | AUTO 36 · WEAK 12 · ABSENT 4 · TOOL 3 · SKIP 0 · DEAD 0 (после обновления до cqg@2.46; добавилась сверка записей с замком payload'а) |
 | pre-commit на коммите одного файла | 1,17 с (бюджет ≤ 5 с) |
 | pre-commit `--all-files` | 5,44 с, из них detect-secrets 5,27 с — снимок канонов 1,6 МБ; это прогон CI, бюджет — минуты |
 | `delivery_metrics.py` | 8 метрик в блоке (до первого коммита поставки: `files_touched 0`) |

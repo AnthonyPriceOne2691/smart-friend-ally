@@ -4,5 +4,5 @@
 объявлениях. Синхронизация по процедуре CLAUDE.md «Синхронизация с каноном».
 
 ## Slice 1 — канон cqg@2.45 → cqg@2.46 (Prepare 9323136)
-- [ ] T1: `plan_update.py` — план без записи; ручных портов быть не должно
-- [ ] T2: `apply_update.py`, база секретов, приёмка: gate-coverage → доктор → delivery_check
+- [x] T1: `plan_update.py` — план без записи; ручных портов быть не должно
+- [x] T2: `apply_update.py`, база секретов, приёмка: gate-coverage → доктор → delivery_check
