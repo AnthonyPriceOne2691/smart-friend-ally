@@ -66,10 +66,16 @@ jobs:
           echo "база диффа: $base"
 
       # ⚠ Версия ОБЯЗАНА совпадать с локальной: .venv проекта — 3.12.
+      # ⚠ `cache-dependency-path` задан ЯВНО — находка первого прогона Ally
+      # (36990914981): охрана `cache:` в шаблоне смотрит `**/requirements*.txt`,
+      # а setup-python по умолчанию ищет точное `**/requirements.txt`. На проекте
+      # только с requirements-dev.txt охрана включала кэш, а действие не находило
+      # файла и роняло всю джобу гейтов до первого гейта.
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
           cache: ${{ hashFiles('**/requirements*.txt', '**/pyproject.toml') != '' && 'pip' || '' }}
+          cache-dependency-path: requirements-dev.txt
 
       # Инструменты контура — по манифесту, а не командой мимо него (lab-11 F9):
       # тот же requirements-dev.txt, что ставится локально в .venv.
