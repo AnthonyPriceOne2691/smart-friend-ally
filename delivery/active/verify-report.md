@@ -75,11 +75,11 @@ asserts_without_example: 0
   `scripts/delivery_risk.py` — это механика контура, а не код продукта.
 
 ## Spec coverage gaps
-- `human_ok_spec: deferred` — примеры A1–A7 ждут подписи человека; на handoff нужна `yes`.
+- Спека подписана человеком 2026-10-02 (`human_ok_spec: yes`, by=human:anthony) — после замеров A1–A7.
 - Swift-роли (длина, линтер, сложность, слои, копипаст, покрытие, мутации) — `n/a` до первого кода; остаток в STACK-ACCEPTANCE.
 
 ## Verdict
-- [x] READY FOR HANDOFF — после подписи спеки человеком
+- [x] READY FOR HANDOFF
 - [ ] NEED CONVERGE (new tasks)
 - [ ] BLOCKED
 

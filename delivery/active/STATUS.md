@@ -6,10 +6,10 @@
 - **kind:** bootstrap
 - **repro_test:** n/a reason=не bugfix: развёртывание контура, кода продукта нет
 - **diagnosis:** n/a reason=не bugfix
-- **phase:** verify
+- **phase:** handoff
 - **builder:** agent:claude-code
 - **verifier:** process:ci
-- **human_ok_spec:** deferred (reason=цель «обязательно развернуть контур» дана устно 2026-10-02, примеры A1–A7 человек ещё не видел; на handoff нужна подпись, at=2026-10-02)
+- **human_ok_spec:** yes (by=human:anthony, at=2026-10-02)
 - **human_ok_plan:** n/a
 - **shape-oracles:** cqg-deployed
   <!-- гейты подключены и судят (доктор: DEAD 0); Swift-роли объявлены n/a до первого кода -->
