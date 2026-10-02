@@ -1,0 +1,32 @@
+# Active delivery status
+
+- **slug:** sync-cqg-2.46
+- **stack:** delivery@1.99, cqg@2.45, okf@1.19
+- **class:** S
+- **kind:** feature
+- **repro_test:** n/a reason=не bugfix
+- **diagnosis:** n/a reason=не bugfix
+- **phase:** implement
+- **builder:** agent:claude-code
+- **verifier:** process:ci
+- **human_ok_spec:** n/a
+- **human_ok_plan:** n/a
+- **shape-oracles:** cqg-deployed
+- **behavior-oracles:** weak — дёшево: ничего; накат канона, мутационного кода у проекта нет
+- **artifact_oracle:** n/a reason=проект пока ничего не собирает: Xcode-проекта нет
+- **ci-oracles:** tooling
+- **worktree:** none (S)
+- **hooks:** not-deployed
+- **blockers:** none
+- **waivers:** none
+- **new_dependency:** none
+- **runtime_paths:** none reason=накат механики контура; кода продукта нет
+- **irreversible_surfaces:** none reason=продукт офлайн; поставка не добавляет ни отправки, ни выкатки
+- **model_surface:** n/a reason=модель продукта ещё не вызывается
+- **rule_enforcers:** n/a reason=model_surface не объявлена списком
+- **canon_drift_waiver:** no
+- **baseline_growth_waiver:** no
+- **observability:** 1
+- **observe_signal:** заполняется на handoff
+- **observe_until:** 2026-10-16
+- **circuit_breakers:** defaults from AGENT_DELIVERY_HARNESS.md §3.4
