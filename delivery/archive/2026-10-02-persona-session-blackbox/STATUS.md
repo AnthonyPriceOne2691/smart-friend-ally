@@ -1,0 +1,32 @@
+# Active delivery status
+
+- **slug:** persona-session-blackbox
+- **stack:** delivery@1.99, cqg@2.45, okf@1.19
+- **class:** S
+- **kind:** feature
+- **repro_test:** n/a reason=не bugfix
+- **diagnosis:** n/a reason=не bugfix
+- **phase:** handoff
+- **builder:** agent:claude-code
+- **verifier:** process:ci
+- **human_ok_spec:** n/a
+- **human_ok_plan:** n/a
+- **shape-oracles:** cqg-deployed
+- **behavior-oracles:** weak — дёшево: ничего; поставка документная — решения пользователя о персонаже, сессии и чёрном ящике в каноне домена
+- **artifact_oracle:** n/a reason=проект пока ничего не собирает: Xcode-проекта нет
+- **ci-oracles:** tooling
+- **worktree:** none (S)
+- **hooks:** not-deployed
+- **blockers:** none
+- **waivers:** none
+- **new_dependency:** none
+- **runtime_paths:** none reason=канон домена и база исследования; кода продукта нет
+- **irreversible_surfaces:** none reason=продукт офлайн; поставка не добавляет ни отправки, ни выкатки
+- **model_surface:** n/a reason=модель продукта ещё не вызывается
+- **rule_enforcers:** n/a reason=model_surface не объявлена списком
+- **canon_drift_waiver:** no
+- **baseline_growth_waiver:** no
+- **observability:** 1
+- **observe_signal:** первая поставка с синтезом и записью опирается на persona, session-limit и black-box без пересмотра; голос подруги выбран дочерью из вариантов F2
+- **observe_until:** 2026-10-16
+- **circuit_breakers:** defaults from AGENT_DELIVERY_HARNESS.md §3.4
