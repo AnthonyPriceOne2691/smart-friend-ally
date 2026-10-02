@@ -36,4 +36,5 @@
 ## Куда уехало
 
 - `scripts/lint/adapted.json` → `.github/workflows/quality.yml`, `kind: upstream-candidate`;
-- сообщение судье (сессия Prepare) после мержа поставки `canon-sync-loop`.
+- сообщение судье (сессия Prepare) после мержа поставки `canon-sync-loop`;
+- **судья воспроизвёл по шаблону** 2026-10-02 (без `active/STATUS.md` шаг печатает skip, архив не судит никто) — очередь судьи, BACKLOG Prepare п.7. Внесение утверждает пользователь.
