@@ -6,7 +6,7 @@ status: stable
 tags: [repo, onboarding]
 generated:
   by: claude_code/opus-5.5
-  at: 2026-10-02T09:28:19Z
+  at: 2026-10-02T15:30:00Z
 stale_after: 2027-01-02T00:00:00Z
 # Только структурные якоря (OKF §3.5a): тронули файл — предложение карты стало
 # ложным. Появится Xcode-проект или Package.swift — вписать их сюда.
@@ -50,3 +50,6 @@ implementation:
   маской `*.swift` — комментарием в `.pre-commit-config.yaml`).
 - **`raw.githubusercontent.com` из песочницы агента недоступен** (таймаут);
   содержимое GitHub — через `gh api`.
+- **Синхронизация с каноном — по содержимому, не по SHA:** HEAD Prepare двигают правки
+  BACKLOG и обход флота без смены канона (`9323136` → `ce08a07` — один `BACKLOG.md`).
+  Накатывать только из чистого и отправленного Prepare — процедура в `CLAUDE.md`.
