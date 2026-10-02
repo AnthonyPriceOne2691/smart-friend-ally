@@ -21,9 +21,7 @@
 - **hooks:** not-deployed
 - **blockers:** none
 - **waivers:** none
-- **new_dependency:** pre-commit reason=оркестратор гейтов на коммите и pre-push (CQG §4); альтернатива — голые git-хуки, отвергнута: канон и доктор читают .pre-commit-config.yaml by=agent:claude-code
-- **new_dependency:** detect-secrets reason=secrets-гейт §2.7; без пакета хук честно красный; альтернатива gitleaks стоит на машине, но канонный хук и база — detect-secrets by=agent:claude-code
-- **new_dependency:** PyYAML reason=stack_selftest без парсера проверяет yaml-блоки урезанно и молчит (AGENT_STACK §7) by=agent:claude-code
+- **new_dependency:** requirements-dev.txt reason=новый манифест инструментов контура: pre-commit (оркестратор гейтов, CQG §4), detect-secrets (secrets-гейт §2.7), PyYAML (stack_selftest без парсера молчит); отвергнуты голые git-хуки и gitleaks — канон и доктор читают .pre-commit-config.yaml и .secrets.baseline by=agent:claude-code
 - **runtime_paths:** none reason=кода продукта нет; пути (микрофон, права, аудиосессия, entitlement памяти) объявляются первой поставкой с iOS-кодом — KNOWLEDGE.md §11
 - **irreversible_surfaces:** none reason=продукт офлайн: отправки наружу, денег, прода и публикации нет; приватный репозиторий GitHub создаётся с согласия пользователя 2026-10-02 и данных ребёнка не содержит
 - **model_surface:** n/a reason=модель продукта ещё не вызывается: промптов, пина и параметров нет; появятся с первой поставкой голосового цикла (KNOWLEDGE.md П10)
