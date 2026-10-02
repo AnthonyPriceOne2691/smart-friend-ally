@@ -1,0 +1,52 @@
+# --- Данные ребёнка: никогда в git (delivery/CONSTITUTION.md, Non-negotiables) ---
+# Записи голоса, транскрипты, выгрузки с телефона — только в local/.
+# Игнор обходится `git add -f`, поэтому то же держит гейт контура на коммите.
+local/
+*.wav
+*.m4a
+*.caf
+*.aif
+*.aiff
+*.mp3
+*.flac
+*.ogg
+*.opus
+*.sqlite
+*.sqlite3
+*.db
+*.realm
+
+# --- Веса моделей: гигабайты, качаются отдельно ---
+models/
+*.gguf
+*.safetensors
+*.onnx
+*.tflite
+*.litertlm
+*.mlpackage/
+*.mlmodelc/
+
+# --- Xcode / Swift ---
+.build/
+DerivedData/
+xcuserdata/
+*.xcuserstate
+*.ipa
+*.dSYM/
+*.dSYM.zip
+.swiftpm/
+
+# --- Python: механика контура ---
+__pycache__/
+.venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+coverage.json
+
+# --- macOS ---
+.DS_Store
+
+# --- Claude Code: локальные клики «yes» не коммитятся (Delivery §4.5) ---
+.claude/settings.local.json
