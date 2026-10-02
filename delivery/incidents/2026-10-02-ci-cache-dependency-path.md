@@ -41,4 +41,5 @@ python-манифест назван не `requirements.txt`. Класс — «�
 ## Куда уехало
 
 - `scripts/lint/adapted.json` → `.github/workflows/quality.yml`, `kind: upstream-candidate`;
-- сообщение судье (сессия Prepare) после мержа поставки `canon-sync-loop`.
+- сообщение судье (сессия Prepare) после мержа поставки `canon-sync-loop`;
+- **судья воспроизвёл по шаблону §8.3** 2026-10-02 (охрана включает pip при `requirements*.txt`, путь для pip не задан, у npm — задан) — очередь судьи, BACKLOG Prepare п.6. Внесение в канон утверждает пользователь; до тех пор `upstream-candidate` в `adapted.json` держится как есть.
