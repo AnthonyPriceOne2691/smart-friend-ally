@@ -67,10 +67,14 @@
 Ally держится в полной синхронизации с каноном `~/Documents/Prepare`
 (`agent-canon-stack`) — решение пользователя 2026-10-02.
 
-- **Сверка в начале каждой сессии:** коммит снимка
-  `python3 -c "import json;print(json.load(open('docs/canon/VENDORED.json'))['commit'])"`
-  против `git -C ~/Documents/Prepare rev-parse origin/main`. Отстали — первой работой
-  сессии идёт поставка обновления.
+- **Сверка в начале каждой сессии — по содержимому канона, а не по SHA:**
+  `python3 ~/Documents/Prepare/field/fleet/plan_update.py "$PWD"`. «Сейчас» равно «станет»
+  и «едет сам 0» — синхронизация не нужна: HEAD Prepare двигают правки BACKLOG и обход
+  флота, а канон при этом не меняется. Отстали — первой работой сессии идёт поставка обновления.
+- **Предусловие наката:** Prepare чистый и отправлен — `git -C ~/Documents/Prepare status -sb`
+  показывает `## main...origin/main` без `ahead`, а `status --porcelain` пуст. Иначе канон в
+  работе у судьи: накат привёз бы неопубликованное состояние, а провенанс снимка сослался бы
+  на коммит, которого нет в upstream. Ждать.
 - **Вниз (канон → Ally):** `python3 ~/Documents/Prepare/field/fleet/plan_update.py "$PWD"`
   (план, без записи) → `python3 ~/Documents/Prepare/field/fleet/apply_update.py "$PWD"`
   (механика; требует закоммиченными файлы, которые перепишет; сам не коммитит) → ручные
