@@ -62,10 +62,33 @@
 - В пути проекта пробел (`Smart frend Ally`) — пути в скриптах всегда в кавычках.
 - Пользователь пишет по-русски, часто диктовкой: искажённые названия сверять с контекстом.
 
+## Синхронизация с каноном (Prepare)
+
+Ally держится в полной синхронизации с каноном `~/Documents/Prepare`
+(`agent-canon-stack`) — решение пользователя 2026-10-02.
+
+- **Сверка в начале каждой сессии:** коммит снимка
+  `python3 -c "import json;print(json.load(open('docs/canon/VENDORED.json'))['commit'])"`
+  против `git -C ~/Documents/Prepare rev-parse origin/main`. Отстали — первой работой
+  сессии идёт поставка обновления.
+- **Вниз (канон → Ally):** `python3 ~/Documents/Prepare/field/fleet/plan_update.py "$PWD"`
+  (план, без записи) → `python3 ~/Documents/Prepare/field/fleet/apply_update.py "$PWD"`
+  (механика; требует закоммиченными файлы, которые перепишет; сам не коммитит) → ручные
+  порты по плану → гейты, доктор, приёмка → PR → `merge_guard.sh`. Обновление контура —
+  не развёртывание: CQG §5.5.
+- **Наверх (Ally → канон):** канон сами не правим — протокол сети (BACKLOG Prepare):
+  нашедший заявляет, хозяин воспроизводит, вносит судья. Артефакты —
+  `delivery/incidents/<дата>-<имя>.md` и `kind: upstream-candidate` в
+  `scripts/lint/adapted.json` (их собирает обход флота). Транспорт — сообщение сессии в
+  репозитории канона (`ListAgents` → `prepare-*`); разговор не носитель: нет артефакта —
+  нет находки.
+- **Флот:** Ally стоит в реестре `field/fleet/registry.json` Prepare — тогда суточный
+  обход (10:00) и обход после каждого бампа версии видят его отставание и кандидатов.
+
 ## Состояние (2026-10-02)
 
-- **Контур развёрнут и слит** (squash `520cfa3`, PR #1 закрыт): `delivery@1.98 · cqg@2.43 · okf@1.19 · stack-map@1.52`,
-  снимок `docs/canon/` с провенансом. Репозиторий — приватный `AnthonyPriceOne2691/smart-friend-ally`;
+- **Контур развёрнут и слит** (squash `520cfa3`, PR #1 закрыт) и синхронизирован с каноном до
+  `delivery@1.99 · cqg@2.45 · okf@1.19 · stack-map@1.52` (Prepare `859152d`), снимок `docs/canon/` с провенансом и замком. Репозиторий — приватный `AnthonyPriceOne2691/smart-friend-ally`;
   `ci-oracles: tooling` (защиты ветки нет на бесплатном тарифе). Мерж — только
   `PATH="$PWD/.venv/bin:$PATH" bash scripts/merge_guard.sh <ветка> main` из основного клона, затем
   `git push origin main` и закрыть PR со ссылкой на сквош.

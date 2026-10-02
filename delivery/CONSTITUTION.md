@@ -2,7 +2,7 @@
 
 **Version:** 1.0
 **Ratified:** 2026-10-02
-**Canon stack:** delivery@1.98 · cqg@2.43 · okf@1.19
+**Canon stack:** delivery@1.99 · cqg@2.45 · okf@1.19
 <!-- версии из шапок соответствующих *.md; absent = слой не развёрнут -->
 **CI:** deployed (github-actions) merge-gate: tooling   <!-- §10.4; по факту прогона 36991128518 -->
 
