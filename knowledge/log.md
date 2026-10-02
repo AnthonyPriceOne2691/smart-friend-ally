@@ -1,5 +1,11 @@
 # Knowledge Bundle Update Log
 
+## 2026-10-02 — решения о персонаже, сессии и чёрном ящике
+
+* **Creation**: `product/persona` (подруга, голос девочки; кандидаты — Supertonic 3 F2 и производные; чужой голос не клонируется), `product/session-limit` (мягкие 10 минут), `ops/black-box` (текст и звук каждой сессии, выгрузка только на Mac без облака).
+* **Update**: `product/overview` и `ops/child-data` — граница «данные не покидают телефон» уточнена: единственный выход — выгрузка родителем на свой Mac; `engineering/safety-below-model` — журнал нарушений живёт в чёрном ящике.
+* **Источник**: решения пользователя 2026-10-02; голоса Supertonic сверены по официальной документации (`supertone-oss-archive/supertonic-py`, `docs/voices.md`).
+
 ## 2026-10-02
 
 * **Initialization**: создан OKF v0.2 bundle (`knowledge/`) при развёртывании контура (`okf@1.19`).
