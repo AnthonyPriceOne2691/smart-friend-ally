@@ -4,7 +4,7 @@
 **Ratified:** 2026-10-02
 **Canon stack:** delivery@1.98 · cqg@2.43 · okf@1.19
 <!-- версии из шапок соответствующих *.md; absent = слой не развёрнут -->
-**CI:** not-deployed   <!-- §10.4; после первого зелёного прогона: deployed (github-actions) merge-gate: tooling -->
+**CI:** deployed (github-actions) merge-gate: tooling   <!-- §10.4; по факту прогона 36991128518 -->
 
 ## Non-negotiables
 
@@ -83,6 +83,6 @@ ask: WebFetch
 - Code shape oracles: see `docs/canon/CODE_QUALITY_GATES.md` — [ ] not deployed / [x] deployed (Swift-роли ждут первого кода: `scripts/lint/not-applicable.json`)
 - Domain canon: see `knowledge/` per `docs/canon/OKF_KNOWLEDGE_BUNDLE.md` — [ ] not deployed / [x] deployed
 - Agent hooks (§10): [x] not deployed / [ ] deployed
-- CI oracles (§10.4, workflow per CQG §8): [x] not deployed / [ ] deployed
+- CI oracles (§10.4, workflow per CQG §8): [ ] not deployed / [x] deployed (`quality`, `main-guard`, `canon-freshness`; мерж — `scripts/merge_guard.sh`)
 - Skills catalog: `skills/README.md` — [x] absent / [ ] present
 - Research base (не канон контура): `KNOWLEDGE.md` в корне — факты, решения, принципы П1–П37.

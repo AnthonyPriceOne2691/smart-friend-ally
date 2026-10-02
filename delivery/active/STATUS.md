@@ -6,7 +6,7 @@
 - **kind:** bootstrap
 - **repro_test:** n/a reason=не bugfix: развёртывание контура, кода продукта нет
 - **diagnosis:** n/a reason=не bugfix
-- **phase:** implement
+- **phase:** verify
 - **builder:** agent:claude-code
 - **verifier:** process:ci
 - **human_ok_spec:** deferred (reason=цель «обязательно развернуть контур» дана устно 2026-10-02, примеры A1–A7 человек ещё не видел; на handoff нужна подпись, at=2026-10-02)
@@ -15,8 +15,8 @@
   <!-- гейты подключены и судят (доктор: DEAD 0); Swift-роли объявлены n/a до первого кода -->
 - **behavior-oracles:** weak — дёшево: канарейка гейта детских данных (доктор, `canaries.json`); тестов продукта нет, потому что нет кода
 - **artifact_oracle:** n/a reason=проект пока ничего не собирает: Xcode-проекта нет
-- **ci-oracles:** weak
-  <!-- CI ещё не развёрнут; по факту зелёного прогона — tooling (бесплатный тариф, защиты ветки нет) -->
+- **ci-oracles:** tooling
+  <!-- по факту прогона 36991128518 (success, все шаги исполнены). Гейт мержа — merge_guard.sh в репозитории; серверной защиты ветки нет: приватный репо на бесплатном тарифе. Остаток: force-push и обход админом не закрыты -->
 - **worktree:** none (bootstrap трогает дерево контура целиком, §7.2 шаг 6)
 - **hooks:** not-deployed
 - **blockers:** none
@@ -29,6 +29,6 @@
 - **canon_drift_waiver:** no
 - **baseline_growth_waiver:** no
 - **observability:** 1
-- **observe_signal:** заполняется на handoff
+- **observe_signal:** A2, A4 держатся в использовании: следующая поставка проходит merge_guard без обходов, доктор в CI — DEAD 0; ни одного коммита с аудио или базой (child-data в CI на main)
 - **observe_until:** 2026-10-16
 - **circuit_breakers:** exempt (kind: bootstrap, §3.4 — развёртывание трогает всё дерево контура и не режется на части)
