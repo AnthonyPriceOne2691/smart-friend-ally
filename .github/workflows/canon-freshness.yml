@@ -1,0 +1,16 @@
+# OKF §7.2: просроченный stale_after — повод перечитать канон, а не тишина.
+# Дословно из OKF_KNOWLEDGE_BUNDLE.md §7.2.
+name: canon-freshness
+on:
+  schedule: [{cron: "0 7 * * 1"}]     # понедельник, 07:00 UTC
+  workflow_dispatch:
+jobs:
+  stale:
+    runs-on: ubuntu-latest
+    # §8.7 CQG: предохранитель на КАЖДОЙ джобе — дефолт GitHub 6 часов.
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with: {python-version: "3.12"}
+      - run: python scripts/okf_sync_gate.py --check-stale

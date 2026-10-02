@@ -1,0 +1,12 @@
+{
+  "_": "Что изменено против канона и зачем (CQG §5.5). Канонные скрипты не правились ни один: адаптация — в конфигах.",
+  ".pre-commit-config.yaml": {
+    "reason": "стек продукта Swift, кода нет: python- и ts-хуки сняты, свой гейт child-data, маска *.swift у file-length",
+    "changed": "сняты ruff, ruff-format, mypy, eslint, eslint-warning-ratchet, prettier, file-length, гейты grep/ast/jscpd/layers/complexity/deps-audit (объявлены в not-applicable.json; форма file-length с маской *.swift — комментарием); добавлены child-data и pre-push блок §8.5.1; check-added-large-files: exclude ^docs/canon/; default_install_hook_types: [pre-commit, pre-push] — одна команда install ставит оба хука"
+  },
+  ".github/workflows/quality.yml": {
+    "reason": "стек продукта Swift, кода нет; механика контура — python на ubuntu (macOS-раннер 10x, §8.7)",
+    "changed": "сняты setup-node, Install frontend deps, env LINT_PY_SRC/LINT_FE_DIR/LINT_BE_DIR/LINT_COV_PKG, шаги Diff coverage, Vulnerable dependencies, Mutation testing (роли в not-applicable.json); Install backend deps → Install contour tools из корневого requirements-dev.txt в .venv; pre-commit зовётся из .venv; в шаге toolchain дефолт LINT_FE_DIR задан подстановкой; setup-python: cache-dependency-path: requirements-dev.txt — охрана cache: шаблона смотрит **/requirements*.txt, а действие по умолчанию **/requirements.txt (прогон 36990914981 упал на этом); кандидат в апстрим",
+    "upstream_candidate": "охрана cache: и дефолтный cache-dependency-path setup-python расходятся: проект только с requirements-dev.txt роняет джобу гейтов"
+  }
+}
