@@ -61,3 +61,20 @@
   команды Xcode запускать с `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer`.
 - В пути проекта пробел (`Smart frend Ally`) — пути в скриптах всегда в кавычках.
 - Пользователь пишет по-русски, часто диктовкой: искажённые названия сверять с контекстом.
+
+## Состояние (2026-10-02)
+
+- **Контур развёрнут и слит** (squash `520cfa3`, PR #1 закрыт): `delivery@1.98 · cqg@2.43 · okf@1.19 · stack-map@1.52`,
+  снимок `docs/canon/` с провенансом. Репозиторий — приватный `AnthonyPriceOne2691/smart-friend-ally`;
+  `ci-oracles: tooling` (защиты ветки нет на бесплатном тарифе). Мерж — только
+  `PATH="$PWD/.venv/bin:$PATH" bash scripts/merge_guard.sh <ветка> main` из основного клона, затем
+  `git push origin main` и закрыть PR со ссылкой на сквош.
+- Разбор и уроки L1–L4 — `delivery/archive/2026-10-02-contour-bootstrap/`, `delivery/archive/INDEX.md`.
+- **Обязательство:** до **2026-10-16** записать `delivery/archive/2026-10-02-contour-bootstrap/observed.md`
+  (сигнал — в STATUS архива), иначе `delivery_check` покраснеет на следующей поставке.
+- **Первая поставка с кодом** подключает Swift-роли, объявленные `n/a`: `file-length` с маской `*.swift`
+  (форма — комментарием в `.pre-commit-config.yaml`), ратчет SwiftLint (роли линтера и сложности),
+  покрытие через `swift test --enable-code-coverage`; объявляет `runtime_paths` и `model_surface`, повторяет приёмку.
+- **Находки для канона (Prepare):** шаблон CI роняет джобу без `requirements.txt` (L3); OKF отстаёт от upstream #323
+  (метки времени ISO 8601 со смещением). Решение о правке канона — за пользователем.
+
