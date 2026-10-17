@@ -1,7 +1,7 @@
 # Active delivery status
 
 - **slug:** sync-cqg-2.63
-- **stack:** delivery@2.01, cqg@2.55, okf@1.19
+- **stack:** delivery@2.03, cqg@2.63, okf@1.21
 - **class:** S
 - **kind:** feature
 - **repro_test:** n/a reason=не bugfix
