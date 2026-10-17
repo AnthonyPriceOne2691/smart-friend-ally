@@ -96,14 +96,14 @@ Ally держится в полной синхронизации с каноно
   `ci-oracles: tooling` (защиты ветки нет на бесплатном тарифе). Мерж — только
   `PATH="$PWD/.venv/bin:$PATH" bash scripts/merge_guard.sh <ветка> main` из основного клона, затем
   `git push origin main` и закрыть PR со ссылкой на сквош.
-- Разбор и уроки L1–L24 — `delivery/archive/`, указатель — `delivery/archive/INDEX.md`. Ally стоит в реестре флота
+- Разбор и уроки L1–L25 — `delivery/archive/`, указатель — `delivery/archive/INDEX.md`. Ally стоит в реестре флота
   Prepare. Находки наверх: три инцидента 02.10 — в очереди судьи (BACKLOG Prepare, п.6–8). Из находок 17.10 судья
   внёс в канон: недельный `delivery_check` (`okf@1.21`), разборщик карты ролей (`cqg@2.60`), маячок «деньги» на «счёт»
   (`delivery@2.03`) — итог дописан в инцидентах; механизм истечения n/a «до кода» вынесен на решение пользователя. Находка 17.10 о поставке, уехавшей
   в архив тем же коммитом (`2026-10-17-archived-handoff-signature`), закрыта судьёй в `delivery@2.04`: строгий
   `delivery_check` с `--diff-base` судит такую поставку сам, обход L24 больше не нужен.
 - **Обязательства наблюдения:** до **2026-11-30** — `persona-session-blackbox` (сдвинуто: сигнал наступит со спайком),
-  `na-expiry-stopper`, `sync-cqg-2.55`, `state-refresh`, `spike-memory-limit`, `look-and-feel`, `look-and-feel-research`, `snout-instead-of-trunk`, `flower-crown`, `crown-centered`, `character-axolotl`, `spike-model-bakeoff`, `visual-approved`, `sync-cqg-2.63`, `spike-phone-llm`, `incident-archived-handoff`. Остальные закрыты `observed.md` 17.10. Недельный
+  `na-expiry-stopper`, `sync-cqg-2.55`, `state-refresh`, `spike-memory-limit`, `look-and-feel`, `look-and-feel-research`, `snout-instead-of-trunk`, `flower-crown`, `crown-centered`, `character-axolotl`, `spike-model-bakeoff`, `visual-approved`, `sync-cqg-2.63`, `spike-phone-llm`, `incident-archived-handoff`, `persona-v2`. Остальные закрыты `observed.md` 17.10. Недельный
   `canon-freshness` гоняет `delivery_check` (Delivery §13.1): просрочку видно и без поставок.
 - **Спайк на телефоне** (`KNOWLEDGE.md` §12): шаг 1 сделан — лимит памяти приложения ≈3,3 ГБ без entitlement и
   ≈6,0 ГБ с `increased-memory-limit`, бесплатная Personal Team его выдаёт (`knowledge/engineering/memory-limit.md`).
@@ -115,7 +115,11 @@ Ally держится в полной синхронизации с каноно
   Первый запуск новой подписи требует доверия сертификату на самом телефоне — это шаг владельца (L15).
 - **Как она разговаривает** — `knowledge/product/persona.md` (пожелания родителя 2026-10-17): естественность фраз — главное,
   не терять деталей разговора, спрашивать про брата (имена и подробности — только в памяти на телефоне, не в git); ударения —
-  критерий выбора голоса (временный Milena ставит их неправильно). Следующая поставка — персона v2 с проверкой на слух.
+  критерий выбора голоса (временный Milena ставит их неправильно). **Персона v2.4 принята на слух родителя 2026-10-17**
+  (лист вслепую: живее в 21 паре из 24; `knowledge/engineering/persona-eval.md`). Обращение — только по имени: «моя
+  хорошая», «солнышко» снимает фильтр перед голосом (решение родителя). Очевидные листы судят слепые судьи-агенты по
+  критериям родителя: безопасность с запретом, ум, живость. Частоту («иногда») и гарантии промпт E4B не держит — их
+  держит код (L25). Следующая поставка — безопасность ниже модели: фильтр и маршрутизатор.
 - **Облик** — `knowledge/product/look-and-feel.md` (draft, пожелания родителя 2026-10-17): пузырьки, нежно-розовый,
   максимально плавные анимации, персонаж в круге — аксолотлик, выбор дочери 2026-10-17; визуал утверждён родителем — прототип v3
   (`local/prototype/ally-main-screen-v3.html`, вне git), венок из роз, гвоздик и лизиантусов включён; правила экрана для пятилетки

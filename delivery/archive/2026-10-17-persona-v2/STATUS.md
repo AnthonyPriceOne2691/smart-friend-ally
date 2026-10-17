@@ -1,0 +1,35 @@
+# Active delivery status
+
+- **slug:** persona-v2
+- **stack:** delivery@2.04, cqg@2.63, okf@1.21
+- **class:** M
+- **kind:** feature
+- **repro_test:** n/a reason=не bugfix
+- **diagnosis:** n/a reason=не bugfix
+- **phase:** handoff
+- **builder:** agent:claude-code
+- **verifier:** process:ci
+- **human_ok_spec:** yes (by=human:anthony, at=2026-10-17)
+  <!-- примеры приёмки B1–B9 показаны родителю вместе с листом вслепую 2; ответ: «подходит да» -->
+- **human_ok_plan:** n/a
+- **shape-oracles:** cqg-deployed
+- **behavior-oracles:** weak — дёшево: ничего; спайк персоны — результат: правила речи и числа в knowledge; стенд вне git, его оракулы — замороженные `rules.py` и `dialog_rules.py`, судья естественности — родитель (B9)
+- **artifact_oracle:** n/a reason=проект пока ничего не собирает: Xcode-проекта в дереве нет, стенд и зонд — вне git (`local/spike/`)
+- **ci-oracles:** tooling
+- **worktree:** ../Smart frend Ally-wt-persona-v2
+- **parallel_sessions:** merge-guard,manual-deploy
+  <!-- §5.1a: интеграция в main только через scripts/merge_guard.sh; на телефон приложение ставится отдельным решением, а не следствием мержа -->
+- **hooks:** not-deployed
+- **blockers:** none
+- **waivers:** none
+- **new_dependency:** none
+- **runtime_paths:** none reason=стенд персоны и зонд не коммитятся как код (local/spike, вне git); прогоны и версии — в verify-report
+- **irreversible_surfaces:** none reason=продукт офлайн; поставка не добавляет ни отправки, ни выкатки
+- **model_surface:** n/a reason=модель продукта ещё не вызывается: персона живёт в стенде, в продукт её внесёт первая поставка голосового цикла
+- **rule_enforcers:** n/a reason=model_surface не объявлена списком
+- **canon_drift_waiver:** no
+- **baseline_growth_waiver:** no
+- **observability:** 1
+- **observe_signal:** первая поставка голосового цикла продукта берёт персону v2, и живые сессии с дочерью не показывают заготовок v1 и навязчивых вопросов о брате (черный ящик, оценка родителя)
+- **observe_until:** 2026-11-30
+- **circuit_breakers:** defaults from AGENT_DELIVERY_HARNESS.md §3.4
