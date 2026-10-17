@@ -1,8 +1,8 @@
 # Stack acceptance
 
 **Date:** 2026-10-02
-**Stack:** delivery@2.01 · cqg@2.55 · okf@1.19 · stack-map@1.52
-**Где лежат каноны:** снимок в `docs/canon/` (вариант C, коммитится), провенанс — `docs/canon/VENDORED.json` (`agent-canon-stack` @ `b5241ac`, `dirty: false`; обновляется через `apply_update.py` — `4c3caa1` → `859152d` → `9323136` → `b5241ac`, замок `scripts/lint/payload.lock.json`)
+**Stack:** delivery@2.03 · cqg@2.63 · okf@1.21 · stack-map@1.53
+**Где лежат каноны:** снимок в `docs/canon/` (вариант C, коммитится), провенанс — `docs/canon/VENDORED.json` (`agent-canon-stack` @ `2eff5ed`, `dirty: false`; обновляется через `apply_update.py` — `4c3caa1` → `859152d` → `9323136` → `b5241ac` → `2eff5ed` (из чистого клона), замок `scripts/lint/payload.lock.json`)
 
 checked_at: 2026-10-02
 stale_after: 2026-12-31
@@ -54,16 +54,16 @@ Swift, кода продукта пока нет: роли, которым не�
 
 ## Полнота, не только зелёность
 
-- [x] `check_gate_coverage.sh` — OK: 16 скриптов, подключено 4, осознанно нет 12 (причины печатаются)
+- [x] `check_gate_coverage.sh` — OK: 17 скриптов, подключено 5, осознанно нет 12 (причины печатаются; после cqg@2.63)
 - [x] `pre-commit run --all-files` — зелено (7 хуков, toml — нет файлов)
-- [x] `stack_selftest.py` — OK: 116 блоков, 0 ошибок
+- [x] `stack_selftest.py` — OK: 117 блоков, 0 ошибок (cqg@2.63)
 - [x] Каждый подключённый гейт показал непустое число: secrets — 77 файлов, child-data — 77 файлов; гейт длины не подключён (n/a), поэтому «0 просмотрено» нигде не выдаётся за успех
 
 ## Замеры (строки measure §6)
 
 | Что | Число |
 |---|---|
-| `contour_doctor.py` | AUTO 36 · WEAK 12 · ABSENT 4 · TOOL 3 · SKIP 0 · DEAD 0 (после обновления до cqg@2.55; добавилась сверка записей с замком payload'а) |
+| `contour_doctor.py` | AUTO 39 · WEAK 12 · ABSENT 4 · TOOL 3 · SKIP 0 · DEAD 0 (после обновления до cqg@2.63) |
 | pre-commit на коммите одного файла | 1,17 с (бюджет ≤ 5 с) |
 | pre-commit `--all-files` | 5,44 с, из них detect-secrets 5,27 с — снимок канонов 1,6 МБ; это прогон CI, бюджет — минуты |
 | `delivery_metrics.py` | 8 метрик в блоке (до первого коммита поставки: `files_touched 0`) |

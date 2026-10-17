@@ -36,3 +36,7 @@
 
 - `.github/workflows/canon-freshness.yml` Ally;
 - сообщение судье (сессия Prepare) после мержа поставки `na-expiry-stopper`.
+
+## Итог
+
+Внесено в канон: `okf@1.21` — в шаблон недельной джобы добавлен шаг наблюдений (`delivery_check` без `needs:`); судья `prepare-ae`, 2026-10-17. Ally получил ревизию накатом `sync-cqg-2.63`.
