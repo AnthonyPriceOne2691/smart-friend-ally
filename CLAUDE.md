@@ -96,16 +96,18 @@ Ally держится в полной синхронизации с каноно
   `ci-oracles: tooling` (защиты ветки нет на бесплатном тарифе). Мерж — только
   `PATH="$PWD/.venv/bin:$PATH" bash scripts/merge_guard.sh <ветка> main` из основного клона, затем
   `git push origin main` и закрыть PR со ссылкой на сквош.
-- Разбор и уроки L1–L18 — `delivery/archive/`, указатель — `delivery/archive/INDEX.md`. Ally стоит в реестре флота
+- Разбор и уроки L1–L20 — `delivery/archive/`, указатель — `delivery/archive/INDEX.md`. Ally стоит в реестре флота
   Prepare. Находки наверх: три инцидента 02.10 — в очереди судьи (BACKLOG Prepare, п.6–8), две 17.10
   (`delivery/incidents/2026-10-03-na-without-expiry.md`, `…-2026-10-17-weekly-delivery-check.md`) отправлены судье
-  `prepare-ae`. Решение о внесении в канон — за пользователем.
+  `prepare-ae`; 17.10 ещё одна — маячок «деньги» срабатывает на «счёт» в играх (`delivery/incidents/2026-10-17-risk-money-schet.md`).
+  Решение о внесении в канон — за пользователем.
 - **Обязательства наблюдения:** до **2026-11-30** — `persona-session-blackbox` (сдвинуто: сигнал наступит со спайком),
-  `na-expiry-stopper`, `sync-cqg-2.55`, `state-refresh`, `spike-memory-limit`, `look-and-feel`, `look-and-feel-research`, `snout-instead-of-trunk`, `flower-crown`, `crown-centered`, `character-axolotl`. Остальные закрыты `observed.md` 17.10. Недельный
+  `na-expiry-stopper`, `sync-cqg-2.55`, `state-refresh`, `spike-memory-limit`, `look-and-feel`, `look-and-feel-research`, `snout-instead-of-trunk`, `flower-crown`, `crown-centered`, `character-axolotl`, `spike-model-bakeoff`. Остальные закрыты `observed.md` 17.10. Недельный
   `canon-freshness` гоняет `delivery_check` (Delivery §13.1): просрочку видно и без поставок.
 - **Спайк на телефоне** (`KNOWLEDGE.md` §12): шаг 1 сделан — лимит памяти приложения ≈3,3 ГБ без entitlement и
   ≈6,0 ГБ с `increased-memory-limit`, бесплатная Personal Team его выдаёт (`knowledge/engineering/memory-limit.md`).
-  Дальше — гонка моделей по-русски на Mac, затем задержка лучших двух на телефоне. Первый запуск новой подписи
+  Шаг 2 на Mac сделан (`knowledge/engineering/model-bakeoff.md`): в замер на телефоне идут Gemma 4 E4B и E2B (E2B —
+  только с маршрутизацией «скажи маме» до модели), оба Bonsai отклонены; стенд — `local/spike/bakeoff/`. Первый запуск новой подписи
   требует доверия сертификату на самом телефоне — это шаг владельца (L15).
 - **Облик** — `knowledge/product/look-and-feel.md` (draft, пожелания родителя 2026-10-17): пузырьки, нежно-розовый,
   максимально плавные анимации, персонаж в круге — аксолотлик, выбор дочери 2026-10-17 (венок из роз, гвоздик и лизиантусов — на сравнении); правила экрана для пятилетки
