@@ -28,5 +28,5 @@
 - **baseline_growth_waiver:** no
 - **observability:** 1
 - **observe_signal:** первая поставка с синтезом и записью опирается на persona, session-limit и black-box без пересмотра; голос подруги выбран дочерью из вариантов F2
-- **observe_until:** 2026-10-16
+- **observe_until:** 2026-11-30 (сдвинуто 2026-10-17 с 2026-10-16: сигнал не наступил — поставок с синтезом и записью ещё не было; наступит со спайком)
 - **circuit_breakers:** defaults from AGENT_DELIVERY_HARNESS.md §3.4

@@ -15,8 +15,8 @@
 #     на каждом прогоне, чтобы устаревшее объявление попадалось на глаза;
 #   - file-length ждёт первого Swift-кода (объявлен n/a; форма хука с маской
 #     *.swift записана ниже комментарием — без маски гейт не увидит Swift, F16);
-#   - добавлен свой гейт child-data (CONSTITUTION, Non-negotiables) и pre-push
-#     фрагмент §8.5.1.
+#   - добавлены свои гейты child-data (CONSTITUTION, Non-negotiables) и na-expiry
+#     (объявления «до первого кода» истекают с кодом) и pre-push фрагмент §8.5.1.
 #
 # ⚠ Пути с пробелом: корень репозитория — «Smart frend Ally». Каждый entry ниже
 # берёт корень через "$(git rev-parse --show-toplevel)" В КАВЫЧКАХ.
@@ -81,6 +81,19 @@ repos:
         name: данные ребёнка не попадают в git (CONSTITUTION)
         language: system
         entry: bash -c 'cd "$(git rev-parse --show-toplevel)" && python3 scripts/lint/check_child_data.py'
+        pass_filenames: false
+        always_run: true
+
+      # -----------------------------------------------------------------------
+      # Свой гейт проекта: объявления n/a «до первого кода» истекают с первым
+      # кодом. Канон держит n/a печатью причины; на проекте, развёрнутом до кода,
+      # первый .swift иначе проходит все гейты (проба 2026-10-03). Условия —
+      # scripts/lint/na-expiry.json; канарейка — scripts/lint/canaries.json.
+      # -----------------------------------------------------------------------
+      - id: na-expiry
+        name: объявления n/a «до первого кода» истекают с первым кодом
+        language: system
+        entry: bash -c 'cd "$(git rev-parse --show-toplevel)" && python3 scripts/lint/check_na_expiry.py'
         pass_filenames: false
         always_run: true
 

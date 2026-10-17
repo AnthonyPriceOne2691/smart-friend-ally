@@ -2,7 +2,7 @@
   "_": "Что изменено против канона и зачем (CQG §5.5). Канонные скрипты не правились ни один: адаптация — в конфигах.",
   ".pre-commit-config.yaml": {
     "reason": "стек продукта Swift, кода нет: python- и ts-хуки сняты, свой гейт child-data, маска *.swift у file-length",
-    "changed": "сняты ruff, ruff-format, mypy, eslint, eslint-warning-ratchet, prettier, file-length, гейты grep/ast/jscpd/layers/complexity/deps-audit (объявлены в not-applicable.json; форма file-length с маской *.swift — комментарием); добавлены child-data и pre-push блок §8.5.1; check-added-large-files: exclude ^docs/canon/; default_install_hook_types: [pre-commit, pre-push] — одна команда install ставит оба хука"
+    "changed": "сняты ruff, ruff-format, mypy, eslint, eslint-warning-ratchet, prettier, file-length, гейты grep/ast/jscpd/layers/complexity/deps-audit (объявлены в not-applicable.json; форма file-length с маской *.swift — комментарием); добавлены child-data и pre-push блок §8.5.1; check-added-large-files: exclude ^docs/canon/; default_install_hook_types: [pre-commit, pre-push] — одна команда install ставит оба хука; свой гейт na-expiry (check_na_expiry.py)"
   },
   ".github/workflows/quality.yml": {
     "reason": "ДВА дефекта шаблона CQG §8.3 — кандидаты наверх: (1) охрана cache: смотрит **/requirements*.txt, а setup-python по умолчанию **/requirements.txt — проект только с dev-манифестом роняет джобу gates (delivery/incidents/2026-10-02-ci-cache-dependency-path.md); (2) в простое шаг delivery печатает skip и прячет просроченное наблюдение (delivery/incidents/2026-10-02-ci-idle-skip.md). Остальная адаптация — под стек Swift без кода, наверх не просится",

@@ -1,5 +1,9 @@
 # OKF §7.2: просроченный stale_after — повод перечитать канон, а не тишина.
-# Дословно из OKF_KNOWLEDGE_BUNDLE.md §7.2.
+# Основа — шаблон OKF_KNOWLEDGE_BUNDLE.md §7.2; добавлен шаг delivery_check по
+# Delivery §13.1: «если следующей поставки не будет, никто не проверит» просроченное
+# наблюдение — закрывается той же cron-джобой. Шаблон этого шага не несёт: 16.10
+# истекли окна семи поставок, а недельный прогон 12.10 был зелёным (инцидент
+# delivery/incidents/2026-10-17-weekly-delivery-check.md).
 name: canon-freshness
 on:
   schedule: [{cron: "0 7 * * 1"}]     # понедельник, 07:00 UTC
@@ -14,3 +18,8 @@ jobs:
       - uses: actions/setup-python@v7
         with: {python-version: "3.12"}
       - run: python scripts/okf_sync_gate.py --check-stale
+      # Без флагов: в простое у --require-ci и --diff-base нет предмета; гейт судит
+      # архив — полноту INDEX и просроченные окна наблюдения (§2.2a, §13.1).
+      - name: Просроченные наблюдения (Delivery §13.1)
+        if: always()
+        run: python scripts/delivery_check.py

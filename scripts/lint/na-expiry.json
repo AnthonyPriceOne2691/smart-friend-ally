@@ -1,0 +1,24 @@
+{
+  "_": "Условия истечения объявлений n/a (свой механизм проекта; канон держит n/a печатью причины). Ключ — маска git ls-files; значение — ключи not-applicable.json, чья причина обещает действие «первой поставкой с кодом». Появился хоть один файл по маске — check_na_expiry.py красный, пока каждый ключ не решён: подключить гейт или переобъявить n/a с причиной, верной при коде, — и в обоих случаях убрать ключ отсюда. Не входят check_deps_audit.sh, ruff, mypy: их причины от кода не зависят.",
+  "*.swift": [
+    "check_ast_gate.py",
+    "check_ast_gate.py:silent-except",
+    "check_ast_gate.py:inline-prompt",
+    "check_ast_gate.py:cpu-in-async",
+    "check_ast_gate.py:unbounded-list",
+    "check_grep_gate.sh",
+    "check_grep_gate.sh:config-access",
+    "check_grep_gate.sh:di-indirection",
+    "check_grep_gate.sh:service-no-web",
+    "check_grep_gate.sh:no-grab-bag-module",
+    "check_grep_gate.sh:blind-error",
+    "check_grep_gate.sh:unstructured-log",
+    "check_jscpd_gate.sh",
+    "check_eslint_warnings.sh",
+    "check_layers_gate.sh",
+    "check_complexity_gate.sh",
+    "check_mutation_gate.sh",
+    "check_file_length.sh",
+    "check_diff_coverage.sh"
+  ]
+}
