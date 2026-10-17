@@ -89,22 +89,25 @@ Ally держится в полной синхронизации с каноно
 - **Флот:** Ally стоит в реестре `field/fleet/registry.json` Prepare — тогда суточный
   обход (10:00) и обход после каждого бампа версии видят его отставание и кандидатов.
 
-## Состояние (2026-10-02)
+## Состояние (2026-10-17)
 
 - **Контур развёрнут и слит** (squash `520cfa3`, PR #1 закрыт) и синхронизирован с каноном до
   `delivery@2.01 · cqg@2.55 · okf@1.19 · stack-map@1.52` (Prepare `b5241ac`), снимок `docs/canon/` с провенансом и замком. Репозиторий — приватный `AnthonyPriceOne2691/smart-friend-ally`;
   `ci-oracles: tooling` (защиты ветки нет на бесплатном тарифе). Мерж — только
   `PATH="$PWD/.venv/bin:$PATH" bash scripts/merge_guard.sh <ветка> main` из основного клона, затем
   `git push origin main` и закрыть PR со ссылкой на сквош.
-- Разбор и уроки L1–L7 — `delivery/archive/`, указатель — `delivery/archive/INDEX.md`. Ally стоит в реестре флота
-  Prepare (`agent-canon-stack` `9323136`); три инцидента — в очереди судьи (BACKLOG Prepare, пункты 6–8).
-- **Обязательство:** до **2026-10-16** записать `delivery/archive/2026-10-02-contour-bootstrap/observed.md`
-  (сигнал — в STATUS архива), иначе `delivery_check` покраснеет на следующей поставке.
+- Разбор и уроки L1–L14 — `delivery/archive/`, указатель — `delivery/archive/INDEX.md`. Ally стоит в реестре флота
+  Prepare. Находки наверх: три инцидента 02.10 — в очереди судьи (BACKLOG Prepare, п.6–8), две 17.10
+  (`delivery/incidents/2026-10-03-na-without-expiry.md`, `…-2026-10-17-weekly-delivery-check.md`) отправлены судье
+  `prepare-ae`. Решение о внесении в канон — за пользователем.
+- **Обязательства наблюдения:** до **2026-11-30** — `persona-session-blackbox` (сдвинуто: сигнал наступит со спайком),
+  `na-expiry-stopper`, `sync-cqg-2.55`, `state-refresh`. Остальные закрыты `observed.md` 17.10. Недельный
+  `canon-freshness` гоняет `delivery_check` (Delivery §13.1): просрочку видно и без поставок.
 - **Первая поставка с кодом** подключает Swift-роли, объявленные `n/a`: `file-length` с маской `*.swift`
   (форма — комментарием в `.pre-commit-config.yaml`), ратчет SwiftLint (роли линтера и сложности),
   покрытие через `swift test --enable-code-coverage`; объявляет `runtime_paths` и `model_surface`, повторяет приёмку.
   Держит это гейт `na-expiry`: первый `.swift` краснит коммит и CI, пока каждое объявление из
   `scripts/lint/na-expiry.json` не решено (подключить гейт или переобъявить n/a с причиной, верной при коде).
-- **Находки для канона (Prepare):** шаблон CI роняет джобу без `requirements.txt` (L3); OKF отстаёт от upstream #323
-  (метки времени ISO 8601 со смещением). Решение о правке канона — за пользователем.
+- **STATUS поставки** несёт `parallel_sessions: merge-guard,manual-deploy` (обязательно с `delivery@2.01`). После
+  синхронизации канона сразу гонять строгий `delivery_check --require-ci --diff-base origin/main` (урок L14).
 
