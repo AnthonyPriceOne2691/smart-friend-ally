@@ -1,7 +1,7 @@
 # Durable smoke oracles
 
-Постоянные проверки репозитория; все гоняет `run.sh`. Пока кода продукта нет, это проверки контура;
-продуктовые (`swift test`, сборка приложения) добавит первая поставка с кодом.
+Постоянные проверки репозитория; все гоняет `run.sh`. S1–S4 — проверки контура, S5 — тесты пакета ремонта текста
+с покрытием (в CI — джоба `swift`, чтобы не собирать пакет дважды); сборку приложения добавит поставка приложения.
 
 | ID | Command | Expected | Timeout |
 |---|---|---|---|
@@ -9,3 +9,4 @@
 | S2 | `bash scripts/lint/check_gate_coverage.sh` | exit 0 | 30s |
 | S3 | `python3 docs/canon/stack_selftest.py docs/canon` | exit 0 | 60s |
 | S4 | `bash delivery/evals/smoke/idle_overdue.sh` | exit 0: в простое просрочка наблюдения красная, CI зовёт гейт | 30s |
+| S5 | `bash scripts/lint/check_swift_coverage.sh` | exit 0: `swift test` пакета `AllyDiscipline` зелёный, покрытие строк Sources ≥ 70% | 300s |

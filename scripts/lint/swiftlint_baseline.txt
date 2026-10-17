@@ -1,0 +1,3 @@
+# swiftlint_baseline.txt — снимок числа находок SwiftLint и файлов-помоек. --generate, НЕ руками.
+# Global-count: гейт падает при РОСТЕ суммы. Снимок только вниз (CQG §7).
+0
