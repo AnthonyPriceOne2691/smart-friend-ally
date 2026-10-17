@@ -12,4 +12,4 @@
 - [x] T7: пробы гейтов (C6): `print(` и пустой `catch` в Sources, файл длиннее 500 строк — красные; доктор и мета-гейт зелёные
 
 ## Slice 3 — сдача
-- [ ] T8: verify-report, eval-smoke (C1–C8), канон (`safety-below-model` — пакет вместо прототипа для ремонта), CLAUDE.md
+- [x] T8: verify-report, eval-smoke (C1–C8), канон (`safety-below-model` — пакет вместо прототипа для ремонта), CLAUDE.md

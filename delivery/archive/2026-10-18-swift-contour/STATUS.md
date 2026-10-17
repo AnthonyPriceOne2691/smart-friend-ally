@@ -6,7 +6,7 @@
 - **kind:** feature
 - **repro_test:** n/a reason=не bugfix
 - **diagnosis:** n/a reason=не bugfix
-- **phase:** implement
+- **phase:** handoff
 - **builder:** agent:claude-code
 - **verifier:** process:ci
 - **human_ok_spec:** yes (by=human:anthony, at=2026-10-18)
@@ -29,6 +29,6 @@
 - **canon_drift_waiver:** no
 - **baseline_growth_waiver:** no
 - **observability:** 1
-- **observe_signal:** —
-- **observe_until:** —
+- **observe_signal:** поставка приложения собирает пакет для iOS и зовёт `Repair` в голосовом тракте; до неё паритет и покрытие пакета зелёные на Linux в каждом PR, `na-expiry` краснеет на первом `App/*.swift`
+- **observe_until:** 2026-11-30
 - **circuit_breakers:** defaults from AGENT_DELIVERY_HARNESS.md §3.4
