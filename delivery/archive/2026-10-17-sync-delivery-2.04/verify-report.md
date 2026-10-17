@@ -17,6 +17,16 @@
 ## Product oracles
 - [x] PASS — `delivery/evals/smoke/run.sh` S1–S4 (шаг `Smoke evals` в CI)
 
+## Ревью рисковых мест
+
+- **безопасность — риска нет, потому что** маячок поднят двумя словами диффа, и оба не про доступ. `hashed_secret` —
+  три записи `.secrets.baseline` типа «Hex High Entropy String» для `docs/canon/VENDORED.json` (`line_number` 4, 15, 16):
+  это хэш коммита-провенанса `c5585a5` и sha256 файлов снимка, они сменились вместе с накатом; база перескана
+  `detect-secrets scan --baseline`, новых находок нет — хук `secrets` на коммите и в CI зелёный, а `hashed_secret`
+  хранит хэш строки, не её саму. `permission` — импорт `permission_block` из `delivery_decisions` в канонных скриптах
+  Delivery: разборщик блока прав агента в конституции (§4.5), приехал байт в байт (`scripts/lint/payload.lock.json`).
+  Прав доступа и авторизации продукта дифф не трогает: кода продукта нет.
+
 ## Spec coverage gaps
 - Нет.
 
