@@ -9,7 +9,7 @@
 - **phase:** implement
 - **builder:** agent:claude-code
 - **verifier:** process:ci
-- **human_ok_spec:** deferred (reason=цель согласована словами 2026-10-18 — родитель: «вязать модель кодом, давай дисциплину усилим», примеры приёмки покажу вместе с целями дисциплины, at=2026-10-18)
+- **human_ok_spec:** yes (by=human:anthony, at=2026-10-18)
 - **human_ok_plan:** n/a
 - **shape-oracles:** cqg-deployed
 - **behavior-oracles:** tests-present
@@ -20,7 +20,7 @@
   <!-- §5.1a: интеграция в main только через scripts/merge_guard.sh; на телефон приложение ставится отдельным решением, а не следствием мержа -->
 - **hooks:** not-deployed
 - **blockers:** none
-- **waivers:** none
+- **waivers:** max_loc_diff=950 reason=919 строк при лимите 800, из них 214 — фикстуры паритета и их генератор (данные теста), 74 — конфиг SwiftLint; резать — значит увезти оракул паритета от кода, который он проверяет; запас до 950 — на правки под Linux после CI by=human:anthony at=2026-10-18
 - **new_dependency:** none
 - **runtime_paths:** none reason=пакет — чистые функции над готовым текстом: без экрана, прав, железа и ввода-вывода; тракт голоса подключит поставка приложения
 - **irreversible_surfaces:** none reason=продукт офлайн; поставка не добавляет ни отправки, ни выкатки
