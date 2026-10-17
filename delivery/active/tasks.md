@@ -7,6 +7,6 @@ L24 (строгая проверка до переноса в архив — п�
 
 ## Slice 1 — канон delivery@2.03 → delivery@2.04 (Prepare c5585a5)
 - [x] T1: план из клона: едет сам 9 (скрипты Delivery), порт вручную 0, стоп 0, новый файл 0, порт не нужен 2
-- [ ] T2: `apply_update.py` из клона; записи о версиях — `delivery/STACK-ACCEPTANCE.md`, `CLAUDE.md`
-- [ ] T3: приёмка: гейты, `check_gate_coverage.sh`, доктор, `stack_selftest`, smoke; строгий `delivery_check` сразу (L14)
-- [ ] T4: проверка исполнением: архивная поставка с `deferred` теперь краснеет; итог в инциденте `2026-10-17-archived-handoff-signature`
+- [x] T2: `apply_update.py` из клона; записи о версиях — `delivery/STACK-ACCEPTANCE.md`, `CLAUDE.md`
+- [x] T3: приёмка: гейты, `check_gate_coverage.sh`, доктор, `stack_selftest`, smoke; строгий `delivery_check` сразу (L14); база секретов перескана — сдвиг строк снимка задержал первый коммит
+- [x] T4: проверка исполнением: архивная поставка с `deferred` теперь краснеет; итог в инциденте `2026-10-17-archived-handoff-signature`
