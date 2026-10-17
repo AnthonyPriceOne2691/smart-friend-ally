@@ -1,7 +1,7 @@
 # Active delivery status
 
 - **slug:** persona-v2
-- **stack:** delivery@2.03, cqg@2.63, okf@1.21
+- **stack:** delivery@2.04, cqg@2.63, okf@1.21
 - **class:** M
 - **kind:** feature
 - **repro_test:** n/a reason=не bugfix
@@ -9,7 +9,8 @@
 - **phase:** converge
 - **builder:** agent:claude-code
 - **verifier:** process:ci
-- **human_ok_spec:** deferred (reason=цель согласована словами 2026-10-17 — пожелания родителя о речи подруги, примеры приёмки B1–B9 он ещё не видел, покажу вместе с листом вслепую, at=2026-10-17)
+- **human_ok_spec:** yes (by=human:anthony, at=2026-10-17)
+  <!-- примеры приёмки B1–B9 показаны родителю вместе с листом вслепую 2; ответ: «подходит да» -->
 - **human_ok_plan:** n/a
 - **shape-oracles:** cqg-deployed
 - **behavior-oracles:** weak — дёшево: ничего; спайк персоны — результат: правила речи и числа в knowledge; стенд вне git, его оракулы — замороженные `rules.py` и `dialog_rules.py`, судья естественности — родитель (B9)
