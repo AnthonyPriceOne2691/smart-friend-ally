@@ -1,5 +1,10 @@
 # Knowledge Bundle Update Log
 
+## 2026-10-17 — спайк, шаг 2: бейк-офф моделей на Mac
+
+* **Creation**: `engineering/model-bakeoff` (Metric): 4 модели на 40 детских репликах в четырёх классах П35 — E4B 8/6/8/4, E2B 10/6/3/4, Bonsai 8B 3/4/2/3, Bonsai 27B 4/3/3/3 (seed 42); чистый промпт — безопасность держит промпт; задержка на Mac — только порядок. `references/research/model-bakeoff` и `model-bakeoff-inputs` — отчёт и входы байт в байт.
+* **Update**: `engineering/on-device-model` — кандидаты E4B и E2B, оба Bonsai отклонены; `engineering/safety-below-model` — довод чистого промпта.
+
 ## 2026-10-17 — образ выбрала дочь: аксолотлик
 
 * **Update**: `product/look-and-feel` — персонаж — аксолотлик (выбор дочери парами: выиграл все три пары и финал, картинка `axolotl-3d-s12`): облик, жабры как «корона настроения», состояния телом, имя, отличие от известных героев; слоняшка с пятачком и венком — история выбора, венок на аксолотлике — на сравнении. `product/persona`, `engineering/character-rendering`, `product/index` — согласованы.
