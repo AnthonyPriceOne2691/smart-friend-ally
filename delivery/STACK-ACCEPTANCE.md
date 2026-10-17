@@ -1,8 +1,8 @@
 # Stack acceptance
 
 **Date:** 2026-10-02
-**Stack:** delivery@2.03 · cqg@2.63 · okf@1.21 · stack-map@1.53
-**Где лежат каноны:** снимок в `docs/canon/` (вариант C, коммитится), провенанс — `docs/canon/VENDORED.json` (`agent-canon-stack` @ `2eff5ed`, `dirty: false`; обновляется через `apply_update.py` — `4c3caa1` → `859152d` → `9323136` → `b5241ac` → `2eff5ed` (из чистого клона), замок `scripts/lint/payload.lock.json`)
+**Stack:** delivery@2.04 · cqg@2.63 · okf@1.21 · stack-map@1.53
+**Где лежат каноны:** снимок в `docs/canon/` (вариант C, коммитится), провенанс — `docs/canon/VENDORED.json` (`agent-canon-stack` @ `c5585a5`, `dirty: false`; обновляется через `apply_update.py` — `4c3caa1` → `859152d` → `9323136` → `b5241ac` → `2eff5ed` → `c5585a5` (из чистого клона), замок `scripts/lint/payload.lock.json`)
 
 checked_at: 2026-10-02
 stale_after: 2026-12-31
