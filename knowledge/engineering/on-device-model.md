@@ -6,7 +6,7 @@ status: draft
 tags: [architecture, llm, on-device]
 generated:
   by: claude_code/opus-5.5
-  at: 2026-10-02T09:28:19Z
+  at: 2026-10-17T12:30:00Z
 implementation: []
 ---
 
@@ -18,7 +18,8 @@ implementation: []
 # Context
 
 - iOS даёт приложению ≈6 ГБ с entitlement `increased-memory-limit` и закрывает его
-  при превышении без ошибки (jetsam). LLM, распознавание и синтез в нашем процессе
+  при превышении без ошибки (jetsam). Замер на нашем телефоне 2026-10-17: 6142 МБ с
+  entitlement, 3374 МБ без — [Memory limit](/engineering/memory-limit.md). LLM, распознавание и синтез в нашем процессе
   делят этот бюджет.
 - Скорость генерации упирается в пропускную способность памяти: у A19 Pro она в
   ~3,5 раза меньше, чем у M4 Pro, поэтому вес модели прямо задаёт её скорость.

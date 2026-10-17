@@ -1,5 +1,10 @@
 # Knowledge Bundle Update Log
 
+## 2026-10-17 — замер лимита памяти на телефоне
+
+* **Creation**: `engineering/memory-limit` (Metric): без entitlement потолок ≈3,3 ГБ (3374 МБ на старте), с `increased-memory-limit` ≈6,0 ГБ (6142 МБ); зонд занял и записал 5,75 ГБ без вылета; entitlement выдан бесплатной Personal Team. Исходник зонда — в концепте.
+* **Update**: `engineering/on-device-model` — контекст ADR опирается на замер, а не на цифры вендора.
+
 ## 2026-10-02 — решения о персонаже, сессии и чёрном ящике
 
 * **Creation**: `product/persona` (подруга, голос девочки; кандидаты — Supertonic 3 F2 и производные; чужой голос не клонируется), `product/session-limit` (мягкие 10 минут), `ops/black-box` (текст и звук каждой сессии, выгрузка только на Mac без облака).

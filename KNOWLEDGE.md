@@ -55,9 +55,8 @@
 - PrismML: *«a 12 GB iPhone offers about 6 GB for the model to use on-device, and the model shares that budget with its KV cache and activations»* `[вендор]`.
 - Без entitlement `com.apple.developer.kernel.increased-memory-limit` приложению доступно ≈3,3 ГБ, с ним ≈6 ГБ `[замер; модель телефона в источнике не указана]`.
 - На iPhone 17 Pro с этим entitlement Gemma 4 E4B (3,65 ГБ) загрузилась 36 раз из 36 при пике 4 651 МБ, без entitlement приложение вылетало `[замер]`.
-- Entitlement доступен и при подписи бесплатным Apple ID через Xcode `[замер, SideStore #1616]`.
-- Встречается цифра «6144 МБ на 17 Pro Max» `[?]`.
-- **На нашем телефоне лимит не замерен**: это первый пункт спайка (раздел 12).
+- Entitlement доступен и при подписи бесплатным Apple ID через Xcode `[замер, SideStore #1616]`; подтверждено на нашей связке 2026-10-17 — бесплатная Personal Team, `codesign` показывает entitlement в артефакте.
+- **Замер на нашем iPhone 17 Pro Max (2026-10-17, iOS 27.0.1):** без entitlement 3374 МБ на старте, потолок ≈3,3 ГБ; с `increased-memory-limit` 6142 МБ, потолок ≈6,0 ГБ — зонд занял и записал 5,75 ГБ без вылета `[замер]`. Entitlement выдан бесплатной Personal Team. Подробно и как повторить — `knowledge/engineering/memory-limit.md`.
 - Если LLM, распознавание и синтез работают внутри нашего процесса, бюджет у них общий. Системный распознаватель Apple (SpeechAnalyzer) работает вне памяти приложения: модель *«operates outside of your application's memory space»* `[вендор]`. Для системного синтеза (AVSpeechSynthesizer) это вероятно, но не подтверждено `[оценка]`.
 
 ### Нагрев
@@ -462,7 +461,7 @@ Python-сервер, Ollama, whisper-cli, Piper, ffmpeg и браузер на i
 
 **Спайк на телефоне до основной разработки**
 
-1. Замерить `os_proc_available_memory()` с entitlement и без.
+1. ~~Замерить `os_proc_available_memory()` с entitlement и без~~ — **сделано 2026-10-17:** 3374 МБ без, 6142 МБ с entitlement (`knowledge/engineering/memory-limit.md`).
 2. Прогнать Gemma 4 E4B, Gemma 4 E2B и Ternary Bonsai 8B (1-bit Bonsai 27B — как потолок) на 30 детских репликах в четырёх классах (П35): разговор; игры и счёт; «скажи маме или папе»; шумный транскрипт. Смотреть время до первого звука, естественность русского на слух родителя, нарушения правил по классам и качество извлечения фактов.
 3. Записать ~50 фраз дочери и сравнить на них SpeechTranscriber (`ru_RU`) и GigaAM-v3.
 4. Дать дочери послушать Supertonic 3 F2 и его варианты (темп, высота, смешанный стиль) и выбрать голос подруги.
