@@ -1,0 +1,34 @@
+# Active delivery status
+
+- **slug:** sync-delivery-2.04
+- **stack:** delivery@2.04, cqg@2.63, okf@1.21
+- **class:** S
+- **kind:** feature
+- **repro_test:** n/a reason=не bugfix
+- **diagnosis:** n/a reason=не bugfix
+- **phase:** implement
+- **builder:** agent:claude-code
+- **verifier:** process:ci
+- **human_ok_spec:** n/a
+- **human_ok_plan:** n/a
+- **shape-oracles:** cqg-deployed
+- **behavior-oracles:** weak — дёшево: ничего; накат канона, кода продукта нет
+- **artifact_oracle:** n/a reason=проект пока ничего не собирает: Xcode-проекта нет
+- **ci-oracles:** tooling
+- **worktree:** none (S)
+- **parallel_sessions:** merge-guard,manual-deploy
+  <!-- §5.1a: интеграция в main только через scripts/merge_guard.sh; на телефон приложение ставится отдельным решением, а не следствием мержа -->
+- **hooks:** not-deployed
+- **blockers:** none
+- **waivers:** none
+- **new_dependency:** none
+- **runtime_paths:** none reason=накат механики контура; кода продукта нет
+- **irreversible_surfaces:** none reason=продукт офлайн; поставка не добавляет ни отправки, ни выкатки
+- **model_surface:** n/a reason=модель продукта ещё не вызывается
+- **rule_enforcers:** n/a reason=model_surface не объявлена списком
+- **canon_drift_waiver:** no
+- **baseline_growth_waiver:** no
+- **observability:** 1
+- **observe_signal:** следующая сдача поставки, архивируемой тем же коммитом, судится строгим delivery_check как поставка (строка «судится поставка, которую архивирует этот дифф»), а не проходит как простой
+- **observe_until:** 2026-11-30
+- **circuit_breakers:** defaults from AGENT_DELIVERY_HARNESS.md §3.4
