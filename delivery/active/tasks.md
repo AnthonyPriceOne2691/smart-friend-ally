@@ -10,4 +10,4 @@
 ## Slice 1 — пожелания родителя в каноне домена
 - [x] T1: `knowledge/product/look-and-feel.md` (Design) — интерфейс, плавность, персонаж в круге и его реакции; ограничения памяти и GPU рядом с моделью; что открыто и кем решается
 - [x] T2: `knowledge/product/persona.md`, `overview.md` — образ задан направлением, имя открыто; в обзоре — направление «возможный продукт» (идея, не решение) и что из него следует уже сейчас
-- [x] T3: `KNOWLEDGE.md` §12, `knowledge/product/index.md`, `knowledge/log.md`
+- [x] T3: `KNOWLEDGE.md` §2 и §12 (§2 нашёл поиск, а не план), `knowledge/product/index.md`, `knowledge/log.md`
