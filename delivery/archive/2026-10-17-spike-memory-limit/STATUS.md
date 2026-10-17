@@ -6,7 +6,7 @@
 - **kind:** feature
 - **repro_test:** n/a reason=не bugfix
 - **diagnosis:** n/a reason=не bugfix
-- **phase:** implement
+- **phase:** handoff
 - **builder:** agent:claude-code
 - **verifier:** process:ci
 - **human_ok_spec:** n/a
@@ -29,6 +29,6 @@
 - **canon_drift_waiver:** no
 - **baseline_growth_waiver:** no
 - **observability:** 1
-- **observe_signal:** заполняется на handoff
+- **observe_signal:** гонка моделей на телефоне укладывается в бюджет ≈6,0 ГБ; приложение с entitlement не закрывается jetsam на 20-минутном прогоне
 - **observe_until:** 2026-11-30
 - **circuit_breakers:** defaults from AGENT_DELIVERY_HARNESS.md §3.4
