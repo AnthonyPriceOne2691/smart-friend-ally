@@ -30,3 +30,4 @@
 | 2026-10-17 | `2026-10-17-look-and-feel-research` | `knowledge/engineering/character-rendering.md`, `KNOWLEDGE.md`, `knowledge/product/look-and-feel.md` | **L17:** бюджет памяти без рантайма — не бюджет. Пик Gemma 4 E4B 4651 МБ (рантайм в источнике не назван) и оценка 1–2 ГБ в LiteRT-LM дают противоположные ответы на вопрос «влезает ли GigaAM рядом»: отчёт агента вывел «не влезает» из одной цифры, таблица связок §6 — «влезает» из другой, и обе верны при своих допущениях. Ошибкой было бы записать любую без рантайма. Это П26 («каждый замер несёт версию рантайма»), распространённое на оценки; расхождение нашёл поиск по L16, а не план поставки |
 | 2026-10-17 | `2026-10-17-snout-instead-of-trunk` | `knowledge/product/look-and-feel.md` | — |
 | 2026-10-17 | `2026-10-17-flower-crown` | `knowledge/product/look-and-feel.md` | — |
+| 2026-10-17 | `2026-10-17-crown-centered` | `knowledge/product/look-and-feel.md` | — |
