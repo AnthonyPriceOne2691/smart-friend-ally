@@ -1,19 +1,19 @@
 {
   "_": "Провенанс снимка (AGENT_STACK §7.1). Пересоздаётся при каждом перевендоривании — CQG §5 шаг 11.",
   "upstream": "/Users/anthony/Documents/Prepare",
-  "commit": "2eff5ed407ecfa1dadbb52ca56c0f08b80c99e6f",
+  "commit": "c5585a519cd63d8b490459b082cc51ce6277a93b",
   "branch": "main",
   "dirty": false,
   "vendored_at": "2026-10-17",
   "versions": {
-    "delivery": "2.03",
+    "delivery": "2.04",
     "stack-map": "1.53",
     "cqg": "2.63",
     "okf": "1.21"
   },
   "sha256": {
-    "AGENT_DELIVERY_HARNESS.md": "ca1e51a414843c21633079e46d4acdc121a2eb863f33d3f42ccd50bba6cab22c",
-    "AGENT_STACK.md": "393973c30bb59e033b5c0381c315593833a8a3371f2d30974d66f8ca62cfbbf9",
+    "AGENT_DELIVERY_HARNESS.md": "a416bb39b2c2eaf5a579257c67efea0928f4296d77b7a0e01119186d9c76e2cf",
+    "AGENT_STACK.md": "bb9ffe89c96c288de4f605e80425212cac9616adff580442ddb4ccf5b9824ac9",
     "CODE_QUALITY_GATES.md": "6fd41858a303c72b8aa432ceb26bca9f943367a7e83b8d360f734110c78a156c",
     "OKF_KNOWLEDGE_BUNDLE.md": "d63aec43cab1c0dfb02321e00840c540c8263b96d0117a68b4411990c693071d",
     "extract_payload.py": "fdff1324f4bad94c5b7b12d3a1bf58b9fc9716bcfc07897ebd450208658de3f0",
