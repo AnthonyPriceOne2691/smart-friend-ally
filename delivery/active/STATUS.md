@@ -1,0 +1,34 @@
+# Active delivery status
+
+- **slug:** incident-archived-handoff
+- **stack:** delivery@2.03, cqg@2.63, okf@1.21
+- **class:** S
+- **kind:** feature
+- **repro_test:** n/a reason=не bugfix
+- **diagnosis:** n/a reason=не bugfix
+- **phase:** implement
+- **builder:** agent:claude-code
+- **verifier:** process:ci
+- **human_ok_spec:** n/a
+- **human_ok_plan:** n/a
+- **shape-oracles:** cqg-deployed
+- **behavior-oracles:** weak — дёшево: ничего; поставка документная — находка для канона с воспроизведением хозяина
+- **artifact_oracle:** n/a reason=проект пока ничего не собирает: Xcode-проекта нет
+- **ci-oracles:** tooling
+- **worktree:** none (S)
+- **parallel_sessions:** merge-guard,manual-deploy
+  <!-- §5.1a: интеграция в main только через scripts/merge_guard.sh; на телефон приложение ставится отдельным решением, а не следствием мержа -->
+- **hooks:** not-deployed
+- **blockers:** none
+- **waivers:** none
+- **new_dependency:** none
+- **runtime_paths:** none reason=артефакт инцидента; кода продукта нет
+- **irreversible_surfaces:** none reason=продукт офлайн; поставка не добавляет ни отправки, ни выкатки
+- **model_surface:** n/a reason=модель продукта ещё не вызывается
+- **rule_enforcers:** n/a reason=model_surface не объявлена списком
+- **canon_drift_waiver:** no
+- **baseline_growth_waiver:** no
+- **observability:** 1
+- **observe_signal:** судья воспроизвёл находку и ответил вердиктом; следующая сдача поставки класса M с архивом в том же коммите судится строгим delivery_check, а не проходит как простой
+- **observe_until:** 2026-11-30
+- **circuit_breakers:** defaults from AGENT_DELIVERY_HARNESS.md §3.4
