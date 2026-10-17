@@ -96,12 +96,12 @@ Ally держится в полной синхронизации с каноно
   `ci-oracles: tooling` (защиты ветки нет на бесплатном тарифе). Мерж — только
   `PATH="$PWD/.venv/bin:$PATH" bash scripts/merge_guard.sh <ветка> main` из основного клона, затем
   `git push origin main` и закрыть PR со ссылкой на сквош.
-- Разбор и уроки L1–L20 — `delivery/archive/`, указатель — `delivery/archive/INDEX.md`. Ally стоит в реестре флота
+- Разбор и уроки L1–L21 — `delivery/archive/`, указатель — `delivery/archive/INDEX.md`. Ally стоит в реестре флота
   Prepare. Находки наверх: три инцидента 02.10 — в очереди судьи (BACKLOG Prepare, п.6–8). Из находок 17.10 судья
   внёс в канон: недельный `delivery_check` (`okf@1.21`), разборщик карты ролей (`cqg@2.60`), маячок «деньги» на «счёт»
   (`delivery@2.03`) — итог дописан в инцидентах; механизм истечения n/a «до кода» вынесен на решение пользователя.
 - **Обязательства наблюдения:** до **2026-11-30** — `persona-session-blackbox` (сдвинуто: сигнал наступит со спайком),
-  `na-expiry-stopper`, `sync-cqg-2.55`, `state-refresh`, `spike-memory-limit`, `look-and-feel`, `look-and-feel-research`, `snout-instead-of-trunk`, `flower-crown`, `crown-centered`, `character-axolotl`, `spike-model-bakeoff`, `visual-approved`. Остальные закрыты `observed.md` 17.10. Недельный
+  `na-expiry-stopper`, `sync-cqg-2.55`, `state-refresh`, `spike-memory-limit`, `look-and-feel`, `look-and-feel-research`, `snout-instead-of-trunk`, `flower-crown`, `crown-centered`, `character-axolotl`, `spike-model-bakeoff`, `visual-approved`, `sync-cqg-2.63`. Остальные закрыты `observed.md` 17.10. Недельный
   `canon-freshness` гоняет `delivery_check` (Delivery §13.1): просрочку видно и без поставок.
 - **Спайк на телефоне** (`KNOWLEDGE.md` §12): шаг 1 сделан — лимит памяти приложения ≈3,3 ГБ без entitlement и
   ≈6,0 ГБ с `increased-memory-limit`, бесплатная Personal Team его выдаёт (`knowledge/engineering/memory-limit.md`).
