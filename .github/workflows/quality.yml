@@ -29,6 +29,12 @@ jobs:
     runs-on: ubuntu-latest
     # §8.7: предохранитель, а не оптимизация — гейты — секунды-минуты; 20 значит «что-то повисло».
     timeout-minutes: 20
+    # Маски Swift для канонных гейтов (CQG §5.5: адаптация в конфиге). Те же значения стоят в entry хуков;
+    # здесь — чтобы доктор, который зовёт гейт напрямую, судил тот же код, что и pre-commit.
+    env:
+      LINT_LENGTH_GLOBS: "*.swift *.py"
+      LINT_PY_SRC: Packages/AllyDiscipline/Sources
+      LINT_JSCPD_PY_FORMAT: swift
     steps:
       - uses: actions/checkout@v7
         with:
@@ -84,6 +90,20 @@ jobs:
           python -m venv .venv
           echo "deps: requirements-dev.txt"
           .venv/bin/pip install -r requirements-dev.txt
+          # Swift-контур (поставка swift-contour): SwiftLint — Linux-сборка релиза, jscpd — npm; версии закреплены.
+          if git ls-files -- '*.swift' | grep -q .; then
+            curl -fsSL -o /tmp/swiftlint.zip \
+              https://github.com/realm/SwiftLint/releases/download/0.65.0/swiftlint_linux_amd64.zip
+            sudo unzip -o -q /tmp/swiftlint.zip swiftlint -d /usr/local/bin
+            sudo chmod +x /usr/local/bin/swiftlint
+            # SourceKit для SwiftLint на Linux — из Swift, что стоит на образе раннера
+            if command -v swift >/dev/null; then
+              echo "LINUX_SOURCEKIT_LIB_PATH=$(dirname "$(dirname "$(readlink -f "$(command -v swift)")")")/lib" >> "$GITHUB_ENV"
+            fi
+            swiftlint version
+            npm install -g jscpd@4.0.5 >/dev/null 2>&1
+            jscpd --version
+          fi
 
       # ⚠ ГЛАВНЫЙ УРОК восьмого развёртывания: упавшая установка превращает
       # честные пропуски гейтов в «гейты прошли». Здесь пропуск переводится в
@@ -109,6 +129,9 @@ jobs:
           fi
           if [ -f package.json ] || [ -f "${LINT_FE_DIR:-frontend}/package.json" ]; then
             expect eslint; expect jscpd
+          fi
+          if git ls-files -- '*.swift' | grep -q .; then
+            expect swiftlint; expect jscpd
           fi
           if [ -n "$missing" ]; then
             echo "::error::инструменты гейтов не поставились:$missing"
@@ -148,10 +171,29 @@ jobs:
         if: always()
         run: python scripts/lint/check_new_dependency.py
 
-      # Diff coverage, Vulnerable dependencies, Mutation testing — сняты: кода и
-      # тестов продукта нет, а pip-audit/mutmut/pytest-cov к Swift не относятся.
-      # Объявления — scripts/lint/not-applicable.json; первая поставка с кодом
-      # возвращает шаги с инструментами Swift (swift test --enable-code-coverage).
+      # Diff coverage, Vulnerable dependencies, Mutation testing канона — сняты: pip-audit/mutmut/pytest-cov к Swift
+      # не относятся. Покрытие Swift — джоба swift ниже (check_swift_coverage.sh); роль мутаций правил исполнителя —
+      # тесты абляции пакета; зависимостей у пакета нет. Объявления — scripts/lint/not-applicable.json.
+
+  swift:
+    runs-on: ubuntu-latest
+    # Swift-пакеты: тесты и покрытие строк ≥ 70% (check_swift_coverage.sh). Swift — с образа раннера, версия в логе
+    # (macOS-раннер ×10, §8.7: пакет — только Foundation и собирается на Linux). 15 мин — сборка с нуля и два прогона.
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - name: Swift toolchain
+        run: swift --version
+      - name: Swift tests and coverage (check_swift_coverage.sh, порог 70%)
+        run: bash scripts/lint/check_swift_coverage.sh
+      # Отрицательный контроль: гейт, который проходит с порогом 101%, слеп (CQG §6 — гейт обязан уметь краснеть).
+      - name: Coverage gate is not blind (порог 101% обязан покраснеть)
+        run: |
+          if LINT_COVERAGE_MIN=101 bash scripts/lint/check_swift_coverage.sh; then
+            echo "::error::гейт покрытия прошёл с порогом 101% — он слеп"
+            exit 1
+          fi
+          echo "отрицательный контроль: гейт покраснел, как и должен"
 
   delivery:
     runs-on: ubuntu-latest
@@ -204,6 +246,12 @@ jobs:
             # предмета. Регрессия — delivery/evals/smoke/idle_overdue.sh.
             python scripts/delivery_check.py
           fi
+
+      # Swift-половина ревью утверждений (Delivery §3.1d, уровень 3): канонный assert_digest.sh Swift-тестов не видит
+      # (delivery/incidents/2026-10-18-assert-digest-swift.md), и `asserts_reviewed_by: n/a` проходил бы на пустоте.
+      - name: Assertion digest — Swift (n/a над утверждениями без примера = красный)
+        if: always()
+        run: python scripts/lint/assert_digest_swift.py --check
 
       # if: always() — как у джобы gates: падение фазового гейта не уносит проверки ниже.
       - name: Canon sync gate (code <-> knowledge)

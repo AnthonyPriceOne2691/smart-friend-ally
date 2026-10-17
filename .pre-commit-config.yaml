@@ -50,18 +50,6 @@ repos:
         # собственный первый коммит (CQG §5 шаг 11).
         exclude: ^docs/canon/
 
-  # -------------------------------------------------------------------------
-  # file-length (prod <= 500 / tests <= 1000) НЕ подключён, пока нет Swift-кода:
-  # подключённый гейт с нулём просмотренных доктор честно зовёт DEAD («роль
-  # объявлена закрытой, а гейт не видит кода»). Объявлен в not-applicable.json;
-  # первая поставка с кодом возвращает хук ровно в этой форме:
-  #   - id: file-length
-  #     entry: bash -c 'cd "$(git rev-parse --show-toplevel)" && LINT_LENGTH_GLOBS="*.swift" bash scripts/lint/check_file_length.sh'
-  #     language: system
-  #     types_or: [swift]
-  #     pass_filenames: false
-  # -------------------------------------------------------------------------
-
   - repo: local
     hooks:
       # -----------------------------------------------------------------------
@@ -105,6 +93,29 @@ repos:
   # pre-push (CQG §8.5.1 ③): только быстрые проверки, бюджет ≤ 10 c (§8.6).
   # Блок дословно из канона.
   # -------------------------------------------------------------------------
+      # -----------------------------------------------------------------------
+      # Swift-контур (поставка swift-contour, 2026-10-18): гейты судят код пакетов Packages/.
+      # Канонные скрипты не правились — адаптация в конфигах (CQG §5.5), свои гейты — scripts/lint/.
+      # -----------------------------------------------------------------------
+      - id: swiftlint-ratchet
+        name: SwiftLint — находки только вниз (сложность, двойники правил grep/ast, файлы-помойки)
+        entry: bash -c 'cd "$(git rev-parse --show-toplevel)" && bash scripts/lint/check_swiftlint_ratchet.sh'
+        language: system
+        types_or: [swift]
+        pass_filenames: false
+      - id: file-length
+        name: file-length (prod <= 500 / tests <= 1000)
+        entry: bash -c 'cd "$(git rev-parse --show-toplevel)" && LINT_LENGTH_GLOBS="*.swift *.py" bash scripts/lint/check_file_length.sh'
+        language: system
+        types_or: [swift, python]
+        pass_filenames: false
+      - id: jscpd
+        name: jscpd — копипаст в Swift не растёт
+        entry: bash -c 'cd "$(git rev-parse --show-toplevel)" && LINT_PY_SRC=Packages/AllyDiscipline/Sources LINT_JSCPD_PY_FORMAT=swift bash scripts/lint/check_jscpd_gate.sh'
+        language: system
+        types_or: [swift]
+        pass_filenames: false
+
   - repo: local
     hooks:
       - id: delivery-gate

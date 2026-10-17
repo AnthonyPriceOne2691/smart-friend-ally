@@ -89,21 +89,21 @@ Ally держится в полной синхронизации с каноно
 - **Флот:** Ally стоит в реестре `field/fleet/registry.json` Prepare — тогда суточный
   обход (10:00) и обход после каждого бампа версии видят его отставание и кандидатов.
 
-## Состояние (2026-10-17)
+## Состояние (2026-10-18)
 
 - **Контур развёрнут и слит** (squash `520cfa3`, PR #1 закрыт) и синхронизирован с каноном до
   `delivery@2.04 · cqg@2.63 · okf@1.21 · stack-map@1.53` (Prepare `c5585a5`, накат из чистого клона), снимок `docs/canon/` с провенансом и замком. Репозиторий — приватный `AnthonyPriceOne2691/smart-friend-ally`;
   `ci-oracles: tooling` (защиты ветки нет на бесплатном тарифе). Мерж — только
   `PATH="$PWD/.venv/bin:$PATH" bash scripts/merge_guard.sh <ветка> main` из основного клона, затем
   `git push origin main` и закрыть PR со ссылкой на сквош.
-- Разбор и уроки L1–L25 — `delivery/archive/`, указатель — `delivery/archive/INDEX.md`. Ally стоит в реестре флота
+- Разбор и уроки L1–L27 — `delivery/archive/`, указатель — `delivery/archive/INDEX.md`. Ally стоит в реестре флота
   Prepare. Находки наверх: три инцидента 02.10 — в очереди судьи (BACKLOG Prepare, п.6–8). Из находок 17.10 судья
   внёс в канон: недельный `delivery_check` (`okf@1.21`), разборщик карты ролей (`cqg@2.60`), маячок «деньги» на «счёт»
   (`delivery@2.03`) — итог дописан в инцидентах; механизм истечения n/a «до кода» вынесен на решение пользователя. Находка 17.10 о поставке, уехавшей
   в архив тем же коммитом (`2026-10-17-archived-handoff-signature`), закрыта судьёй в `delivery@2.04`: строгий
   `delivery_check` с `--diff-base` судит такую поставку сам, обход L24 больше не нужен.
 - **Обязательства наблюдения:** до **2026-11-30** — `persona-session-blackbox` (сдвинуто: сигнал наступит со спайком),
-  `na-expiry-stopper`, `sync-cqg-2.55`, `state-refresh`, `spike-memory-limit`, `look-and-feel`, `look-and-feel-research`, `snout-instead-of-trunk`, `flower-crown`, `crown-centered`, `character-axolotl`, `spike-model-bakeoff`, `visual-approved`, `sync-cqg-2.63`, `spike-phone-llm`, `incident-archived-handoff`, `persona-v2`. Остальные закрыты `observed.md` 17.10. Недельный
+  `na-expiry-stopper`, `sync-cqg-2.55`, `state-refresh`, `spike-memory-limit`, `look-and-feel`, `look-and-feel-research`, `snout-instead-of-trunk`, `flower-crown`, `crown-centered`, `character-axolotl`, `spike-model-bakeoff`, `visual-approved`, `sync-cqg-2.63`, `spike-phone-llm`, `incident-archived-handoff`, `persona-v2`, `swift-contour`. Остальные закрыты `observed.md` 17.10. Недельный
   `canon-freshness` гоняет `delivery_check` (Delivery §13.1): просрочку видно и без поставок.
 - **Спайк на телефоне** (`KNOWLEDGE.md` §12): шаг 1 сделан — лимит памяти приложения ≈3,3 ГБ без entitlement и
   ≈6,0 ГБ с `increased-memory-limit`, бесплатная Personal Team его выдаёт (`knowledge/engineering/memory-limit.md`).
@@ -119,18 +119,18 @@ Ally держится в полной синхронизации с каноно
   (лист вслепую: живее в 21 паре из 24; `knowledge/engineering/persona-eval.md`). Обращение — только по имени: «моя
   хорошая», «солнышко» снимает фильтр перед голосом (решение родителя). Очевидные листы судят слепые судьи-агенты по
   критериям родителя: безопасность с запретом, ум, живость. Частоту («иногда») и гарантии промпт E4B не держит — их
-  держит код (L25). Следующая поставка — безопасность ниже модели: фильтр и маршрутизатор.
+  держит код (L25). Дальше — дисциплина: контракт хода, затем маршрутизатор; цели приёмки подписаны родителем
+  2026-10-18 (`knowledge/engineering/safety-below-model.md`), судья безопасности — слепые агенты, не словарь.
 - **Облик** — `knowledge/product/look-and-feel.md` (draft, пожелания родителя 2026-10-17): пузырьки, нежно-розовый,
   максимально плавные анимации, персонаж в круге — аксолотлик, выбор дочери 2026-10-17; визуал утверждён родителем — прототип v3
   (`local/prototype/ally-main-screen-v3.html`, вне git), венок из роз, гвоздик и лизиантусов включён; правила экрана для пятилетки
   и этика — там же. Способ показа — ADR `engineering/character-rendering` (proposed: Rive «2.5D», решает зонд;
   память и GPU — общие с моделью). Открыто за родителем: 2.5D или 3D, установка инструмента концепт-арта, бюджет
   на исполнителя; образ и имя — с дочерью. Отчёты исследований — `knowledge/references/research/`.
-- **Первая поставка с кодом** подключает Swift-роли, объявленные `n/a`: `file-length` с маской `*.swift`
-  (форма — комментарием в `.pre-commit-config.yaml`), ратчет SwiftLint (роли линтера и сложности),
-  покрытие через `swift test --enable-code-coverage`; объявляет `runtime_paths` и `model_surface`, повторяет приёмку.
-  Держит это гейт `na-expiry`: первый `.swift` краснит коммит и CI, пока каждое объявление из
-  `scripts/lint/na-expiry.json` не решено (подключить гейт или переобъявить n/a с причиной, верной при коде).
+- **Swift-контур подключён** (поставка `swift-contour`, 2026-10-18): пакет `Packages/AllyDiscipline` (ремонт текста до
+  голоса), ратчет SwiftLint, `file-length` с маской `*.swift *.py`, jscpd `swift`, джоба CI `swift` с покрытием ≥ 70%;
+  приёмка стека повторена. Два объявления `na-expiry` ждут кода приложения (`App/*.swift`). Тесты Swift канонная
+  сводка утверждений не видит — `asserts_reviewed_by` судит своя `assert_digest_swift.py --check` (L26).
 - **STATUS поставки** несёт `parallel_sessions: merge-guard,manual-deploy` (обязательно с `delivery@2.01`). После
   синхронизации канона сразу гонять строгий `delivery_check --require-ci --diff-base origin/main` (урок L14).
 

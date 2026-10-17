@@ -1,0 +1,74 @@
+# SwiftLint — shape oracles для Swift-слоя (CQG §2.1/§2.2, адаптация под стек; образец — lash-try-on).
+# Пороги канона: функция soft 50 / hard 80, сложность soft 8 / hard 10, аргументы 8, вложенность 4. Длину файлов
+# ведёт check_file_length.sh (маска *.swift), поэтому file_length здесь отключён — один источник истины.
+# custom_rules — Swift-двойники ролей, которые у Python держали check_grep_gate.sh и check_ast_gate.py
+# (scripts/lint/not-applicable.json называет, какое правило держит какую роль).
+
+included:
+  - Packages
+
+excluded:
+  - Packages/AllyDiscipline/.build
+  - Packages/AllyDiscipline/Tests/DisciplineTests/Fixtures
+
+disabled_rules:
+  - file_length          # ведёт check_file_length.sh
+  - todo                 # задачи — в delivery/active/tasks.md
+  - trailing_comma
+
+opt_in_rules:
+  - force_unwrapping
+  - empty_count
+  - first_where
+  - toggle_bool
+
+line_length:
+  warning: 120
+  error: 160
+
+function_body_length:
+  warning: 50
+  error: 80
+
+type_body_length:
+  warning: 300
+  error: 500
+
+cyclomatic_complexity:
+  warning: 8
+  error: 10
+
+function_parameter_count:
+  warning: 5
+  error: 8
+
+nesting:
+  type_level: 2
+  function_level: 4
+
+identifier_name:
+  min_length: 1
+  max_length: 50
+
+custom_rules:
+  no_print:              # роль unstructured-log (check_grep_gate.sh:unstructured-log)
+    name: "Логи через os.Logger"
+    regex: '\b(print|debugPrint|NSLog)\s*\('
+    message: "print/NSLog не попадают в журнал: логируй через os.Logger"
+    severity: error
+  empty_catch:           # роли silent-except и blind-error (check_ast_gate.py, check_grep_gate.sh)
+    name: "Пустой catch"
+    regex: 'catch\b[^{\n]*\{\s*\}'
+    message: "Ошибка проглочена молча: обработай или залогируй"
+    severity: error
+  env_access:            # роль config-access (check_grep_gate.sh:config-access)
+    name: "Окружение мимо конфига"
+    regex: '(ProcessInfo\.processInfo\.environment|\bgetenv\s*\()'
+    message: "Настройки — через конфиг, а не через окружение процесса"
+    severity: error
+  inline_prompt:         # роль inline-prompt (check_ast_gate.py:inline-prompt)
+    name: "Русский текст литералом"
+    regex: '"[^"\n]*[А-Яа-яЁё][^"\n]{40,}"'
+    excluded: ".*/Tests/.*"
+    message: "Тексты и правила речи — в ресурсах (repair.json и др.), не литералом в коде"
+    severity: error
