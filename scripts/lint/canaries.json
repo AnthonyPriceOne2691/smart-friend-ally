@@ -3,5 +3,9 @@
   "check_child_data.py": {
     "path": "voice-renamed.bin",
     "content": "RIFF0000WAVEfmt — переименованная запись голоса, гейт обязан поймать по сигнатуре\n"
+  },
+  "check_na_expiry.py": {
+    "path": "NaExpiryCanary.swift",
+    "content": "// канарейка: появился Swift-код, а объявления n/a «до кода» в силе — гейт обязан покраснеть\n"
   }
 }
