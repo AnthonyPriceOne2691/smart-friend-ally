@@ -1,8 +1,8 @@
 {
   "_": "Замок payload'а: что канон отдавал на этих версиях. Пишет обновление контура (§5.5), читает доктор; руками не править.",
   "versions": {
-    "cqg": "2.46",
-    "delivery": "1.99",
+    "cqg": "2.55",
+    "delivery": "2.01",
     "okf": "1.19",
     "stack-map": "1.52"
   },
@@ -57,11 +57,11 @@
     },
     "scripts/delivery_runtime.py": {
       "canon": "delivery",
-      "digest": "sha256:b2b666b17d8c488a91790738987a9665ce3b4561ec60252c2a05d5f39c93ad74"
+      "digest": "sha256:63f75778bc323b8c61caa2bd191f4049d780cfb5a2c4f8bbb9431e06e828a54e"
     },
     "scripts/delivery_status.py": {
       "canon": "delivery",
-      "digest": "sha256:727e5a91ebd5f28f108c5785882d1ef994eafda8f80b4a779600bbb38ea773ec"
+      "digest": "sha256:9b077c4c2a75931f923c3d93e078b01268194130fd980adb70444ad2c044d260"
     },
     "scripts/lint/assert_digest.sh": {
       "canon": "cqg",
@@ -97,7 +97,7 @@
     },
     "scripts/lint/check_diff_coverage.sh": {
       "canon": "cqg",
-      "digest": "sha256:bdddbdfcb62b60f98d43d55938c6c167032d3557af2d6d7462cd240810965470"
+      "digest": "sha256:8a6f912c48f09c2d6117957b284447a2dc858979094984e149e624d863d42742"
     },
     "scripts/lint/check_eslint_warnings.sh": {
       "canon": "cqg",
@@ -129,11 +129,11 @@
     },
     "scripts/lint/check_mutation_gate.sh": {
       "canon": "cqg",
-      "digest": "sha256:53a84c26f3f3837b7bc9725725fd1e9490eeaab6088d791ddb025d2b9c31ab95"
+      "digest": "sha256:9c7e8b714976ab94c95e10b9dbfc24fe7028db29714d5971dbc8a141b82c6082"
     },
     "scripts/lint/check_new_dependency.py": {
       "canon": "cqg",
-      "digest": "sha256:71e50aa22c4fdddd315c8f35e0a5f9700f5ed268f48e454b3db88ac740c94e53"
+      "digest": "sha256:44a9f1a5b4569593bfe834b7a55c42713b097d99bd84448b69ba7508a7c528f6"
     },
     "scripts/lint/complexity_halves.sh": {
       "canon": "cqg",
@@ -169,11 +169,11 @@
     },
     "scripts/lint/doctor_hooks.py": {
       "canon": "cqg",
-      "digest": "sha256:ced6f3727e1b09a9047ef65293db2bfb05a1be818dc6fc9bf7bdc9c37e66aca8"
+      "digest": "sha256:673ef38077244e2ce8dafae110df8ad9c7b2d273a8f9de41bc7ef7f44bafc94e"
     },
     "scripts/lint/doctor_layout.py": {
       "canon": "cqg",
-      "digest": "sha256:becdda4baf1d344f65bd1d9175612671e805d0539a05d32eaaff7d15140bfcc8"
+      "digest": "sha256:3e2bd3646e8011c6b59b8455c977f77afef0d053904a96cd68f21dc9a11d5416"
     },
     "scripts/lint/doctor_probes.py": {
       "canon": "cqg",

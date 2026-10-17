@@ -53,14 +53,21 @@ red=$(printf '\033[31m'); yellow=$(printf '\033[33m'); green=$(printf '\033[32m'
 # python. Тот же класс, что гейт слоёв до `2.41` и OKF до `okf@1.19`. Законный
 # выход один — объявить роль неприменимой в not-applicable.json с причиной;
 # STRICT=0 — отчёт без отказа. Честное «судить нечего» сюда НЕ ходит.
+NA="scripts/lint/not-applicable.json"
+
+# Объявление читается ДО работы (`cqg@2.47`). В `2.46` его видел только
+# `not_judged`, то есть после прогона: с настроенным mutmut гейт жёг весь
+# `BUDGET_SEC` на каждом PR и лишь потом говорил «неприменим». Сбор статистики
+# mutmut — ВЕСЬ сьют, на `outreach-donors` это 7–8 минут CI ради жёлтой строки.
+if [[ -f "$NA" ]] && grep -q '"check_mutation_gate.sh"' "$NA"; then
+  printf '%s⚠ мутационный гейт объявлен неприменимым в %s — пропуск НАЗВАН, прогона не было.%s\n' \
+    "$yellow" "$NA" "$reset"
+  exit 0
+fi
+
 not_judged() {
-  local na="scripts/lint/not-applicable.json"
-  if [[ -f "$na" ]] && grep -q '"check_mutation_gate.sh"' "$na"; then
-    printf '%s⚠ мутационный гейт объявлен неприменимым в %s — пропуск НАЗВАН.%s\n' "$yellow" "$na" "$reset"
-    exit 0
-  fi
   printf '%s✗ мутационный гейт не просудил НИЧЕГО (причина выше) — это НЕ «мутанты убиты».\n' "$red"
-  printf 'Почини причину либо объяви роль неприменимой в %s с причиной.%s\n' "$na" "$reset"
+  printf 'Почини причину либо объяви роль неприменимой в %s с причиной.%s\n' "$NA" "$reset"
   [[ "$STRICT" == "0" ]] && { printf '%sWARNING (STRICT=0)%s\n' "$yellow" "$reset" >&2; exit 0; }
   exit 1
 }
