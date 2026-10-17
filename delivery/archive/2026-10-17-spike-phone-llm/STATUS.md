@@ -6,10 +6,10 @@
 - **kind:** feature
 - **repro_test:** n/a reason=не bugfix
 - **diagnosis:** n/a reason=не bugfix
-- **phase:** verify
+- **phase:** handoff
 - **builder:** agent:claude-code
 - **verifier:** process:ci
-- **human_ok_spec:** deferred (reason=цель согласована словами 2026-10-17 «Хорошо, да, давай» на описание шага, примеры приёмки A1–A8 показаны 2026-10-17 после замера, подпись ещё не получена, at=2026-10-17)
+- **human_ok_spec:** yes (by=human:anthony, at=2026-10-17)
 - **human_ok_plan:** n/a
 - **shape-oracles:** cqg-deployed
 - **behavior-oracles:** weak — дёшево: ничего; спайк-замер на телефоне — результат: числа в knowledge; зонд вне git, его оракулы — паритет промптов с Mac (A3) и замороженные проверки бейк-оффа на ответах телефона (A4)

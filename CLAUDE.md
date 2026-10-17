@@ -96,18 +96,24 @@ Ally держится в полной синхронизации с каноно
   `ci-oracles: tooling` (защиты ветки нет на бесплатном тарифе). Мерж — только
   `PATH="$PWD/.venv/bin:$PATH" bash scripts/merge_guard.sh <ветка> main` из основного клона, затем
   `git push origin main` и закрыть PR со ссылкой на сквош.
-- Разбор и уроки L1–L21 — `delivery/archive/`, указатель — `delivery/archive/INDEX.md`. Ally стоит в реестре флота
+- Разбор и уроки L1–L23 — `delivery/archive/`, указатель — `delivery/archive/INDEX.md`. Ally стоит в реестре флота
   Prepare. Находки наверх: три инцидента 02.10 — в очереди судьи (BACKLOG Prepare, п.6–8). Из находок 17.10 судья
   внёс в канон: недельный `delivery_check` (`okf@1.21`), разборщик карты ролей (`cqg@2.60`), маячок «деньги» на «счёт»
   (`delivery@2.03`) — итог дописан в инцидентах; механизм истечения n/a «до кода» вынесен на решение пользователя.
 - **Обязательства наблюдения:** до **2026-11-30** — `persona-session-blackbox` (сдвинуто: сигнал наступит со спайком),
-  `na-expiry-stopper`, `sync-cqg-2.55`, `state-refresh`, `spike-memory-limit`, `look-and-feel`, `look-and-feel-research`, `snout-instead-of-trunk`, `flower-crown`, `crown-centered`, `character-axolotl`, `spike-model-bakeoff`, `visual-approved`, `sync-cqg-2.63`. Остальные закрыты `observed.md` 17.10. Недельный
+  `na-expiry-stopper`, `sync-cqg-2.55`, `state-refresh`, `spike-memory-limit`, `look-and-feel`, `look-and-feel-research`, `snout-instead-of-trunk`, `flower-crown`, `crown-centered`, `character-axolotl`, `spike-model-bakeoff`, `visual-approved`, `sync-cqg-2.63`, `spike-phone-llm`. Остальные закрыты `observed.md` 17.10. Недельный
   `canon-freshness` гоняет `delivery_check` (Delivery §13.1): просрочку видно и без поставок.
 - **Спайк на телефоне** (`KNOWLEDGE.md` §12): шаг 1 сделан — лимит памяти приложения ≈3,3 ГБ без entitlement и
   ≈6,0 ГБ с `increased-memory-limit`, бесплатная Personal Team его выдаёт (`knowledge/engineering/memory-limit.md`).
   Шаг 2 на Mac сделан (`knowledge/engineering/model-bakeoff.md`): в замер на телефоне идут Gemma 4 E4B и E2B (E2B —
-  только с маршрутизацией «скажи маме» до модели), оба Bonsai отклонены; стенд — `local/spike/bakeoff/`. Первый запуск новой подписи
-  требует доверия сертификату на самом телефоне — это шаг владельца (L15).
+  только с маршрутизацией «скажи маме» до модели), оба Bonsai отклонены; стенд — `local/spike/bakeoff/`. Шаг 2 на телефоне
+  сделан (`knowledge/engineering/model-on-phone.md`): в llama.cpp E4B и E2B держат 0,3–0,5 ГБ из 6 ГБ (веса из файла в лимит
+  не идут), до первого звука p95 1,9 и 1,3 с, детали длинного разговора 7 из 7; русский распознаёт DictationTranscriber
+  (у SpeechTranscriber его нет); E4B — основной кандидат; зонд — `local/spike/phone/`, живой режим — иконка «Ally Probe».
+  Первый запуск новой подписи требует доверия сертификату на самом телефоне — это шаг владельца (L15).
+- **Как она разговаривает** — `knowledge/product/persona.md` (пожелания родителя 2026-10-17): естественность фраз — главное,
+  не терять деталей разговора, спрашивать про брата (имена и подробности — только в памяти на телефоне, не в git); ударения —
+  критерий выбора голоса (временный Milena ставит их неправильно). Следующая поставка — персона v2 с проверкой на слух.
 - **Облик** — `knowledge/product/look-and-feel.md` (draft, пожелания родителя 2026-10-17): пузырьки, нежно-розовый,
   максимально плавные анимации, персонаж в круге — аксолотлик, выбор дочери 2026-10-17; визуал утверждён родителем — прототип v3
   (`local/prototype/ally-main-screen-v3.html`, вне git), венок из роз, гвоздик и лизиантусов включён; правила экрана для пятилетки
