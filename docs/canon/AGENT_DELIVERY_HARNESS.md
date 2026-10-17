@@ -7,7 +7,7 @@
 > Не разворачивай CQG/OKF раньше этого файла, если человек явно не сказал иначе.
 > © 2026 — proprietary; правообладатель и условия — в [LICENSE](LICENSE).
 
-**Canon version:** `delivery@2.03` · 2026-10-17 (Changelog — в конце файла).
+**Canon version:** `delivery@2.04` · 2026-10-17 (Changelog — в конце файла).
 При развёртывании впиши версию в `delivery/CONSTITUTION.md` и `STATUS.md`
 (поле `stack:`) — иначе проект не знает, какую ревизию каркаса он получил.
 
@@ -387,6 +387,18 @@ delivery/
 Заглушка вида `phase: idle` в STATUS **не** вводится сознательно: это ритуал
 заполнения ради зелёности, а такие ритуалы канон уже разбирал (§9.2 до §2.2a).
 Найдено развёртыванием, а не чтением: до первой архивации состояние не возникает.
+
+⚠ **Idle не прячет поставку, которую архивирует этот же дифф** (`delivery@2.04`).
+Поле Smart Friend Ally 17.10: handoff и перенос в `archive/` шли одним коммитом.
+pre-push и CI видели пустой `active/` и писали «idle», 0 ошибок, хотя в архивном
+STATUS стояло `human_ok_spec: deferred`; те же файлы в `active/` дают «всё ещё
+deferred (§2.2b)». Поэтому `delivery_check` с `--diff-base` судит каждую поставку,
+чей `archive/<slug>/STATUS.md` ДОБАВЛЕН в окне ветки. Судят её те же разделы, что
+активную, и на её СОБСТВЕННОЙ фазе: запаркованная на implement не судится как
+handoff. Каждая строка помечена путём поставки. Пределов два, и оба названы.
+Правка давнего архива поставкой не считается, как и waiver у `okf_sync_gate`
+(OKF v1.20). Без `--diff-base` окна нет, и архивную поставку не судит никто;
+pre-push и CI зовут гейт с базой (CQG §8.5.1).
 
 ### 2.4. Что писать в constitution (и чего не писать)
 
@@ -3738,11 +3750,13 @@ import argparse
 import re
 import sys
 from datetime import date
+from pathlib import Path
 
 from delivery_base import (ACTIVE, ARCHIVE, DELIVERY, ROOT,
                            field,
                            is_placeholder, read, read_json)
 from delivery_decisions import (permission_block)
+from delivery_diff import archived_in_diff
 from delivery_evidence import check_evidence
 from delivery_journals import check_journals
 from delivery_limits import check_limits
@@ -3915,12 +3929,28 @@ def check_preconditions(args, errors: list[str], warnings: list[str]) -> bool:
             "idle: нет delivery/active/STATUS.md — активной поставки нет (§2.3a). "
             "Начинаешь работу? Создай STATUS по шаблону A.2"
         )
-    else:
-        ctx = check_status_shape(status, args, errors, warnings)
-        check_evidence(status, args, errors, warnings, ctx)
-        check_journals(status, args, errors, warnings, ctx)
-        check_limits(status, args, errors, warnings, ctx)
+    # §2.3a: поставку, которую архивирует ЭТОТ дифф, судят те же разделы.
+    archived = archived_in_diff(getattr(args, "diff_base", None))
+    for home in ([ACTIVE] if status else []) + archived:
+        judge_delivery(home, args, errors, warnings)
     return True
+
+
+def judge_delivery(home: Path, args, errors: list[str], warnings: list[str]) -> None:
+    """Все разделы гейта над ОДНОЙ поставкой — на её фазе; у архивной путь в каждой строке."""
+    status = read(home / "STATUS.md")
+    tag = "" if home == ACTIVE else f"{home.relative_to(ROOT).as_posix()}: "
+    if tag:
+        print(f"судится поставка, которую архивирует этот дифф: {tag[:-2]} "
+              f"(phase={field(status, 'phase') or '?'})")
+    errs: list[str] = []
+    warns: list[str] = []
+    ctx = check_status_shape(status, args, errs, warns, home)
+    check_evidence(status, args, errs, warns, ctx)
+    check_journals(status, args, errs, warns, ctx)
+    check_limits(status, args, errs, warns, ctx)
+    errors.extend(tag + e for e in errs)
+    warnings.extend(tag + w for w in warns)
 
 
 def parse_args():
@@ -4380,7 +4410,9 @@ class ActiveCtx:
     Восемь значений — вся связь между разделами активной поставки; внутри `main`
     их роль играли полсотни локальных переменных, и именно поэтому функция не
     резалась. Список получен замером: пересечение «присвоено раньше — прочитано
-    позже» по AST, а не на глаз.
+    позже» по AST, а не на глаз. Девятое, `home`, — каталог поставки
+    (`delivery@2.04`): поставку, которую архивирует этот же дифф, судят те же
+    разделы, и путь к её файлам обязан приходить отсюда, а не из `ACTIVE`.
     """
 
     phase: str
@@ -4391,6 +4423,7 @@ class ActiveCtx:
     verify: Path
     eval_smoke: Path
     implement_like: set[str]
+    home: Path = ACTIVE
 ```
 
 # Приложение B2 — `scripts/delivery_diff.py`
@@ -4400,16 +4433,41 @@ class ActiveCtx:
 """Что изменилось: дифф, идентификаторы правки, уроки из архива.
 
 Часть `delivery_check.py` (`delivery@1.53`). Ответ на вопрос «на что вообще
-смотреть»: объём диффа, какие имена в нём появились и какие строки архива к нему
-применимы. Суждения здесь нет — оно в разделах, которые этим пользуются.
+смотреть»: объём диффа, какие имена в нём появились, какие строки архива к нему
+применимы и какие поставки он архивирует. Суждения здесь нет — оно в разделах,
+которые этим пользуются.
 """
 
 from __future__ import annotations
 
 import re
+from pathlib import Path
 
-from delivery_base import git, merge_base_of, out_of_blast_radius
+from delivery_base import ROOT, git, merge_base_of, out_of_blast_radius
 from delivery_decisions import DECISION_STOPWORDS
+
+#: STATUS поставки в архиве — тот же образец, что `ARCHIVED_STATUS` у `okf_sync_gate`
+#: (каноны друг друга не импортируют: проект вправе развернуть один без другого).
+ARCHIVED_STATUS = re.compile(r"^delivery/archive/[^/]+/STATUS\.md$")
+
+
+def archived_in_diff(base: str | None) -> list[Path]:
+    """Каталоги поставок, которые архивирует ЭТОТ дифф: их STATUS ДОБАВЛЕН в окне.
+
+    Поле Smart Friend Ally 17.10: handoff и перенос в `archive/` — один коммит, и
+    гейт, смотревший только в `active/`, видел пустоту — «idle», 0 ошибок при
+    неподписанной спеке (§2.3a). Окно — общее у всех потребителей базы. Только
+    ДОБАВЛЕННЫЕ: правка давнего архива поставкой не является (как у `okf@1.20`).
+    `--no-renames` — иначе перенос `active/` → `archive/` пришёл бы переименованием;
+    `-z` — кириллический slug git отдал бы в кавычках, и образец его не узнал бы.
+    """
+    merge_base = merge_base_of(base)
+    if not merge_base:
+        return []
+    out = git("-C", str(ROOT), "diff", "--name-only", "-z", "--diff-filter=A",
+              "--no-renames", f"{merge_base}..HEAD")
+    return [ROOT / Path(f).parent for f in out.split("\0") if ARCHIVED_STATUS.match(f)]
+
 
 def diff_stats(base: str) -> tuple[int, int, int, int, list[str]] | None:
     """(files, added, deleted, excluded, paths) для base..HEAD; None если ref недоступен.
@@ -5340,15 +5398,16 @@ def _detected_surfaces(root: Path) -> set[str]:
     return _deploy_surface(root) | _outward_surface(root)
 
 
-def _signature_is_valid(status: str, root: Path) -> bool:
+def _signature_is_valid(status: str, root: Path, home: Path | None = None) -> bool:
     """Подпись проверяется ИСПОЛНЕНИЕМ `ssh-keygen -Y verify`, а не наличием файла.
 
     Файл рядом — это снова «объявленный реестр без файла» наоборот: подпись,
     которую никто не проверил, неотличима от подделанной. Ключ обязан жить там,
     куда агент не дотягивается (анклав, аппаратный токен): подпись из файла в
-    `~/.ssh` — это та же строка текста, только длиннее.
+    `~/.ssh` — это та же строка текста, только длиннее. Лежит подпись в каталоге
+    поставки (`home`) и уезжает с ней в архив (§2.3a).
     """
-    sig = root / "delivery" / "active" / "irreversible.sig"
+    sig = (home or root / "delivery" / "active") / "irreversible.sig"
     signers = root / ".github" / "allowed_signers"
     if not (sig.is_file() and signers.is_file()):
         return False
@@ -5363,7 +5422,8 @@ def _signature_is_valid(status: str, root: Path) -> bool:
     return proc.returncode == 0
 
 
-def unsigned_irreversible_gaps(status: str, root: Path = ROOT) -> list[str]:
+def unsigned_irreversible_gaps(status: str, root: Path = ROOT,
+                               home: Path | None = None) -> list[str]:
     """§3.4a: необратимое, до которого агент дотягивается без человека.
 
     Три состояния, и они обязаны различаться. Поверхность видна детектором, но
@@ -5392,7 +5452,7 @@ def unsigned_irreversible_gaps(status: str, root: Path = ROOT) -> list[str]:
                 "единственный breaker, у которого этого нельзя: он охраняет ровно "
                 "класс «письменное разрешение подделывается агентом». Здесь waiver "
                 "принимается только подписью"]
-    if not _signature_is_valid(status, root):
+    if not _signature_is_valid(status, root, home):
         return [f"объявлено необратимое без человека в цепочке "
                 f"({', '.join(sorted(declared))}), подписи нет или она не сходится "
                 "(§3.4a). Это остановка, а не повод просить waiver: сначала "
@@ -5867,14 +5927,17 @@ def _branch_window(base: str | None) -> str:
 
 
 def _expectation_verdict(ex: str, test_paths: list[str],
-                         order: dict[str, int], window: str = "") -> str:
+                         order: dict[str, int], window: str = "",
+                         spec_paths: tuple[str, ...] = ("delivery/active/spec.md",)) -> str:
     """`after` | `unknown` | `""` — что история говорит про ОДИН id.
 
     Шов по данным: наружу блок отдавал только корзину, в которую лёг id, —
     `s_rev`/`t_rev` ниже не читает никто. Вердикт возвращается словом, а `continue`
     остаётся у вызывающего: выход через границу шва сменил бы смысл (было 41/12).
+    `spec_paths` — все пути спеки в окне: у архивной поставки она жила в
+    `active/` и уехала в `archive/<slug>/` (§2.3a), история знает оба.
     """
-    s_rev = _first_commit_with(ex, "delivery/active/spec.md", window=window)
+    s_rev = _first_commit_with(ex, *spec_paths, window=window)
     t_rev = _first_commit_with(ex, *test_paths, window=window)
     if not s_rev or not t_rev:
         return ""  # id ещё не в истории — поставка не закоммичена, не наше дело
@@ -5910,7 +5973,9 @@ def _expectation_warnings(after: list[str], unknown: list[str],
 
 
 def expectation_predates_tests(ex_ids: list[str], test_paths: list[str],
-                               base: str | None = None) -> list[str]:
+                               base: str | None = None,
+                               spec_paths: tuple[str, ...] = ("delivery/active/spec.md",)
+                               ) -> list[str]:
     """[(предупреждения)] — порядок «пример раньше теста» по истории ВЕТКИ.
 
     Возвращает предупреждения, а не ошибки: до первого живого проекта у нас нет
@@ -5927,7 +5992,7 @@ def expectation_predates_tests(ex_ids: list[str], test_paths: list[str],
     ids = list(dict.fromkeys(ex_ids))
     after, unknown = [], []
     for ex in ids:
-        verdict = _expectation_verdict(ex, test_paths, order, window)
+        verdict = _expectation_verdict(ex, test_paths, order, window, spec_paths)
         if verdict == "after":
             after.append(ex)
         elif verdict == "unknown":
@@ -6130,6 +6195,7 @@ def debt_is_not_frozen() -> list[str]:
 from __future__ import annotations
 
 import re
+from pathlib import Path
 
 from delivery_base import (ACTIVE, ActiveCtx, field,
                            is_placeholder, read)
@@ -6246,8 +6312,9 @@ def check_risky_diff(status: str, args, phase: str, verify,
     check_model_surface(status, args, phase, verify, errors, warnings)
     # §3.4a. Зовётся БЕЗУСЛОВНО, не внутри соседа: красная черта не зависит
     # ни от модели, ни от объявленных runtime_paths — проект может не иметь
-    # ни того, ни другого и всё равно дотягиваться до необратимого.
-    for g in unsigned_irreversible_gaps(status):
+    # ни того, ни другого и всё равно дотягиваться до необратимого. Подпись
+    # лежит рядом с отчётом поставки: у архивной это `archive/<slug>/` (§2.3a).
+    for g in unsigned_irreversible_gaps(status, home=verify.parent):
         (errors if phase == "handoff" else warnings).append(
             f"необратимое без человека: {g}"
         )
@@ -6403,8 +6470,13 @@ def check_surface_breaker(status: str, phase: str, touched,
         )
 
 
-def check_status_shape(status: str, args, errors: list[str], warnings: list[str]) -> ActiveCtx:
-    """Фаза, класс и артефакты фазы. → контекст для остальных разделов."""
+def check_status_shape(status: str, args, errors: list[str], warnings: list[str],
+                       home: Path = ACTIVE) -> ActiveCtx:
+    """Фаза, класс и артефакты фазы. → контекст для остальных разделов.
+
+    `home` — каталог поставки: `active/` либо `archive/<slug>/`, которую
+    архивирует этот же дифф (§2.3a).
+    """
     allowed = {
         "specify",
         "plan",
@@ -6435,11 +6507,11 @@ def check_status_shape(status: str, args, errors: list[str], warnings: list[str]
     check_phase_and_class(raw_phase, raw_class, phase, klass, allowed,
                           errors, warnings)
 
-    spec = ACTIVE / "spec.md"
-    plan = ACTIVE / "plan.md"
-    tasks = ACTIVE / "tasks.md"
-    verify = ACTIVE / "verify-report.md"
-    eval_smoke = ACTIVE / "eval-smoke.md"
+    spec = home / "spec.md"
+    plan = home / "plan.md"
+    tasks = home / "tasks.md"
+    verify = home / "verify-report.md"
+    eval_smoke = home / "eval-smoke.md"
 
     check_required_artifacts(status, phase, klass, spec, plan, tasks, verify,
                              eval_smoke, implement_like, errors, warnings)
@@ -6447,7 +6519,7 @@ def check_status_shape(status: str, args, errors: list[str], warnings: list[str]
     check_risky_diff(status, args, phase, verify, errors, warnings)
 
 
-    return ActiveCtx(phase=phase, klass=klass, spec=spec, plan=plan, tasks=tasks, verify=verify, eval_smoke=eval_smoke, implement_like=implement_like)
+    return ActiveCtx(phase=phase, klass=klass, spec=spec, plan=plan, tasks=tasks, verify=verify, eval_smoke=eval_smoke, implement_like=implement_like, home=home)
 ```
 
 # Приложение B8 — `scripts/delivery_evidence.py`
@@ -6465,7 +6537,7 @@ from __future__ import annotations
 
 import re
 
-from delivery_base import (ACTIVE, ActiveCtx, field, is_placeholder,
+from delivery_base import (ROOT, ActiveCtx, field, is_placeholder,
                            read)
 from delivery_base import SKIP_DIR_PARTS, TEST_TEXT_SUFFIXES, example_ref_pattern
 from delivery_decisions import signature_verdict
@@ -6649,7 +6721,7 @@ def check_expectation_and_oracle(status: str, ctx: ActiveCtx, klass: str,
         # `verify-report.md` отчитывается, а вопрос был про проверку.
         tests_text = ""
         for root_dir in ("tests", "backend/tests", "src/tests"):
-            d = ACTIVE.parent.parent / root_dir
+            d = ROOT / root_dir
             if not d.is_dir():
                 continue
             for f in d.rglob("*test*"):
@@ -6663,7 +6735,7 @@ def check_expectation_and_oracle(status: str, ctx: ActiveCtx, klass: str,
                     tests_text += read(f)
 
         check_examples_and_ids(spec_text, ex_ids,
-                               tests_text + read(eval_smoke), klass, phase,
+                               tests_text + read(eval_smoke), ctx,
                                errors, warnings, base)
 
         check_relational_oracle(tests_text, klass, warnings)
@@ -6710,13 +6782,16 @@ def check_relational_oracle(tests_text: str, klass: str,
 
 
 def check_examples_and_ids(spec_text: str, ex_ids: list[str], refs_text: str,
-                           klass: str, phase: str, errors: list[str],
+                           ctx: ActiveCtx, errors: list[str],
                            warnings: list[str], base: str | None = None) -> None:
     """Блок примеров есть, id проставлены, id встречаются в тестах.
 
     Шестой шов (`delivery@1.57`): цепочка `if/elif/else` — это три ответа на
     один вопрос, и она уносит из вызывающей функции почти всю сложность.
+    `ctx`, а не `klass` с `phase` (`delivery@2.04`): порядку §3.1d нужен ещё и
+    путь спеки, а девятый аргумент пробил бы планку `max-args=8` CQG.
     """
+    klass, phase = ctx.klass, ctx.phase
     if not re.search(r"(?im)^#+\s*acceptance\s+examples", spec_text):
         errors.append(
             f"class {klass}: spec.md без блока '## Acceptance examples' "
@@ -6757,10 +6832,13 @@ def check_examples_and_ids(spec_text: str, ex_ids: list[str], refs_text: str,
         # состояние фазы implement.
         if phase in {"verify", "converge", "handoff"}:
             test_dirs = [d for d in ("tests", "backend/tests", "src/tests")
-                         if (ACTIVE.parent.parent / d).is_dir()]
+                         if (ROOT / d).is_dir()]
             # База — та же, что у breakers: порядок судится в окне ветки, иначе
             # переиспользованный id датируется чужой поставкой (`delivery@1.97`).
-            warnings += expectation_predates_tests(ex_ids, test_dirs, base)
+            # Спека архивной поставки жила в `active/` и в `archive/<slug>/`.
+            spec_paths = tuple(dict.fromkeys(
+                ("delivery/active/spec.md", ctx.spec.relative_to(ROOT).as_posix())))
+            warnings += expectation_predates_tests(ex_ids, test_dirs, base, spec_paths)
 
 
 def check_observability_ladder(status: str, sig: str, errors: list[str]) -> None:
@@ -6827,7 +6905,7 @@ from __future__ import annotations
 
 import re
 
-from delivery_base import (ACTIVE, ActiveCtx, field, is_placeholder,
+from delivery_base import (ActiveCtx, field, is_placeholder,
                            list_entries, read, unfilled, verdict_blocks)
 from delivery_artifact import (check_artifact_oracle,
                                check_weak_names_the_cheap_gap)
@@ -6852,7 +6930,7 @@ def check_diagnosis(status: str, ctx: ActiveCtx, kind: str, phase: str,
         "handoff",
     }:
         diag = field(status, "diagnosis")
-        diag_file = ACTIVE / "diagnosis.md"
+        diag_file = ctx.home / "diagnosis.md"
         if is_placeholder(diag):
             errors.append(
                 f"kind={kind.split()[0]} at verify+: missing diagnosis (§12.1) "
@@ -6896,7 +6974,7 @@ def check_escalation(status: str, ctx: ActiveCtx, phase: str,
         "нет",
         "n/a",
     }:
-        esc = ACTIVE / "escalation.md"
+        esc = ctx.home / "escalation.md"
         if not esc.is_file():
             errors.append(
                 f"blockers непусты ({blockers[:50]}), а active/escalation.md "
@@ -6993,7 +7071,7 @@ def check_decisions_format(status: str, args, ctx: ActiveCtx, klass: str, phase:
     implement_like = ctx.implement_like
     # --- §12.2: журнал решений. Проверяется ФОРМАТ: лента без альтернатив
     # неаудируема, а именно аудируемость — весь смысл файла.
-    dec_file = ACTIVE / "decisions.md"
+    dec_file = ctx.home / "decisions.md"
     late = phase in {"verify", "converge", "handoff"}
     if dec_file.is_file():
         good, bad = decision_lines(read(dec_file))
@@ -7226,7 +7304,7 @@ from __future__ import annotations
 
 import re
 
-from delivery_base import (ACTIVE, ARCHIVE, BREAKER_EXCLUDE, ActiveCtx,
+from delivery_base import (ARCHIVE, BREAKER_EXCLUDE, ActiveCtx,
                            DEFAULT_BREAKERS, GENERATED_FILENAMES, field,
                            is_placeholder, read)
 from delivery_diff import applicable_lessons, diff_stats
@@ -7263,7 +7341,7 @@ def weak_ci_consequences(status: str, waivers: str, ctx: ActiveCtx,
     compensated = (
         bool(re.search(r"(?im)^\s*\**clean_clone_run\**\s*:\s*\S", read(verify)))
         and bool(field(status, "blockers").lower() not in {"", "none", "-"})
-        and (ACTIVE / "escalation.md").is_file()
+        and (ctx.home / "escalation.md").is_file()
     )
     if klass == "L" and not ci_waived and not compensated:
         errors.append(
@@ -7827,6 +7905,7 @@ python scripts/delivery_metrics.py --base origin/main --write   # на handoff
 
 | Дата | Изменение |
 |---|---|
+| 2026-10-17 | **v2.04**: **Поставка, уехавшая в архив тем же диффом, что и handoff, не судилась: idle прятал неподписанную спеку.** Поле Smart Friend Ally 17.10 (их инцидент `2026-10-17-archived-handoff-signature`, PR #23): handoff и перенос в `archive/` у них идут одним коммитом, и pre-push с CI видели пустой `active/` — «idle», 0 ошибок. Воспроизведение хозяина на чистом клоне `delivery@2.03`: в архивном STATUS `yes` → `deferred (reason=проба)`, `delivery_check --require-ci --diff-base` — 0 error(s), 1 warning (idle). Контроль — те же файлы в `active/` → «class M at handoff: human_ok_spec всё ещё deferred (§2.2b)». У Ally тот же класс уже стоил урока L10: handoff с непройденным маячком §12.5 уходил в архив и push. Корень — допущение «архив бывает только после мержа»; `okf@1.20` чинил его со стороны waiver'а, а здесь его не досмотрели. **Что встало:** `archived_in_diff` в `delivery_diff` — STATUS, ДОБАВЛЕННЫЕ в `archive/<slug>/` в окне `merge_base..HEAD` (`--no-renames`, `-z`): модуль и так отвечает, «на что вообще смотреть». `delivery_check` судит каждую такую поставку теми же четырьмя разделами, что активную (`judge_delivery`): на её СОБСТВЕННОЙ фазе и с её путём в каждой строке. Каталог поставки едет в `ActiveCtx.home`, и все чтения файлов поставки берут его, а не `ACTIVE`: `diagnosis`, `escalation`, `decisions`, подпись §3.4a, история спеки §3.1d. `ACTIVE.parent.parent` в роли корня заменён на `ROOT`: у архивной поставки он указывал бы в `delivery/`. `check_examples_and_ids` получил `ctx` вместо `klass` и `phase`, потому что девятый аргумент пробил бы `max-args=8` CQG. Вторую реализацию подписи (`check_irreversible_signature.sh`, для проектов без payload) не трогал: она судит только `active/` и архивных поставок не видит — предел назван. **Девять прогонов** (`test_archived_handoff_is_judged.py`): случай поля — красный, с путём; та же поставка с подписью — код 0 (судится и проходит); маячок §12.5 по коду той же ветки — красный; запаркованная на implement — предупреждение, не ошибка; архив отдельным PR после мержа — код 0; правка давнего архива и прогон без базы — не судятся; подпись на настоящем ключе читается из архива, а по умолчанию — из `active/`. **Обратный прогон:** на `delivery@2.03` случай поля и маячок дают код 0 и одно «idle». **вес: +66 строк, за что** — `archived_in_diff`, `judge_delivery`, каталог поставки в `ActiveCtx` и его протяжка до подписи и истории спеки. ⚠ `delivery_check.py` перешёл планку 300 (291 → 309): оркестратор разделов не вынести без цикла импортов (`delivery_status` импортирует `delivery_diff`), а режется файл блоком прав §4.5/§4.6 в `delivery_decisions` — отдельной правкой, записано в BACKLOG. **объём: +13 строк, за что** — абзац §2.3a и эта запись. **класс:** green-without-the-thing @ scripts/delivery_check.py::check_preconditions |
 | 2026-10-17 | **v2.03**: **Маячок «деньги» срабатывал на детском счёте — рецидив класса `delivery@1.72` на том же месте.** Поле Smart Friend Ally 17.10: строгий `delivery_check` на handoff поставки из одних документов (русский bake-off моделей для детского голосового друга) упал «рисковый дифф … деньги». Паттерн держал голое `счёт/счет` с окончаниями, а по-русски «счёт» — и деньги, и счёт до десяти; домен Ally — игры со счётом для пятилетнего («игры и счёт», правило «счёт ведёт код»), то есть маячок срабатывал бы почти на каждой правке игр. Воспроизведение владельцем: «игры и счёт», «Счёт ведёт код», «верный счёт и похвала» — все в «деньги»; контроль «выставить счёт за услуги» — верно. Обхода не было: в отчёте настоящий блок ревью рисковых мест. `delivery@1.72` убрал `\w*` (ловил «счётчик»), но многозначность самого слова оставил — тот же класс на том же месте, и реестр пишет это рецидивом, а не близнецом. **Что встало:** голого «счёт» нет — урок `token` из того же словаря: многозначное слово только составными формами (`счёт-фактура`, `лицевой/расчётный/банковский счёт`, `выставить счёт`, `счёт клиента`, `пополнить/списать … счёт`). **Корпуса:** отрицательный — четыре фразы детского счёта; положительный — «выставить счёт за услуги», «расчётный счёт компании», «счёт-фактура», «лицевой счёт», «банковский счёт»; прежние «счёт клиента пополнен» и «счет выставлен» держатся. **Два обратных:** паттерн `2.02` краснит отрицательный корпус («игры и счёт» → деньги); «счёта нет вовсе» краснит положительный. ⚠ Сторож корней сработал сам: `лицев` и `банковск` не встречались ни в одном корпусе, и правило «каждый корень проверен корпусом» потребовало их дописать. **вес: +9 строк, за что** — составные формы и разбор поля в комментарии `RISK_CLASSES`. **объём: +1 строк, за что** — эта запись. **класс:** green-without-the-thing @ scripts/delivery_risk.py |
 | 2026-10-17 | **v2.02**: **Детектор отправки §3.4a судил то, что лежит на диске, а не то, что в репозитории.** Поле G connect 17.10: стабильная сборка сервера лежала в игнорируемом `.stable/` — копия репозитория вместе со `scripts/`; `_outward_surface` обходил дерево `rglob`'ом мимо `.gitignore`, нашёл в `.stable/scripts/delivery_runtime.py` свой же `_OUTWARD_MARKERS` (sendgrid, mailgun, postmark) и выдал «`irreversible_surfaces:` не называет отправка наружу» у продукта без единой отправки. `BREAKER_EXCLUDE` — префикс от корня, и `.stable/scripts/` им не ловится; `.venv`/`node_modules` отсекались по имени части пути, прочее игнорируемое — нет. Остальные гейты контура ходят через `git ls-files` — расхождение братьев; тем же днём то же у AST-гейта (`cqg@2.59`). **Что встало:** население — файлы git (`git -C <корень> ls-files -- '*.py'`); нет git — прежний обход: молчать хуже; путь, отслеживаемый, но удалённый с диска, пропускается. **Прогоны:** копия механики в игнорируемой сборке — тихо (на `2.01` красен ровно этот); отправка в отслеживаемом продуктовом коде — найдена; без git обход ищет. Shell-брат (`check_irreversible_signature.sh`) детектора не имеет — чинить там нечего. **вес: +11 строк, за что** — население детектора из git с разбором поля. **объём: +1 строк, за что** — эта запись. **класс:** gate-mask-misses-the-population @ AGENT_DELIVERY_HARNESS.md scripts/delivery_runtime.py::_outward_surface |
 | 2026-10-17 | **v2.01**: **§5.1 запрещал работу прямо в общей ветке — и спросить об этом было некому.** Правило «ветка на поставку, один мёрж» жило таблицей режимов §5.1; принуждения не было, и при нескольких сессиях над одним репозиторием оно оставалось пожеланием. Первая редакция (`1.85`, 2026-08-21) влита не была и отстала на пятнадцать ревизий; эта — переделка на текущем каноне с полем за два месяца. **Диагноз классом, а не случаем:** worktree изолирует рабочий каталог, индекс и HEAD и НЕ изолирует интегрирующую ветку, состав выката, общие счётчики и ресурсы прогона. **Четыре класса, у каждого замер:** A — цена поломки размазана (`1 failed / 9994 passed` остановил выкат всем); B — состав никому не принадлежит (в общем клоне `add` одной сессии и `commit` другой унесли 12 файлов и 1078 вставок под «приборы не коммичу»); C — счётчики разъезжаются (номера задач — на полтора десятка); D — общий ресурс прогона принят за свой (`outreach-donors`: `DROP SCHEMA` соседа — 25 и 6 ложных красных на pre-push). Класс D и уровень коммита у B — новое против первой редакции. **Что встало:** §5.1a — классы, где стоит очередь (гейт мержа CQG §8.5, а не новая механика), две ловушки, единица счёта, честный остаток; поле `parallel_sessions:` в шаблоне STATUS; `parallel_session_gaps` в `delivery_runtime` и `check_parallel_sessions` в гейте поставки по лестнице §12.6. **Слот бюджета §9.1a не занят:** проверка живёт внутри существующего гейта поставки. ⚠ **Главное отличие от первой редакции — значения `hook` в наборе нет.** Первая судила его файлом хука (каталог спрошен у git, worktree учтён), а в проекте с CQG pre-push стоит всегда: на нём живут гейты поставки (§8.5.1 ③). Замер флота 2026-10-17: pre-push у восьми проектов из девяти, и зелёный прямой пуш в `main` не отбивает ни один. Проверка «хук есть по факту» была бы зелёной у всех восьми — `green-without-the-thing` в первой же строке. Набор теперь называет механизм очереди: `merge-guard` (опровержимо — скрипт лежит), `server` и `manual-deploy` (вне репозитория, проверки не рождают, §4.3b). **Одиннадцать тестов, четыре обратных прогона, матрица диагональная:** снятый вызов роняет семь негативных; `hook`, возвращённый в набор, — ровно прогон «хук лежит, а это не очередь»; снятая проверка скрипта — ровно свой; молчание, ставшее ошибкой на `verify`, — тест на код 0. ⚠ **Полигон краснел и без проверки:** неполный verify-report держал `verify` красным, и `code == 1` в негативных тестах не свидетельствовал ни о чём — отчёт дополнен, на `verify` код теперь свидетель. **вес: +64 строк, за что** — `parallel_session_gaps` и закрытый набор в `delivery_runtime.py`, `check_parallel_sessions` и вызов в `delivery_status.py`, докстринг общего разбора объявлений (полей у него четыре, а не два). **объём: +131 строк, за что** — §5.1a целиком, поле шаблона STATUS с комментарием, строка оглавления и эта запись. **Объявленная стоимость чтения приведена к замеру** (канон ≈2700 → 2993, payload ≈4757 → 4923, та же строка карты): правка довела расхождение до 9,8% при допуске 10%, а внутри допуска оракул молчит по построению — следующая правка вывела бы его за край уже в чужой ревизии. **класс:** rule-without-an-executor @ AGENT_DELIVERY_HARNESS.md §5.1 |

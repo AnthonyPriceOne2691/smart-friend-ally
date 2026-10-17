@@ -2,7 +2,7 @@
   "_": "Замок payload'а: что канон отдавал на этих версиях. Пишет обновление контура (§5.5), читает доктор; руками не править.",
   "versions": {
     "cqg": "2.63",
-    "delivery": "2.03",
+    "delivery": "2.04",
     "okf": "1.21",
     "stack-map": "1.53"
   },
@@ -17,11 +17,11 @@
     },
     "scripts/delivery_base.py": {
       "canon": "delivery",
-      "digest": "sha256:99d18d11e62e2a0654d6ac60fdde397b6c42af3797ddc6de516377ec19a20b0e"
+      "digest": "sha256:dd96d839b9f44f8e2efb71304856365cfe9e61c7ccc3f84d4a400fe5e2ae34fa"
     },
     "scripts/delivery_check.py": {
       "canon": "delivery",
-      "digest": "sha256:cd77d338e781af2093244dc3481c8446e6071d3b4f65e9daadb64919e045be58"
+      "digest": "sha256:18cdd1fafa537cedbc8914da657e1109f2fa70dda55c33d303e206f2186aaa69"
     },
     "scripts/delivery_decisions.py": {
       "canon": "delivery",
@@ -29,23 +29,23 @@
     },
     "scripts/delivery_diff.py": {
       "canon": "delivery",
-      "digest": "sha256:be3f99347137b33c984b79670b56ef1c44813ad8f983230826911a32aecf367e"
+      "digest": "sha256:424369fc22c4479a14d46a0830dc5807a545e4a0cbbbaabb95e5527435f143ba"
     },
     "scripts/delivery_evidence.py": {
       "canon": "delivery",
-      "digest": "sha256:fbe89a80aa834dd2c8a88c497b51bc32dfac3caaf94a9b316d0962f7d1cc36fe"
+      "digest": "sha256:4bfd3394d3a02a3279a79e0635fd8b0257df26c98521a7bf75c9bb89c53c96a5"
     },
     "scripts/delivery_history.py": {
       "canon": "delivery",
-      "digest": "sha256:f962264c69e768d1a4b4a5a6c041d53923958ae3b210564f9f90c91815751c24"
+      "digest": "sha256:5bd3f64951e5c7ba9cc302b09629deac17175775eab9bf42ce70fe7f3cf947a9"
     },
     "scripts/delivery_journals.py": {
       "canon": "delivery",
-      "digest": "sha256:82f7cf7124b1e918b2bafb65af4cb6b702b36f1b80ed4b3bf8a0c75f5a2a13ae"
+      "digest": "sha256:8108d03ec1c57c5db980e07755c8f69fdc3954e8aff7624ef878198c1b2c2c9c"
     },
     "scripts/delivery_limits.py": {
       "canon": "delivery",
-      "digest": "sha256:31577dfdd1a348ee054b6595e8baded5bf2b6eb49dfc31553834d29a648474f4"
+      "digest": "sha256:ffdfa3394f7da0c4305bed88e7c0f43ef1becc7f2f774a7044a4ba5d8e141470"
     },
     "scripts/delivery_metrics.py": {
       "canon": "delivery",
@@ -57,11 +57,11 @@
     },
     "scripts/delivery_runtime.py": {
       "canon": "delivery",
-      "digest": "sha256:3aa5074fab85b3e4ca8fc569feddf7cc9f02ddd8fe8ce56ab6b416dd4667097e"
+      "digest": "sha256:1dca8eb8d868f5ce5b7e46f0b7833140463c0100c43728390f77b3da6631934b"
     },
     "scripts/delivery_status.py": {
       "canon": "delivery",
-      "digest": "sha256:9b077c4c2a75931f923c3d93e078b01268194130fd980adb70444ad2c044d260"
+      "digest": "sha256:e151d8407bb7f314b444f59055e05e61f13369231b9b5fa8cb374495832b954b"
     },
     "scripts/lint/assert_digest.sh": {
       "canon": "cqg",

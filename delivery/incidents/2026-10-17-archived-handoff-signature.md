@@ -45,3 +45,13 @@ Ally L10: handoff с непройденным маячком §12.5 уже ух�
 ## Куда уехало
 
 - сообщение судье (сессия Prepare) после мержа этой поставки.
+
+## Итог
+
+Внесено в канон: `delivery@2.04` (Prepare `c5585a5`) — строгий `delivery_check` с `--diff-base` находит `STATUS.md`,
+добавленные в `delivery/archive/<slug>/` в окне `merge_base..HEAD`, и судит каждую такую поставку теми же разделами,
+что активную, на её собственной фазе; строки ошибок помечены путём, а суд виден строкой «судится поставка, которую
+архивирует этот дифф». Тест канона `tests/test_archived_handoff_is_judged.py`. Судья `prepare-ae`, 2026-10-17.
+Ally получил ревизию накатом `sync-delivery-2.04`; проверка исполнением на пробе хозяина: архивная поставка с
+`deferred` → `ERROR: delivery/archive/2026-10-17-spike-phone-llm: class M at handoff: human_ok_spec всё ещё deferred`,
+с `yes` → 0 ошибок. Обход L24 снят.
