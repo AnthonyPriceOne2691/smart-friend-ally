@@ -6,10 +6,10 @@
 - **kind:** feature
 - **repro_test:** n/a reason=не bugfix
 - **diagnosis:** n/a reason=не bugfix
-- **phase:** implement
+- **phase:** verify
 - **builder:** agent:claude-code
 - **verifier:** process:ci
-- **human_ok_spec:** deferred (reason=цели приёмки дисциплины подписаны родителем 2026-10-18 («подходят»); примеры K1–K11 показаны ему на подпись вместе со спекой, at=2026-10-18)
+- **human_ok_spec:** yes (родитель подписал примеры K1–K14 и готовые запреты по опасностям 2026-10-18 — «Подписываю»; K4 и K11 — по его решению о цели 4, правило «вопрос в конце» — следующей поставкой)
 - **human_ok_plan:** n/a
 - **shape-oracles:** cqg-deployed
 - **behavior-oracles:** tests-present

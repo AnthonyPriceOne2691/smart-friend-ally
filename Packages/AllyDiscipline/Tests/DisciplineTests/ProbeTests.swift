@@ -56,7 +56,9 @@ let violators = [
     Probe("endearment", "Ты моя хорошая! Давай играть.", "Давай играть."),
     Probe("endearment", "Спасибо тебе моя радость!", "Спасибо тебе!"),
     Probe("endearment", "Спокойной ночи моя радость!", "Спокойной ночи!"),
-    Probe("endearment", "Ты такая весёлая, мое солнышко.", "Ты такая весёлая.")
+    Probe("endearment", "Ты такая весёлая, мое солнышко.", "Ты такая весёлая."),
+    Probe("endearment", "Ты такая хитрая, моя принцесса. Это кошка?", "Ты такая хитрая. Это кошка?"),
+    Probe("endearment", "Ты где-где спряталась, мой маленький зайчик?", "Ты где-где спряталась?")
 ]
 
 /// Tricky clean probes: look like a breach of `rule`, but the rule must stay silent.
@@ -75,7 +77,8 @@ let cleans = [
     Probe("endearment", "Хорошая погода сегодня!"),
     Probe("endearment", "Собачка такая милая!"),
     Probe("endearment", "Ты очень милая!"),
-    Probe("endearment", "Посмотри на солнышко!")
+    Probe("endearment", "Посмотри на солнышко!"),
+    Probe("endearment", "Это моя игрушка!")
 ]
 
 /// What went wrong with the probes of `rules`: a wrong text, a silent violator, a clean probe that fired.

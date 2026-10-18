@@ -90,12 +90,14 @@ struct Rules: Sendable {
         let own = "(?:\(terms.ownRe)\\s+)?", name = "(?:\(terms.words.joined(separator: "|")))"
         let lead = "(^|(?<=[.!?…]\\s))"
         // strip_endearments: a lone «Ты моя хорошая!», mid-sentence, sentence start; without a comma only with the
-        // possessive («Спокойной ночи моя радость!»), so «Собачка такая милая!» stays.
+        // possessive («Спокойной ночи моя радость!»), so «Собачка такая милая!» stays; after a comma the possessive
+        // marks an address whatever the word («, моя принцесса!»), while «Это моя игрушка!» has no comma.
         endearments = [
             lead + terms.aloneRe + own + name + "\\s*[!.…]+\\s*",
             ",\\s*" + own + name + "\\s*(?=[,!?.…])",
             lead + own + name + "\\s*[,!]\\s*",
-            "\\s+\(terms.ownRe)\\s+(?:\(terms.tailWords.joined(separator: "|")))\\s*(?=[!?.…])"
+            "\\s+\(terms.ownRe)\\s+(?:\(terms.tailWords.joined(separator: "|")))\\s*(?=[!?.…])",
+            ",\\s*\(terms.ownRe)\\s+(?:[а-яё]+\\s+)?[а-яё]+\\s*(?=[,!?.…])"
         ].map { Pattern($0, .caseInsensitive) }
     }
 

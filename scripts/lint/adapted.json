@@ -18,5 +18,10 @@
     "reason": "exclude_contour (и зеркало CONTOUR_RE у доктора) перечисляет механику контура случаями: из модулей delivery_*.py исключены только check и metrics, 11 модулей после разреза delivery@1.53 — нет; на Swift-проекте с маской *.swift доктор зовёт file-length DEAD (delivery/incidents/2026-10-18-exclude-contour-delivery-modules.md)",
     "changed": "не правился; маска LINT_LENGTH_GLOBS=\"*.swift *.py\" в хуке и в env джобы gates — модули канона короче 500 строк и судятся как продуктовый код",
     "kind": "upstream-candidate"
+  },
+  "scripts/delivery_evidence.py": {
+    "reason": "ссылки на id примеров (§3.1d) и порядок «пример раньше теста» собирают тесты только из корней tests, backend/tests, src/tests: тесты SwiftPM в Packages/<Пакет>/Tests не видны — §3.1d тревожит зря (гасит eval-smoke), а порядок проходит без предмета (delivery/incidents/2026-10-18-test-roots-outside-tests.md)",
+    "changed": "не правился; K1–K14 названы в delivery/active/eval-smoke.md, порядок показан историей ветки",
+    "kind": "upstream-candidate"
   }
 }
