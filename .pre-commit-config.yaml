@@ -1,25 +1,41 @@
-# pre-commit hooks. Установка: .venv/bin/pre-commit install --allow-missing-config
-#                            && .venv/bin/pre-commit install --hook-type pre-push --allow-missing-config
-# Прогон по всему дереву: .venv/bin/pre-commit run --all-files --verbose.
+# pre-commit hooks. Установка: pip install pre-commit && pre-commit install.
+# Прогон по всему дереву: pre-commit run --all-files.
 #
-# Адаптация под Smart Friend Ally (объявлена в scripts/lint/adapted.json).
-# Основа — Приложение B CODE_QUALITY_GATES.md, скопированное дословно; дальше по
-# правилу §5 «менять можно транспорт, пути, маски; нельзя — состав гейтов и
-# строку вызова»:
-#   - технологический стек продукта — Swift, кода пока нет. Хуки ruff, ruff-format,
-#     mypy, eslint, eslint-warning-ratchet, prettier сняты: python- и ts-кода продукта
-#     в репозитории нет (python здесь — только механика контура, её судит сьют канона);
-#   - check-скрипты без предмета на этом стеке (AST-правила, grep-правила с
-#     питоновскими паттернами, jscpd, layers, complexity, deps-audit, mutation)
-#     объявлены в scripts/lint/not-applicable.json с причиной — мета-гейт печатает её
-#     на каждом прогоне, чтобы устаревшее объявление попадалось на глаза;
-#   - file-length ждёт первого Swift-кода (объявлен n/a; форма хука с маской
-#     *.swift записана ниже комментарием — без маски гейт не увидит Swift, F16);
-#   - добавлены свои гейты child-data (CONSTITUTION, Non-negotiables) и na-expiry
-#     (объявления «до первого кода» истекают с кодом) и pre-push фрагмент §8.5.1.
+# Пути ниже — под backend/-и-frontend/-layout (git-root = корень проекта).
+# Поправь files:/exclude:/entry: и путь к venv (.venv) под свою структуру.
+# Скрипт-хуки читают структуру из env LINT_PY_SRC/LINT_FE_DIR/... (см. §6 документа) —
+# задай их здесь ПРЕФИКСОМ или через export, если дефолты не подходят:
+#   entry: bash -c 'cd "$(git rev-parse --show-toplevel)" && LINT_PY_SRC=backend/app bash scripts/lint/check_grep_gate.sh --rule config-access'
+#   entry: bash -c 'export LINT_PY_SRC=backend/app; cd "$(git rev-parse --show-toplevel)" && bash ...'
+# ⚠ Форма `LINT_PY_SRC=... && bash ...` (стояла здесь до cqg@1.28) НЕ работает:
+# присваивание без export и с `&&` создаёт переменную ТЕКУЩЕГО шелла, а гейт —
+# дочерний процесс, он её не видит. Гейт молча брал дефолт `backend/features`,
+# каталога не было, и он печатал мягкий пропуск с exit 0 — зелёный гейт,
+# просмотревший ноль файлов. Форма без `bash -c` невозможна в принципе:
+# `language: system` делит entry по shlex и делает exec, поэтому `VAR=x` уходит в
+# argv[0] и падает FileNotFoundError. Нашло приёмочное развёртывание.
+#
+# Адаптация под Smart Friend Ally (объявлена в scripts/lint/adapted.json). Основа —
+# этот шаблон Приложения B дословно; по правилу CQG §5.5 менять можно транспорт,
+# пути, маски, нельзя — состав гейтов и строку вызова:
+#   - технологический стек продукта — Swift (пакет Packages/AllyDiscipline); python
+#     здесь — только механика контура, её судит сьют канона. Хуки ruff, ruff-format,
+#     mypy, eslint, eslint-warning-ratchet, prettier сняты: python- и ts-кода продукта нет;
+#   - гейты без предмета на этом стеке (grep- и AST-правила, layers, complexity,
+#     deps-audit, mutation) объявлены в scripts/lint/not-applicable.json с причиной —
+#     мета-гейт печатает её на каждом прогоне; их роли на Swift держат свои гейты
+#     (карта ролей — delivery/STACK-ACCEPTANCE.md);
+#   - file-length и jscpd судят Swift: маски — env в entry; те же значения стоят в env
+#     джобы gates (quality.yml), чтобы доктор судил тот же код, что хуки;
+#   - свои гейты: child-data (CONSTITUTION, Non-negotiables) и swiftlint-ratchet;
+#   - pre-push — фрагмент §8.5.1 ③ дословно, рядом с остальными.
+# Объявления n/a «до первого кода» истекают через мета-гейт: `until` в
+# not-applicable.json (cqg@2.66) — свой гейт na-expiry снят.
 #
 # ⚠ Пути с пробелом: корень репозитория — «Smart frend Ally». Каждый entry ниже
 # берёт корень через "$(git rev-parse --show-toplevel)" В КАВЫЧКАХ.
+# Установка одной командой (ставит оба типа хуков, см. default_install_hook_types):
+#   .venv/bin/pre-commit install --allow-missing-config
 
 default_install_hook_types: [pre-commit, pre-push]
 # Хук без `stages:` идёт на КАЖДОЙ установленной стадии, а pre-push контур ставит
@@ -50,74 +66,115 @@ repos:
         # собственный первый коммит (CQG §5 шаг 11).
         exclude: ^docs/canon/
 
+  # -------------------------------------------------------------------------
+  # Файлы кода: prod <= 500 / tests <= 1000 строк (baseline-ratchet).
+  # -------------------------------------------------------------------------
+  - repo: local
+    hooks:
+      # Маска Swift — env в entry (CQG §6; без неё гейт Swift не видит, F16). `*.py` —
+      # генератор фикстур пакета; механику контура гейт исключает сам (`cqg@2.67`).
+      - id: file-length
+        name: Файлы кода <= 500/1000 строк (baseline-ratchet)
+        language: system
+        entry: bash -c 'cd "$(git rev-parse --show-toplevel)" && LINT_LENGTH_GLOBS="*.swift *.py" bash scripts/lint/check_file_length.sh'
+        types_or: [swift, python]
+        pass_filenames: false
+
+  # -------------------------------------------------------------------------
+  # DRY / copy-paste гейт (jscpd clone-count ratchet).
+  # -------------------------------------------------------------------------
+  - repo: local
+    hooks:
+      # Половина «py» гейта судит Swift: LINT_JSCPD_PY_FORMAT=swift по Sources пакета.
+      # `files:` — Swift и конфиги порогов, как у шаблона (правка порогов судится порогами).
+      - id: jscpd-dry-gate
+        name: DRY — рост копипаста (jscpd clone-count ratchet)
+        language: system
+        entry: bash -c 'cd "$(git rev-parse --show-toplevel)" && LINT_PY_SRC=Packages/AllyDiscipline/Sources LINT_JSCPD_PY_FORMAT=swift bash scripts/lint/check_jscpd_gate.sh'
+        files: ^(Packages/.*\.swift|\.pre-commit-config\.yaml|scripts/lint/.*)$
+        pass_filenames: false
+
+  # deps-audit и mutation — НЕ на commit (§8.6: бюджет 5 с). deps-audit ходит в
+  # сеть, mutation считает минуты. Их место — CI и pre-push.
   - repo: local
     hooks:
       # -----------------------------------------------------------------------
-      # Secrets — блок дословно из Приложения B (§2.7). venv инструментов лежит
-      # в корне (.venv), его находит третий кандидат лестницы.
+      # Secrets. §2.7 посылала за этим блоком «в конец Приложения B», а блока здесь
+      # НЕ БЫЛО — он жил только в прозе §2.7. Кто копировал конфиг дословно (а канон
+      # требует именно дословно), получал контур без secrets-хука, при том что
+      # строка приёмки §6 «Нет секретов в git» помечена `auto`. Три независимых
+      # развёртывания нашли это по отдельности. Альтернатива — gitleaks, см. §2.7.
       # -----------------------------------------------------------------------
       - id: detect-secrets-guard
         name: secrets — ничего секретного в коммит (§2.7)
         language: system
+        # entry блочным скаляром `|-`, а НЕ plain: в тексте есть «Установка: pip …»,
+        # а последовательность `": "` внутри plain-скаляра YAML запрещена и роняет
+        # разбор ВСЕГО файла — pre-commit не стартует ни одним хуком. Именно так и
+        # вышло при добавлении этого хука; поймал приёмочный прогон, а не
+        # самопроверка, потому что PyYAML на машине правившего не стоял.
+        #
+        # lab-11 F10: хук печатал `Passed`, не просканировав НИ ОДНОГО файла —
+        # голый `command -v` не видел инструмента в venv проекта, а «инструмента
+        # нет» выходил нулём. Единственный хук с голым PATH был ровно тот, для
+        # которого §6 запрещает soft-режим. Теперь: ① инструмент ищется СНАЧАЛА
+        # в venv (как у mypy-соседа), потом в PATH; ② инструмента нет + weak НЕ
+        # объявлен в STATUS = exit 1 — наказывается ложь, а не бедность (тот же
+        # принцип, что check_ci_status.sh); ③ успех печатает число просмотренных
+        # (§6: «чисто» обязано отличаться от «ноль файлов»); ④ нет baseline при
+        # живом инструменте = exit 1 с командой снятия.
+        #
+        # ⚠ Сообщения ниже пишут «secrets — …», а НЕ «secrets: …», и это не стиль.
+        # Замер (первое развёртывание, находка 2): detect-secrets на yaml-файле
+        # относит находку к строке `entry: |-`, а его KeywordDetector считает
+        # секретом всё, что стоит после `secret…:` — то есть текст СВОЕГО ЖЕ
+        # сообщения. Конфиг канона краснил у собственного хука. Двоеточие после
+        # слова из denylist'а (`secret`, `password`, `token`, `api_key`) внутри
+        # этого entry запрещено; регрессия — `tests/test_payload_clean_for_scanners.py`.
         entry: |-
           bash -c 'cd "$(git rev-parse --show-toplevel)" || exit 1; t=""; for c in "${LINT_VENV:-backend/.venv}/bin/detect-secrets-hook" "${LINT_BE_DIR:-backend}/.venv/bin/detect-secrets-hook" ".venv/bin/detect-secrets-hook"; do [ -x "$c" ] && { t="$c"; break; }; done; [ -n "$t" ] || t="$(command -v detect-secrets-hook || true)"; if [ -n "$t" ]; then [ -f .secrets.baseline ] || { printf "\033[31msecrets — baseline отсутствует. Сними его (порядок §5 шага 11: сначала git add): detect-secrets scan \$(git ls-files -c -o --exclude-standard) > .secrets.baseline\033[0m\n"; exit 1; }; "$t" --baseline .secrets.baseline "$@" || exit 1; printf "secrets — просканировано %d файл(ов)\n" "$#"; else if grep -qsiE "security-oracles:.*weak" delivery/active/STATUS.md; then printf "\033[33m⚠ detect-secrets не установлен; security-oracles: weak объявлен в STATUS — бедность названа, не спрятана (§2.7)\033[0m\n"; else printf "\033[31msecrets — инструмента НЕТ, а weak НЕ объявлен — гейт не смеет молча выйти нулём (lab-11 F10). Выходы: pip install detect-secrets (он в requirements-dev.txt шага 4) ИЛИ объяви security-oracles: weak в delivery/active/STATUS.md\033[0m\n"; exit 1; fi; fi' --
         pass_filenames: true
 
-      # -----------------------------------------------------------------------
-      # Свой гейт проекта: данные ребёнка не попадают в git. Индекс и
-      # неигнорируемое дерево; расширение, каталог local/ и сигнатура
-      # содержимого. Допуск ноль, снимка и мягкого режима нет. Канарейка —
-      # scripts/lint/canaries.json.
-      # -----------------------------------------------------------------------
+  # -------------------------------------------------------------------------
+  # Свои гейты проекта (CQG §5.5: канонные скрипты не правились, свои —
+  # scripts/lint/; канарейки — scripts/lint/canaries.json).
+  # -------------------------------------------------------------------------
+  - repo: local
+    hooks:
+      # Данные ребёнка не попадают в git: индекс и неигнорируемое дерево;
+      # расширение, каталог local/ и сигнатура содержимого. Допуск ноль, снимка и
+      # мягкого режима нет.
       - id: child-data
         name: данные ребёнка не попадают в git (CONSTITUTION)
         language: system
         entry: bash -c 'cd "$(git rev-parse --show-toplevel)" && python3 scripts/lint/check_child_data.py'
         pass_filenames: false
         always_run: true
-
-      # -----------------------------------------------------------------------
-      # Свой гейт проекта: объявления n/a «до первого кода» истекают с первым
-      # кодом. Канон держит n/a печатью причины; на проекте, развёрнутом до кода,
-      # первый .swift иначе проходит все гейты (проба 2026-10-03). Условия —
-      # scripts/lint/na-expiry.json; канарейка — scripts/lint/canaries.json.
-      # -----------------------------------------------------------------------
-      - id: na-expiry
-        name: объявления n/a «до первого кода» истекают с первым кодом
-        language: system
-        entry: bash -c 'cd "$(git rev-parse --show-toplevel)" && python3 scripts/lint/check_na_expiry.py'
-        pass_filenames: false
-        always_run: true
-
-  # -------------------------------------------------------------------------
-  # pre-push (CQG §8.5.1 ③): только быстрые проверки, бюджет ≤ 10 c (§8.6).
-  # Блок дословно из канона.
-  # -------------------------------------------------------------------------
-      # -----------------------------------------------------------------------
-      # Swift-контур (поставка swift-contour, 2026-10-18): гейты судят код пакетов Packages/.
-      # Канонные скрипты не правились — адаптация в конфигах (CQG §5.5), свои гейты — scripts/lint/.
-      # -----------------------------------------------------------------------
+      # Ратчет SwiftLint (поставка swift-contour): двойники ролей grep/ast и
+      # сложности на Swift, файлы-помойки; находки только вниз.
       - id: swiftlint-ratchet
         name: SwiftLint — находки только вниз (сложность, двойники правил grep/ast, файлы-помойки)
         entry: bash -c 'cd "$(git rev-parse --show-toplevel)" && bash scripts/lint/check_swiftlint_ratchet.sh'
         language: system
         types_or: [swift]
         pass_filenames: false
-      - id: file-length
-        name: file-length (prod <= 500 / tests <= 1000)
-        entry: bash -c 'cd "$(git rev-parse --show-toplevel)" && LINT_LENGTH_GLOBS="*.swift *.py" bash scripts/lint/check_file_length.sh'
-        language: system
-        types_or: [swift, python]
-        pass_filenames: false
-      - id: jscpd
-        name: jscpd — копипаст в Swift не растёт
-        entry: bash -c 'cd "$(git rev-parse --show-toplevel)" && LINT_PY_SRC=Packages/AllyDiscipline/Sources LINT_JSCPD_PY_FORMAT=swift bash scripts/lint/check_jscpd_gate.sh'
-        language: system
-        types_or: [swift]
-        pass_filenames: false
 
+  # -------------------------------------------------------------------------
+  # pre-push (CQG §8.5.1 ③): только быстрые проверки, бюджет ≤ 10 c (§8.6).
+  # Фрагмент дословно из канона.
+  # -------------------------------------------------------------------------
   - repo: local
     hooks:
+      # ⚠ База — ЦЕЛЬ МЕРЖА, а не upstream ветки, и это стоило отказа правила на
+      # живом проекте (`cqg@2.05`). Прежняя редакция брала `@{u}`: пока ветка не
+      # запушена, это цель мержа и всё верно, а ПОСЛЕ первого push'а `@{u}` — сама
+      # ветка, и «дифф поставки» схлопывается в последний инкремент. Замер:
+      # по цели мержа 27 файлов и 8 цитат в блоке ревью, по `@{u}` — 1 файл и 0
+      # цитат при пороге §12.5 «≥2». Порог становится недостижим АРИФМЕТИЧЕСКИ:
+      # чинить нечего, а пройти нельзя — это не строгость, а отказ.
+      # И второе: тот же блок в CI судится против цели мержа и зелёный, то есть
+      # два оракула одного правила расходились по базе, причём локальный был
+      # строже там, где прав был CI. Базу обязаны брать одинаково — держит оракул.
       - id: delivery-gate
         name: delivery phase gate + breakers (pre-push)
         entry: bash -c 'b(){ git symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null && return 0; for c in origin/main origin/master; do git rev-parse --verify --quiet "$c" >/dev/null 2>&1 && { echo "$c"; return 0; }; done; echo origin/main; }; PY=$(command -v python3 || command -v python); "$PY" scripts/delivery_check.py --diff-base "$(b)"'
@@ -130,6 +187,13 @@ repos:
         language: system
         stages: [pre-push]
         pass_filenames: false
+      # Гейт, который исполняется только в CI, — не автоматика, а украшение: на
+      # проекте без раннера он не срабатывал НИ РАЗУ (lab-12). Замер: 0.06 c на
+      # манифест — бюджет §8.6 (≤10 c) он не трогает. База — та же ЦЕЛЬ МЕРЖА, что
+      # у delivery-gate: вопрос «вносит ли ПОСТАВКА необъявленную зависимость», а
+      # не «внёс ли её последний push». По `@{u}` зависимость, добавленную первым
+      # push'ом, следующие уже не видят — и объявление можно снять из STATUS
+      # безнаказанно.
       - id: new-dependency
         name: новая зависимость объявлена в STATUS (pre-push)
         entry: bash -c 'b(){ git symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null && return 0; for c in origin/main origin/master; do git rev-parse --verify --quiet "$c" >/dev/null 2>&1 && { echo "$c"; return 0; }; done; echo origin/main; }; PY=$(command -v python3 || command -v python); BASE="$(b)" "$PY" scripts/lint/check_new_dependency.py'

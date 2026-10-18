@@ -16,19 +16,23 @@ L3 и L5 (шаблон CI несёт допущения канона — све�
 трогает.
 
 ## Slice 1 — накат (Prepare 76c42c3, клон `git clone --local`)
-- [ ] T1: план из клона; расхождение адаптаций `.pre-commit-config.yaml` и `quality.yml` со старым пином
-- [ ] T2: `apply_update.py` из клона; записи о версиях; база секретов (провенанс `git:`/`sha256:`)
+- [x] T1: план из клона: едет сам 16, порт вручную 0, стоп 0, новый файл 0, порт не нужен 2, не развёрнуто 8;
+  расхождение адаптаций со старым пином `.pre-commit-config.yaml` +98/−310, `quality.yml` +108/−231
+- [x] T2: `apply_update.py` из клона (payload 16, снимок 9, записи 3, замок); строгий `delivery_check` сразу — 0/0 (L14);
+  доктор сразу после наката — `DEAD 1`: часть `mutation_shard.sh` не привезена (инцидент
+  `2026-10-18-plan-misses-sourced-part`); база секретов: 8 записей провенанса ушли одним пересъёмом, находок 0
 
 ## Slice 2 — ручные порты
-- [ ] T3: сводка утверждений — канонная видит Swift (`cqg@2.68`): снять `assert_digest_swift.py` и его шаг CI,
+- [x] T3: сводка утверждений — канонная видит Swift (`cqg@2.68`): снять `assert_digest_swift.py` и его шаг CI,
   записи `upstream-candidate` у `assert_digest.sh` и `check_file_length.sh`; проба `XCTAssertEqual(2 + 2, 5)`;
   доктор DEAD 0; `file-length` видит Swift
-- [ ] T4: истечение n/a (`cqg@2.66`): объекты `{"reason", "until"}` в `not-applicable.json` вместо
+- [x] T4: истечение n/a (`cqg@2.66`): объекты `{"reason", "until"}` в `not-applicable.json` вместо
   `check_na_expiry.py` + `na-expiry.json` + хука; проба `App/Probe.swift`
-- [ ] T5: корни тестов (`delivery@2.07`): снять запись `upstream-candidate` у `delivery_evidence.py`; проба — K1–K14
-  архивной `turn-contract` видны без `eval-smoke.md`
-- [ ] T6: адаптированные шаблоны — сверка с каноном целиком, объявления в `adapted.json`; карта ролей
+- [x] T5: корни тестов (`delivery@2.07`): снять запись `upstream-candidate` у `delivery_evidence.py`; проба — спека
+  архивной `turn-contract` без `eval-smoke.md`: до наката предупреждение K1–K14, после — только K11 (у него метки в
+  тестах нет: живость судят слепые судьи)
+- [x] T6: адаптированные шаблоны — сверка с каноном целиком, объявления в `adapted.json`; карта ролей
   `STACK-ACCEPTANCE.md`; итоги инцидентов 18.10
 
 ## Slice 3 — приёмка
-- [ ] T7: гейты, `check_gate_coverage.sh`, доктор (до/после), OKF, `swift test`, smoke, строгий `delivery_check` (L14)
+- [x] T7: гейты, `check_gate_coverage.sh`, доктор (до/после), OKF, `swift test`, smoke, строгий `delivery_check` (L14)

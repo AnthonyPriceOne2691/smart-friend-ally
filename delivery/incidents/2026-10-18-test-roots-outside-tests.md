@@ -48,3 +48,13 @@
 - поставка `turn-contract` Ally; запись `kind: upstream-candidate` у `scripts/delivery_evidence.py` в
   `scripts/lint/adapted.json`;
 - сообщение судье (сессия Prepare) после мержа поставки.
+
+## Итог
+
+Закрыто в каноне `delivery@2.07` (Prepare `1a46b2b`, обход флота `76c42c3`): `delivery_base.test_files()` берёт
+тест-файлы по признаку имени (`test_*`, `*_test.*`, `*Tests.*`, `*Spec.*` …) и каталогу `__tests__/` из отслеживаемых и
+новых неигнорируемых файлов; оба места — §3.1d и порядок «пример раньше теста» — берут тесты оттуда. Накат в Ally —
+поставка `sync-cqg-2.70`: запись `upstream-candidate` у `scripts/delivery_evidence.py` снята. Проверено исполнением во
+временном клоне: спека архивной `turn-contract` в `active/` без `eval-smoke.md` — до наката предупреждение
+перечисляет K1–K14, после — только K11, и это правда: у K11 (живость по слепым судьям) метки в тестах нет, его
+прогон записан в `eval-smoke.md` той поставки.

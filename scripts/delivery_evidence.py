@@ -12,7 +12,7 @@ import re
 
 from delivery_base import (ROOT, ActiveCtx, field, is_placeholder,
                            read)
-from delivery_base import SKIP_DIR_PARTS, TEST_TEXT_SUFFIXES, example_ref_pattern
+from delivery_base import example_ref_pattern, test_files
 from delivery_decisions import signature_verdict
 from delivery_history import debt_is_not_frozen, expectation_predates_tests
 
@@ -101,7 +101,7 @@ def check_assert_review(status: str, ctx: ActiveCtx, klass: str, phase: str,
     if klass in {"M", "L"} and phase in {"verify", "converge", "handoff"} and verify.is_file():
         vr = read(verify)
         reviewed = field(vr, "asserts_reviewed_by")
-        digest = re.search(r"(?im)^\s*asserts_without_example:\s*(\d+)\s*$", vr)
+        digest = re.search(r"(?im)^\s*asserts_without_example:\s*(\d+|unknown)\s*$", vr)
         if is_placeholder(reviewed):
             errors.append(
                 f"class {klass}: verify-report.md без asserts_reviewed_by "
@@ -115,6 +115,16 @@ def check_assert_review(status: str, ctx: ActiveCtx, klass: str, phase: str,
                     "asserts_reviewed_by: n/a без вставленного дайджеста "
                     "(нет строки 'asserts_without_example: N') — n/a надо "
                     "заслужить, а не заявить (§3.1d уровень 3)"
+                )
+            elif digest.group(1).lower() == "unknown":
+                # `cqg@2.68`: дайджест встретил тест-файл, которого не разбирает.
+                # Прежде этот случай падал в ветку «дайджеста нет» — отказ верный,
+                # диагноз чужой: дайджест вставлен, неизвестно число.
+                errors.append(
+                    "asserts_reviewed_by: n/a, а дайджест разобрал не все тест-файлы "
+                    "(asserts_without_example: unknown) — число непривязанных "
+                    "неизвестно; нужна подпись human:… at=… либо маски LINT_TEST_GLOB "
+                    "(§3.1d уровень 3)"
                 )
             elif int(digest.group(1)) > 0:
                 errors.append(
@@ -192,20 +202,9 @@ def check_expectation_and_oracle(status: str, ctx: ActiveCtx, klass: str,
         # описывал как «в тестах ИЛИ eval-smoke» (см. ветку ниже) — значит проза
         # попала в корпус мимо собственной формулировки: `tasks.md` обещает,
         # `verify-report.md` отчитывается, а вопрос был про проверку.
-        tests_text = ""
-        for root_dir in ("tests", "backend/tests", "src/tests"):
-            d = ROOT / root_dir
-            if not d.is_dir():
-                continue
-            for f in d.rglob("*test*"):
-                # Только текстовые исходники и не служебные каталоги:
-                # маска ловила .pyc и роняла гейт (F9).
-                if (
-                    f.is_file()
-                    and f.suffix in TEST_TEXT_SUFFIXES
-                    and not any(p in SKIP_DIR_PARTS for p in f.parts)
-                ):
-                    tests_text += read(f)
+        # Только текстовые исходники и не служебные каталоги (маска ловила .pyc
+        # и роняла гейт, F9); где лежат — решает признак имени, а не корень.
+        tests_text = "".join(read(ROOT / rel) for rel in test_files())
 
         check_examples_and_ids(spec_text, ex_ids,
                                tests_text + read(eval_smoke), ctx,
@@ -304,8 +303,7 @@ def check_examples_and_ids(spec_text: str, ex_ids: list[str], refs_text: str,
         # тестов может просто не быть, и проверка ругалась бы на штатное
         # состояние фазы implement.
         if phase in {"verify", "converge", "handoff"}:
-            test_dirs = [d for d in ("tests", "backend/tests", "src/tests")
-                         if (ROOT / d).is_dir()]
+            test_dirs = test_files()
             # База — та же, что у breakers: порядок судится в окне ветки, иначе
             # переиспользованный id датируется чужой поставкой (`delivery@1.97`).
             # Спека архивной поставки жила в `active/` и в `archive/<slug>/`.
