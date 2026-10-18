@@ -13,8 +13,8 @@ public struct Repaired: Equatable, Sendable {
 }
 
 /// Repairs a model reply before speech synthesis. A port of the Python reference (outside git): `strip_markup`,
-/// `symbols_to_words`, `latin_to_cyrillic`, `digits_to_words` (local/spike/discipline/output_filter.py) and
-/// `strip_endearments` (local/spike/persona-v2/judge_sheet.py). Placeholders go first, or the bracket step of
+/// `symbols_to_words`, `latin_to_cyrillic`, `strip_cjk`, `digits_to_words` (local/spike/discipline/output_filter.py)
+/// and `strip_endearments` (local/spike/persona-v2/judge_sheet.py). Placeholders go first, or the bracket step of
 /// markup leaves a stray comma; `phone_like` reports the `⟦PHONE⟧` marks of `digits` and changes no text.
 public enum Repair {
     /// - Parameter disabled: rule ids to switch off (ablation tests).
@@ -24,6 +24,7 @@ public enum Repair {
         out = pass.markup(out)
         out = pass.symbols(out)
         out = pass.latin(out)
+        out = pass.cjk(out)
         out = pass.digits(out)
         out = pass.endearments(out)
         return Repaired(text: pass.finish(out), actions: pass.actions)

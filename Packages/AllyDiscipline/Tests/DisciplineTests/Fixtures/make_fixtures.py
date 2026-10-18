@@ -8,6 +8,8 @@ Repair.apply's order. Placeholders (judge_sheet.PLACEHOLDER) go first: after str
 Inputs: `response` or `reply` of persona-v2/results/*.jsonl and bakeoff/results/*.jsonl; up to 90 replies the
 reference changes, round-robin over what fired (rarest first), and up to 20 it keeps (endearment words first);
 inside a group, sha256 order. Checks first that repair.json holds the reference's tables and words.
+Field `contract`: the reference's turn contract (output_filter.contract, talk mode) on `out`, with the rules this
+contract ports (no honesty, secrets, address); checks that contract.json holds the reference's limits, patterns, texts.
 
   python3 -I Packages/AllyDiscipline/Tests/DisciplineTests/Fixtures/make_fixtures.py
 """
@@ -29,7 +31,10 @@ import output_filter as of  # noqa: E402
 
 HERE = Path(__file__).resolve().parent
 DATA = json.loads((HERE.parents[2] / "Sources/Discipline/Resources/repair.json").read_text(encoding="utf-8"))
+CONTRACT = json.loads((HERE.parents[2] / "Sources/Discipline/Resources/contract.json")
+                      .read_text(encoding="utf-8"))
 CHANGED, UNCHANGED = 90, 20
+NEXT_DELIVERY = ("honesty", "human_claim", "pii_echo", "pii_request", "secret", "secret_pointer")
 
 
 def check_data():
@@ -45,6 +50,21 @@ def check_data():
               "endearments": ((own, word, alone, tail), (js.OWN, js.WORD, js.ALONE.pattern, js.TAIL.pattern))}
     for name in (k for k, (got, want) in checks.items() if got != want):
         sys.exit("repair.json: %s differs from the reference" % name)
+
+
+def check_contract():
+    """contract.json is the one copy of the contract's data: limits by mode, patterns and texts of the reference."""
+    keys = ("plea_safety", "hazard", "encourage", "danger_safe", "pointer", "safety", "prohibition", "connective",
+            "action", "filler", "filler_q")
+    want = {k: getattr(of, k.upper() + "_RE").pattern for k in keys}
+    want.update(modes={m: {**lim, "canned": of.MODE_CANNED[m]} for m, lim in of.MODES.items()}, attachment=of.ATTACH,
+                negatable=sorted(of.NEGATABLE), negation=list(of.NEGATION), clause_splits=of.CLAUSE_SPLITS,
+                pointer_script=of.POINTER_SCRIPT, hazard_scripts=[list(p) for p in of.HAZARD_SCRIPTS],
+                canned={k: of.CANNED[k] for k in CONTRACT["canned"]},
+                scripts={k: of.SCRIPTS[k] for _, k in of.HAZARD_SCRIPTS},
+                fallback_of={k: of.FALLBACK_OF[{"phone": "digits_pii"}.get(k, k)] for k in CONTRACT["fallback_of"]})
+    for name in (k for k, v in want.items() if CONTRACT[k] != v):
+        sys.exit("contract.json: %s differs from the reference" % name)
 
 
 def repair(text):
@@ -76,6 +96,8 @@ def replies():
 
 def main():
     check_data()
+    check_contract()
+    of.ENABLED.update(dict.fromkeys(NEXT_DELIVERY, False))
     done = {x: repair(x) for x in replies()}
     queues = collections.defaultdict(list)
     for x, (out, fired) in done.items():
@@ -94,7 +116,8 @@ def main():
     rows = picked + same[:UNCHANGED]
     with open(HERE / "repair_parity.jsonl", "w", encoding="utf-8") as fh:
         for x in rows:
-            fh.write(json.dumps({"in": x, "out": done[x][0]}, ensure_ascii=False) + "\n")
+            row = {"in": x, "out": done[x][0], "contract": of.contract(done[x][0], [])["text"]}
+            fh.write(json.dumps(row, ensure_ascii=False) + "\n")
     kinds = collections.Counter(k for x in picked for k in done[x][1])
     print("repair_parity.jsonl: %d changed, %d unchanged of %d replies; fired in the changed: %s"
           % (len(picked), len(rows) - len(picked), len(done), dict(sorted(kinds.items()))))

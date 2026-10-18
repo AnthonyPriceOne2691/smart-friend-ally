@@ -7,14 +7,19 @@ tags: [safety, contracts, child]
 generated:
   by: claude_code/opus-5.5
   at: 2026-10-02T09:28:19Z
-# Первый исполнитель в коде — ремонт текста (поставка swift-contour); контракт хода и
-# маршрутизатор впишут свои пути сами.
+# Исполнители в коде: ремонт текста (swift-contour) и контракт хода (turn-contract);
+# маршрутизатор впишет свои пути сам.
 implementation:
   - Packages/AllyDiscipline/Sources/Discipline/Repair.swift
   - Packages/AllyDiscipline/Sources/Discipline/Rules.swift
   - Packages/AllyDiscipline/Sources/Discipline/Markup.swift
   - Packages/AllyDiscipline/Sources/Discipline/Words.swift
   - Packages/AllyDiscipline/Sources/Discipline/Resources/repair.json
+  - Packages/AllyDiscipline/Sources/Discipline/TurnContract.swift
+  - Packages/AllyDiscipline/Sources/Discipline/Contract.swift
+  - Packages/AllyDiscipline/Sources/Discipline/TurnPass.swift
+  - Packages/AllyDiscipline/Sources/Discipline/Selection.swift
+  - Packages/AllyDiscipline/Sources/Discipline/Resources/contract.json
 ---
 
 # Purpose
@@ -107,6 +112,25 @@ implementation:
 6. Брат — 1–2 раза за 14 ходов, имя — не чаще чем в трети реплик, детали длинного разговора — 7 из 7.
 7. Игровые ответы не уводятся в «скажи маме» (0 из 90).
 8. Слепые судьи по критериям родителя: версия с дисциплиной не хуже сырой по живости.
+
+# Реестр: правило персоны v2.4 → исполнитель (2026-10-18, поставка turn-contract)
+
+Полем STATUS реестр станет, когда поставка приложения объявит `model_surface` (канон §14.2a); до тех пор — здесь.
+«advisory» — правило держит только промпт, а значит, по L25 его нет.
+
+| Правило промпта | Исполнитель | Статус |
+|---|---|---|
+| Одно–три предложения, один вопрос | `TurnContract`: лимиты режима, отбор предложений | исполняется |
+| Без смайликов, звёздочек, скобок, списков, ссылок; числа словами; только русский | `Repair`: markup, emoji, symbols, latin, digits; `TurnContract`: иероглифы | исполняется |
+| Ласковые слова (решение родителя: только имя) | `Repair.endearment` снимает взрослые обращения и заглушки | исполняется |
+| Не скучать, не ждать, не просить остаться | `TurnContract.attachment` | исполняется |
+| Когда уходит — без вопросов и без «поиграем ещё» | `TurnContract`, режим `goodbye` (режим задаёт приложение) | исполняется |
+| Опасное — запрет и куда бежать | `TurnContract`: «как сделать опасное» → готовый запрет; указание на взрослого не срезается; после запрета нет вопросов | частично: маршрутизатор и заготовки до модели — следующая поставка |
+| Не спрашивать и не повторять адрес и телефон | `Repair` ставит отметку номера, `TurnContract` (`phone`) отвечает заготовкой | частично: адрес словами — следующая поставка |
+| Не обещать секрет от мамы | — | advisory до следующей поставки |
+| Честно: сказочная подружка, не живая | — | advisory до следующей поставки |
+| Брат 1–2 раза, имя только при встрече | — | advisory: счётчики окна — поставка маршрутизатора |
+| Без страшилок и взрослых тем; женский род; не повторять вопрос; верный счёт | — | advisory |
 
 # Ремонт текста в коде (пакет `Packages/AllyDiscipline`, 2026-10-18)
 

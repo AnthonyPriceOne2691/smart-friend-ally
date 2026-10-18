@@ -14,6 +14,9 @@ struct Pattern: @unchecked Sendable {  // NSRegularExpression is immutable and t
 
     func found(in text: String) -> Bool { regex.firstMatch(in: text, range: Self.whole(text)) != nil }
 
+    /// Where the matches are, left to right, as UTF-16 ranges.
+    func ranges(in text: String) -> [NSRange] { regex.matches(in: text, range: Self.whole(text)).map(\.range) }
+
     /// The matched fragments, left to right (match ranges are UTF-16 offsets, so they are cut through NSString).
     func matches(in text: String) -> [String] {
         let string = NSString(string: text)

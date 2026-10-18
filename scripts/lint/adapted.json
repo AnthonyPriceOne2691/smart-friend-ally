@@ -10,7 +10,7 @@
     "kind": "upstream-candidate"
   },
   "scripts/lint/assert_digest.sh": {
-    "reason": "сводка утверждений не видит тестов на Swift: маска диффа только *test*.py/ts/tsx и *_test.go, шаблон утверждения в нижнем регистре (XCTAssertEqual и #expect не совпадают), блок func test не открывается — при одних Swift-тестах asserts_without_example: 0, и asserts_reviewed_by: n/a проходит на пустоте (delivery/incidents/2026-10-18-assert-digest-swift.md)",
+    "reason": "сводка утверждений не видит тестов на Swift: маска диффа только *test*.py/ts/tsx и *_test.go, шаблон утверждения в нижнем регистре (XCTAssertEqual не совпадает; #expect шаблон берёт, но файлы *Tests.swift до разбора не доходят), блок func test не открывается, настройки LINT_TEST_GLOB из шапки в коде нет — при одних Swift-тестах asserts_without_example: 0, и asserts_reviewed_by: n/a проходит на пустоте (delivery/incidents/2026-10-18-assert-digest-swift.md)",
     "changed": "не правился; рядом свой scripts/lint/assert_digest_swift.py с тем же договором и режимом --check в джобе delivery CI",
     "kind": "upstream-candidate"
   },

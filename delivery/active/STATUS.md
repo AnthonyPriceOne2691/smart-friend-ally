@@ -1,0 +1,34 @@
+# Active delivery status
+
+- **slug:** turn-contract
+- **stack:** delivery@2.04, cqg@2.63, okf@1.21
+- **class:** M
+- **kind:** feature
+- **repro_test:** n/a reason=не bugfix
+- **diagnosis:** n/a reason=не bugfix
+- **phase:** specify
+- **builder:** agent:claude-code
+- **verifier:** process:ci
+- **human_ok_spec:** deferred (reason=цели приёмки дисциплины подписаны родителем 2026-10-18 («подходят»); примеры K1–K11 показаны ему на подпись вместе со спекой, at=2026-10-18)
+- **human_ok_plan:** n/a
+- **shape-oracles:** cqg-deployed
+- **behavior-oracles:** tests-present
+- **artifact_oracle:** n/a reason=поставка не собирает приложение: пакет SwiftPM проверяют его тесты в CI на Linux, сборка не оракул (§6.5a); бандл iOS проверит поставка приложения
+- **ci-oracles:** tooling
+- **worktree:** ../Smart frend Ally-wt-contract
+- **parallel_sessions:** merge-guard,manual-deploy
+  <!-- §5.1a: интеграция в main только через scripts/merge_guard.sh; на телефон приложение ставится отдельным решением, а не следствием мержа -->
+- **hooks:** not-deployed
+- **blockers:** none
+- **waivers:** none
+- **new_dependency:** none
+- **runtime_paths:** none reason=контракт — чистые функции над готовым текстом и строкой девочки: без экрана, прав, железа и ввода-вывода; тракт голоса подключит поставка приложения
+- **irreversible_surfaces:** none reason=продукт офлайн; поставка не добавляет ни отправки, ни выкатки
+- **model_surface:** n/a reason=модель продукта ещё не вызывается кодом в репозитории: контракт судит готовый ответ; промпт, пин и сэмплинг войдут с поставкой голосового цикла
+- **rule_enforcers:** n/a reason=model_surface не объявлена списком; до её объявления реестр «правило персоны v2.4 → исполнитель → статус» ведётся таблицей в knowledge/engineering/safety-below-model.md
+- **canon_drift_waiver:** no
+- **baseline_growth_waiver:** no
+- **observability:** 1
+- **observe_signal:** —
+- **observe_until:** —
+- **circuit_breakers:** defaults from AGENT_DELIVERY_HARNESS.md §3.4

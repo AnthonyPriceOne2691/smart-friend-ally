@@ -18,6 +18,13 @@ extension Pass {
         return rules.collapse(rules.letters.replacing(in: split) { rules.cyrillic(word: $0[0]) })
     }
 
+    /// strip_cjk, right after latin: CJK characters go, logged as `latin` like the reference.
+    mutating func cjk(_ text: String) -> String {
+        guard rules.cjk.found(in: text) else { return text }
+        log(.latin, "cjk removed")
+        return rules.cjk.replacing(in: text, with: "")
+    }
+
     /// `digits` (digits_to_words): numbers become words, a phone-like run the mark; `phone_like` reports each mark.
     /// A count goes first, so «5 4 3 2 1» is read, not marked.
     mutating func digits(_ text: String) -> String {
