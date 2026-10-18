@@ -34,7 +34,13 @@ let turnViolators = [
               + "рядом, правда?", "Ой, нет же, не надо трогать спички! Они могут обжечь, это очень опасно. Скажи "
               + "об этом маме или папе."),
     TurnProbe("limits", "Слоны очень большие. Они едят траву и листья. Слоны любят купаться. А ещё у них длинный "
-              + "хобот. Хочешь узнать про уши?", "Слоны очень большие. Они едят траву и листья. Слоны любят купаться."),
+              + "хобот. Хочешь узнать про уши?", "Слоны очень большие. Они едят траву и листья. Слоны любят купаться. "
+              + "Хочешь узнать про уши?"),
+    TurnProbe("limits", "Раз. Два. Три. Четыре.", "Раз. Два. Три."),
+    TurnProbe("closing_question", "Божьи коровки живут в траве и едят маленьких тлей. Когда им страшно, они "
+              + "притворяются мёртвыми и выпускают жёлтую горькую капельку, чтобы их не съели. А ты хочешь сама найти "
+              + "божью коровку, когда мы пойдём гулять в парк?", "Божьи коровки живут в траве и едят маленьких тлей. "
+              + "А ты хочешь сама найти божью коровку, когда мы пойдём гулять в парк?"),
     TurnProbe("clauses", "Ой, я не умею рассказывать длинные сказки, но я могу рассказать тебе короткую историю про "
               + "дракона и принцессу.", "Ой, я не умею рассказывать длинные сказки. Но я могу рассказать тебе "
               + "короткую историю про дракона и принцессу."),
@@ -49,8 +55,8 @@ let turnViolators = [
               "Ой, ты испугалась? Не бойся, я с тобой. Скажи об этом маме или папе."),
     TurnProbe("pointer_keep", "Ой, ты испугалась? Не бойся. Я с тобой. Ты можешь сказать маме или папе?",
               "Ой, ты испугалась? Не бойся. Скажи об этом маме или папе."),
-    TurnProbe("safety_keep", "Ой, не волнуйся! Я с тобой. Постой на месте. Попроси помощи у продавца, хорошо?",
-              "Ой, не волнуйся! Постой на месте. Попроси помощи у продавца, хорошо?"),
+    TurnProbe("safety_keep", "Ой, не волнуйся! Я с тобой. Постой на месте. Попроси помощи у продавца.",
+              "Ой, не волнуйся! Постой на месте. Попроси помощи у продавца."),
     TurnProbe("connective_strip", "Ой! Ты хочешь свечку? Это горячо. Поэтому позови взрослого, он поможет.",
               "Ой! Ты хочешь свечку? Позови взрослого, он поможет."),
     TurnProbe("danger_script", "Давай зажжём спичку, это красиво!", contractData.scripts["matches"]),
@@ -91,7 +97,9 @@ let turnCleans = [
               + "хорошо?"),
     TurnProbe("action_referral", "Ой, не трогай! Эти таблетки — для взрослых."),
     TurnProbe("why_filler", "Ой, хороший вопрос! Ты знаешь, что жирафы спят стоя? Они спят совсем чуть-чуть.",
-              nil, .why)
+              nil, .why),
+    TurnProbe("closing_question", "Раз. Два. Три. Хочешь ещё?"),
+    TurnProbe("closing_question", "Ой, не волнуйся! Я с тобой. Постой на месте. Попроси помощи у продавца, хорошо?")
 ]
 
 func say(_ reply: String, _ mode: TurnMode = .talk, off disabled: Set<String> = []) -> Turn {
@@ -154,6 +162,36 @@ final class ContractTests: XCTestCase {
 
     func testReferralToAnAdultIsKept() {  // K14
         XCTAssertEqual(turnFailures(of: ["action_referral", "safety_prohibition"]), [])
+    }
+
+    /// The journal names the rule only when it changed what is spoken.
+    func testClosingQuestionComesFourthInTalk() {  // Q1
+        XCTAssertEqual(turnFailures(of: ["closing_question", "limits"]), [])
+        XCTAssertEqual(say("Раз. Два. Три. Хочешь ещё?").record.rules, ["closing_question"])
+        XCTAssertEqual(say("Привет! Как дела?").record.rules, [])
+    }
+
+    func testWhyModeKeepsThreeSentences() {  // Q2
+        let reply = "Люди спят, чтобы отдохнуть. Ночью мозг раскладывает всё по полочкам. А ещё во сне ты растёшь. "
+            + "Ты любишь спать днём?"
+        XCTAssertEqual(spoken(say(reply, .why)), "Люди спят, чтобы отдохнуть. Ночью мозг раскладывает всё по "
+            + "полочкам. А ещё во сне ты растёшь.")
+        XCTAssertEqual(spoken(say(reply)), reply)
+    }
+
+    func testGoodbyeHasNoClosingQuestion() {  // Q3
+        let reply = "Пока-пока! Было очень весело. Ты сегодня молодец. Поиграем завтра?"
+        XCTAssertEqual(spoken(say(reply, .goodbye)), "Пока-пока! Было очень весело. Ты сегодня молодец.")
+    }
+
+    func testNoClosingQuestionAfterAProhibition() {  // Q4
+        let reply = "Ой, это таблетки. Их нельзя есть. Их даёт только мама. А какие ещё штучки ты нашла в шкафу?"
+        XCTAssertEqual(spoken(say(reply)), "Ой, это таблетки. Их нельзя есть. Их даёт только мама.")
+    }
+
+    func testAQuestionFirstLeavesNoClosingQuestion() {  // Q5
+        let reply = "Ты про корову? Она милая. Она даёт молоко. А ты любишь молоко?"
+        XCTAssertEqual(spoken(say(reply)), "Ты про корову? Она милая. Она даёт молоко.")
     }
 
     func testCannedRepliesWhenNothingIsLeft() {  // K7

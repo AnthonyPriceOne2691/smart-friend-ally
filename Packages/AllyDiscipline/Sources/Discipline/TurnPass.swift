@@ -7,20 +7,23 @@ enum ContractRule: String, CaseIterable {
     case clauses, limits, afterProhibition = "after_prohibition", pointerKeep = "pointer_keep"
     case safetyKeep = "safety_keep", connective = "connective_strip", modes, whyFiller = "why_filler"
     case lastQuestion = "last_question", actionReferral = "action_referral", safetyProhibition = "safety_prohibition"
+    case closingQuestion = "closing_question"
 }
 
 /// The first sentence that broke a content rule: nothing after it is spoken.
 typealias Violation = (rule: ContractRule, sentence: String)
 
-/// One turn through the contract: the mode's limits, the rules switched off, the rule ids fired so far.
+/// One turn through the contract: the mode's limits (narrowed for the statements before a closing question), the
+/// rules switched off, the rule ids fired so far.
 struct TurnPass {
-    let contract: Contract, limits: ContractData.Limits, disabled: Set<String>, why: Bool
+    let contract: Contract, disabled: Set<String>, why: Bool, talk: Bool
+    var limits: ContractData.Limits
     private(set) var fired: [String] = []
 
     init(contract: Contract, mode: TurnMode, disabled: Set<String>) {
         let mode = disabled.contains(ContractRule.modes.rawValue) ? .talk : mode
         (self.contract, self.disabled) = (contract, disabled)
-        (limits, why) = (contract.limits(mode), mode == .why)
+        (limits, why, talk) = (contract.limits(mode), mode == .why, mode == .talk)
     }
 
     func isOn(_ rule: ContractRule) -> Bool { !disabled.contains(rule.rawValue) }
