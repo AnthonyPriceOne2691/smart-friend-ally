@@ -9,7 +9,7 @@
 - **phase:** verify
 - **builder:** agent:claude-code
 - **verifier:** process:ci
-- **human_ok_spec:** deferred (reason=решение о цели 4 родитель принял 2026-10-18, примеры Q1–Q7 несёт ему ведущий сессии — подпись до мержа, at=2026-10-18)
+- **human_ok_spec:** yes (родитель подписал примеры Q1–Q7 2026-10-18 — «Подписываю»)
 - **human_ok_plan:** n/a
 - **shape-oracles:** cqg-deployed
 - **behavior-oracles:** tests-present
