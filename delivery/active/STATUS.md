@@ -6,7 +6,7 @@
 - **kind:** feature
 - **repro_test:** n/a reason=не bugfix
 - **diagnosis:** n/a reason=не bugfix
-- **phase:** verify
+- **phase:** handoff
 - **builder:** agent:claude-code
 - **verifier:** process:ci
 - **human_ok_spec:** yes (родитель подписал примеры K1–K14 и готовые запреты по опасностям 2026-10-18 — «Подписываю»; K4 и K11 — по его решению о цели 4, правило «вопрос в конце» — следующей поставкой)
