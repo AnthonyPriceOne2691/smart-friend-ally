@@ -25,6 +25,7 @@ struct RepairData: Decodable {
 struct Rules: Sendable {
     static let shared = Rules(RepairData.load())
     static let word = "[\\p{L}\\p{N}_]"  // Python's \w: ICU's \w also takes combining marks
+    static let boundary = "(?:(?<!\(word))(?=\(word))|(?<=\(word))(?!\(word)))"  // Python's \b
     static let cyrillic = "\\x{0410}-\\x{044F}\\x{0401}\\x{0451}"  // А-Я а-я Ё ё, as in the reference
 
     let enWords: [String: String]
@@ -55,6 +56,8 @@ struct Rules: Sendable {
     let edges = Pattern("^\\s+|\\s+$")
     let symbols: [(Pattern, String)]
     let latinLetter = Pattern("[A-Za-z]")
+    let cjk = Pattern("[\\x{3040}-\\x{30FF}\\x{3400}-\\x{4DBF}\\x{4E00}-\\x{9FFF}"  // CJK_RE of the reference
+                      + "\\x{AC00}-\\x{D7AF}\\x{F900}-\\x{FAFF}]+")
     let cyrillicLetter = Pattern("[\(cyrillic)]")
     let camelCase = Pattern("(?<=[a-z])(?=[A-Z])")
     let letters = Pattern("[A-Za-z\(cyrillic)]+")
@@ -74,9 +77,8 @@ struct Rules: Sendable {
         translit = data.translit.map { ($0[0], $0[1]) }
         homoglyph = Dictionary(uniqueKeysWithValues: data.homoglyph.map { (Character($0.key), $0.value) })
         phoneMark = " \(data.phoneMarker) "
-        let word = Rules.word, notWord = "(?!\(Rules.word))"
-        let boundary = "(?:(?<!\(word))(?=\(word))|(?<=\(word))(?!\(word)))"  // Python's \b
-        url = Pattern("https?://\\S+|www\\.\\S+|\(boundary)[\\p{L}\\p{N}_\\-]+\\."
+        let notWord = "(?!\(Rules.word))"
+        url = Pattern("https?://\\S+|www\\.\\S+|\(Rules.boundary)[\\p{L}\\p{N}_\\-]+\\."
                       + "(?:\(data.urlTlds.joined(separator: "|")))\(notWord)", .caseInsensitive)
         symbols = data.symbols.map { (Pattern($0[0]), NSRegularExpression.escapedTemplate(for: $0[1])) }
         numberSteps = [
@@ -88,12 +90,14 @@ struct Rules: Sendable {
         let own = "(?:\(terms.ownRe)\\s+)?", name = "(?:\(terms.words.joined(separator: "|")))"
         let lead = "(^|(?<=[.!?…]\\s))"
         // strip_endearments: a lone «Ты моя хорошая!», mid-sentence, sentence start; without a comma only with the
-        // possessive («Спокойной ночи моя радость!»), so «Собачка такая милая!» stays.
+        // possessive («Спокойной ночи моя радость!»), so «Собачка такая милая!» stays; after a comma the possessive
+        // marks an address whatever the word («, моя принцесса!»), while «Это моя игрушка!» has no comma.
         endearments = [
             lead + terms.aloneRe + own + name + "\\s*[!.…]+\\s*",
             ",\\s*" + own + name + "\\s*(?=[,!?.…])",
             lead + own + name + "\\s*[,!]\\s*",
-            "\\s+\(terms.ownRe)\\s+(?:\(terms.tailWords.joined(separator: "|")))\\s*(?=[!?.…])"
+            "\\s+\(terms.ownRe)\\s+(?:\(terms.tailWords.joined(separator: "|")))\\s*(?=[!?.…])",
+            ",\\s*\(terms.ownRe)\\s+(?:[а-яё]+\\s+)?[а-яё]+\\s*(?=[,!?.…])"
         ].map { Pattern($0, .caseInsensitive) }
     }
 

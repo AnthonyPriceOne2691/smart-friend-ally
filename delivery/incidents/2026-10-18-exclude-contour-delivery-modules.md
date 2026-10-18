@@ -38,3 +38,8 @@ Ally подключил `file-length` с маской `*.swift` (первый к
 
 - поставка `swift-contour` Ally; запись `kind: upstream-candidate` у `check_file_length.sh` в `scripts/lint/adapted.json`;
 - сообщение судье (сессия Prepare) после мержа поставки.
+
+## Итог
+
+Судья `prepare-ae` записал находку в BACKLOG канона (Prepare `0c642c2`, 2026-10-18) и сверил с кодом; правка канона —
+следующей партией.

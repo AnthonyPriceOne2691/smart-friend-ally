@@ -1,13 +1,14 @@
 import XCTest
 @testable import Discipline
 
-/// One reply of the model and what the Python reference makes of it (Fixtures/make_fixtures.py).
+/// One reply of the model, its repaired text and its contract output (talk) by the Python reference (make_fixtures.py).
 struct ParityPair: Decodable {
     let input: String
     let output: String
+    let contract: String
 
     enum CodingKeys: String, CodingKey {
-        case input = "in", output = "out"
+        case input = "in", output = "out", contract
     }
 }
 
