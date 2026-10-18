@@ -6,7 +6,7 @@
 - **kind:** feature
 - **repro_test:** n/a reason=не bugfix
 - **diagnosis:** n/a reason=не bugfix
-- **phase:** implement
+- **phase:** handoff
 - **builder:** agent:claude-code
 - **verifier:** process:ci
 - **human_ok_spec:** n/a
@@ -29,6 +29,6 @@
 - **canon_drift_waiver:** no
 - **baseline_growth_waiver:** no
 - **observability:** 1
-- **observe_signal:** заполняется на handoff
+- **observe_signal:** первый `App/*.swift` краснит мета-гейт «объявления n/a «до первого кода» истекли» по ключам cpu-in-async и unbounded-list (свой na-expiry снят); следующая поставка с Swift-тестами получает от канонной сводки число непривязанных или `unknown`, а не «утверждений нет»; следующий накат канона не трогает `.secrets.baseline`; судья закрывает находку `2026-10-18-plan-misses-sourced-part` ревизией канона
 - **observe_until:** 2026-11-30
 - **circuit_breakers:** defaults from AGENT_DELIVERY_HARNESS.md §3.4
