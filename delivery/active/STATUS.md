@@ -6,7 +6,7 @@
 - **kind:** feature
 - **repro_test:** n/a reason=не bugfix
 - **diagnosis:** n/a reason=не bugfix
-- **phase:** specify
+- **phase:** implement
 - **builder:** agent:claude-code
 - **verifier:** process:ci
 - **human_ok_spec:** deferred (reason=цели приёмки дисциплины подписаны родителем 2026-10-18 («подходят»); примеры K1–K11 показаны ему на подпись вместе со спекой, at=2026-10-18)
