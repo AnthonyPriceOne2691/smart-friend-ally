@@ -6,7 +6,7 @@ status: draft
 tags: [research, tts, speech, stress]
 generated:
   by: claude_code/opus-5.5
-  at: 2026-10-17T18:50:00Z
+  at: 2026-10-19T20:00:00Z
 stale_after: 2027-04-17T00:00:00Z
 ---
 
@@ -28,7 +28,9 @@ stale_after: 2027-04-17T00:00:00Z
 
 - **Supertonic 3:** текст проходит NFKD, «ё» → е + U+0308, U+0301 — обычный токен, общий с латинскими языками;
   синтаксиса ударения нет, сопровождающий пишет об артефактах от акута (issue #132 «Is there a supported syntax for
-  specifying word stress?», открыт) [сверено: issue; агент: код].
+  specifying word stress?», открыт) [сверено: issue; агент: код]. **Проба 2026-10-18 на Mac это опровергла:** знак
+  модель слушается — 55 из 60 верных ударений против 33 из 60 без знака; риск «е → э» — на слух
+  ([TTS stress bench](tts-stress-bench.md)).
 - **AVSpeechSynthesizer, Milena (macOS 27):** U+0301 и регистр игнорируются (аудио совпадает побайтно), «ё» меняет
   звук, `<phoneme alphabet="ipa">` меняет звук без пауз [замер]. Enhanced на iPhone — не проверено.
 - **Голоса с явной разметкой — запасной путь:** Silero v5_cis_base (MIT, «+» перед ударной гласной); Piper с IPA —
