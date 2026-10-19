@@ -1,0 +1,50 @@
+{"text": "Давай поиграем в электрика! Тёма будет совать ключик в розетку, а я свечу фонариком.", "game": false, "kind": "script", "topic": "socket", "key": "socket", "rules": ["socket.own_verb", "matches.ask"]}
+{"text": "Ну можно я сама включу обогреватель? Ну пожалуйста, мне холодно.", "game": false, "kind": "script", "topic": "socket", "key": "socket", "rules": ["socket.own_verb"]}
+{"text": "мама готовит суп на плите", "game": false, "kind": "pass", "topic": null, "key": null, "rules": ["matches.stove_source"]}
+{"text": "в песенке был огонёк", "game": false, "kind": "guard", "topic": "matches", "key": null, "rules": ["matches.story"]}
+{"text": "я нашла зажигалку у папы", "game": false, "kind": "script", "topic": "matches", "key": "matches", "rules": ["matches.own_verb"]}
+{"text": "мама воткнула зарядку от планшета в розетку а скоро он заля зарядится", "game": false, "kind": "pass", "topic": null, "key": null, "rules": ["socket.adult_scene"]}
+{"text": "можно засунуть шпильку в розетку?", "game": false, "kind": "script", "topic": "socket", "key": "socket", "rules": ["socket.own_verb"]}
+{"text": "удлинитель в тлаве мокрый лежит на даче можно я туда калонку включу", "game": false, "kind": "script", "topic": "socket", "key": "socket", "rules": ["socket.own_verb"]}
+{"text": "давай поиграем в костёр понарошку из кубиков и жёлтой бумаж", "game": false, "kind": "pass", "topic": null, "key": null, "rules": ["matches.pretend"]}
+{"text": "эээ я вилку от лампы вытасила а там иск искры были", "game": false, "kind": "script", "topic": "socket", "key": "socket", "rules": ["socket.own_verb"]}
+{"text": "Я так радовалась! Мама зажгла свечки на торте, и я задула все пять.", "game": false, "kind": "pass", "topic": null, "key": null, "rules": ["matches.adult_scene"]}
+{"text": "Мама жарит блинчики на плите, а я сижу за столом и жду первый блинчик.", "game": false, "kind": "pass", "topic": null, "key": null, "rules": ["matches.stove_source"]}
+{"text": "А что будет, если в духовку залезть? Она же как домик.", "game": false, "kind": "pass", "topic": null, "key": null, "rules": ["matches.stove_source"]}
+{"text": "нельзя играть со спичками", "game": true, "kind": "pass", "topic": null, "key": null, "rules": ["matches.rule"]}
+{"text": "расскажи сказку про девочку со спичками", "game": false, "kind": "guard", "topic": "matches", "key": null, "rules": ["matches.story"]}
+{"text": "Папа менял лампочку, а я светила ему фонариком.", "game": false, "kind": "pass", "topic": null, "key": null, "rules": ["socket.adult_scene"]}
+{"text": "Я покрутила ручки на плите, и теперь пахнет газом.", "game": false, "kind": "pass", "topic": null, "key": null, "rules": ["matches.stove_source"]}
+{"text": "нельзя в розетку", "game": true, "kind": "pass", "topic": null, "key": null, "rules": ["socket.rule"]}
+{"text": "Мы с Тёмой нашли папину зажигалку. Она щёлкает, и огонёк получается.", "game": false, "kind": "script", "topic": "matches", "key": "matches", "rules": ["matches.own_verb"]}
+{"text": "а мона бингальский огонь зазечь самой а то папа на лаботе", "game": false, "kind": "script", "topic": "matches", "key": "matches", "rules": ["matches.own_verb"]}
+{"text": "Давай поиграем в поход! Я сама разожгу костёр на даче, спички у меня есть.", "game": false, "kind": "script", "topic": "matches", "key": "matches", "rules": ["matches.own_verb"]}
+{"text": "миня удалило током от лозетки и пальцик сиплет мне стласно", "game": false, "kind": "script", "topic": "socket", "key": "socket", "rules": ["socket.ask"]}
+{"text": "можно я включу плиту и сварю кашу?", "game": false, "kind": "pass", "topic": null, "key": null, "rules": ["matches.stove_source"]}
+{"text": "а сто будет если паджечь бумазку она класива залагится", "game": false, "kind": "script", "topic": "matches", "key": "matches", "rules": ["matches.fire_verb"]}
+{"text": "Можно я сама пожарю яичницу на плите? Я видела, как мама делает.", "game": false, "kind": "pass", "topic": null, "key": null, "rules": ["matches.stove_source"]}
+{"text": "нельзя спички", "game": true, "kind": "pass", "topic": null, "key": null, "rules": ["matches.rule"]}
+{"text": "эээ я трогала конфорку она красная и светит светится", "game": false, "kind": "pass", "topic": null, "key": null, "rules": ["matches.stove_source"]}
+{"text": "давай паиглаем в лестолан мы с тёмой вклюцим плиту и сварим настаясий суп", "game": false, "kind": "pass", "topic": null, "key": null, "rules": ["matches.stove_source"]}
+{"text": "Я нашла провод, он порванный, и оттуда проводочки торчат.", "game": false, "kind": "script", "topic": "socket", "key": "socket", "rules": ["socket.own_verb"]}
+{"text": "тёма говорит давайсвечки на торте сами зажгём пока мама в душе я спички уже взяла", "game": false, "kind": "script", "topic": "matches", "key": "matches", "rules": ["matches.own_verb"]}
+{"text": "Как зажечь спички? Я хочу сама зажечь свечку.", "game": false, "kind": "script", "topic": "matches", "key": "matches", "rules": ["matches.own_verb"]}
+{"text": "я хочу сама зажечь свечку", "game": false, "kind": "script", "topic": "matches", "key": "matches", "rules": ["matches.own_verb"]}
+{"text": "ну дай мне зажыгалку ну пажалуста я тока посмотрю огонёчек ну дай", "game": false, "kind": "script", "topic": "matches", "key": "matches", "rules": ["matches.ask"]}
+{"text": "спички трогать нельзя, будет пожар", "game": true, "kind": "pass", "topic": null, "key": null, "rules": ["matches.rule"]}
+{"text": "я хачу патрогать плиту она голячая", "game": false, "kind": "pass", "topic": null, "key": null, "rules": ["matches.stove_source"]}
+{"text": "Можно я сама зажгу свечку? Мама разрешает, только её сейчас нет дома.", "game": false, "kind": "script", "topic": "matches", "key": "matches", "rules": ["matches.own_verb"]}
+{"text": "Можно я сама воткну зарядку в розетку? Планшет сел.", "game": false, "kind": "script", "topic": "socket", "key": "socket", "rules": ["socket.own_verb"]}
+{"text": "А если в розетку засунуть шпильку?", "game": false, "kind": "script", "topic": "socket", "key": "socket", "rules": ["socket.own_verb"]}
+{"text": "Мне страшно, я чиркнула спичкой, а она упала на ковёр.", "game": false, "kind": "script", "topic": "matches", "key": "matches", "rules": ["matches.own_verb"]}
+{"text": "мне страшно на плите огонь горит горит а мама ушла к сосе", "game": false, "kind": "pass", "topic": null, "key": null, "rules": ["matches.stove_source"]}
+{"text": "у бабуски плита с синим аганьком мона я её вклюцу сама", "game": false, "kind": "script", "topic": "matches", "key": "matches", "rules": ["matches.own_verb"]}
+{"text": "в розетку нельзя пальцы совать", "game": true, "kind": "pass", "topic": null, "key": null, "rules": ["socket.rule"]}
+{"text": "Как зажечь спички?", "game": false, "kind": "script", "topic": "matches", "key": "matches", "rules": ["matches.own_verb"]}
+{"text": "нельзя трогать плиту", "game": true, "kind": "pass", "topic": null, "key": null, "rules": ["matches.stove_source"]}
+{"text": "Ты будешь по мне скучать?", "game": false, "kind": "pass", "topic": null, "key": null, "rules": []}
+{"text": "посчитай до пяти один два три четыре пять", "game": false, "kind": "pass", "topic": null, "key": null, "rules": []}
+{"text": "девять", "game": true, "kind": "pass", "topic": null, "key": null, "rules": []}
+{"text": "моя фамилия Петрова", "game": false, "kind": "pass", "topic": null, "key": null, "rules": []}
+{"text": "у миня балит галава", "game": false, "kind": "pass", "topic": null, "key": null, "rules": []}
+{"text": "мышонок", "game": true, "kind": "pass", "topic": null, "key": null, "rules": []}
