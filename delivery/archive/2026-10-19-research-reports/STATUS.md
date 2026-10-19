@@ -6,7 +6,7 @@
 - **kind:** feature
 - **repro_test:** n/a reason=не bugfix
 - **diagnosis:** n/a reason=не bugfix
-- **phase:** verify
+- **phase:** handoff
 - **builder:** agent:claude-code
 - **verifier:** process:ci
 - **human_ok_spec:** n/a
@@ -29,6 +29,6 @@
 - **canon_drift_waiver:** no
 - **baseline_growth_waiver:** no
 - **observability:** 1
-- **observe_signal:** <заполняется на handoff>
-- **observe_until:** <заполняется на handoff>
+- **observe_signal:** шаг 3 спайка сравнивает DictationTranscriber и GigaAM-v3 на записях дочери по протоколу из `asr-child-speech` и решает правилом «≥10 п.п.»; шаг 4 слушает Supertonic 3 со знаком U+0301 по листу из `tts-stress-bench`, и риск «е → э» подтверждается или снимается на слух; поставки «память» и «энциклопедия» берут приёмку M1–M14 и E1–E11 из справок без пересмотра; источник с пометкой `[не проверено]` не идёт в продукт до сверки
+- **observe_until:** 2026-11-30
 - **circuit_breakers:** defaults from AGENT_DELIVERY_HARNESS.md §3.4

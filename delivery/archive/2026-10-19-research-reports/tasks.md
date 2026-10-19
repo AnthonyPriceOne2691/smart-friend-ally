@@ -44,5 +44,5 @@ iPhone. **L19** — проверки замораживаются до прог�
   `product/persona`; строка обязательства наблюдения в `CLAUDE.md`
 
 ## Slice 4 — проверка
-- [ ] T7: сверка чисел concept ↔ отчёт скриптом; `okf_validate`, `okf_sync_gate`; pre-commit; строгий
+- [x] T7: сверка чисел concept ↔ отчёт скриптом; `okf_validate`, `okf_sync_gate`; pre-commit; строгий
   `delivery_check`; CI; verify-report, архив, строка `INDEX.md`
