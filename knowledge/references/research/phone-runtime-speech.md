@@ -6,7 +6,7 @@ status: draft
 tags: [research, llm, speech, ios]
 generated:
   by: claude_code/opus-5.5
-  at: 2026-10-17T17:30:00Z
+  at: 2026-10-19T20:00:00Z
 stale_after: 2027-04-17T00:00:00Z
 ---
 
@@ -62,3 +62,5 @@ stale_after: 2027-04-17T00:00:00Z
   через SPM, только CPU, без потоковой выдачи; модели — `supertone-oss-archive/supertonic-3`,
   OpenRAIL-M, ~99M параметров, 44,1 кГц; русский — сырой текст без G2P, знак ударения U+0301 даёт
   артефакты по словам сопровождающего; есть Core ML конверсия [агент]. Вход в шаг 4 (голос с дочерью).
+  Проба 2026-10-18 на Mac: знак U+0301 модель слушается — 55 из 60 против 33 из 60 без знака
+  ([TTS stress bench](tts-stress-bench.md)).

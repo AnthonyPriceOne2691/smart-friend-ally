@@ -1,0 +1,34 @@
+# Active delivery status
+
+- **slug:** research-reports
+- **stack:** delivery@2.07, cqg@2.70, okf@1.21
+- **class:** S
+- **kind:** feature
+- **repro_test:** n/a reason=не bugfix
+- **diagnosis:** n/a reason=не bugfix
+- **phase:** verify
+- **builder:** agent:claude-code
+- **verifier:** process:ci
+- **human_ok_spec:** n/a
+- **human_ok_plan:** n/a
+- **shape-oracles:** cqg-deployed
+- **behavior-oracles:** weak — дёшево: сверка чисел concept ↔ отчёт скриптом и сверка лицензий по первоисточникам (verify-report); поставка документная — четыре отчёта исследований 2026-10-18 в каноне домена
+- **artifact_oracle:** n/a reason=поставка не собирает приложение: Xcode-проекта нет, кода продукта поставка не трогает
+- **ci-oracles:** tooling
+- **worktree:** ../Smart frend Ally-wt-research
+- **parallel_sessions:** merge-guard,manual-deploy
+  <!-- §5.1a: интеграция в main только через scripts/merge_guard.sh; на телефон приложение ставится отдельным решением, а не следствием мержа -->
+- **hooks:** not-deployed
+- **blockers:** none
+- **waivers:** none
+- **new_dependency:** none
+- **runtime_paths:** none reason=канон домена и база исследования; кода продукта поставка не трогает
+- **irreversible_surfaces:** none reason=продукт офлайн; поставка не добавляет ни отправки, ни выкатки
+- **model_surface:** n/a reason=модель продукта ещё не вызывается кодом в репозитории
+- **rule_enforcers:** n/a reason=model_surface не объявлена списком
+- **canon_drift_waiver:** no
+- **baseline_growth_waiver:** no
+- **observability:** 1
+- **observe_signal:** <заполняется на handoff>
+- **observe_until:** <заполняется на handoff>
+- **circuit_breakers:** defaults from AGENT_DELIVERY_HARNESS.md §3.4

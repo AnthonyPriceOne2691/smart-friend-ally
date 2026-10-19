@@ -1,5 +1,19 @@
 # Knowledge Bundle Update Log
 
+## 2026-10-19 — четыре исследования 18.10: ударения, распознавание, память, энциклопедия
+
+* **Creation**: `references/research/tts-stress-bench`, `asr-child-speech`, `memory-portrait`, `kids-encyclopedia` —
+  выжимки отчётов агентов 2026-10-18: числа, методы, оговорки, приёмка M1–M14 и E1–E11, протокол записи шага 3.
+* **Сверка лицензий** при записи (`gh api`, API Hugging Face, правовые тексты): OpenStax — CC BY-NC-SA, а не CC BY;
+  общественное достояние текстов NASA Space Place и NOAA SciJinks не подтвердилось; Gemma 4 — Apache 2.0; Викидия —
+  CC BY-SA 3.0; остальные утверждения отчётов подтвердились, непроверяемое помечено.
+* **Update**: `product/persona` — знак U+0301 Supertonic 3 модель слушается (55 из 60 против 33 из 60), запись «даёт
+  артефакты» опровергнута; замер поиска энциклопедии — BM25 хватает. `references/research/tts-stress`,
+  `phone-runtime-speech` — та же поправка; `memory-prototype` — ссылка на продолжение.
+* **Update**: `KNOWLEDGE.md` §6, §9, §12, §13 — указатели на справки (OKF §6); бюджет связки с GigaAM — footprint
+  ~0,7 ГБ по замеру на Mac вместо оценки ~0,3 ГБ.
+* **Источник**: поставка `research-reports`; отчёты — `local/research/` (вне git).
+
 ## 2026-10-18 — накат канона cqg@2.70: свои обходы сняты
 
 * **Update**: `references/repo-map` — истечение объявлений n/a «до кода приложения» держит мета-гейт канона (`until: "App/*.swift"` в `not-applicable.json`, `cqg@2.66`), свой гейт `na-expiry` снят; во входных точках — пакет `Packages/AllyDiscipline` вместо «продукта пока нет».

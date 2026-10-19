@@ -133,6 +133,10 @@ Ally держится в полной синхронизации с каноно
   контракт хода `TurnContract` до голоса; ратчет SwiftLint, `file-length` с маской `*.swift *.py`, jscpd `swift`, джоба
   CI `swift` с покрытием ≥ 70%. Два объявления n/a ждут кода приложения (`until: "App/*.swift"` в
   `not-applicable.json`, мета-гейт). Сводку утверждений Swift даёт канонная `assert_digest.sh` (`cqg@2.68`).
+- **Исследования 18.10** (поставка `research-reports`, наблюдение до 2026-11-30) — справки в `knowledge/references/research/`:
+  ударения синтеза (знак U+0301 у Supertonic 3 работает: 55 из 60 против 33 из 60), распознавание речи пятилетки (GigaAM-v3
+  точнее диктовки; правило шага 3 «≥10 п.п.» и протокол записи), память-портрет (приёмка M1–M14), энциклопедия «почему»
+  (BM25 в FTS5 хватает; приёмка E1–E11). Лицензии сверены при записи: OpenStax — CC BY-NC-SA, не CC BY.
 - **STATUS поставки** несёт `parallel_sessions: merge-guard,manual-deploy` (обязательно с `delivery@2.01`). После
   синхронизации канона сразу гонять строгий `delivery_check --require-ci --diff-base origin/main` (урок L14).
 
