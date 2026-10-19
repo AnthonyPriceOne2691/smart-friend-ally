@@ -22,5 +22,8 @@
     «розетка», проверка быта проходит; hazard_dev 16 из 16, ложных 0 из 80; игры, диалоги, «почему» — 0 и 0
 - [x] T7: знания: `safety-below-model` (строка реестра про счётчики — решение 7; раздел маршрутизатора;
   `implementation:`), `knowledge/log.md`; `eval-smoke.md`
-- [ ] T8: verify-report, PR, CI зелёный; handoff: архив, INDEX, `router-core` в список наблюдений CLAUDE.md; мерж —
+- [x] T8: verify-report, PR, CI зелёный; handoff: архив, INDEX, `router-core` в список наблюдений CLAUDE.md; мерж —
   ведущий через merge_guard
+  - сделано: PR #31; два пуша прошли без CI — PR конфликтовал с main после мержа research-reports (`knowledge/log.md`);
+    слит main `5340dd6`, строгий `delivery_check` сразу после слияния — 0 ошибок (L14); CI 39320275130 зелёный; уроки
+    L34–L35; мерж — ведущий

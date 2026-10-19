@@ -6,7 +6,7 @@
 - **kind:** feature
 - **repro_test:** n/a reason=не bugfix
 - **diagnosis:** n/a reason=не bugfix
-- **phase:** verify
+- **phase:** handoff
 - **builder:** agent:claude-code
 - **verifier:** process:ci
 - **human_ok_spec:** yes (решения родителя 1–5, 7 и «Упрощение» — 2026-10-19, решение 5 отозвано упрощением; тексты П1 подписаны 18.10)

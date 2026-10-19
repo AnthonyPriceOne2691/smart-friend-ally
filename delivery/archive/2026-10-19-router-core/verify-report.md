@@ -3,8 +3,8 @@
 **Date:** 2026-10-19
 **Verifier:** process:ci
 **asserts_reviewed_by:** n/a (все утверждения ведут к одобренным примерам и критериям — дайджест ниже, asserts_without_example: 0; ids — критерии серии R1, R3, R8–R12 и примеры спеки; пробы E21–E25 — экземпляры этих критериев на темах поставки)
-**CI run:** https://github.com/AnthonyPriceOne2691/smart-friend-ally/actions/runs/39319272907
-**Commit:** caa5de7 (код; дальше — знания, eval-smoke и этот отчёт)
+**CI run:** https://github.com/AnthonyPriceOne2691/smart-friend-ally/actions/runs/39320275130
+**Commit:** 279644a (код caa5de7 — прогон 39319272907 тоже зелёный; знания, этот отчёт и слияние main `5340dd6`)
 
 ## Shape oracles
 - [x] PASS — pre-commit на коммитах поставки: файлы ≤ 300 строк (21 файл по маске `*.swift *.py`), jscpd — 0 пар на 14 файлах Sources, секреты, данные ребёнка, SwiftLint — 0 находок (сложность ≤ 8, строки ≤ 120), покрытие гейтов; pre-push: delivery-gate, baseline-ratchet, new-dependency
@@ -69,7 +69,7 @@
 | Metric | Value |
 |---|---|
 | files_touched / loc_diff | 10 файлов в счёте предохранителя, net 785 из 800; поставка и знания — вне счёта |
-| commits | 3 до verify (документы, код, знания) |
+| commits | 3 до verify (документы, код, знания), отчёт, слияние main (конфликт — только `knowledge/log.md`), handoff |
 | rework_after_done | 0 |
 | harness_hardened | yes — самопроверка данных при загрузке с хэшем двойников; абляция 14 правил по пробам данных |
 | implement_retries | 1 — первый подсчёт net 811 > 800, исправлено до коммита (типы и тесты короче, без исключения) |
