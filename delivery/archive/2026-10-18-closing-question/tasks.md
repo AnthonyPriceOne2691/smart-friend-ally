@@ -20,4 +20,7 @@
   срезало ничего (те же слова, что у сырого ответа) — дрейф между кругами судей (L30)
 - [x] T7: verify-report, PR, CI зелёный; вердикты слепых судей (Q6 парный пересуд, Q7) — ведущий; подпись родителя под Q1–Q7
   - Q7: 71% на v2.4 (15 пар против 7), 52% на v2.6; скрытый набор 256 и 254 против 257 и 254 у сырой; подпись — 2026-10-18
-- [ ] T8: после мержа наката канона — перебазировать на main, строгий `delivery_check --require-ci` (L14), handoff: архив, INDEX, `closing-question` в список наблюдений CLAUDE.md, merge_guard
+- [x] T8: после мержа наката канона — перебазировать на main, строгий `delivery_check --require-ci` (L14), handoff: архив, INDEX, `closing-question` в список наблюдений CLAUDE.md, merge_guard
+  - перебазировано на `8514c1f` (накат `sync-cqg-2.70`): конфликт только в `knowledge/log.md` (обе записи); 27 из 27 тестов;
+    строгий `delivery_check --require-ci --diff-base origin/main` — 0 ошибок, 2 предупреждения (разбор в verify-report);
+    стек STATUS → delivery@2.07 · cqg@2.70; CI 39305402962 зелёный; архив, INDEX (L33), CLAUDE.md

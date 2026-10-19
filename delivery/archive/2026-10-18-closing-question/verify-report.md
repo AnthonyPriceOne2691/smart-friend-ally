@@ -1,16 +1,16 @@
 # Verify report
 
-**Date:** 2026-10-18
+**Date:** 2026-10-19 (перебазирование на накат `sync-cqg-2.70`; замеры и вердикты судей — 2026-10-18)
 **Verifier:** process:ci
 **asserts_reviewed_by:** n/a (все утверждения ведут к одобренным примерам — 8 Swift-утверждений к Q1–Q5, дайджест ниже, asserts_without_example: 0; примеры Q1–Q7 подписаны родителем 2026-10-18)
-**CI run:** https://github.com/AnthonyPriceOne2691/smart-friend-ally/actions/runs/39157773870
-**Commit:** 921ca52
+**CI run:** https://github.com/AnthonyPriceOne2691/smart-friend-ally/actions/runs/39305402962
+**Commit:** f6df918 (код как в 921ca52, перебазирован на `8514c1f`; плюс стек STATUS)
 
 ## Shape oracles
-- [x] PASS — pre-commit на коммите и `--all-files`: 12 хуков (секреты, данные ребёнка, na-expiry, ратчет SwiftLint — 0 находок, file-length, jscpd, покрытие гейтов); pre-push: delivery-gate, baseline-ratchet, new-dependency
-- [x] PASS — доктор контура: `AUTO 42 · WEAK 16 · ABSENT 4 · TOOL 3 · SKIP 2 · DEAD 0` — как у turn-contract
+- [x] PASS — pre-commit `--all-files` после перебазирования: 11 хуков (секреты, данные ребёнка, ратчет SwiftLint — 0 находок, file-length, jscpd, покрытие гейтов); свой хук na-expiry снят накатом `sync-cqg-2.70` — истечение n/a держит мета-гейт канона; pre-push: delivery-gate, baseline-ratchet, new-dependency
+- [x] PASS — доктор контура (env Swift) после перебазирования: `AUTO 40 · WEAK 13 · ABSENT 4 · TOOL 3 · SKIP 2 · DEAD 0` — как у сдачи наката с активной поставкой; до правки стека STATUS было `AUTO 36 · WEAK 17` (четыре WEAK — версии 2.04/2.63 против снимка 2.07/2.70, тот же дрейф краснил CI-прогон 39304767643)
 - [x] PASS — `okf_validate.py`: 0 ошибок, 0 предупреждений, 35 файлов; `okf_sync_gate.py --base origin/main`: 3 концепта с `implementation:` сверены (концепт `safety-below-model` изменён вместе с `Selection.swift`)
-- [x] PASS — `delivery_check --diff-base origin/main`: 0 ошибок; предохранитель — 6 файлов, net 64 строки из 800. Предупреждения: `human_ok_spec: deferred` (долг до handoff) и «нет реляционного оракула» — детектор знает только hypothesis и fast-check; метаморфное отношение на Swift есть (`testNoiseKeepsTheRulesThatFire` в ContractTests и ParityTests)
+- [x] PASS — строгий `delivery_check --require-ci --diff-base origin/main` сразу после перебазирования (L14): 0 ошибок; предохранитель — 6 файлов, net 64 строки из 800. Предупреждения: §3.1d — у Q1–Q5 пример и тест приехали одним коммитом, порядок не проверить (накат научил гейт находить тесты Swift; урок L33); «нет реляционного оракула» — детектор знает только hypothesis и fast-check, а дифференциальный оракул здесь — паритет Swift с эталоном (743 из 743) и метаморфное `testNoiseKeepsTheRulesThatFire` в ContractTests и ParityTests
 
 ## Behavior oracles
 - [x] PASS — `swift test` на Mac (Xcode 27, Swift 6.4): 27 тестов из 27, покрытие строк Sources 96% (675 из 699); в CI на Linux — джоба `swift`, покрытие 96% (675 из 699), отрицательный контроль порогом 101% покраснел
@@ -81,7 +81,7 @@
 | Metric | Value |
 |---|---|
 | files_touched / loc_diff | 6 файлов в счёте предохранителя, net 64 из 800; поставка и знания — вне счёта |
-| commits | 2 до verify |
+| commits | 3 до verify; перебазирование на `sync-cqg-2.70` без правок кода (конфликт — только `knowledge/log.md`) и коммит стека STATUS |
 | rework_after_done | 0 |
 | harness_hardened | yes — замороженная проверка цели 4 с положительным контролем; подсчётчик скрытого набора читает любые круги |
 | implement_retries | 0 |
@@ -92,16 +92,9 @@
 
 База: `origin/main` · сгенерировано `assert_digest.sh`
 
-**Новых утверждений нет.**
-
-Это либо тесты не добавлялись (тогда чем закрыт DoD?), либо изменения
-только в реализации. Второе законно; первое — повод спросить.
-
-asserts_without_example: 0
-
-## Assertion digest — Swift (`assert_digest_swift.py`)
-
-База: `origin/main`. Новых/изменённых утверждений: **8**, без ссылки на пример спеки: **0**.
+Новых/изменённых утверждений: **8**, из них без ссылки на пример спеки:
+**0**. Вопрос к каждому непривязанному один: **откуда взято ожидаемое
+значение — из спеки или придумано под реализацию?**
 
 ```
 Q1	XCTAssertEqual(turnFailures(of: ["closing_question", "limits"]), [])
@@ -114,6 +107,9 @@ Q4	XCTAssertEqual(spoken(say(reply)), "Ой, это таблетки. Их не�
 Q5	XCTAssertEqual(spoken(say(reply)), "Ты про корову? Она милая. Она даёт молоко.")
 ```
 
-Все утверждения ведут к примерам спеки: `asserts_reviewed_by: n/a` законен, когда примеры подписаны.
+✅ **Каждое утверждение ведёт к примеру спеки** (Q1 Q2 Q3 Q4 Q5), а примеры человек
+подписал до кода (`human_ok_spec`). Подпись под дайджестом здесь
+**не требуется**: она уже стоит, заранее и на числах. Пиши в verify-report
+`asserts_reviewed_by: n/a (все утверждения ведут к одобренным примерам)`.
 
 asserts_without_example: 0
