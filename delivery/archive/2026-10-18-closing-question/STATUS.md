@@ -1,0 +1,34 @@
+# Active delivery status
+
+- **slug:** closing-question
+- **stack:** delivery@2.07, cqg@2.70, okf@1.21
+- **class:** M
+- **kind:** feature
+- **repro_test:** n/a reason=не bugfix
+- **diagnosis:** n/a reason=не bugfix
+- **phase:** handoff
+- **builder:** agent:claude-code
+- **verifier:** process:ci
+- **human_ok_spec:** yes (родитель подписал примеры Q1–Q7 2026-10-18 — «Подписываю»)
+- **human_ok_plan:** n/a
+- **shape-oracles:** cqg-deployed
+- **behavior-oracles:** tests-present
+- **artifact_oracle:** n/a reason=поставка не собирает приложение: пакет SwiftPM проверяют его тесты в CI на Linux, сборка не оракул (§6.5a); бандл iOS проверит поставка приложения
+- **ci-oracles:** tooling
+- **worktree:** ../Smart frend Ally-wt-closing
+- **parallel_sessions:** merge-guard,manual-deploy
+  <!-- §5.1a: интеграция в main только через scripts/merge_guard.sh; на телефон приложение ставится отдельным решением, а не следствием мержа -->
+- **hooks:** not-deployed
+- **blockers:** none
+- **waivers:** none
+- **new_dependency:** none
+- **runtime_paths:** none reason=правило — чистая функция отбора предложений над готовым текстом: без экрана, прав, железа и ввода-вывода; тракт голоса подключит поставка приложения
+- **irreversible_surfaces:** none reason=продукт офлайн; поставка не добавляет ни отправки, ни выкатки
+- **model_surface:** n/a reason=модель продукта ещё не вызывается кодом в репозитории: контракт судит готовый ответ; промпт, пин и сэмплинг войдут с поставкой голосового цикла
+- **rule_enforcers:** n/a reason=model_surface не объявлена списком; до её объявления реестр «правило персоны v2.4 → исполнитель → статус» ведётся таблицей в knowledge/engineering/safety-below-model.md
+- **canon_drift_waiver:** no
+- **baseline_growth_waiver:** no
+- **observability:** 1
+- **observe_signal:** живость Q7 (≥ 50% свежих пар не хуже сырой, два слепых судьи, оба порядка) закрывает долг K11 поставки turn-contract; поставка приложения зовёт `TurnContract` на каждом ответе голосового цикла, и в чёрном ящике живых сессий журнал хода несёт `closing_question` без слов девочки, а четвёртым предложением звучит только вопрос в конце обычного разговора — не в «почему», не на прощание и не после запрета (оценка родителя на слух); до неё паритет и тесты пакета зелёные в каждом PR
+- **observe_until:** 2026-11-30
+- **circuit_breakers:** defaults from AGENT_DELIVERY_HARNESS.md §3.4
