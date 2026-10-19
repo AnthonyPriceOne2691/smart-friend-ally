@@ -1,10 +1,16 @@
 {
- "_": "Роль без предмета на этом стеке (CQG «Применимость»). Мета-гейт печатает причину на каждом прогоне: появился код — пересмотри строку. Объявления «до первого кода» истекают механически: scripts/lint/na-expiry.json + check_na_expiry.py.",
+ "_": "Роль без предмета на этом стеке (CQG «Применимость»). Мета-гейт печатает причину на каждом прогоне: появился код — пересмотри строку. Объявление «до первого кода» — объект с маской `until` (cqg@2.66): с первым файлом по маске мета-гейт краснеет, пока роль не решена. Маска называет путь продукта: `*` в маске git проходит `/`, поэтому `Packages/*.swift` истёк бы сразу.",
  "check_ast_gate.py": "python-`ast` не разбирает Swift; роли его правил держат пользовательские правила SwiftLint в ратчете `check_swiftlint_ratchet.sh` (`.swiftlint.yml`, по ключам ниже)",
  "check_ast_gate.py:silent-except": "роль держит правило SwiftLint `empty_catch` (`.swiftlint.yml`, ратчет `check_swiftlint_ratchet.sh`): пустой `catch {}` — ошибка",
  "check_ast_gate.py:inline-prompt": "роль держит правило SwiftLint `inline_prompt`: русский текст длиннее 40 знаков литералом в Sources — ошибка; тексты и правила речи — в ресурсах пакета (KNOWLEDGE.md П10)",
- "check_ast_gate.py:cpu-in-async": "в Swift-пакетах нет `async`: ремонт текста — синхронные чистые функции над одной репликой; правило вернётся с асинхронным кодом приложения (условие истечения — `App/*.swift` в na-expiry.json)",
- "check_ast_gate.py:unbounded-list": "Swift-двойник требует анализа типов, а в пакете нет накопления без предела — функции над одной репликой; вернётся с кодом приложения (условие истечения — `App/*.swift` в na-expiry.json)",
+ "check_ast_gate.py:cpu-in-async": {
+  "reason": "в Swift-пакетах нет `async`: ремонт текста и контракт хода — синхронные чистые функции над одной репликой; правило вернётся с асинхронным кодом приложения",
+  "until": "App/*.swift"
+ },
+ "check_ast_gate.py:unbounded-list": {
+  "reason": "Swift-двойник требует анализа типов, а в пакете нет накопления без предела — функции над одной репликой; вернётся с кодом приложения",
+  "until": "App/*.swift"
+ },
  "check_grep_gate.sh": "паттерны правил питоновские; роли держат пользовательские правила SwiftLint и проверка имён файлов в ратчете `check_swiftlint_ratchet.sh` (по ключам ниже)",
  "check_grep_gate.sh:config-access": "роль держит правило SwiftLint `env_access`: `ProcessInfo.processInfo.environment` и `getenv(` — ошибка",
  "check_grep_gate.sh:di-indirection": "в Swift нет `importlib` и динамической загрузки модулей: зависимости таргетов фиксирует SPM, обращение назад не соберётся",
@@ -19,5 +25,6 @@
  "check_mutation_gate.sh": "mutmut и Stryker — для python и ts, muter требует Xcode и macOS-раннер (×10, CQG §8.7); роль для правил исполнителя держат тесты абляции пакета — правило выключается, и хотя бы одна его проба обязана дать другой результат; мутаций кода вне правил нет — названный остаток",
  "check_diff_coverage.sh": "раннер канона — pytest --cov, к Swift не относится; роль держит `check_swift_coverage.sh` в джобе swift CI: покрытие строк Sources/ не ниже 70% (swift test --enable-code-coverage)",
  "ruff": "python-кода продукта нет: requirements-dev.txt — манифест инструментов контура, а не продукта (стек Swift)",
- "mypy": "python-кода продукта нет: requirements-dev.txt — манифест инструментов контура, а не продукта (стек Swift)"
+ "mypy": "python-кода продукта нет: requirements-dev.txt — манифест инструментов контура, а не продукта (стек Swift)",
+ "mutation_shard.sh": "часть мутационного гейта — доли TS-прогона (cqg@2.64); гейт целиком n/a (ключ check_mutation_gate.sh), и вход выходит на этом объявлении раньше, чем подключает части. Накат 76c42c3 часть не привёз: план не видит `source` в shell (delivery/incidents/2026-10-18-plan-misses-sourced-part.md)"
 }

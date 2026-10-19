@@ -62,3 +62,13 @@
 настройку `LINT_TEST_GLOB`, но в коде её нет — расширить маску проектом нельзя. Направление для канона: ноль должен
 отличаться от «не видел» (`asserts_without_example: unknown` при тест-файлах на неразбираемом языке, `n/a` не
 принимается). `assert_digest_swift.py --check` записан образцом.
+
+Канон впитал находку в `cqg@2.68` + `delivery@2.06` (Prepare `9a8f592`): маски из `LINT_TEST_GLOB` (по умолчанию и
+`*Tests.swift`, `*Test.swift`), разбор `XCTAssert…`, `XCTFail`, блоков `func test…` и `@Test`, тест-файл вне масок —
+`asserts_without_example: unknown`, и `delivery_check` не принимает над ним `n/a`. Накат в Ally — поставка
+`sync-cqg-2.70` (Prepare `76c42c3`): свой `assert_digest_swift.py`, его шаг CI и запись `upstream-candidate` сняты.
+Проверено исполнением на временной ветке: `XCTAssertEqual(2 + 2, 5)` в `ProbeTests.swift` — канонная сводка «1, без
+ссылки на пример 1», `asserts_without_example: 1` (сводка до наката на том же коммите — «Новых утверждений нет», 0);
+тест-файл `DigestSpec.swift` вне масок — `unknown` со списком; `delivery_check` отказывает `n/a` и при `2`, и при
+`unknown`. Маски проекта не понадобились: раскладка SwiftPM видна по умолчанию. Остаток (решает человек): CI больше не
+пересчитывает сводку сам, как делал `--check`, — `delivery_check` судит строку, вставленную в verify-report.

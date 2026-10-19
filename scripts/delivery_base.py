@@ -79,6 +79,15 @@ BREAKER_EXCLUDE = (
     # Оба хостинга: у контура гейт мержа чисто гитовый, а CI-контракт §10.4
     # описан шагами, поэтому путь конфига — свойство хостинга, не канона.
     ".gitlab-ci.yml",
+    # Третье зеркало правила «механика контура — всё, что приносит накат»
+    # (`delivery@2.05`, вслед за `cqg@2.67`): скрипты §3.4a лежат вне
+    # `scripts/lint/`, а едущие файлы (§7.1 карты) — в корне либо в `scripts/`, и
+    # накат, обновивший их, считался бы правкой кода. Полноту всех трёх зеркал
+    # держит `test_contour_population.py` — по манифесту payload'а.
+    "scripts/check_irreversible_signature.sh",
+    "scripts/sign_irreversible.sh",
+    "stack_selftest.py", "selftest_sizes.py", "extract_payload.py",
+    "scripts/stack_selftest.py", "scripts/selftest_sizes.py", "scripts/extract_payload.py",
 )
 
 # ВТОРОЙ принцип исключения — «сгенерированное, а не написанное». Пути выше
@@ -118,8 +127,16 @@ def out_of_blast_radius(path: str) -> bool:
     исключение, которого нет в печати, это ровно «исключение растворено», против
     чего §3.4 и требует печатать число.
     """
-    return (path.startswith(BREAKER_EXCLUDE)
-            or path.rsplit("/", 1)[-1] in GENERATED_FILENAMES)
+    name = path.rsplit("/", 1)[-1]
+    return (path.startswith(BREAKER_EXCLUDE) or name in GENERATED_FILENAMES
+            or name in CONTOUR_CONFIGS)
+
+
+#: Конфиги гейтов, которые поставляет канон, — механика по тому же принципу, что
+#: и `BREAKER_EXCLUDE`, но путь у проектов разный (`frontend/` или корень), поэтому
+#: по имени файла (`delivery@2.05`; зеркала CQG держат их с `cqg@2.04`).
+CONTOUR_CONFIGS = (".dependency-cruiser.cjs", "eslint.config.js", "eslint.config.mjs",
+                   "eslint.config.cjs")
 
 
 # Текстовые расширения для поиска id примеров в тестах. Маска `*test*` ловит и
@@ -148,6 +165,29 @@ SKIP_DIR_PARTS = (
     ".eggs", "__pycache__", ".mypy_cache", ".pytest_cache", ".ruff_cache",
     "build", "dist", ".git",
 )
+
+#: Тест-файл — по ПРИНЦИПУ имени, а не по зашитым корням (`delivery@2.07`). Поле Smart
+#: Friend Ally 18.10: корпус §3.1d и порядок «пример раньше теста» брали тесты только из
+#: `tests`, `backend/tests`, `src/tests` и по маске `*test*` (регистр важен), а тесты
+#: SwiftPM лежат в `Packages/<Пакет>/Tests/<Цель>Tests/*.swift`. Итог — ложная тревога
+#: «примеры без ссылки» при метках `// K<n>` в тестах и МОЛЧАЩИЙ порядок: судить было
+#: нечего. Каталог `tests/` сам признаком не служит — в корпус уехала бы проза вроде
+#: `tests/README.md`; исключение — `__tests__/`, где имена не помечены. Шире, чем у
+#: дайджеста утверждений CQG (`cqg@2.68`), и это осознанно: там лишний файл стоит
+#: `unknown` и подписи, тут — лишнего текста для поиска id.
+TEST_FILE_RE = re.compile(
+    r"(^|/)__tests__/[^/]+$"
+    r"|(^|/)(tests?\.[^/]*|tests?_[^/]*|[^/]*[_.-](tests?|spec)\.[^/]*|[^/]*(Tests?|Spec)\.[^/]*)$")
+
+
+def test_files(root: Path = ROOT) -> list[str]:
+    """Тест-файлы проекта: в git (и новые неигнорируемые), по признаку имени, текстом."""
+    listed = git("-C", str(root), "ls-files", "-z", "--cached", "--others",
+                 "--exclude-standard").split("\0")
+    return sorted({p for p in listed
+                   if p and TEST_FILE_RE.search(p) and Path(p).suffix in TEST_TEXT_SUFFIXES
+                   and not any(part in SKIP_DIR_PARTS for part in Path(p).parts)})
+
 
 # Что считается ССЫЛКОЙ теста на пример §3.1d — одно понятие на две проверки:
 # «есть ли ссылка» (`delivery_evidence`) и «когда она появилась»

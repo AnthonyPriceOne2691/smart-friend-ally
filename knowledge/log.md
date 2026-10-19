@@ -1,5 +1,10 @@
 # Knowledge Bundle Update Log
 
+## 2026-10-18 — накат канона cqg@2.70: свои обходы сняты
+
+* **Update**: `references/repo-map` — истечение объявлений n/a «до кода приложения» держит мета-гейт канона (`until: "App/*.swift"` в `not-applicable.json`, `cqg@2.66`), свой гейт `na-expiry` снят; во входных точках — пакет `Packages/AllyDiscipline` вместо «продукта пока нет».
+* **Источник**: поставка `sync-cqg-2.70` (Prepare `76c42c3`, накат из чистого клона).
+
 ## 2026-10-18 — контракт хода: замер, живость, обращения
 
 * **Update**: `engineering/safety-below-model`:

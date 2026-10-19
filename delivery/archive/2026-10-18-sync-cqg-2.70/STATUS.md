@@ -1,0 +1,34 @@
+# Active delivery status
+
+- **slug:** sync-cqg-2.70
+- **stack:** delivery@2.07, cqg@2.70, okf@1.21
+- **class:** S
+- **kind:** feature
+- **repro_test:** n/a reason=не bugfix
+- **diagnosis:** n/a reason=не bugfix
+- **phase:** handoff
+- **builder:** agent:claude-code
+- **verifier:** process:ci
+- **human_ok_spec:** n/a
+- **human_ok_plan:** n/a
+- **shape-oracles:** cqg-deployed
+- **behavior-oracles:** weak — дёшево: ничего сверх сделанного; накат механики контура, код продукта не меняется, ручные порты доказываются пробами исполнением (verify-report), тесты пакета — джоба swift
+- **artifact_oracle:** n/a reason=поставка не собирает приложение: Xcode-проекта нет, пакет SwiftPM проверяют его тесты в CI (джоба swift)
+- **ci-oracles:** tooling
+- **worktree:** ../Smart frend Ally-wt-sync269
+- **parallel_sessions:** merge-guard,manual-deploy
+  <!-- §5.1a: интеграция в main только через scripts/merge_guard.sh; на телефон приложение ставится отдельным решением, а не следствием мержа -->
+- **hooks:** not-deployed
+- **blockers:** none
+- **waivers:** none
+- **new_dependency:** none
+- **runtime_paths:** none reason=накат механики контура; код продукта не меняется
+- **irreversible_surfaces:** none reason=продукт офлайн; поставка не добавляет ни отправки, ни выкатки
+- **model_surface:** n/a reason=модель продукта ещё не вызывается кодом в репозитории
+- **rule_enforcers:** n/a reason=model_surface не объявлена списком
+- **canon_drift_waiver:** no
+- **baseline_growth_waiver:** no
+- **observability:** 1
+- **observe_signal:** первый `App/*.swift` краснит мета-гейт «объявления n/a «до первого кода» истекли» по ключам cpu-in-async и unbounded-list (свой na-expiry снят); следующая поставка с Swift-тестами получает от канонной сводки число непривязанных или `unknown`, а не «утверждений нет»; следующий накат канона не трогает `.secrets.baseline`; судья закрывает находку `2026-10-18-plan-misses-sourced-part` ревизией канона
+- **observe_until:** 2026-11-30
+- **circuit_breakers:** defaults from AGENT_DELIVERY_HARNESS.md §3.4

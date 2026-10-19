@@ -4,10 +4,6 @@
   "path": "voice-renamed.bin",
   "content": "RIFF0000WAVEfmt — переименованная запись голоса, гейт обязан поймать по сигнатуре\n"
  },
- "check_na_expiry.py": {
-  "path": "App/Sources/NaExpiryCanary.swift",
-  "content": "// канарейка: появился код приложения, а объявления async и списков «до кода приложения» в силе — гейт обязан покраснеть\n"
- },
  "check_swiftlint_ratchet.sh": {
   "path": "Packages/AllyDiscipline/Sources/Discipline/LintCanary.swift",
   "content": "// канарейка: print вместо os.Logger — ратчет SwiftLint обязан покраснеть\nfunc lintCanary() { print(\"x\") }\n"

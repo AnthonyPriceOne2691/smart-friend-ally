@@ -92,14 +92,16 @@ Ally держится в полной синхронизации с каноно
 ## Состояние (2026-10-18)
 
 - **Контур развёрнут и слит** (squash `520cfa3`, PR #1 закрыт) и синхронизирован с каноном до
-  `delivery@2.04 · cqg@2.63 · okf@1.21 · stack-map@1.53` (Prepare `c5585a5`, накат из чистого клона), снимок `docs/canon/` с провенансом и замком. Репозиторий — приватный `AnthonyPriceOne2691/smart-friend-ally`;
+  `delivery@2.07 · cqg@2.70 · okf@1.21 · stack-map@1.54` (Prepare `76c42c3`, накат из чистого клона), снимок `docs/canon/` с провенансом и замком. Репозиторий — приватный `AnthonyPriceOne2691/smart-friend-ally`;
   `ci-oracles: tooling` (защиты ветки нет на бесплатном тарифе). Мерж — только
   `PATH="$PWD/.venv/bin:$PATH" bash scripts/merge_guard.sh <ветка> main` из основного клона, затем
   `git push origin main` и закрыть PR со ссылкой на сквош.
 - Разбор и уроки L1–L30 — `delivery/archive/`, указатель — `delivery/archive/INDEX.md`. Ally стоит в реестре флота
   Prepare. Находки наверх: три инцидента 02.10 — в очереди судьи (BACKLOG Prepare, п.6–8). Из находок 17.10 судья
   внёс в канон: недельный `delivery_check` (`okf@1.21`), разборщик карты ролей (`cqg@2.60`), маячок «деньги» на «счёт»
-  (`delivery@2.03`) — итог дописан в инцидентах; механизм истечения n/a «до кода» вынесен на решение пользователя. Находка 17.10 о поставке, уехавшей
+  (`delivery@2.03`) — итог дописан в инцидентах; механизм истечения n/a «до кода» внесён в `cqg@2.66`. Четыре находки 18.10 (сводка Swift, исключение контура,
+  корни тестов, истечение n/a) канон впитал — свои обходы сняты накатом `sync-cqg-2.70`; новая — накат не привозит
+  часть комплекта (`2026-10-18-plan-misses-sourced-part`). Находка 17.10 о поставке, уехавшей
   в архив тем же коммитом (`2026-10-17-archived-handoff-signature`), закрыта судьёй в `delivery@2.04`: строгий
   `delivery_check` с `--diff-base` судит такую поставку сам, обход L24 больше не нужен.
 - **Обязательства наблюдения:** до **2026-11-30** — `persona-session-blackbox` (сдвинуто: сигнал наступит со спайком),
@@ -129,8 +131,8 @@ Ally держится в полной синхронизации с каноно
   на исполнителя; образ и имя — с дочерью. Отчёты исследований — `knowledge/references/research/`.
 - **Пакет `Packages/AllyDiscipline`** (поставки `swift-contour` и `turn-contract`, 2026-10-18): ремонт текста `Repair` и
   контракт хода `TurnContract` до голоса; ратчет SwiftLint, `file-length` с маской `*.swift *.py`, jscpd `swift`, джоба
-  CI `swift` с покрытием ≥ 70%. Два объявления `na-expiry` ждут кода приложения (`App/*.swift`). Тесты Swift канонная
-  сводка утверждений не видит — `asserts_reviewed_by` судит своя `assert_digest_swift.py --check` (L26).
+  CI `swift` с покрытием ≥ 70%. Два объявления n/a ждут кода приложения (`until: "App/*.swift"` в
+  `not-applicable.json`, мета-гейт). Сводку утверждений Swift даёт канонная `assert_digest.sh` (`cqg@2.68`).
 - **STATUS поставки** несёт `parallel_sessions: merge-guard,manual-deploy` (обязательно с `delivery@2.01`). После
   синхронизации канона сразу гонять строгий `delivery_check --require-ci --diff-base origin/main` (урок L14).
 
