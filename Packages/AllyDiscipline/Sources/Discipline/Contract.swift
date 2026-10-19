@@ -6,6 +6,12 @@ struct ContractData: Decodable, Sendable {
         static let closed = Limits(maxSentences: 0, maxQuestions: 0, maxWords: 0, maxSentenceWords: 0,
                                    canned: "generic")
         let maxSentences, maxQuestions, maxWords, maxSentenceWords: Int, canned: String
+
+        /// What is left to the statements before a closing question of `words` words: its question and words go.
+        func reserving(words: Int) -> Limits {
+            Limits(maxSentences: maxSentences, maxQuestions: maxQuestions - 1, maxWords: maxWords - words,
+                   maxSentenceWords: maxSentenceWords, canned: canned)
+        }
     }
 
     struct Probe: Decodable, Sendable { let rule, mode, reply: String }

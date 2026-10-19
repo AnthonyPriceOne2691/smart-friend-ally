@@ -1,6 +1,7 @@
 import Foundation
 
-/// The turn mode sets the limits: `why` has talk's for now, `goodbye` has no question.
+/// The turn mode sets the limits: in `talk` a closing question may come fourth, `why` gives facts more words,
+/// `goodbye` has no question.
 public enum TurnMode: String, CaseIterable, Sendable { case talk, why, goodbye }
 
 /// Who speaks: the model's sentences or a canned reply of a kind («generic», «attachment», a hazard script).

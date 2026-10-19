@@ -43,13 +43,29 @@ extension TurnPass {
         return Set(open.filter { $0 != stay })
     }
 
-    /// select: narrow, keep; a referral the model made and the cut lost comes back as the pointer script.
+    /// select: narrow, keep — in talk with the closing question's slot; a referral the model made and the cut lost
+    /// comes back as the pointer script.
     mutating func select(_ cands: [String]) -> [String] {
         let cands = narrow(cands)
-        var out = keep(cands)
+        var out = closing(cands) ?? keep(cands)
         if isOn(.actionReferral), cands.contains(where: referral), !out.contains(where: referral) {
             rescue(&out, as: .actionReferral)
         }
+        return out
+    }
+
+    /// closing_question (target 4, refined 2026-10-18): in talk the question she hands the turn back with may come
+    /// fourth, at the end. The last candidate, a question no prohibition blocks that fits with sentence 1, stays; the
+    /// statements before it are kept with its question and words reserved. nil: the rule does not apply.
+    mutating func closing(_ cands: [String]) -> [String]? {
+        guard isOn(.closingQuestion), talk, cands.count > 1, let question = cands.last, isQuestion(question),
+              !blockedQuestions(cands).contains(cands.count - 1), fits([cands[0], question]) else { return nil }
+        var plain = self
+        let full = limits
+        limits = full.reserving(words: words(question))
+        let out = keep(Array(cands.dropLast())) + [question]  // sentence 1 fits the reserved limits by the guard
+        limits = full
+        if out != plain.keep(cands) { log(.closingQuestion) }
         return out
     }
 

@@ -89,14 +89,14 @@ Ally держится в полной синхронизации с каноно
 - **Флот:** Ally стоит в реестре `field/fleet/registry.json` Prepare — тогда суточный
   обход (10:00) и обход после каждого бампа версии видят его отставание и кандидатов.
 
-## Состояние (2026-10-18)
+## Состояние (2026-10-19)
 
 - **Контур развёрнут и слит** (squash `520cfa3`, PR #1 закрыт) и синхронизирован с каноном до
   `delivery@2.07 · cqg@2.70 · okf@1.21 · stack-map@1.54` (Prepare `76c42c3`, накат из чистого клона), снимок `docs/canon/` с провенансом и замком. Репозиторий — приватный `AnthonyPriceOne2691/smart-friend-ally`;
   `ci-oracles: tooling` (защиты ветки нет на бесплатном тарифе). Мерж — только
   `PATH="$PWD/.venv/bin:$PATH" bash scripts/merge_guard.sh <ветка> main` из основного клона, затем
   `git push origin main` и закрыть PR со ссылкой на сквош.
-- Разбор и уроки L1–L30 — `delivery/archive/`, указатель — `delivery/archive/INDEX.md`. Ally стоит в реестре флота
+- Разбор и уроки L1–L33 — `delivery/archive/`, указатель — `delivery/archive/INDEX.md`. Ally стоит в реестре флота
   Prepare. Находки наверх: три инцидента 02.10 — в очереди судьи (BACKLOG Prepare, п.6–8). Из находок 17.10 судья
   внёс в канон: недельный `delivery_check` (`okf@1.21`), разборщик карты ролей (`cqg@2.60`), маячок «деньги» на «счёт»
   (`delivery@2.03`) — итог дописан в инцидентах; механизм истечения n/a «до кода» внесён в `cqg@2.66`. Четыре находки 18.10 (сводка Swift, исключение контура,
@@ -105,7 +105,7 @@ Ally держится в полной синхронизации с каноно
   в архив тем же коммитом (`2026-10-17-archived-handoff-signature`), закрыта судьёй в `delivery@2.04`: строгий
   `delivery_check` с `--diff-base` судит такую поставку сам, обход L24 больше не нужен.
 - **Обязательства наблюдения:** до **2026-11-30** — `persona-session-blackbox` (сдвинуто: сигнал наступит со спайком),
-  `na-expiry-stopper`, `sync-cqg-2.55`, `state-refresh`, `spike-memory-limit`, `look-and-feel`, `look-and-feel-research`, `snout-instead-of-trunk`, `flower-crown`, `crown-centered`, `character-axolotl`, `spike-model-bakeoff`, `visual-approved`, `sync-cqg-2.63`, `spike-phone-llm`, `incident-archived-handoff`, `persona-v2`, `swift-contour`, `turn-contract`. Остальные закрыты `observed.md` 17.10. Недельный
+  `na-expiry-stopper`, `sync-cqg-2.55`, `state-refresh`, `spike-memory-limit`, `look-and-feel`, `look-and-feel-research`, `snout-instead-of-trunk`, `flower-crown`, `crown-centered`, `character-axolotl`, `spike-model-bakeoff`, `visual-approved`, `sync-cqg-2.63`, `spike-phone-llm`, `incident-archived-handoff`, `persona-v2`, `swift-contour`, `turn-contract`, `sync-cqg-2.70`, `closing-question`. Остальные закрыты `observed.md` 17.10. Недельный
   `canon-freshness` гоняет `delivery_check` (Delivery §13.1): просрочку видно и без поставок.
 - **Спайк на телефоне** (`KNOWLEDGE.md` §12): шаг 1 сделан — лимит памяти приложения ≈3,3 ГБ без entitlement и
   ≈6,0 ГБ с `increased-memory-limit`, бесплатная Personal Team его выдаёт (`knowledge/engineering/memory-limit.md`).
@@ -121,15 +121,15 @@ Ally держится в полной синхронизации с каноно
   (лист вслепую: живее в 21 паре из 24; `knowledge/engineering/persona-eval.md`). Обращение — только по имени: «моя
   хорошая», «солнышко» снимает фильтр перед голосом (решение родителя). Очевидные листы судят слепые судьи-агенты по
   критериям родителя: безопасность с запретом, ум, живость. Частоту («иногда») и гарантии промпт E4B не держит — их
-  держит код (L25). Дисциплина: контракт хода сдан 18.10, живость — поставкой «вопрос в конце» (цель 4 уточнена
-  родителем), затем маршрутизатор; цели — `knowledge/engineering/safety-below-model.md`, судья — слепые агенты (L30).
+  держит код (L25). Дисциплина: контракт хода сдан 18.10, «вопрос в конце» — 19.10 (цель 4 уточнена родителем,
+  живость 71%), дальше маршрутизатор; цели — `knowledge/engineering/safety-below-model.md`, судья — слепые агенты (L30).
 - **Облик** — `knowledge/product/look-and-feel.md` (draft, пожелания родителя 2026-10-17): пузырьки, нежно-розовый,
   максимально плавные анимации, персонаж в круге — аксолотлик, выбор дочери 2026-10-17; визуал утверждён родителем — прототип v3
   (`local/prototype/ally-main-screen-v3.html`, вне git), венок из роз, гвоздик и лизиантусов включён; правила экрана для пятилетки
   и этика — там же. Способ показа — ADR `engineering/character-rendering` (proposed: Rive «2.5D», решает зонд;
   память и GPU — общие с моделью). Открыто за родителем: 2.5D или 3D, установка инструмента концепт-арта, бюджет
   на исполнителя; образ и имя — с дочерью. Отчёты исследований — `knowledge/references/research/`.
-- **Пакет `Packages/AllyDiscipline`** (поставки `swift-contour` и `turn-contract`, 2026-10-18): ремонт текста `Repair` и
+- **Пакет `Packages/AllyDiscipline`** (поставки `swift-contour`, `turn-contract`, `closing-question`, 18–19.10): ремонт текста `Repair` и
   контракт хода `TurnContract` до голоса; ратчет SwiftLint, `file-length` с маской `*.swift *.py`, jscpd `swift`, джоба
   CI `swift` с покрытием ≥ 70%. Два объявления n/a ждут кода приложения (`until: "App/*.swift"` в
   `not-applicable.json`, мета-гейт). Сводку утверждений Swift даёт канонная `assert_digest.sh` (`cqg@2.68`).
