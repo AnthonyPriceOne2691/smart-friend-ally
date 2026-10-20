@@ -9,6 +9,7 @@ included:
 
 excluded:
   - Packages/AllyDiscipline/.build
+  - Packages/AllyCore/.build
   - Packages/AllyDiscipline/Tests/DisciplineTests/Fixtures
 
 disabled_rules:

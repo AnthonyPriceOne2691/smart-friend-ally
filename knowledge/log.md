@@ -1,5 +1,13 @@
 # Knowledge Bundle Update Log
 
+## 2026-10-20 — ядро голосового цикла: ход через контракт и конец реплики
+
+* **Creation**: `engineering/turn-detector` — конец реплики ядра: пороги зонда, хвост по типу хода (1,8 / 0,8 / 2,5 с)
+  по замеру speech-in, «возможно, конец» через 0,3 с, предзапись ≥ 1,5 с, предел хода 20 с; Smart Turn снят.
+* **Update**: `engineering/safety-below-model` — раздел «Ход через контракт в коде»: `TurnRunner` и граница первой фразы
+  (`SentenceStream`), журнал без слов; `implementation:` — пути ядра. `references/repo-map` — входная точка `AllyCore`.
+* **Источник**: поставка `voice-core` (D1.1; спека D1 подписана родителем 2026-10-20).
+
 ## 2026-10-19 — маршрутизатор до модели: движок, спички и розетка
 
 * **Update**: `engineering/safety-below-model`:

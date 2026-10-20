@@ -1,0 +1,40 @@
+import Discipline
+import Foundation
+
+/// The first sentence of a growing reply, cut only where repair can not move the boundary: end marks, then whitespace
+/// and a letter (the next sentence has begun: «! [Имя]?» merges into «!?»), not after a digit («2.5», «1. Кошка»), not
+/// inside an open thinking block, and a head that, repaired, keeps a letter and the end mark («www.kot.ru.» loses it).
+/// The contract repairs before it splits, so a raw cut loses words; a late cut only delays sentence 1 (A3).
+public enum SentenceStream {
+    static let marks: Set<Character> = [".", "!", "?", "…"]
+
+    public static func first(in text: String) -> String? {
+        let chars = Array(text)
+        var index = 0
+        while index < chars.count {
+            guard marks.contains(chars[index]) else {
+                index += 1
+                continue
+            }
+            var end = index, next = index + 1
+            while next < chars.count, marks.contains(chars[next]) { (end, next) = (next, next + 1) }
+            while next < chars.count, chars[next].isWhitespace { next += 1 }
+            if next > end + 1, next < chars.count, chars[next].isLetter, index == 0 || !chars[index - 1].isNumber,
+               let head = safeHead(String(chars[...end])) {
+                return head
+            }
+            index = end + 1
+        }
+        return nil
+    }
+
+    static func safeHead(_ head: String) -> String? {
+        let low = head.lowercased(), repaired = Repair.apply(head).text
+        let thinking = low.contains("<think") && !low.contains("</think")
+            || low.contains("<|channel|>") && !low.contains("<|message|>")
+        guard !thinking, repaired.contains(where: \.isLetter), let last = repaired.last, marks.contains(last) else {
+            return nil
+        }
+        return head.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+}

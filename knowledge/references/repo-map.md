@@ -20,6 +20,8 @@ implementation:
 - **Кода приложения пока нет** — Xcode-проект появится с поставкой приложения. Есть пакет
   `Packages/AllyDiscipline` (ремонт текста и контракт хода до голоса):
   `swift test --package-path Packages/AllyDiscipline`.
+- **Ядро голосового цикла** — `Packages/AllyCore` (ход через контракт, конец реплики, журнал хода без слов, реестр
+  модели): `swift test --package-path Packages/AllyCore` (тулчейн Xcode: `DEVELOPER_DIR`).
 - **Контур:** `python3 scripts/delivery_check.py` — фазы поставки;
   `.venv/bin/pre-commit run --all-files --verbose` — гейты;
   `python3 scripts/lint/contour_doctor.py` — судят ли гейты;

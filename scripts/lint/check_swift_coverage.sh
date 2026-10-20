@@ -3,7 +3,8 @@
 #
 # Канонный раннер — pytest --cov (CQG §3.5), к Swift не относится. Механика роли сохранена: порог 70%, отчёт —
 # число и что посчитано. Источник — JSON, который пишет `swift test --enable-code-coverage`
-# (путь даёт `swift test --show-codecov-path`); считаются только файлы Sources/ — тесты и фикстуры не в счёт.
+# (путь даёт `swift test --show-codecov-path`); считаются только файлы Sources/ самого пакета — тесты, фикстуры и
+# пакеты-зависимости (локальный путь) не в счёт.
 # Пакет новый, поэтому покрытие всего пакета и есть покрытие диффа; когда появится легаси, роль перейдёт на дифф.
 #
 # Настройка (env):
@@ -48,10 +49,13 @@ for pkg in $PACKAGES; do
     printf '%sERROR%s: нет отчёта покрытия для %s (%s)\n' "$red" "$reset" "$pkg" "$report" >&2
     fail=1; continue
   fi
-  read -r files covered count <<<"$(python3 - "$report" <<'PY'
-import json, sys
+  read -r files covered count <<<"$(python3 - "$report" "$REPO_ROOT/$pkg/Sources/" <<'PY'
+import json, os, sys
 data = json.load(open(sys.argv[1]))["data"][0]["files"]
-src = [f for f in data if "/Sources/" in f["filename"]]
+# Только Sources/ САМОГО пакета: зависимость локальным путём (AllyCore → AllyDiscipline) попадает в тот же отчёт,
+# и её непокрытые строки занижали бы чужой пакет — область измерения шире области гейта (Delivery §4.3b, случай 1).
+own = os.path.realpath(sys.argv[2])
+src = [f for f in data if os.path.realpath(f["filename"]).startswith(own)]
 print(len(src), sum(f["summary"]["lines"]["covered"] for f in src), sum(f["summary"]["lines"]["count"] for f in src))
 PY
 )"

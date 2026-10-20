@@ -6,7 +6,7 @@
 - **kind:** feature
 - **repro_test:** n/a reason=не bugfix
 - **diagnosis:** n/a reason=не bugfix
-- **phase:** specify
+- **phase:** implement
 - **builder:** agent:claude-code
 - **verifier:** process:ci
 - **human_ok_spec:** yes (родитель 2026-10-20 «Подписываю»; имена подтверждены; примеры A1–A6, A14–A19 — в спеке D1, коммиты 792cd1c и 62d5323; A25–A27 — уточнение A17 ведущим 2026-10-20 по замеру speech-in, на подпись родителю до мержа)

@@ -40,6 +40,11 @@ jobs:
       LINT_LENGTH_GLOBS: "*.swift *.py"
       LINT_PY_SRC: Packages/AllyDiscipline/Sources
       LINT_JSCPD_PY_FORMAT: swift
+      # Вторая половина jscpd — исходники AllyCore (voice-core): маска игнора гейта знает `**/tests/**` строчными,
+      # а тесты Swift лежат в `Tests/`, поэтому не общий корень `Packages`, а второй каталог исходников.
+      LINT_TS_SRC: Packages/AllyCore/Sources
+      LINT_JSCPD_TS_FORMAT: swift
+      LINT_JSCPD_TS_EXTS: "swift:swift"
     steps:
       - uses: actions/checkout@v7
         with:
@@ -248,6 +253,9 @@ jobs:
     # Swift-пакеты: тесты и покрытие строк ≥ 70% (check_swift_coverage.sh). Swift — с образа раннера, версия в логе
     # (macOS-раннер ×10, §8.7: пакет — только Foundation и собирается на Linux). 15 мин — сборка с нуля и два прогона.
     timeout-minutes: 15
+    # Пакеты под покрытием: AllyCore зависит от AllyDiscipline локальным путём (поставка voice-core).
+    env:
+      LINT_SWIFT_PACKAGES: "Packages/AllyDiscipline Packages/AllyCore"
     steps:
       - uses: actions/checkout@v7
       - name: Swift toolchain
@@ -335,6 +343,13 @@ jobs:
             # Регрессия — delivery/evals/smoke/idle_overdue.sh.
             python scripts/delivery_check.py --require-ci --diff-base "$BASE"
           fi
+
+      # Свой шаг проекта (adapted.json; поставка voice-core, решение ведущего 2026-10-19): дайджест утверждений
+      # пересчитывается от базы PR и сверяется со строкой asserts_without_example в verify-report — устаревший или
+      # поправленный руками дайджест больше не пропускает asserts_reviewed_by: n/a (Delivery §3.1d ур. 3; урок L26).
+      - name: Assertion digest = verify-report
+        if: always()
+        run: python scripts/lint/check_digest_report.py
 
       # if: always() — как у джобы gates. Без него падение фазового гейта уносило
       # ЧЕТЫРЕ проверки ниже: они не запускались, и в логе их просто не было — тот же
