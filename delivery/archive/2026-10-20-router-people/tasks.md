@@ -33,5 +33,7 @@
 - [x] T8: знания: `safety-below-model` (реестр, раздел маршрутизатора), `knowledge/log.md`; `eval-smoke.md`
   - сделано: реестр — адрес, секрет, «сказочная подружка» исполняются; текст «ты живая?» поправлен по L16 (поиск
     нашёл старый текст с «люблю» в правилах концепта)
-- [ ] T9: verify-report, PR, CI зелёный; handoff: архив, INDEX, `router-people` в список наблюдений CLAUDE.md; мерж —
+- [x] T9: verify-report, PR, CI зелёный; handoff: архив, INDEX, `router-people` в список наблюдений CLAUDE.md; мерж —
   ведущий через merge_guard
+  - сделано: PR #32 (`MERGEABLE`), CI 39478540337 зелёный на коде и знаниях; строгий `delivery_check` на handoff до
+    переноса в архив — 0 ошибок; уроки L38–L39; мерж — ведущий
