@@ -1,0 +1,34 @@
+# Active delivery status
+
+- **slug:** router-people
+- **stack:** delivery@2.07, cqg@2.70, okf@1.21
+- **class:** M
+- **kind:** feature
+- **repro_test:** n/a reason=не bugfix
+- **diagnosis:** n/a reason=не bugfix
+- **phase:** handoff
+- **builder:** agent:claude-code
+- **verifier:** process:ci
+- **human_ok_spec:** yes (решения родителя 2026-10-19 и упрощение «базовые случаи»; тексты П2 проверены ведущим по поручению родителя 2026-10-19 — local/checkpoint/router-scripts-basic.json)
+- **human_ok_plan:** n/a
+- **shape-oracles:** cqg-deployed
+- **behavior-oracles:** tests-present
+- **artifact_oracle:** n/a reason=поставка не собирает приложение: пакет SwiftPM проверяют его тесты в CI на Linux, сборка не оракул (§6.5a); бандл iOS проверит поставка приложения
+- **ci-oracles:** tooling
+- **worktree:** ../Smart frend Ally-wt-router
+- **parallel_sessions:** merge-guard,manual-deploy
+  <!-- §5.1a: интеграция в main только через scripts/merge_guard.sh; на телефон приложение ставится отдельным решением, а не следствием мержа; параллельно идёт поставка голосового ядра (Packages/AllyCore) — общие файлы CLAUDE.md, INDEX.md, knowledge/log.md правятся малыми добавлениями -->
+- **hooks:** not-deployed
+- **blockers:** none
+- **waivers:** none
+- **new_dependency:** none
+- **runtime_paths:** none reason=маршрутизатор и контракт хода — чистые функции над распознанной репликой, решением и ответом модели: без экрана, прав, железа и ввода-вывода; голосовой цикл подключит поставка приложения
+- **irreversible_surfaces:** none reason=продукт офлайн; поставка не добавляет ни отправки, ни выкатки
+- **model_surface:** n/a reason=модель продукта ещё не вызывается кодом в репозитории: маршрутизатор решает до модели по реплике девочки, контракт судит готовый текст; промпт, пин и сэмплинг войдут с поставкой голосового цикла
+- **rule_enforcers:** n/a reason=model_surface не объявлена списком; до её объявления реестр «правило персоны v2.4 → исполнитель → статус» ведётся таблицей в knowledge/engineering/safety-below-model.md
+- **canon_drift_waiver:** no
+- **baseline_growth_waiver:** no
+- **observability:** 1
+- **observe_signal:** поставка приложения зовёт `Router` до модели и `TurnContract(mode:heard:decision:)` после неё на каждой реплике; в чёрном ящике живых сессий журнал решения несёт вид, тему, id правил и хэш данных без слов девочки; на «дядя зовёт», «тётя дала конфету», «звонят в дверь», «я потерялась», «маме не говори», «покажи, что под трусиками», «в планшете просят фото», «ты живая?» звучит подписанная фраза, адрес не попадает в историю модели и память, на «мне страшно» ответ модели несёт указатель на взрослого, игровые ответы заготовок не получают (оценка родителя на слух); до неё паритет и тесты пакета зелёные в каждом PR
+- **observe_until:** 2026-11-30
+- **circuit_breakers:** defaults from AGENT_DELIVERY_HARNESS.md §3.4

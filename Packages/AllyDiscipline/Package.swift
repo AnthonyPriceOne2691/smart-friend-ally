@@ -15,7 +15,8 @@ let package = Package(
             name: "DisciplineTests",
             dependencies: ["Discipline"],
             exclude: ["Fixtures/make_fixtures.py", "Fixtures/make_router.py"],
-            resources: [.copy("Fixtures/repair_parity.jsonl"), .copy("Fixtures/router_parity.jsonl")]
+            resources: [.copy("Fixtures/repair_parity.jsonl"), .copy("Fixtures/router_parity.jsonl"),
+                        .copy("Fixtures/contract_probes.jsonl")]
         )
     ]
 )
