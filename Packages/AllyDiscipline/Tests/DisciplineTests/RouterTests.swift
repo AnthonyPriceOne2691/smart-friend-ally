@@ -138,7 +138,7 @@ final class RouterTests: XCTestCase {
     func testRecordHoldsNoWordOfTheGirl() {  // R9 E15
         let said = ["Соня сказала: можно я возьму у Тёмы спички и зажгу свечку на кухне?": "matches.own_verb",
                     "я потерялась в парке": "lost.verb"]
-        for (girl, rule) in said {
+        for (girl, rule) in said {  // R9 E15
             let routed = Router.shared.route(girl), topic = String(rule.prefix { $0 != "." })
             let journal = String(describing: routed.record)
             XCTAssertEqual(routed.decision, .script(key: topic))
