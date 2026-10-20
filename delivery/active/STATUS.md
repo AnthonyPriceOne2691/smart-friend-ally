@@ -9,8 +9,8 @@
 - **phase:** specify
 - **builder:** agent:claude-code
 - **verifier:** process:ci
-- **human_ok_spec:** pending (спека D1.1 + D1.2 и список имён E5 — у родителя; подпись до первого кода)
-- **human_ok_plan:** pending (класс L: родитель подписывает план вместе со спекой)
+- **human_ok_spec:** yes (родитель 2026-10-20 «Подписываю»; имена подтверждены)
+- **human_ok_plan:** yes (родитель 2026-10-20 «Подписываю»; имена подтверждены)
 - **shape-oracles:** cqg-deployed
 - **behavior-oracles:** tests-present
   <!-- логика хода — тесты AllyCore на Linux (предпосылка D1.1 voice-core); AllyLlama — паритет со стендом v2.4 на Mac (A23); код App — исполнение на телефоне (A9–A12, A20), не тесты -->
