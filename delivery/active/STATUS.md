@@ -1,0 +1,34 @@
+# Active delivery status
+
+- **slug:** voice-core
+- **stack:** delivery@2.07, cqg@2.70, okf@1.21
+- **class:** M
+- **kind:** feature
+- **repro_test:** n/a reason=не bugfix
+- **diagnosis:** n/a reason=не bugfix
+- **phase:** specify
+- **builder:** agent:claude-code
+- **verifier:** process:ci
+- **human_ok_spec:** yes (родитель 2026-10-20 «Подписываю»; имена подтверждены; примеры A1–A6, A14–A19 — в спеке D1, коммиты 792cd1c и 62d5323; A25–A27 — уточнение A17 ведущим 2026-10-20 по замеру speech-in, на подпись родителю до мержа)
+- **human_ok_plan:** yes (родитель 2026-10-20 «Подписываю»; имена подтверждены; план D1 с разделом D1.1)
+- **shape-oracles:** cqg-deployed
+- **behavior-oracles:** tests-present
+- **artifact_oracle:** n/a reason=поставка не собирает приложение: пакет SwiftPM проверяют его тесты в CI на Linux, сборка не оракул (§6.5a); бандл iOS проверит D1.2
+- **ci-oracles:** tooling
+- **worktree:** ../Smart frend Ally-wt-core
+- **parallel_sessions:** merge-guard,manual-deploy
+  <!-- §5.1a: интеграция в main только через scripts/merge_guard.sh; на телефон приложение ставится отдельным решением, а не следствием мержа -->
+- **hooks:** not-deployed
+- **blockers:** none
+- **waivers:** none
+- **new_dependency:** Packages/AllyCore/Package.swift reason=новый манифест SwiftPM без внешних зависимостей: таргет AllyCore — Foundation и локальный пакет ../AllyDiscipline (продукт Discipline), тесты — XCTest из тулчейна; сторонних библиотек не брал — ход, поток, конец речи и разбор профиля стоят на Foundation by=agent:claude-code
+- **runtime_paths:** none reason=ядро — чистые функции и протоколы над текстом, кадрами чисел и байтами профиля: без экрана, прав, железа и ввода-вывода; рисковые пути (звук, распознавание, модель) подключит D1.2
+- **irreversible_surfaces:** none reason=продукт офлайн; поставка не добавляет ни отправки, ни выкатки
+- **model_surface:** n/a reason=модель продукта ещё не вызывается: LanguageModel — протокол, в тестах — двойники; промпт, пин и сэмплинг войдут с D1.2, там model_surface объявлена списком
+- **rule_enforcers:** n/a reason=model_surface не объявлена списком; реестр «правило персоны v2.4 → исполнитель» — таблица в knowledge/engineering/safety-below-model.md, D1.1 вписывает туда TurnRunner — контракт на каждом ответе хода
+- **canon_drift_waiver:** no
+- **baseline_growth_waiver:** no
+- **observability:** 1
+- **observe_signal:** D1.2 зовёт TurnRunner на каждом ходе голосового цикла: на телефоне у каждого хода журнал без слов с id правил и хэшем контракта (A20 D1.2), первая фраза звучит до конца генерации; до неё тесты ядра A1–A6, A14–A19, A25–A27 и покрытие AllyCore ≥ 70% зелёные в каждом PR
+- **observe_until:** 2026-11-30
+- **circuit_breakers:** defaults from AGENT_DELIVERY_HARNESS.md §3.4
