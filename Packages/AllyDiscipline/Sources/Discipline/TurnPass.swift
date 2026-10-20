@@ -7,22 +7,25 @@ enum ContractRule: String, CaseIterable {
     case clauses, limits, afterProhibition = "after_prohibition", pointerKeep = "pointer_keep"
     case safetyKeep = "safety_keep", connective = "connective_strip", modes, whyFiller = "why_filler"
     case lastQuestion = "last_question", actionReferral = "action_referral", safetyProhibition = "safety_prohibition"
-    case closingQuestion = "closing_question"
+    case closingQuestion = "closing_question", humanClaim = "human_claim", piiEcho = "pii_echo"
+    case piiRequest = "pii_request", promise, promiseRefusalExempt = "promise_refusal_exempt"
+    case surpriseExempt = "surprise_exempt", adviceExempt = "advice_exempt", promisePointer = "promise_pointer"
+    case adultPointer = "adult_pointer"
 }
 
 /// The first sentence that broke a content rule: nothing after it is spoken.
 typealias Violation = (rule: ContractRule, sentence: String)
 
 /// One turn through the contract: the mode's limits (narrowed for the statements before a closing question), the
-/// rules switched off, the rule ids fired so far.
+/// rules switched off, what she said this turn, the topic whose adult pointer the turn keeps, the rule ids fired.
 struct TurnPass {
-    let contract: Contract, disabled: Set<String>, why: Bool, talk: Bool
+    let contract: Contract, disabled: Set<String>, why: Bool, talk: Bool, heard: Heard, topic: String?
     var limits: ContractData.Limits
     private(set) var fired: [String] = []
 
-    init(contract: Contract, mode: TurnMode, disabled: Set<String>) {
+    init(contract: Contract, mode: TurnMode, disabled: Set<String>, heard: Heard, topic: String?) {
         let mode = disabled.contains(ContractRule.modes.rawValue) ? .talk : mode
-        (self.contract, self.disabled) = (contract, disabled)
+        (self.contract, self.disabled, self.heard, self.topic) = (contract, disabled, heard, topic)
         (limits, why, talk) = (contract.limits(mode), mode == .why, mode == .talk)
     }
 
@@ -50,16 +53,17 @@ struct TurnPass {
         return (clean, nil)
     }
 
-    /// In the reference's order: a phone mark, attachment, danger how-to (a hazard with encouragement, no safety).
+    /// In the reference's order: a phone mark, a claim to be human, her address echoed or asked, a secret promised,
+    /// attachment, danger how-to.
     func violation(_ sentence: String) -> ContractRule? {
         let text = Self.norm(sentence)
-        if isOn(.phone), sentence.contains(contract.phoneMark) { return .phone }
-        if isOn(.attachment), attached(text) { return .attachment }
-        if isOn(.dangerHowto), contract.hazard.found(in: text), contract.encourage.found(in: text),
-           !(isOn(.dangerSafeExempt) && contract.dangerSafe.found(in: text)) {
-            return .dangerHowto
-        }
-        return nil
+        let checks: [(rule: ContractRule, broken: () -> Bool)] = [
+            (.phone, { sentence.contains(contract.phoneMark) }),
+            (.humanClaim, { contract.found("human_claim", in: text) }), (.piiEcho, { echoes(text) }),
+            (.piiRequest, { asks(text) }), (.promise, { promises(text) }), (.attachment, { attached(text) }),
+            (.dangerHowto, { dangerous(text) })
+        ]
+        return checks.first { isOn($0.rule) && $0.broken() }?.rule
     }
 
     /// attachment: a match no exemption takes — an honest «я не скучаю», safety advice «никуда не уходи».

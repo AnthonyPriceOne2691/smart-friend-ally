@@ -17,7 +17,7 @@ struct Lexicon: Sendable {
     static let particle = Contract.compile("(?<=[а-я])-(?=(?:то|нибудь|либо|ка|таки)\\b)")
     static let doubled = Contract.compile("\\b(бо|ва)-(бо|ва)\\b")
 
-    let data: RouterData, concepts: [(name: String, entries: [Entry])], glue: [String]
+    let data: RouterData, concepts: [(name: String, entries: [Entry])], glue: [String], clauses: [String: [Clause]]
     let sets: [String: Set<String>], doubles: Set<String>, setWords: Set<String>, noise: NoiseTable, plain: NoiseTable
 
     init(_ data: RouterData) {
@@ -34,6 +34,8 @@ struct Lexicon: Sendable {
         setWords = sets.values.reduce([]) { $0.union($1) }
         doubles = Set(data.exactOnly.values.joined().map(Self.normalize))
         (noise, plain) = (NoiseTable(data.noise, child: true), NoiseTable(data.noise, child: false))
+        let topics = data.hazards.compactMap { hazard in hazard.clauses.map { (hazard.topic, $0.map(Clause.init)) } }
+        clauses = Dictionary(topics, uniquingKeysWith: { first, _ in first })
     }
 
     /// normalize of the reference: lower case, ё and э as е, a hyphen before a particle or inside «бо-бо» goes, no ь ъ.
@@ -73,12 +75,11 @@ struct Lexicon: Sendable {
             || concepts.contains { $0.entries.contains { $0.exact(word) } }
     }
 
-    /// stem_match of the reference: a real word only exactly; otherwise the stem reaches the word through the noise
-    /// model within the budget of its length, and the ending matches exactly.
-    func reaches(_ entry: Entry, _ word: String, _ letters: [Int]?, off: Set<String>) -> Bool {
+    /// stem_match of the reference: a real word (`double`) only exactly; otherwise the stem reaches the word through
+    /// the noise model `table` within the budget of its length, and the ending matches exactly.
+    func reaches(_ entry: Entry, _ word: String, _ letters: [Int]?, double: Bool, table: NoiseTable) -> Bool {
         let count = entry.letters.count
-        if count <= 2 || (!off.contains("known_exact") && doubles.contains(word)) { return entry.exact(word) }
-        let table = off.contains("child_costs") ? plain : noise
+        if count <= 2 || double { return entry.exact(word) }
         guard let tok = letters, let head = tok.first, let stem = entry.letters.first, table.first[stem][head],
               count > 3 || stem == head || table.child[stem][head] else { return false }
         let row = distances(entry.letters, tok, table)
