@@ -14,8 +14,8 @@ let package = Package(
         .testTarget(
             name: "DisciplineTests",
             dependencies: ["Discipline"],
-            exclude: ["Fixtures/make_fixtures.py"],
-            resources: [.copy("Fixtures/repair_parity.jsonl")]
+            exclude: ["Fixtures/make_fixtures.py", "Fixtures/make_router.py"],
+            resources: [.copy("Fixtures/repair_parity.jsonl"), .copy("Fixtures/router_parity.jsonl")]
         )
     ]
 )
