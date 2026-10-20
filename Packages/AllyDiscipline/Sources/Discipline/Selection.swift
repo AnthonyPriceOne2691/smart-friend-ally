@@ -130,8 +130,10 @@ extension TurnPass {
         return Self.capitalized(out)
     }
 
-    /// The canned kind: by the violation (for danger, the ready script of the hazard found), else the mode's.
+    /// The canned kind: the topic's fallback when the turn keeps an adult pointer; by the violation (for danger, the
+    /// ready script of the hazard found); else the mode's.
     func fallback(_ violation: Violation?) -> String {
+        if isOn(.adultPointer), let topic, let kind = contract.data.pointers[topic]?.last { return kind }
         guard let violation else { return limits.canned }
         let kind = contract.data.fallbackOf[violation.rule.rawValue] ?? "generic"
         guard kind == "danger", isOn(.dangerScript),
@@ -139,8 +141,10 @@ extension TurnPass {
         return contract.hazardScripts.first { $0.word.found(in: word) }?.script ?? kind
     }
 
-    func canned(_ kind: String) -> Turn {
-        turn(split(contract.data.canned[kind] ?? contract.data.scripts[kind] ?? ""), source: .canned(kind))
+    /// A canned reply of the kind, after the sentence `first` already let out.
+    func canned(_ kind: String, after spoken: String? = nil) -> Turn {
+        let text = contract.data.canned[kind] ?? contract.data.scripts[kind] ?? ""
+        return turn((spoken.map { [$0] } ?? []) + split(text), source: .canned(kind))
     }
 
     func turn(_ sentences: [String], source: TurnSource) -> Turn {

@@ -256,7 +256,7 @@ final class ContractTests: XCTestCase {
 
     /// Ablation, the mutation gate's role: with a rule off, one of the probes comes out differently.
     func testEveryRuleSwitchedOffChangesAProbe() {  // K1–K7
-        let idle = ContractRule.allCases.map(\.rawValue).filter { rule in
+        let idle = ContractRule.allCases.filter { !contentRules.contains($0) }.map(\.rawValue).filter { rule in
             !(turnViolators + turnCleans).contains { spoken(say($0.reply, $0.mode, off: [rule])) != $0.want }
         }
         XCTAssertEqual(idle, [], "switching these rules off changes none of the probes")

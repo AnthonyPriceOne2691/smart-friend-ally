@@ -14,10 +14,12 @@ struct Scene {
     init(_ text: String, lexicon: Lexicon, off: Set<String>) {
         let toks = lexicon.tokens(text, off: off)
         var hits: [String: [Int]] = [:]
+        let table = off.contains("child_costs") ? lexicon.plain : lexicon.noise
         for (index, word) in toks.enumerated() {
-            let letters = Lexicon.letters(word)
-            for concept in lexicon.concepts
-            where concept.entries.contains(where: { lexicon.reaches($0, word, letters, off: off) }) {
+            let letters = Lexicon.letters(word), double = !off.contains("known_exact") && lexicon.doubles.contains(word)
+            for concept in lexicon.concepts where concept.entries.contains(where: { entry in
+                lexicon.reaches(entry, word, letters, double: double, table: table)
+            }) {
                 hits[concept.name, default: []].append(index)
             }
         }
@@ -77,13 +79,14 @@ struct Scene {
 
     var parentAway: Bool { has("PARENT") && (has("PARENT_BUSY", "ABSENT") || anyWord("gone")) }
 
-    /// `topic`: a stove's fire is not hers; the object's grammar; her fire verb alone.
+    /// `topic`: a topic of clauses; a stove's fire is not hers; the object's grammar; her fire verb alone.
     func outcome(_ hazard: RouterData.Hazard) -> Outcome? {
+        guard let object = hazard.object else { return clauses(hazard) }
         if let source = hazard.source, let concept = source.first, on("stove_source"), has(concept),
-           at(hazard.object).allSatisfy({ index in source.dropFirst().contains { toks[index].hasPrefix($0) } }) {
+           at(object).allSatisfy({ index in source.dropFirst().contains { toks[index].hasPrefix($0) } }) {
             return (nil, "stove_source")
         }
-        let found = grammar(hazard)
+        let found = grammar(hazard, object)
         if found?.strength != nil { return found }
         if let verb = hazard.verbAlone, on("fire_verb"), !ownVerbs([verb]).isEmpty, !pretend, !ruleStatement {
             return (.script, "fire_verb")
@@ -92,11 +95,11 @@ struct Scene {
     }
 
     /// `hazard`, its exits first: pretend, a rule she states, a story, a grown-up's scene.
-    func grammar(_ hazard: RouterData.Hazard) -> Outcome? {
-        guard has(hazard.object) else { return nil }
+    func grammar(_ hazard: RouterData.Hazard, _ object: String) -> Outcome? {
+        guard has(object) else { return nil }
         if pretend { return (nil, "pretend") }
         if ruleStatement { return (nil, "rule") }
-        let mine = ownVerbs(hazard.verbs)
+        let mine = ownVerbs(hazard.verbs ?? [])
         if on("story"), has("FRAME"), mine.isEmpty, !intent { return (.guarded, "story") }
         if on("adult_scene"), mine.isEmpty, has("PARENT"), !(intent || question || has("FEAR", "HELP")), !parentAway {
             return (nil, "adult_scene")

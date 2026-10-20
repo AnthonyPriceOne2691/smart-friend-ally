@@ -4,16 +4,19 @@ import Foundation
 struct RouterData: Decodable, Sendable {
     /// A topic by priority: the object, her action verbs; `strong` — the object with intent or a question is enough;
     /// `source` — [concept, prefixes]: with that concept every object word of these prefixes is not hers (a stove's
-    /// fire); `verbAlone` — her verb of this concept is enough without the object.
+    /// fire); `verbAlone` — her verb of this concept is enough without the object. A topic without an object is a list
+    /// of `clauses` [id, condition…] with `exits` (predicates that drop it); `guardOnly` — it never scripts (fear);
+    /// `forget` — the utterance stays out of the model's history and memory (her address).
     struct Hazard: Decodable, Sendable {
-        let topic, object: String, verbs: [String], strong: Bool?, source: [String]?, verbAlone: String?
+        let topic: String, object: String?, verbs: [String]?, strong: Bool?, source: [String]?, verbAlone: String?
+        let clauses: [[String]]?, exits: [String]?, guardOnly: Bool?, forget: Bool?
     }
 
     struct Noise: Decodable, Sendable {
         let vowels, soft: String, reduce, child, voice, classes: [String], cost: [String: Double], budget: [Double]
     }
 
-    struct Probe: Decodable, Sendable { let text, want: String, game: Bool? }
+    struct Probe: Decodable, Sendable { let text, want: String, topic: String?, game: Bool? }
 
     var lexicon: [String: [[String]]], exactHash: String
     let hazards: [Hazard], gameGuards: [String], sets: [String: [String]], noise: Noise
@@ -44,7 +47,7 @@ struct RouterData: Decodable, Sendable {
         let costs = noise.cost.keys.sorted().map { "\($0)=" + Self.fixed(noise.cost[$0] ?? 0) }
         let lines = entries + [noise.vowels, noise.soft] + pairs
             + [costs.joined(separator: " "), noise.budget.map(Self.fixed).joined(separator: " ")]
-        return fnv1a(Data(lines.joined(separator: "\n").utf8))
+        return "fnv1a:" + fnv1a(Data(lines.joined(separator: "\n").utf8))
     }
 
     static func fixed(_ value: Double) -> String { String(format: "%.2f", value) }

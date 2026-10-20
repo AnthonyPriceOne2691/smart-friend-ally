@@ -6,7 +6,7 @@
 - **kind:** feature
 - **repro_test:** n/a reason=не bugfix
 - **diagnosis:** n/a reason=не bugfix
-- **phase:** tasks
+- **phase:** implement
 - **builder:** agent:claude-code
 - **verifier:** process:ci
 - **human_ok_spec:** yes (решения родителя 2026-10-19 и упрощение «базовые случаи»; тексты П2 проверены ведущим по поручению родителя 2026-10-19 — local/checkpoint/router-scripts-basic.json)

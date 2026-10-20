@@ -7,8 +7,9 @@
 exact: a word of ~/models/router/wordfreq/ru_50k.txt (hermitdave/FrequencyWords 2018, OpenSubtitles, content
 CC BY-SA 4.0; normalized, letters only — router3's KNOWN) is a double of a concept when it reaches the concept only
 through the noise model; one line per concept. parity: the open sets of local/spike/router-proto/sets.py (never the
-holdouts); utterances with a decision or a rule first, then plain passes, in sha256 order, up to ROWS; an utterance
-with a personal name other than the fictional Соня, Тёма, Мурка is skipped.
+holdouts); utterances with a decision or a rule, round-robin over the topic of their first rule (sha256 order inside a
+topic), up to ROWS - PLAIN, then PLAIN plain passes; an utterance with a personal name other than the fictional Соня,
+Тёма, Мурка is skipped (router3's list of names is read here, never shipped).
 """
 import sys
 
@@ -28,7 +29,7 @@ sys.path[:0] = [str(PROTO)]
 import router_core as rc  # noqa: E402
 import sets  # noqa: E402
 
-ROWS, FICTIONAL = 50, ("сон", "тем", "мурк")
+ROWS, PLAIN, FICTIONAL = 60, 6, ("сон", "тем", "мурк")
 
 
 def exact():
@@ -65,11 +66,17 @@ def parity():
         seen.add(it["text"])
         r = rc.route(it["text"], {"game": it["game"]}, d)
         rows.append(({"text": it["text"], "game": it["game"], **r}, r["kind"] != "pass" or bool(r["rules"])))
-    picked = [row for row, busy in rows if busy] + [row for row, busy in rows if not busy]
+    topics = {}
+    for row, busy in rows:
+        topics.setdefault(row["rules"][0].split(".")[0], []).append(row) if busy else None
+    picked = []
+    while len(picked) < ROWS - PLAIN and any(topics.values()):
+        picked += [queue.pop(0) for queue in topics.values() if queue][:ROWS - PLAIN - len(picked)]
+    picked += [row for row, busy in rows if not busy][:PLAIN]
     with open(HERE / "router_parity.jsonl", "w", encoding="utf-8") as fh:
-        fh.writelines(json.dumps(row, ensure_ascii=False) + "\n" for row in picked[:ROWS])
-    print("router_parity.jsonl: %d rows (%d with a decision or rule) of %d utterances" % (
-        min(ROWS, len(picked)), sum(busy for _, busy in rows), len(rows)))
+        fh.writelines(json.dumps(row, ensure_ascii=False) + "\n" for row in picked)
+    print("router_parity.jsonl: %d rows (%d with a decision or rule over %d topics) of %d utterances" % (
+        len(picked), sum(busy for _, busy in rows), len(topics), len(rows)))
 
 
 if __name__ == "__main__":
