@@ -90,7 +90,7 @@ repos:
       - id: jscpd-dry-gate
         name: DRY — рост копипаста (jscpd clone-count ratchet)
         language: system
-        entry: bash -c 'cd "$(git rev-parse --show-toplevel)" && LINT_PY_SRC=Packages/AllyDiscipline/Sources LINT_JSCPD_PY_FORMAT=swift bash scripts/lint/check_jscpd_gate.sh'
+        entry: bash -c 'cd "$(git rev-parse --show-toplevel)" && LINT_PY_SRC=Packages/AllyDiscipline/Sources LINT_JSCPD_PY_FORMAT=swift LINT_TS_SRC=Packages/AllyCore/Sources LINT_JSCPD_TS_FORMAT=swift LINT_JSCPD_TS_EXTS=swift:swift bash scripts/lint/check_jscpd_gate.sh'
         files: ^(Packages/.*\.swift|\.pre-commit-config\.yaml|scripts/lint/.*)$
         pass_filenames: false
 

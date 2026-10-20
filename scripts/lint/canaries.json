@@ -19,5 +19,9 @@
  "check_swift_coverage.sh": {
   "path": "Packages/AllyDiscipline/Tests/DisciplineTests/CoverageCanaryTests.swift",
   "content": "import XCTest\n\n// канарейка: красный тест — гейт покрытия не считает покрытие на красных тестах и обязан покраснеть\nfinal class CoverageCanaryTests: XCTestCase {\n    func testCanaryFails() { XCTFail(\"канарейка\") }\n}\n"
+ },
+ "check_digest_report.py": {
+  "path": "delivery/active/verify-report.md",
+  "content": "# канарейка: число дайджеста подложено — сверка с пересчётом обязана покраснеть\nasserts_reviewed_by: n/a\nasserts_without_example: 999\n"
  }
 }
