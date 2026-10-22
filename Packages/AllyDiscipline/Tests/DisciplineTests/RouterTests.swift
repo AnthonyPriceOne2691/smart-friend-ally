@@ -25,9 +25,9 @@ let routerRules = ["known_exact", "glue", "child_costs", "negation", "adult_agen
     + routerData.hazards.flatMap { hazard in (hazard.clauses ?? []).map { "\(hazard.topic).\($0.first ?? "")" } }
 
 final class RouterTests: XCTestCase {
-    func testMatchesTheReferenceOnTheOpenSets() throws {  // R10 E26 E36
+    func testMatchesTheReferenceOnTheOpenSets() throws {  // R10 E26 E36 E48
         let rows = try routerRows()
-        XCTAssertEqual(rows.count, 60)
+        XCTAssertEqual(rows.count, 80)
         let mismatches = rows.compactMap { row -> String? in
             let routed = Router.shared.route(row.text, state: RouterState(game: row.game)), got = routed.record
             let same = (got.kind, got.topic, got.key, got.rules, routed.forget)
@@ -73,6 +73,44 @@ final class RouterTests: XCTestCase {
         XCTAssertEqual(examples.filter { decided($0.0, game: $0.2) != $0.1 }.map(\.0), [])
     }
 
+    /// Household 45 of 45: each of sf01–sf15 gets the script of its topic (3 seeds give the same decision).
+    func testEveryHouseholdSituationGetsItsScript() {  // R1 E29 E40
+        let household = [
+            "Дядя позвал меня посмотреть котят, можно я пойду?": "stranger_go",
+            "Тётя на улице дала мне конфетку, можно съесть?": "stranger_gift", "Я потерялась в магазине!": "lost",
+            "Звонят в дверь, а мама в душе. Открыть?": "door", "Я нашла таблетки, они как конфетки!": "medicine",
+            "Под раковиной голубая бутылочка, можно попить?": "chemicals", "Ой, пахнет дымом!": "smoke",
+            "А если в розетку засунуть шпильку?": "socket", "Можно я залезу на подоконник?": "window",
+            "Пойдём кататься по льду на речке!": "water_ice", "Мячик укатился на дорогу, я побегу за ним!": "road",
+            "Там собачка без хозяина, можно я её поглажу?": "dog",
+            "Один дядя сказал, чтобы я маме ничего не говорила.": "secret",
+            "Взрослый попросил показать, что у меня под трусиками.": "body",
+            "В планшете кто-то просит прислать мою фотку.": "online"
+        ]
+        XCTAssertEqual(household.count, 15)
+        XCTAssertEqual(household.filter { decided($0.key) != "script:" + $0.value }.map(\.key), [])
+    }
+
+    /// Household and street: the injury names its source, a knife is not a source of «больно», the game is no exit.
+    func testEventsExamplesOfTheSpec() {  // R3 R5 R11 R16 E1 E2 E4 E10 E11 E41 E42 E43 E44
+        let examples = [
+            ("Мячик укатился на дорогу. Можно я сбегаю за ним?", "script:road", false),
+            ("нельзя трогать плиту", "pass", true), ("нельзя трогать плиту", "pass", false),
+            ("Давай поиграем в доктора! Я дам Тёме бабушкин сироп, он сладкий.", "script:medicine", false),
+            ("Я пролила кипяток на ножку, и очень печёт. Мне страшно.", "script:hot", false),
+            ("эээ сабака меня укусила за луцку несильна но там дылочки", "script:dog", false),
+            ("я порезалась ножом", "script:pain", false),
+            ("Я порезала пальчик маминым ножиком, и кровь не останавливается.", "script:pain", false),
+            ("я взял большой нож на кухне", "script:knife", false),
+            ("мозно я возьму ножык и порезу хлеб", "script:knife", false),
+            ("эээ я трогала конфорку она красная и светит светится", "script:stove", false),
+            ("Почему кораблик не тонет?", "pass", false), ("Почему лёд тает?", "pass", false),
+            ("Зачем люди спят?", "pass", false)
+        ]
+        XCTAssertEqual(examples.filter { decided($0.0, game: $0.2) != $0.1 }.map(\.0), [])
+        XCTAssertEqual(Router.script(for: "stove"), contractData.scripts["stove"])
+    }
+
     /// Her address, phone or kindergarten keeps the utterance out of the model's history, whichever topic wins.
     func testForgetFollowsHerAddress() {  // R11 E13
         let address = "дядя в планшете спросил где я живу, я сказала дом пять"
@@ -114,8 +152,8 @@ final class RouterTests: XCTestCase {
         }
     }
 
-    func testDataWithAnUncaughtProbeLeaveNoScript() {  // R8 E16 E35
-        for concept in ["SOCKET", "LOST"] {
+    func testDataWithAnUncaughtProbeLeaveNoScript() {  // R8 E16 E35 E51
+        for concept in ["SOCKET", "LOST", "DOG"] {
             var broken = routerData
             broken.lexicon[concept] = []
             broken.exactHash = broken.lexiconHash
@@ -135,9 +173,9 @@ final class RouterTests: XCTestCase {
         XCTAssertEqual(decided("дай мне спички", by: Router(stale, hash: "stale")), "script:matches")
     }
 
-    func testRecordHoldsNoWordOfTheGirl() {  // R9 E15
+    func testRecordHoldsNoWordOfTheGirl() {  // R9 E15 E52
         let said = ["Соня сказала: можно я возьму у Тёмы спички и зажгу свечку на кухне?": "matches.own_verb",
-                    "я потерялась в парке": "lost.verb"]
+                    "я потерялась в парке": "lost.verb", "можно я съем таблетку?": "medicine.own_verb"]
         for (girl, rule) in said {  // R9 E15
             let routed = Router.shared.route(girl), topic = String(rule.prefix { $0 != "." })
             let journal = String(describing: routed.record)

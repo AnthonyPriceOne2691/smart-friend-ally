@@ -65,6 +65,23 @@ final class ContentTests: XCTestCase {
                        tall + "Тучи плывут. Если страшно, скажи маме или папе.")
     }
 
+    func testPainKeepsAnAdultPointer() {  // R13 E45
+        XCTAssertEqual(told("Ой, бедная ножка! Давай подуем.", decision: .script(key: "pain")),
+                       "Ой, бедная ножка! Давай подуем. Скажи об этом маме или папе.")
+        XCTAssertEqual(told("Я буду ждать тебя!", decision: .guard(topic: "pain")), contractData.scripts["pain"])
+    }
+
+    /// «скучать» and «по тебе» in either order, with «буду» or without, in every mode; «не буду» stays honest (D2).
+    func testMissingInEitherOrderIsCutInEveryMode() {  // R14 E54
+        let honest = "Я не буду по тебе скучать, я же всегда в телефоне."
+        for mode in TurnMode.allCases {
+            XCTAssertEqual(told("Ура! Я буду по тебе скучать!", mode: mode), "Ура!", "\(mode)")
+            XCTAssertEqual(told("Пока! Я буду очень скучать по тебе!", mode: mode), "Пока!", "\(mode)")
+            XCTAssertEqual(told("Буду по тебе скучать.", mode: mode), contractData.canned["attachment"], "\(mode)")
+            XCTAssertEqual(told(honest, mode: mode), honest, "\(mode)")
+        }
+    }
+
     /// In a game the fear guard goes (the game flag), so no pointer is added; the fallbacks and pointers pass.
     func testNoPointerInAGameAndEveryPointerPasses() {  // R3 R11 R13 E32
         let decision = Router.shared.route("Мне страшно, тут темно", state: RouterState(game: true)).decision

@@ -86,7 +86,7 @@ def check_contract():
     signed = (SPIKE.parent / "checkpoint/router-scripts-basic.json").read_text(encoding="utf-8")
     basic = {k: v[1] for k, v in json.loads(signed).items()}
     shared = {"canned": {**of.CANNED, "fear": basic["fear_fallback"]},
-              "scripts": {**basic, **{k: of.SCRIPTS[k] for _, k in of.HAZARD_SCRIPTS}},
+              "scripts": {**{k: of.SCRIPTS[k] for _, k in of.HAZARD_SCRIPTS}, **basic},   # the signed stove (4)
               "fallback_of": {{"digits_pii": "phone", "secret": "promise"}.get(k, k): v  # pragma: allowlist secret
                               for k, v in of.FALLBACK_OF.items()}}
     for name in [k for k, v in want.items() if CONTRACT[k] != v] + [
@@ -142,6 +142,7 @@ def main():
     check_contract()
     of.ENABLED.update(dict.fromkeys(NOT_PORTED, False))
     of.CANNED.update(alive=CONTRACT["scripts"]["alive"], secret=CONTRACT["scripts"]["secret"])  # signed texts
+    of.SCRIPTS.update(stove=CONTRACT["scripts"]["stove"])   # «…не включай и не трогай…», decision 4
     probes()
     done = {x: repair(x) for x in replies()}
     queues = collections.defaultdict(list)
