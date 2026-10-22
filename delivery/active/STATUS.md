@@ -1,7 +1,7 @@
 # Active delivery status
 
 - **slug:** router-events
-- **stack:** delivery@2.07, cqg@2.70, okf@1.21
+- **stack:** delivery@2.07, cqg@2.74, okf@1.21
 - **class:** M
 - **kind:** feature
 - **repro_test:** n/a reason=не bugfix
@@ -17,7 +17,7 @@
 - **ci-oracles:** tooling
 - **worktree:** ../Smart frend Ally-wt-router
 - **parallel_sessions:** merge-guard,manual-deploy
-  <!-- §5.1a: интеграция в main только через scripts/merge_guard.sh; параллельно — D1.2 (App, AllyLlama), D2 (документы), накат sync-cqg-2.74 у ведущего; общие файлы CLAUDE.md, INDEX.md, knowledge/log.md правятся малыми добавлениями -->
+  <!-- §5.1a: интеграция в main только через scripts/merge_guard.sh; параллельно — D1.2 (App, AllyLlama), D2 (документы); накат sync-cqg-2.74 влит слиянием main (faa1876); общие файлы CLAUDE.md, INDEX.md, knowledge/log.md правятся малыми добавлениями -->
 - **hooks:** not-deployed
 - **blockers:** none
 - **waivers:** none
