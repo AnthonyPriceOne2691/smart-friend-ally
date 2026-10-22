@@ -14,9 +14,11 @@ struct ContractData: Decodable, Sendable {
         }
     }
 
-    struct Probe: Decodable, Sendable { let rule, mode, reply: String }
+    struct Probe: Decodable, Sendable { let rule, mode, reply: String, heard: String? }
 
     var modes: [String: Limits], attachment: [String: [String]]
+    /// `content` — content rules ported in router-people by rule id; `pointers` — topic → [adult pointer, fallback].
+    var content: [String: [String]], pointers: [String: [String]]
     let negatable, negation, clauseSplits: [String]
     let pleaSafety, hazard, encourage, dangerSafe, pointer, safety, prohibition, connective, pointerScript: String
     let action, filler, fillerQ: String
@@ -47,6 +49,7 @@ struct Contract: Sendable {
     let attachment: [(group: String, patterns: [Pattern])], clauses: [Pattern]
     let negationInside, negationBefore, pleaSafety, hazard, encourage, dangerSafe, pointer, safety: Pattern
     let prohibition, action, filler, fillerQ, connective: Pattern, hazardScripts: [(word: Pattern, script: String)]
+    let content: [String: [Pattern]]
     let phoneMark = Rules.shared.strip(Rules.shared.phoneMark)
     let sentence = Pattern("[^.!?…]+(?:[.!?…]+|$)"), comma = Pattern(",\\s+"), endMark = Pattern("[.!?…]$")
     let words = Pattern("[0-9a-z\\x{0430}-\\x{044F}\\x{0451}]+(?:[-'][0-9a-z\\x{0430}-\\x{044F}\\x{0451}]+)*")
@@ -54,7 +57,7 @@ struct Contract: Sendable {
 
     init(_ data: ContractData, hash: String) {
         let compile = { Contract.compile($0) }
-        (self.data, self.hash) = (data, hash)
+        (self.data, self.hash, content) = (data, hash, data.content.mapValues { $0.map(compile) })
         attachment = data.attachment.sorted { $0.key < $1.key }.map { ($0.key, $0.value.map(compile)) }
         (negationInside, negationBefore) = (compile(data.negation.first ?? ""), compile(data.negation.last ?? ""))
         (pleaSafety, hazard) = (compile(data.pleaSafety), compile(data.hazard))
@@ -70,13 +73,29 @@ struct Contract: Sendable {
 
     func limits(_ mode: TurnMode) -> ContractData.Limits { data.modes[mode.rawValue] ?? .closed }
 
+    /// A pattern of the content rule matches.
+    func found(_ rule: String, in text: String) -> Bool { content[rule, default: []].contains { $0.found(in: text) } }
+
+    /// Group 1 of every match of the rule's patterns, left to right (`finditer` of the reference).
+    func groups(_ rule: String, in text: String) -> [String] {
+        var out: [String] = []
+        for pattern in content[rule, default: []] {
+            _ = pattern.replacing(in: text) { groups in
+                out.append(groups.count > 1 ? groups[1] : groups[0])
+                return ""
+            }
+        }
+        return out
+    }
+
     static func compile(_ pattern: String, _ options: NSRegularExpression.Options = []) -> Pattern {
         Pattern(pattern.replacingOccurrences(of: "\\w", with: Rules.word)
             .replacingOccurrences(of: "\\b", with: Rules.boundary), options)
     }
 
     private func catches(_ probe: ContractData.Probe) -> Bool {
-        let contract = TurnContract(mode: TurnMode(rawValue: probe.mode) ?? .talk, contract: self)
+        let contract = TurnContract(mode: TurnMode(rawValue: probe.mode) ?? .talk, contract: self,
+                                    heard: probe.heard ?? "")
         return contract.finish(probe.reply).record.rules.contains(probe.rule)
     }
 }

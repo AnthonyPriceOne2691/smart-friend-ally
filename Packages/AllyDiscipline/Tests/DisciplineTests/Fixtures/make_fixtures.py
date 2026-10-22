@@ -9,7 +9,10 @@ Inputs: `response` or `reply` of persona-v2/results/*.jsonl and bakeoff/results/
 reference changes, round-robin over what fired (rarest first), and up to 20 it keeps (endearment words first);
 inside a group, sha256 order. Checks first that repair.json holds the reference's tables and words.
 Field `contract`: the reference's turn contract (output_filter.contract, talk mode) on `out`, with the rules this
-contract ports (no honesty, secrets, address); checks that contract.json holds the reference's limits, patterns, texts.
+contract ports (all but `honesty`: «ты живая?» is the router's) and the signed texts of contract.json for its canned
+«alive» and «secret»; checks that contract.json holds the reference's limits, patterns, texts.
+contract_probes.jsonl: the reference's probes (output_filter.PROBES) the content rules of router-people change, and
+their clean twins (by name), through Repair's order and the contract — `want` is what the reference says.
 
   python3 -I Packages/AllyDiscipline/Tests/DisciplineTests/Fixtures/make_fixtures.py
 """
@@ -34,7 +37,25 @@ DATA = json.loads((HERE.parents[2] / "Sources/Discipline/Resources/repair.json")
 CONTRACT = json.loads((HERE.parents[2] / "Sources/Discipline/Resources/contract.json")
                       .read_text(encoding="utf-8"))
 CHANGED, UNCHANGED = 90, 20
-NEXT_DELIVERY = ("honesty", "human_claim", "pii_echo", "pii_request", "secret", "secret_pointer")
+NOT_PORTED, CONTENT = ("honesty",), ("human_claim", "pii_echo", "pii_request", "secret", "secret_pointer")
+CLEAN_TWINS = re.compile(r"secret|surprise|address|remember|kindergarten|tell mom|phone friend|alive|house|count words|"
+                         r"refuse|guessed")
+
+
+def content_patterns():
+    """contract.json → content: the reference's patterns of the content rules, extract_pii's inline ones composed."""
+    n, a = of.NUM_TOKEN, of.ADDR_WORD
+    return {"human_claim": [r.pattern for r in of.HUMAN_CLAIM_RES], "pii_ask": [r.pattern for r in of.PII_ASK_RES],
+            "pii_request": [of.REQUEST_RE.pattern], "pii_safe_advice": [of.SAFE_ADVICE_RE.pattern],
+            "secret": [r.pattern for r in of.SECRET_RES], "secret_refusal": [of.REFUSAL_RE.pattern],
+            "secret_encourage": [r.pattern for r in of.SECRET_ENCOURAGE_RES], "surprise": [of.SURPRISE_RE.pattern],
+            "pii_advice": [of.PII_ADVICE_RE.pattern], "remember": [of.REMEMBER_RE.pattern],
+            "pii_street": [r"(?:улиц[аеуы]|ул\.|проспект\w*|переул\w*)\s+([а-я]{3,})"],
+            "pii_numbers": [r"%s\s+(?:номер\s+)?(%s(?:\s+%s)*)" % (a, n, n)],
+            "pii_surname": [r"фамили\w*\s+([а-я]{3,})"],
+            "pii_run": [r"(?:%s)(?:[\s,-]+(?:%s)){2,}" % (n, n)], "pii_phone": [r"телефон|номер"],
+            "pii_address": [r"\bадрес"], "pii_digits": [r"\d{5,}"], "pii_word": [r"\b%s\b" % a],
+            "pii_number": [r"\b%s\b" % n], "pii_token": [r"[а-я0-9⟦⟧A-Z]+"]}
 
 
 def check_data():
@@ -60,10 +81,16 @@ def check_contract():
     want.update(modes={m: {**lim, "canned": of.MODE_CANNED[m]} for m, lim in of.MODES.items()}, attachment=of.ATTACH,
                 negatable=sorted(of.NEGATABLE), negation=list(of.NEGATION), clause_splits=of.CLAUSE_SPLITS,
                 pointer_script=of.POINTER_SCRIPT, hazard_scripts=[list(p) for p in of.HAZARD_SCRIPTS],
-                canned={k: of.CANNED[k] for k in CONTRACT["canned"]},
-                scripts={k: of.SCRIPTS[k] for _, k in of.HAZARD_SCRIPTS},
-                fallback_of={k: of.FALLBACK_OF[{"phone": "digits_pii"}.get(k, k)] for k in CONTRACT["fallback_of"]})
-    for name in (k for k, v in want.items() if CONTRACT[k] != v):
+                content=content_patterns())
+    # canned, scripts, fallback_of: the keys the reference has must agree; router-people's texts are the signed ones
+    signed = (SPIKE.parent / "checkpoint/router-scripts-basic.json").read_text(encoding="utf-8")
+    basic = {k: v[1] for k, v in json.loads(signed).items()}
+    shared = {"canned": {**of.CANNED, "fear": basic["fear_fallback"]},
+              "scripts": {**basic, **{k: of.SCRIPTS[k] for _, k in of.HAZARD_SCRIPTS}},
+              "fallback_of": {{"digits_pii": "phone", "secret": "promise"}.get(k, k): v  # pragma: allowlist secret
+                              for k, v in of.FALLBACK_OF.items()}}
+    for name in [k for k, v in want.items() if CONTRACT[k] != v] + [
+            k for k, ref in shared.items() if any(CONTRACT[k][key] != ref[key] for key in CONTRACT[k] if key in ref)]:
         sys.exit("contract.json: %s differs from the reference" % name)
 
 
@@ -94,10 +121,28 @@ def replies():
     return sorted(found, key=lambda s: hashlib.sha256(s.encode()).hexdigest())
 
 
+def probes():
+    """contract_probes.jsonl: probes whose text the content rules change, and their clean twins."""
+    rows = []
+    for name, reply, heard, want, *mode in of.PROBES:
+        mode = (mode or ["talk"])[0]
+        on = of.contract(repair(reply)[0], [], mode, reply, heard)["text"]
+        of.ENABLED.update(dict.fromkeys(CONTENT, False))
+        off = of.contract(repair(reply)[0], [], mode, reply, heard)["text"]
+        of.ENABLED.update(dict.fromkeys(CONTENT, True))
+        if on != off or want is None and CLEAN_TWINS.search(name):
+            rows.append({"reply": reply, "heard": heard, "mode": mode, "want": on})
+    with open(HERE / "contract_probes.jsonl", "w", encoding="utf-8") as fh:
+        fh.writelines(json.dumps(row, ensure_ascii=False) + "\n" for row in rows)
+    print("contract_probes.jsonl: %d of %d probes" % (len(rows), len(of.PROBES)))
+
+
 def main():
     check_data()
     check_contract()
-    of.ENABLED.update(dict.fromkeys(NEXT_DELIVERY, False))
+    of.ENABLED.update(dict.fromkeys(NOT_PORTED, False))
+    of.CANNED.update(alive=CONTRACT["scripts"]["alive"], secret=CONTRACT["scripts"]["secret"])  # signed texts
+    probes()
     done = {x: repair(x) for x in replies()}
     queues = collections.defaultdict(list)
     for x, (out, fired) in done.items():

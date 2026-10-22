@@ -105,7 +105,7 @@ Ally держится в полной синхронизации с каноно
   в архив тем же коммитом (`2026-10-17-archived-handoff-signature`), закрыта судьёй в `delivery@2.04`: строгий
   `delivery_check` с `--diff-base` судит такую поставку сам, обход L24 больше не нужен.
 - **Обязательства наблюдения:** до **2026-11-30** — `persona-session-blackbox` (сдвинуто: сигнал наступит со спайком),
-  `na-expiry-stopper`, `sync-cqg-2.55`, `state-refresh`, `spike-memory-limit`, `look-and-feel`, `look-and-feel-research`, `snout-instead-of-trunk`, `flower-crown`, `crown-centered`, `character-axolotl`, `spike-model-bakeoff`, `visual-approved`, `sync-cqg-2.63`, `spike-phone-llm`, `incident-archived-handoff`, `persona-v2`, `swift-contour`, `turn-contract`, `sync-cqg-2.70`, `closing-question`, `router-core`. Остальные закрыты `observed.md` 17.10. Недельный
+  `na-expiry-stopper`, `sync-cqg-2.55`, `state-refresh`, `spike-memory-limit`, `look-and-feel`, `look-and-feel-research`, `snout-instead-of-trunk`, `flower-crown`, `crown-centered`, `character-axolotl`, `spike-model-bakeoff`, `visual-approved`, `sync-cqg-2.63`, `spike-phone-llm`, `incident-archived-handoff`, `persona-v2`, `swift-contour`, `turn-contract`, `sync-cqg-2.70`, `closing-question`, `router-core`, `router-people`, `voice-core`. Остальные закрыты `observed.md` 17.10. Недельный
   `canon-freshness` гоняет `delivery_check` (Delivery §13.1): просрочку видно и без поставок.
 - **Спайк на телефоне** (`KNOWLEDGE.md` §12): шаг 1 сделан — лимит памяти приложения ≈3,3 ГБ без entitlement и
   ≈6,0 ГБ с `increased-memory-limit`, бесплатная Personal Team его выдаёт (`knowledge/engineering/memory-limit.md`).
@@ -132,7 +132,7 @@ Ally держится в полной синхронизации с каноно
 - **Пакет `Packages/AllyDiscipline`** (поставки `swift-contour`, `turn-contract`, `closing-question`, 18–19.10): ремонт текста `Repair` и
   контракт хода `TurnContract` до голоса; ратчет SwiftLint, `file-length` с маской `*.swift *.py`, jscpd `swift`, джоба
   CI `swift` с покрытием ≥ 70%. Два объявления n/a ждут кода приложения (`until: "App/*.swift"` в
-  `not-applicable.json`, мета-гейт). Сводку утверждений Swift даёт канонная `assert_digest.sh` (`cqg@2.68`).
+  `not-applicable.json`, мета-гейт). Сводку утверждений Swift даёт `assert_digest.sh`, CI сверяет её с отчётом (voice-core).
 - **Исследования 18.10** (поставка `research-reports`, наблюдение до 2026-11-30) — справки в `knowledge/references/research/`:
   ударения синтеза (знак U+0301 у Supertonic 3 работает: 55 из 60 против 33 из 60), распознавание речи пятилетки (GigaAM-v3
   точнее диктовки; правило шага 3 «≥10 п.п.» и протокол записи), память-портрет (приёмка M1–M14), энциклопедия «почему»
