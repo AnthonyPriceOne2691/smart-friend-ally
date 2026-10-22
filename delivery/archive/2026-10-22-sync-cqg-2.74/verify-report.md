@@ -2,7 +2,7 @@
 
 **Date:** 2026-10-22
 **Verifier:** process:ci
-**asserts_reviewed_by:** n/a (класс S; накат механики контура, тестов продукта поставка не меняет)
+**asserts_reviewed_by:** n/a (класс S; накат механики контура, тестов продукта поставка не меняет — дайджест ниже, asserts_without_example: 0)
 **CI run:** https://github.com/AnthonyPriceOne2691/smart-friend-ally/actions/runs/39827216684
 **Commit:** e1316aaf9dd9af851c6b161662451206e2dc286b
 
@@ -53,6 +53,19 @@
   python-тестами получит `WEAK`, пока фрагмент pytest не подключит плагин (наблюдение поставки).
 - Накат снова не привёз часть комплекта (повтор `2026-10-18-plan-misses-sourced-part`): исправление — за судьёй.
 
+## Assertion digest (ревью ожиданий, не кода)
+
+База: `origin/main` · сгенерировано `assert_digest.sh`
+
+**Новых утверждений нет.**
+
+Это либо тесты не добавлялись (тогда чем закрыт DoD?), либо изменения
+только в реализации. Второе законно; первое — повод спросить.
+
+asserts_without_example: 0
+
+Тесты поставка не добавляла: накат механики контура, DoD закрыт пробами исполнением и гейтами (разделы выше).
+
 ## Verdict
 - [x] READY FOR HANDOFF
 - [ ] NEED CONVERGE (new tasks)
@@ -67,5 +80,5 @@
 | rework_after_done | 0 |
 | harness_hardened | no — канон принёс механизмы, которые у Ally судить нечего; находка — повтор открытой |
 | implement_retries | 0 |
-| verify_fails_before_green | 1 — формат строки `decisions.md` в строгом `delivery_check` |
+| verify_fails_before_green | 2 — формат строки `decisions.md` в строгом `delivery_check`; в CI сверка `check_digest_report.py`: в отчёте сдачи не было дайджеста утверждений |
 | est_token_or_cost | n/a |
