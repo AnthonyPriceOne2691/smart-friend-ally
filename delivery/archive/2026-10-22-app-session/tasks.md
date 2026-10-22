@@ -60,8 +60,8 @@ L16 (`knowledge/product/`), L47, L48, L49 (маршрутизатор и его 
   мутации, «Исполнение рисковых путей» (W11), `mergeable` и ссылка на зелёный CI (L35); строгий `delivery_check
   --require-ci --diff-base origin/main`; `STRICT=1 BASE=origin/main python3 scripts/lint/check_digest_report.py` до пуша
   (L43)
-- [x] T12: сдача — `delivery/archive/<дата>-app-session` в том же PR, `.gitkeep`, строка INDEX с уроками L59–L61 (если
-  уроки есть), `app-session` в обязательствах CLAUDE.md, `observe_until` 2026-11-30; мерж — ведущий
+- [x] T12: сдача — `delivery/archive/<дата>-app-session` в том же PR, `.gitkeep`, строка INDEX с уроками L59, L60, L61
+  (рождены этой поставкой — раньше ссылаться было не на что), `app-session` в обязательствах CLAUDE.md, `observe_until` 2026-11-30; мерж — ведущий
 
 ## R `child-lock` — следующая ветка, после мержа D2.2
 
