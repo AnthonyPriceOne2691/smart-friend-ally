@@ -30,9 +30,10 @@
 - [x] T10: `.swiftlint.yml` — `included: App`, `no_network`, `blocking_wait`, `unbounded_stream`; роли `cpu-in-async` и
   `unbounded-list` в `not-applicable.json` словами разборщика карты ролей (L32); канарейки; jscpd и счётчик ратчета
   SwiftLint видят `App` и `AllyLlama`; доктор DEAD 0 (A7 — правило, A13)
-- [ ] T11: `scripts/lint/check_app_artifact.sh` с канарейкой; `.github/workflows/ios.yml` — `workflow_dispatch`, macOS,
+- [x] T11: `scripts/lint/check_app_artifact.sh` с канарейкой; `.github/workflows/ios.yml` — `workflow_dispatch`, macOS,
   `timeout-minutes`; запись в `adapted.json`; цена прогона в минутах (CQG §8.7) (A7, A8)
-  (скрипт, канарейка, workflow и записи — 2026-10-22; прогон джобы по метке `macos` и цена — после пуша)
+  (2026-10-22: прогон 39831715919 по метке `macos` — зелёный за 67 с на macos-26, Xcode 26.6: A23 пропущен видимо,
+  `.app` для устройства собран, оракул артефакта OK; цена — 2 мин macOS ×10 = 20 из 2000 бесплатных минут, раз на поставку)
 
 ## Slice 4 — телефон
 - [ ] T12: установка; шаги владельца — доверие сертификату (L15), лимит бесплатной подписи (зонды); веса командой концепта
