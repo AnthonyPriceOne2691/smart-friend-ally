@@ -31,5 +31,5 @@
     второй взгляд E4B — открытый вопрос к родителю; исправления указателя — на следующую маленькую поставку
 - [x] T10: знания (`safety-below-model`, `knowledge/log.md`), `eval-smoke.md`, verify-report, PR, CI; handoff в том же
   PR: архив, INDEX, `router-events` в список наблюдений CLAUDE.md; мерж — ведущий
-  — сделано: verify-report (CI 39838959788), архив `2026-10-22-router-events`, строка INDEX с уроками L47–L49,
+  — сделано: verify-report (CI 39838959788), архив `2026-10-22-router-events`, строка INDEX с уроками L47, L48, L49,
     наблюдение до 2026-11-30; слияния main без перезаписи истории (`cqg@2.74`, `session-core`)
