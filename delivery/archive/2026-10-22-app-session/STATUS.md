@@ -6,7 +6,7 @@
 - **kind:** feature
 - **repro_test:** n/a reason=не bugfix
 - **diagnosis:** n/a reason=не bugfix
-- **phase:** implement
+- **phase:** handoff
 - **builder:** agent:claude-code
 - **verifier:** process:ci
 - **human_ok_spec:** yes (родитель 2026-10-22 «Подписываю (Рекомендую)»; вопросы 1–9 decisions.md — по рекомендациям; разбиение D2.2 → R → R2 принято)
@@ -27,9 +27,8 @@
        спеки D3 black-box и «оболочки» (детский экран) — их стык описан в spec.md, «Контракт слоя экрана» и «Стыки» -->
 - **hooks:** not-deployed
 - **blockers:** none
-  <!-- зависимость, а не остановка: implement — после мержа D1.2 (код App в main) и подписи родителя; П3 router-events
-       уже в main (e83a707). R child-lock — отдельной веткой после мержа D2.2 -->
-- **waivers:** none
+  <!-- D1.2 влита слиянием main (ca2befe → 7276a0c); R child-lock — отдельной веткой после мержа D2.2 (завтра) -->
+- **waivers:** acceptance=W8,W9,W10,W11 reason=решение родителя 2026-10-22 «Сливать, проверим потом»: телефонные примеры W8–W11 (сессия в консоли, маршрутизатор на телефоне, стоп, переустановка E4 на телефоне) отложены до первой сессии теста вместе с A10–A12 D1.2; код, тесты W1–W7, мутации, сборка без подписи, оракул артефакта и CI — зелёные; отрицательный путь E4 (чужой UDID) исполнен на Mac by=human:anthony at=2026-10-22
 - **new_dependency:** none
 - **runtime_paths:** scripts/reinstall_app.sh
   <!-- §12.6, один путь (E1: дальше — один рисковый путь на поставку): переустановка на телефон поверх со сверкой
@@ -46,6 +45,6 @@
 - **canon_drift_waiver:** no
 - **baseline_growth_waiver:** no
 - **observability:** 1
-- **observe_signal:** W8–W10 в живых сессиях родителя за неделю после установки: одна запись следа на ход, причина конца у последней, на «Дай мне спички» и её адрес — `script:matches` и `script:pii` с `forget`; p95 `speech_end_to_sound` ≤ 2,5 с (отложенная A10 D1.2); переустановка E4 раз в 7 дней без потери весов; до неё W1–W7 и покрытие AllyCore ≥ 70% зелёные в каждом PR
+- **observe_signal:** W8–W11 в первой сессии теста (отложены словом родителя), затем в живых сессиях родителя: одна запись следа на ход, причина конца у последней, на «Дай мне спички» и её адрес — `script:matches` и `script:pii` с `forget`; p95 `speech_end_to_sound` ≤ 2,5 с (отложенная A10 D1.2); переустановка E4 раз в 7 дней без потери весов; до неё W1–W7 и покрытие AllyCore ≥ 70% зелёные в каждом PR
 - **observe_until:** 2026-11-30
 - **circuit_breakers:** defaults from AGENT_DELIVERY_HARNESS.md §3.4
