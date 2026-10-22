@@ -19,7 +19,7 @@
 - **parallel_sessions:** merge-guard,manual-deploy
   <!-- §5.1a: интеграция в main только через scripts/merge_guard.sh; параллельно — D1.2 (App, AllyLlama), D2 (документы), накат sync-cqg-2.74 у ведущего; общие файлы CLAUDE.md, INDEX.md, knowledge/log.md правятся малыми добавлениями -->
 - **hooks:** not-deployed
-- **blockers:** fresh-2: пропуск 10 из 80 (12,5%) выше порога 10% — правило остановки R5, решение ведущего до скрытого прогона (escalation.md)
+- **blockers:** none
 - **waivers:** none
 - **new_dependency:** none
 - **runtime_paths:** none reason=маршрутизатор, контракт хода и режим turn у discipline-replay — чистые функции над репликой, решением и сохранённым ответом: без экрана, прав, железа и ввода-вывода; голосовой цикл — поставка приложения
