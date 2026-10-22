@@ -12,6 +12,7 @@ excluded:
   - Packages/AllyDiscipline/.build
   - Packages/AllyCore/.build
   - Packages/AllyLlama/.build
+  - Packages/AllyShell/.build
   - App/build
   - Packages/AllyDiscipline/Tests/DisciplineTests/Fixtures
 
