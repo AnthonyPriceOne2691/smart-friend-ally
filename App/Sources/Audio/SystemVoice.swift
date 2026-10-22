@@ -1,9 +1,8 @@
 import AllyCore
 import AVFoundation
 
-/// The temporary voice: the system Russian voice chosen by identifier, not by language (П23) — without the enhanced
-/// voice the compact one sounds and the console says so; the rate is set on every utterance (П17). `speak` returns
-/// when the sentence has sounded or was stopped.
+/// The temporary voice: the system Russian voice by identifier, not by language (П23) — no enhanced voice, the compact
+/// one with a console note; the rate set on every utterance (П17); `speak` returns once sounded or stopped.
 final class SystemVoice: NSObject, VoiceOutput, AVSpeechSynthesizerDelegate, @unchecked Sendable {
     let voice: AVSpeechSynthesisVoice?, note: String
     private let synth = AVSpeechSynthesizer(), rate: Float

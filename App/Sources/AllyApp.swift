@@ -17,10 +17,13 @@ struct Console: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Для взрослых").font(.title2.bold()).accessibilityIdentifier("console.adultsOnly")
-            ForEach(Array(loop.screen.lines.enumerated()), id: \.offset) {
-                Text($0.element).font(.caption.monospaced())
+            ScrollView {  // 20 turn lines overflowed the screen and pushed the button off it (phone, 2026-10-22)
+                VStack(alignment: .leading, spacing: 12) {
+                    ForEach(Array(loop.screen.lines.enumerated()), id: \.offset) {
+                        Text($0.element).font(.caption.monospaced())
+                    }
+                }.frame(maxWidth: .infinity, alignment: .leading)
             }
-            Spacer()
             Text(loop.screen.heard).foregroundStyle(.secondary)
             Text(loop.screen.said).bold()
             Button(loop.screen.busy ? "Слушаю…" : "Сказать фразу", action: loop.talk)

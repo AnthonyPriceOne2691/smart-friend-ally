@@ -39,8 +39,8 @@ final class VoiceLoop: ObservableObject {
         for try await _ in model.reply(to: "Привет!") {}
         model.newConversation()
         screen.lines.append("прогрев: " + line(model.warmup.merging(["reply": uptime - start]) { $1 }))
-        let rate = ((try? JSONSerialization.jsonObject(with: data)) as? [String: Any])?["voice_rate"] as? Float
-        let speech = await recognizer.prepare(), voice = SystemVoice(identifier: registry.voice, rate: rate ?? 0.5)
+        let rate = ((try? JSONSerialization.jsonObject(with: data)) as? [String: Any])?["voice_rate"] as? Double ?? 0.5
+        let speech = await recognizer.prepare(), voice = SystemVoice(identifier: registry.voice, rate: Float(rate))
         let microphone = await AudioIO.microphoneAllowed()
         screen.lines += [speech.line, voice.note, "микрофон: " + (microphone ? "да" : "нет — разреши в Настройках")]
         let personaHash = SHA256.hash(data: Data(persona.utf8)).map { String(format: "%02x", $0) }.joined()
@@ -75,7 +75,8 @@ final class VoiceLoop: ObservableObject {
         let outcome = try await runner.run(text)
         screen.said = outcome.turn.sentences.joined(separator: " ")
         let stages = ["tail": end.ended - end.voiced, "recognize": recognized - end.ended,
-                      "speech_end_to_sound": voice.firstSound.map { $0 - end.voiced }].compactMapValues { $0 }
+                      "speech_end_to_sound": voice.firstSound.map { $0 - end.voiced },
+                      "tap_buffer": audio.bufferSeconds].compactMapValues { $0 }
         screen.lines.append("ход: " + line(stages))
         let thermal = ["nominal", "fair", "serious", "critical"][ProcessInfo.processInfo.thermalState.rawValue]
         let log = TurnLog(outcome: outcome, stages: stages, versions: versions, memory: memory(model), thermal: thermal)

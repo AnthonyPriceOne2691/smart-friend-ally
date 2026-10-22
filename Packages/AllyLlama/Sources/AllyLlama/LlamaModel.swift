@@ -3,12 +3,10 @@ import CryptoKit
 import Foundation
 import llama
 
-/// Gemma 4 through llama.cpp behind `LanguageModel` (port of the probe's `LlamaEngine`): four sequences, unified KV,
-/// full SWA window. Sequence 0 keeps the persona's system turn; a conversation is its copy in sequence 1 and stays in
-/// the KV. All work runs on the model's own serial queue: a blocking `llama_decode` holds no cooperative pool thread.
+/// Gemma 4 through llama.cpp behind `LanguageModel` (the probe's `LlamaEngine`): sequence 0 keeps the persona's system
+/// turn, a conversation is its copy in sequence 1 and stays in the KV; all work runs on the model's own serial queue.
 public final class LlamaModel: LanguageModel, @unchecked Sendable {
-    /// Warm-up seconds (A24): `weights`, `context` (the first Metal shader build after install lands here), then
-    /// `prefix_file` when the persona prefix was read from its state file or `prefix_build` when it was built.
+    /// Warm-up seconds (A24): `weights`, `context`, then `prefix_file` (read from its state file) or `prefix_build`.
     public private(set) var warmup: [String: Double] = [:]
     private let model: OpaquePointer, ctx: OpaquePointer, vocab: OpaquePointer, settings: LlamaSettings
     private let queue: DispatchQueue, current = Locked<StopFlag?>(nil), prompt = Locked(0)
