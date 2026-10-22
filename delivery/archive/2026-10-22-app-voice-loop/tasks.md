@@ -49,6 +49,9 @@
   карта репозитория, реестр в `safety-below-model.md`, `knowledge/log.md` и индексы
 - [x] T15: инциденты наверх с `kind: upstream-candidate`: `.binaryTarget` в существующем манифесте гейт `new-dependency`
   не видит; `BUILD_MARKERS` не знает XcodeGen и Xcode — правило §6.5a у iOS-проекта молчит
-- [ ] T16: verify-report — «Исполнение рисковых путей», «Изменение поверхности модели», дайджест, ссылка на CI и на ручную
+- [x] T16: verify-report — «Исполнение рисковых путей», «Изменение поверхности модели», дайджест, ссылка на CI и на ручную
   macOS-джобу; строгий `delivery_check --require-ci --diff-base origin/main` (L14)
-- [ ] T17: сдача — архив, урок в INDEX, CLAUDE.md (снять устаревшую строку про `assert_digest_swift.py`); `merge_guard` — ведущий
+  (2026-10-22: verify-report с блоками рисковых путей, поверхности модели, наблюдений родителя на слух; дайджест 3 из 3
+  с примером)
+- [x] T17: сдача — архив, урок в INDEX, CLAUDE.md (снять устаревшую строку про `assert_digest_swift.py`); `merge_guard` — ведущий
+  (2026-10-22: архив `2026-10-22-app-voice-loop`, уроки L44–L46, CLAUDE.md без новых строк)

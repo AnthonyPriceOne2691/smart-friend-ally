@@ -2,9 +2,9 @@
 # Персона, реестр (вес, рантайм, сэмплинг), пакет модели (формат хода Gemma 4, мастер-префикс, цепочка сэмплера);
 # вес — по ключу реестра «файл:байты»; рантайм — релизный xcframework по url и checksum из Package.swift.
 App/Resources/persona.v2.4.ru.md	329790cc6d2f04760c977744d5a1aacd2eb6bf6c2de6198b60b711542e23f722
-App/Resources/model.json	5074cbf9cf911431c56ca7eb40655b48e69ce425885a4d1fada6ce57c7ccccf5
+App/Resources/model.json	b6fc9e78127fb0241d646a47ff75f61b4c7decc6dd9ce08f93690de362c5d029
 Packages/AllyLlama/Package.swift	5e7d0004b4fe0d8927819846f2dbbfcded0ff24c2e0aef1484912d5c979e24e3
-Packages/AllyLlama/Sources/AllyLlama/LlamaModel.swift	6142ab908389468828203c3b94a00b2a85df75444cbad7118fb2fa8e64e28306
+Packages/AllyLlama/Sources/AllyLlama/LlamaModel.swift	cdf72d5fd8766faa5974344bdc13e91188d7cefae1b084babc1037b8fbf4f809
 Packages/AllyLlama/Sources/AllyLlama/LlamaSettings.swift	1adb701e55602e454ca0adf96ed4c3c442c46c61a8804e6c439601b57548f84a
 weights:gemma-4-E4B-it-Q4_K_M.gguf:4977171584	85a896a047553e842f25297ee5b031d64ff30147d9c4af17b1e4b394cd1fab87
 llama.cpp:b10809:llama-b10809-xcframework.zip	d6813b3b6c73728a19f0bc0d1d7cea04ccdb07f9583c1d930c0b38af2377606d
