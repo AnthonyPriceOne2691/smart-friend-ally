@@ -79,7 +79,8 @@ struct Scene {
 
     var parentAway: Bool { has("PARENT") && (has("PARENT_BUSY", "ABSENT") || anyWord("gone")) }
 
-    /// `topic`: a topic of clauses; a stove's fire is not hers; the object's grammar; her fire verb alone.
+    /// `topic`: a topic of clauses; a stove's fire is not hers; the object's grammar; her fire verb alone; the
+    /// clauses of an object's topic when its grammar does not script.
     func outcome(_ hazard: RouterData.Hazard) -> Outcome? {
         guard let object = hazard.object else { return clauses(hazard) }
         if let source = hazard.source, let concept = source.first, on("stove_source"), has(concept),
@@ -87,11 +88,13 @@ struct Scene {
             return (nil, "stove_source")
         }
         let found = grammar(hazard, object)
-        if found?.strength != nil { return found }
-        if let verb = hazard.verbAlone, on("fire_verb"), !ownVerbs([verb]).isEmpty, !pretend, !ruleStatement {
+        if found?.strength == .script { return found }
+        if found?.strength == nil, let verb = hazard.verbAlone, on("fire_verb"), !ownVerbs([verb]).isEmpty, !pretend,
+           !ruleStatement {
             return (.script, "fire_verb")
         }
-        return found
+        let extra = clauses(hazard)
+        return extra?.strength == .script ? extra : found
     }
 
     /// `hazard`, its exits first: pretend, a rule she states, a story, a grown-up's scene.
@@ -107,11 +110,12 @@ struct Scene {
         return verdict(hazard, mine: mine)
     }
 
-    /// Her own action verb, or (a strong object) intent or a question, or fear: a script; the word alone: a guard.
+    /// Her own action verb, or (a strong object) intent or a question, or fear (her pain too, when the topic is
+    /// `hurt`): a script; the word alone: a guard.
     func verdict(_ hazard: RouterData.Hazard, mine: [Int]) -> Outcome {
         if !mine.isEmpty { return (.script, "own_verb") }
         if on("ask"), hazard.strong == true, intent || question || has("FIND") { return (.script, "ask") }
-        if on("fear"), has("FEAR", "HELP") { return (.script, "fear") }
+        if on("fear"), has("FEAR", "HELP") || hazard.hurt == true && has("PAIN") { return (.script, "fear") }
         return (.guarded, "word")
     }
 }

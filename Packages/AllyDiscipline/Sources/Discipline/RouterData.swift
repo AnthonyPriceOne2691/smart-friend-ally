@@ -4,12 +4,14 @@ import Foundation
 struct RouterData: Decodable, Sendable {
     /// A topic by priority: the object, her action verbs; `strong` — the object with intent or a question is enough;
     /// `source` — [concept, prefixes]: with that concept every object word of these prefixes is not hers (a stove's
-    /// fire); `verbAlone` — her verb of this concept is enough without the object. A topic without an object is a list
-    /// of `clauses` [id, condition…] with `exits` (predicates that drop it); `guardOnly` — it never scripts (fear);
-    /// `forget` — the utterance stays out of the model's history and memory (her address).
+    /// fire); `verbAlone` — her verb of this concept is enough without the object; `hurt` — her pain next to the object
+    /// counts as her fear (the injury names its source). A topic without an object is a list of `clauses` [id,
+    /// condition…] with `exits` (predicates that drop it); an object's topic may carry clauses for when its grammar
+    /// does not script; `guardOnly` — it never scripts (fear); `forget` — the utterance stays out of the model's
+    /// history and memory (her address).
     struct Hazard: Decodable, Sendable {
         let topic: String, object: String?, verbs: [String]?, strong: Bool?, source: [String]?, verbAlone: String?
-        let clauses: [[String]]?, exits: [String]?, guardOnly: Bool?, forget: Bool?
+        let clauses: [[String]]?, exits: [String]?, guardOnly: Bool?, forget: Bool?, hurt: Bool?
     }
 
     struct Noise: Decodable, Sendable {
