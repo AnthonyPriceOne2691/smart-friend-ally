@@ -1,6 +1,7 @@
+import AllyCore
 import SwiftUI
 
-/// Ally, D1: the adult console only — the girl gets her screen after the router is accepted (E2).
+/// Ally: the adult console only — the girl gets her screen with the child lock (R) and the shell (E2).
 @main
 struct AllyApp: App {
     @StateObject private var loop = VoiceLoop()
@@ -10,7 +11,8 @@ struct AllyApp: App {
     }
 }
 
-/// «Для взрослых» (A12): readiness, signing days, the last turn's times; what was heard and said stays on this screen.
+/// «Для взрослых» (A12): readiness, signing days, the session's state and limit; what was heard and said stays on
+/// this screen. «Разбудить» starts a session, «Стоп» silences her at once (D2.2).
 struct Console: View {
     @ObservedObject var loop: VoiceLoop
 
@@ -26,12 +28,28 @@ struct Console: View {
             }
             Text(loop.screen.heard).foregroundStyle(.secondary)
             Text(loop.screen.said).bold()
-            Button(loop.screen.busy ? "Слушаю…" : "Сказать фразу", action: loop.talk)
-                .buttonStyle(.borderedProminent).disabled(!loop.screen.ready || loop.screen.busy)
-                .accessibilityIdentifier("console.talk")
+            Text("Элли: " + Self.word(loop.talk.phase)).accessibilityIdentifier("console.phase")
+            HStack {
+                Button("Разбудить", action: loop.wake).buttonStyle(.borderedProminent)
+                    .disabled(!loop.screen.ready || loop.talk.phase != .asleep).accessibilityIdentifier("console.wake")
+                Button("Стоп", action: loop.stop).buttonStyle(.bordered)
+                    .disabled(loop.talk.phase == .asleep).accessibilityIdentifier("console.stop")
+            }
         }
         .padding()
         .task { await loop.start() }
         .onAppear { UIApplication.shared.isIdleTimerDisabled = true }  // a locked phone stops the GPU work
+    }
+
+    private static func word(_ phase: SessionState) -> String {
+        switch phase {
+        case .asleep: "спит"
+        case .greeting: "здоровается"
+        case .listening: "слушает"
+        case .thinking: "думает"
+        case .speaking: "говорит"
+        case .windingDown: "дослушивает"
+        case .goodbye: "прощается"
+        }
     }
 }
