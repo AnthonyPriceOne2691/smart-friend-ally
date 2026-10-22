@@ -6,7 +6,7 @@
 - **kind:** bugfix
 - **repro_test:** Packages/AllyDiscipline/Tests/DisciplineTests/ContentTests.swift::testPointerSparesTheLastProhibition, ::testDangerScriptOutranksABareTopicFallback; Packages/AllyDiscipline/Tests/DisciplineTests/ContractTests.swift::testEllipticTailYieldsToTheFullQuestion — пишутся до правки и краснеют на коде main (H1, H4, H6, H7, H9–H11)
 - **diagnosis:** n/a reason=механизмы найдены сразу замером и чтением кода: `pointed()` вытесняет предложения с конца, не зная о запрете (разбор П3 router-events); `fallback()` ставит запасную фразу темы выше заготовки нарушения (тот же разбор); `extraQuestions()` оставляет последний открытый вопрос, даже обрывок (находка D3)
-- **phase:** specify
+- **phase:** implement
 - **builder:** agent:claude-code
 - **verifier:** process:ci
 - **human_ok_spec:** yes (by=human:родитель at=2026-10-22 «Подписываю (Рекомендую)» — примеры H1–H16 как есть; H4: нет места — запрет остаётся, указатель не дописывается; H8: у «потерялась» своя фраза старше заготовки опасности; передал ведущий)
