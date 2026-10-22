@@ -8,10 +8,12 @@ generated:
   by: claude_code/opus-5.5
   at: 2026-10-02T09:28:19Z
 # Исполнители в коде: ремонт текста (swift-contour), контракт хода (turn-contract),
-# маршрутизатор до модели (router-core), темы людей и правила содержания (router-people).
+# маршрутизатор до модели (router-core), темы людей и правила содержания (router-people),
+# цикл приложения, который зовёт контракт на каждом ответе (app-voice-loop).
 implementation:
   - Packages/AllyDiscipline/Sources/Discipline/Repair.swift
   - Packages/AllyCore/Sources/AllyCore/TurnRunner.swift
+  - App/Sources/VoiceLoop.swift
   - Packages/AllyCore/Sources/AllyCore/SentenceStream.swift
   - Packages/AllyDiscipline/Sources/Discipline/Rules.swift
   - Packages/AllyDiscipline/Sources/Discipline/Markup.swift
@@ -143,6 +145,11 @@ implementation:
 | Честно: сказочная подружка, не живая | `Router`: «ты живая?», «ты настоящая?» → заготовка `alive` до модели; `TurnContract` (`human_claim`): «я живая девочка» в ответе → та же заготовка | исполняется |
 | Брат 1–2 раза, имя только при встрече | — | advisory: счётчики окна — отдельная маленькая поставка после серии маршрутизатора (решение родителя 7, 2026-10-19): к безопасности они не относятся |
 | Без страшилок и взрослых тем; женский род; не повторять вопрос; верный счёт | — | advisory |
+
+**Приложение D1.2 (`app-voice-loop`, 2026-10-22).** Каждый ответ модели в цикле идёт через `TurnRunner` →
+`TurnContract`; режим хода всегда `talk` — прощание (`goodbye`) задаст сессия D2. `Router` в цикл приложения пока не
+включён (крючок — D2): строки выше с `Router` в приложении держит только контракт. Детской поверхности в сборке нет —
+дочь приложением не пользуется до приёмки маршрутизатора (E2).
 
 # Ремонт текста в коде (пакет `Packages/AllyDiscipline`, 2026-10-18)
 

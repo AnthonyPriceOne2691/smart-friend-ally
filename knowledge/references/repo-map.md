@@ -9,16 +9,19 @@ generated:
   at: 2026-10-18T19:31:37Z
 stale_after: 2027-01-02T00:00:00Z
 # Только структурные якоря (OKF §3.5a): тронули файл — предложение карты стало
-# ложным. Появится Xcode-проект или Package.swift — вписать их сюда.
+# ложным. Источник Xcode-проекта — App/project.yml (XcodeGen).
 implementation:
   - requirements-dev.txt
   - scripts/merge_guard.sh
+  - App/project.yml
 ---
 
 # Входные точки
 
-- **Кода приложения пока нет** — Xcode-проект появится с поставкой приложения. Есть пакет
-  `Packages/AllyDiscipline` (ремонт текста и контракт хода до голоса):
+- **Приложение** — `App/` (XcodeGen: `cd App && xcodegen generate`, проект в git не лежит); сборка, веса на телефон,
+  запуск и журнал — runbook [Voice loop](/engineering/voice-loop.md). Модель — пакет `Packages/AllyLlama` (llama.cpp
+  b10809; паритет со стендом: `swift test --disable-keychain --package-path Packages/AllyLlama`, веса в `~/models`).
+- **Дисциплина ответа** — пакет `Packages/AllyDiscipline` (ремонт текста, контракт хода, маршрутизатор до модели):
   `swift test --package-path Packages/AllyDiscipline`.
 - **Ядро голосового цикла** — `Packages/AllyCore` (ход через контракт, конец реплики, журнал хода без слов, реестр
   модели): `swift test --package-path Packages/AllyCore` (тулчейн Xcode: `DEVELOPER_DIR`).
@@ -38,6 +41,8 @@ implementation:
 | `delivery/` | поставки: `active/` — текущая, `archive/` — завершённые с уроками |
 | `scripts/`, `scripts/lint/` | механика контура; канонные файлы правятся только перевендориванием |
 | `docs/canon/` | снимок канонов с самопроверкой (вариант C) |
+| `App/` | приложение iOS: `project.yml`, `Sources/` (консоль, цикл, звук, распознавание), `Resources/` (персона, реестр) |
+| `Packages/` | Swift-пакеты: `AllyDiscipline` (дисциплина ответа), `AllyCore` (ядро хода), `AllyLlama` (модель) |
 | `local/` | данные ребёнка и прочее локальное — игнорируется, гейт не пускает в git |
 
 # Грабли
@@ -48,11 +53,11 @@ implementation:
 - **Гейт детских данных ловит по сигнатуре**: переименованная запись тоже
   красная, а неигнорируемый аудиофайл в дереве блокирует коммит, даже не
   добавленный. Записи держать в `local/`.
-- **Объявления n/a «до кода приложения» истекают сами**: правила `cpu-in-async` и
-  `unbounded-list` объявлены в `scripts/lint/not-applicable.json` с `until: "App/*.swift"`
-  (`cqg@2.66`) — первый файл приложения в индексе или дереве краснит мета-гейт на коммите
-  и в CI, пока роли не решены. Маска называет путь продукта: `*` в маске git проходит `/`,
-  поэтому `Packages/*.swift` истёк бы сразу на коде пакета.
+- **Пакеты с удалёнными артефактами — без связки ключей**: `swift build/test --disable-keychain`, `xcodebuild
+  -packageAuthorizationProvider netrc` (без `.netrc`): иначе macOS спрашивает владельца о доступе к паролю github.com,
+  хотя ассет llama.cpp публичный. Симулятора нет: в xcframework llama.cpp b10809 только срезы iOS-устройства и macOS.
+- **Роли «до кода приложения» решены** (`app-voice-loop`): `cpu-in-async` и `unbounded-list` держат правила SwiftLint
+  `blocking_wait` и `unbounded_stream`; объявлений с `until` в `scripts/lint/not-applicable.json` больше нет.
 - **`raw.githubusercontent.com` из песочницы агента недоступен** (таймаут);
   содержимое GitHub — через `gh api`.
 - **Синхронизация с каноном — по содержимому, не по SHA:** HEAD Prepare двигают правки

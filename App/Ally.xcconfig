@@ -1,0 +1,2 @@
+// DEVELOPMENT_TEAM of this Mac — in the ignored Local.xcconfig; without it the build is unsigned (CI, artifact oracle).
+#include? "Local.xcconfig"

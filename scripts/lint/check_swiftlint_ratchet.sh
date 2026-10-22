@@ -42,7 +42,7 @@ if [[ "$(uname -s)" == "Darwin" ]]; then
 fi
 
 # Скоуп: сколько Swift-файлов реально просмотрено (CQG §6 — гейт обязан это показать).
-scanned=$(git ls-files -- 'Packages/*.swift' | grep -c . || true)
+scanned=$(git ls-files -- 'Packages/*.swift' 'App/*.swift' | grep -c . || true)
 if [[ "$scanned" -eq 0 ]]; then
   printf '%s  !  swiftlint-ratchet: 0 Swift-файлов в скоупе — included в .swiftlint.yml мимо кода%s\n' \
     "$yellow" "$reset" >&2
@@ -63,7 +63,8 @@ print(len(d), sum(1 for x in d if x.get("severity") == "Error"))
 ')"
 
 # no-grab-bag-module: тема файла — в его имени.
-grab=$(git ls-files -- 'Packages/*/Sources/*.swift' | grep -ciE '/(utils?|misc|common|helpers?)\.swift$' || true)
+grab=$(git ls-files -- 'Packages/*/Sources/*.swift' 'App/Sources/*.swift' \
+  | grep -ciE '/(utils?|misc|common|helpers?)\.swift$' || true)
 total=$(( lint + grab ))
 
 if [[ "$GENERATE" == "1" ]]; then

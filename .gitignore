@@ -35,6 +35,11 @@ xcuserdata/
 *.dSYM/
 *.dSYM.zip
 .swiftpm/
+# App: проект и права генерирует XcodeGen из App/project.yml; команда разработчика — свойство Mac, не продукта
+*.xcodeproj/
+App/build/
+App/Ally.entitlements
+App/Local.xcconfig
 
 # --- Python: механика контура ---
 __pycache__/
