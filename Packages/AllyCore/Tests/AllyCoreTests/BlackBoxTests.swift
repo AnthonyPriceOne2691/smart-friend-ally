@@ -54,13 +54,13 @@ struct BoxRig {
         await session.handle(.heard(text))
     }
 
-    /// How many trace lines there are, all without a Cyrillic letter (K9); -1 if one has a word.
+    /// How many trace lines there are, all without a Cyrillic letter (B1, B10); -1 if one has a word.
     var wordlessTrace: Int {
         let lines = trace.records.compactMap { $0.jsonLine() }
         return lines.allSatisfy { $0.range(of: "[А-Яа-яЁё]", options: .regularExpression) == nil } ? lines.count : -1
     }
 
-    /// The records this box wrote and still holds, in the order written.
+    /// The records this box wrote and still holds, in the order written; each file opens with the header (B12).
     func kept() throws -> [Kept] {
         let decoder = JSONDecoder()
         decoder.keyDecodingStrategy = .convertFromSnakeCase

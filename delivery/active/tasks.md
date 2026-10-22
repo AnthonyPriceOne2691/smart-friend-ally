@@ -37,6 +37,13 @@
   таблица данных); индексы, `knowledge/log.md`; `okf_validate` зелёный
 
 ## Slice 6 — сдача
+  <!-- ОСТАНОВКА 2026-10-22 (родитель закругляется, слово ведущего): implement завершён — T1–T8. Факт: 39 тестов
+       AllyCore из 39 (12 новых: B1–B10, B12 и два свойства), покрытие AllyCore 96% (737 из 762), SwiftLint 0 находок,
+       мутации 8 из 8 убиты, смоук 6 из 6 (S6 со старым гейтом main — красный), доктор DEAD 0, okf_validate и
+       okf_sync_gate зелёные; main с D1.2 влит (62347c4). Предохранитель — net 766 из 800 (+781/−15), стоп 780: запас
+       14 строк — CLAUDE.md на сдаче править только на месте. СЛЕДУЮЩИЙ ШАГ — T9: влить origin/main (если D2.2 слита —
+       сверить правки Session/TurnTrace и поле audience, L35), строгий delivery_check; затем T10 — PR, CI, verify-report
+       и факты eval-smoke; затем T11 — архив, уроки L56–L58, CLAUDE.md. -->
 - [ ] T9: слить `origin/main`, когда скажет ведущий; сразу строгий `delivery_check --require-ci --diff-base origin/main` (L14)
 - [ ] T10: verify-report — `swift test` и покрытие AllyCore ≥ 70%, сводка утверждений Swift (новый тест-файл в ней, L26)
   и сверка дайджеста до пуша (L43), мутации, смоук S6, `mergeable` и ссылка на зелёный CI (L35)
