@@ -86,12 +86,14 @@ repos:
   - repo: local
     hooks:
       # Половина «py» гейта судит Swift: LINT_JSCPD_PY_FORMAT=swift по Sources пакета.
+      # Второй прогон гейта — Sources AllyLlama и App (поставка app-voice-loop): обе половины заняты пакетами,
+      # общий корень `Packages` втянул бы `Tests/` и `.build/` (маска игнора знает только `**/tests/**`).
       # `files:` — Swift и конфиги порогов, как у шаблона (правка порогов судится порогами).
       - id: jscpd-dry-gate
         name: DRY — рост копипаста (jscpd clone-count ratchet)
         language: system
-        entry: bash -c 'cd "$(git rev-parse --show-toplevel)" && LINT_PY_SRC=Packages/AllyDiscipline/Sources LINT_JSCPD_PY_FORMAT=swift LINT_TS_SRC=Packages/AllyCore/Sources LINT_JSCPD_TS_FORMAT=swift LINT_JSCPD_TS_EXTS=swift:swift bash scripts/lint/check_jscpd_gate.sh'
-        files: ^(Packages/.*\.swift|\.pre-commit-config\.yaml|scripts/lint/.*)$
+        entry: bash -c 'cd "$(git rev-parse --show-toplevel)" && export LINT_JSCPD_PY_FORMAT=swift LINT_JSCPD_TS_FORMAT=swift LINT_JSCPD_TS_EXTS=swift:swift && LINT_PY_SRC=Packages/AllyDiscipline/Sources LINT_TS_SRC=Packages/AllyCore/Sources bash scripts/lint/check_jscpd_gate.sh && LINT_PY_SRC=Packages/AllyLlama/Sources LINT_TS_SRC=App/Sources bash scripts/lint/check_jscpd_gate.sh'
+        files: ^((Packages|App)/.*\.swift|\.pre-commit-config\.yaml|scripts/lint/.*)$
         pass_filenames: false
 
   # deps-audit и mutation — НЕ на commit (§8.6: бюджет 5 с). deps-audit ходит в

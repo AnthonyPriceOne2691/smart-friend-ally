@@ -1,6 +1,6 @@
 # Stack acceptance
 
-**Date:** 2026-10-02 · повторная приёмка 2026-10-18 — первый Swift-код (поставка `swift-contour`) · сверка при накате `cqg@2.70` 2026-10-18 (поставка `sync-cqg-2.70`): свои обходы впитанных каноном находок сняты, карта ролей — статусы канона
+**Date:** 2026-10-02 · повторная приёмка 2026-10-18 — первый Swift-код (поставка `swift-contour`) · сверка при накате `cqg@2.70` 2026-10-18 (поставка `sync-cqg-2.70`): свои обходы впитанных каноном находок сняты, карта ролей — статусы канона · первый код приложения 2026-10-22 (поставка `app-voice-loop`): роли `cpu-in-async` и `unbounded-list` — правила SwiftLint, оракул артефакта `check_app_artifact.sh`, jscpd — второй прогон
 **Stack:** delivery@2.07 · cqg@2.74 · okf@1.21 · stack-map@1.54
 **Где лежат каноны:** снимок в `docs/canon/` (вариант C, коммитится), провенанс — `docs/canon/VENDORED.json` (`agent-canon-stack` @ `76c42c3`, `dirty: false`, значения с префиксами `git:`/`sha256:`; обновляется через `apply_update.py` — `4c3caa1` → `859152d` → `9323136` → `b5241ac` → `2eff5ed` → `c5585a5` → `76c42c3` (оба последних — из чистого клона), замок `scripts/lint/payload.lock.json`)
 
@@ -35,10 +35,10 @@ Python- и TS-скриптами, на Swift держат свои конфиг�
 | Нет модулей-помоек | `check_grep_gate.sh --rule no-grab-bag-module` | имена `utils/misc/common/helpers.swift` в ратчете `check_swiftlint_ratchet.sh` | адаптирован (`check_swiftlint_ratchet.sh`) |
 | Ошибки не молчат | `check_ast_gate.py --rule silent-except` | правило SwiftLint `empty_catch` в ратчете `check_swiftlint_ratchet.sh` | адаптирован (`check_swiftlint_ratchet.sh`) |
 | Длинные промпты — в файлы | `check_ast_gate.py --rule inline-prompt` | правило SwiftLint `inline_prompt` в ратчете `check_swiftlint_ratchet.sh`: русский литерал длиннее 40 знаков в Sources | адаптирован (`check_swiftlint_ratchet.sh`) |
-| Event loop не голодает | `check_ast_gate.py --rule cpu-in-async` | — | n/a до кода приложения: в пакете нет `async`; `until: "App/*.swift"` — мета-гейт краснеет с первым файлом приложения (`cqg@2.66`) |
-| Список-эндпоинт имеет границу | `check_ast_gate.py --rule unbounded-list` | — | n/a до кода приложения: функции над одной репликой; `until: "App/*.swift"` (`cqg@2.66`) |
+| Event loop не голодает | `check_ast_gate.py --rule cpu-in-async` | правило SwiftLint `blocking_wait` в ратчете `check_swiftlint_ratchet.sh`: `.wait()`, `Thread.sleep`, `usleep`; блокирующий `llama_decode` — на своей очереди модели | адаптирован (`check_swiftlint_ratchet.sh`) — с первым кодом приложения (`app-voice-loop`), канарейка доктора |
+| Список-эндпоинт имеет границу | `check_ast_gate.py --rule unbounded-list` | правило SwiftLint `unbounded_stream` в ратчете `check_swiftlint_ratchet.sh`: `AsyncStream` без `bufferingPolicy` | адаптирован (`check_swiftlint_ratchet.sh`) — с первым кодом приложения (`app-voice-loop`), канарейка доктора |
 | Длина файлов под контролем | `check_file_length.sh` | хук `file-length`, `LINT_LENGTH_GLOBS="*.swift *.py"` (`*.py` — генератор фикстур пакета; механику контура гейт исключает сам, `cqg@2.67`) | как есть, маска Swift |
-| Копипаст не растёт | `check_jscpd_gate.sh` | хук `jscpd-dry-gate`, формат `swift` по `Packages/AllyDiscipline/Sources` | как есть, формат Swift |
+| Копипаст не растёт | `check_jscpd_gate.sh` | хук `jscpd-dry-gate`, формат `swift`: прогон 1 — Sources `AllyDiscipline` и `AllyCore`, прогон 2 — Sources `AllyLlama` и `App` | как есть, формат Swift, два прогона |
 | Warnings линтера не растут | `check_eslint_warnings.sh` | ратчет SwiftLint `check_swiftlint_ratchet.sh`, снимок `swiftlint_baseline.txt` = 0 | адаптирован (`check_swiftlint_ratchet.sh`) |
 | Сложность функций под контролем | `check_complexity_gate.sh` | правило SwiftLint `cyclomatic_complexity` 8/10 в ратчете `check_swiftlint_ratchet.sh` | адаптирован (`check_swiftlint_ratchet.sh`) |
 | Сообщения ошибок с контекстом | `check_grep_gate.sh --rule blind-error` | правило SwiftLint `empty_catch` в ратчете `check_swiftlint_ratchet.sh` | адаптирован (`check_swiftlint_ratchet.sh`) |
@@ -52,7 +52,8 @@ Python- и TS-скриптами, на Swift держат свои конфиг�
 | Все гейты подключены | `check_gate_coverage.sh` | хук `gate-coverage` + CI | как есть |
 | **Секреты не в git** | `detect-secrets-guard` | хук + `.secrets.baseline` | как есть |
 | **Данные ребёнка не в git** (своё) | — | `check_child_data.py`, хук `child-data`, канарейка | своё: индекс + неигнорируемое дерево; каталог `local/`, расширение, сигнатура содержимого |
-| **Объявления неприменимости «до кода» истекают с кодом** | `check_gate_coverage.sh` | `until` у объявлений в `scripts/lint/not-applicable.json` (`cqg@2.66`, образец — бывший свой гейт Ally): два ключа ждут кода приложения — `App/*.swift` | как есть (свой гейт na-expiry снят при накате `cqg@2.70`) |
+| **Собранный .app без сети и лишних прав** (своё) | — | `check_app_artifact.sh`: Info, `nm -u`/`otool -L` бинарей, права подписи; локально и в ручной джобе `ios.yml` | своё: оракул артефакта (Delivery §12.6), канарейка — ключ ATS в бандле |
+| **Объявления неприменимости «до кода» истекают с кодом** | `check_gate_coverage.sh` | `until` у объявлений в `scripts/lint/not-applicable.json` (`cqg@2.66`): оба ключа «до кода приложения» истекли с первым `App/*.swift` и решены правилами SwiftLint в том же коммите (`app-voice-loop`) | как есть (свой гейт na-expiry снят при накате `cqg@2.70`) |
 
 ## Полнота, не только зелёность
 

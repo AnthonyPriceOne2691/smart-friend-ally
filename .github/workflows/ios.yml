@@ -1,0 +1,37 @@
+# Ручная macOS-джоба приложения (поставка app-voice-loop, решение E3): раз на поставку, а не на каждый PR — минута
+# macOS стоит десяти Linux (CQG §8.7), а ядро и форму кода уже судит Linux-джоба quality. Что делает: тесты AllyLlama
+# (A23 без весов — пропуск виден, П34), сборка Ally.app для устройства без подписи, оракул артефакта (A7).
+# Подписанную сборку, права (A8) и телефон (A9–A12) судит человек с Mac: команды — knowledge/engineering/voice-loop.md.
+name: ios
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [labeled]
+
+permissions:
+  contents: read
+
+jobs:
+  app:
+    # Метка `macos` на PR — тот же ручной запуск до мержа: `workflow_dispatch` видит только файлы ветки по умолчанию.
+    if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'macos'
+    runs-on: macos-26
+    # §8.7: предохранитель — сборка пакетов с нуля и приложения ≈ 10 мин; 30 значит «что-то повисло».
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - name: Toolchain (версии в лог)
+        run: |
+          xcodebuild -version
+          brew install xcodegen
+          xcodegen --version
+      - name: AllyLlama tests (A23; без весов — пропуск)
+        run: swift test --disable-keychain --package-path Packages/AllyLlama
+      - name: Ally.app для устройства без подписи
+        run: |
+          cd App && xcodegen generate
+          xcodebuild -project Ally.xcodeproj -scheme Ally -destination 'generic/platform=iOS' \
+            -derivedDataPath build CODE_SIGNING_ALLOWED=NO build
+      - name: Оракул артефакта (check_app_artifact.sh)
+        run: bash scripts/lint/check_app_artifact.sh
