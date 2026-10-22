@@ -1,0 +1,34 @@
+# Active delivery status
+
+- **slug:** sync-cqg-2.74
+- **stack:** delivery@2.07, cqg@2.74, okf@1.21
+- **class:** S
+- **kind:** feature
+- **repro_test:** n/a reason=не bugfix
+- **diagnosis:** n/a reason=не bugfix
+- **phase:** handoff
+- **builder:** agent:claude-code
+- **verifier:** process:ci
+- **human_ok_spec:** n/a
+- **human_ok_plan:** n/a
+- **shape-oracles:** cqg-deployed
+- **behavior-oracles:** weak — дёшево: ничего сверх сделанного; накат механики контура, код продукта не меняется, новые механизмы доказываются пробами исполнением (verify-report), тесты пакетов — джоба swift
+- **artifact_oracle:** n/a reason=поставка не собирает приложение: Xcode-проекта в main нет, пакеты SwiftPM проверяют их тесты в CI (джоба swift)
+- **ci-oracles:** tooling
+- **worktree:** ../Smart frend Ally-wt-sync274
+- **parallel_sessions:** merge-guard,manual-deploy
+  <!-- §5.1a: интеграция в main только через scripts/merge_guard.sh; на телефон приложение ставится отдельным решением, а не следствием мержа -->
+- **hooks:** not-deployed
+- **blockers:** none
+- **waivers:** none
+- **new_dependency:** none
+- **runtime_paths:** none reason=накат механики контура; код продукта не меняется
+- **irreversible_surfaces:** none reason=продукт офлайн; поставка не добавляет ни отправки, ни выкатки
+- **model_surface:** n/a reason=модель продукта ещё не вызывается: LanguageModel в AllyCore — протокол, в тестах — двойники; промпт, пин и сэмплинг войдут с D1.2
+- **rule_enforcers:** n/a reason=model_surface не объявлена списком
+- **canon_drift_waiver:** no
+- **baseline_growth_waiver:** no
+- **observability:** 1
+- **observe_signal:** доктор в CI каждого PR — `DEAD 0` и область «стражи исполнения» `SKIP` с причиной «python-тестов нет»; первая поставка с python-тестами получает от доктора вердикт стражей, а не `SKIP`; судья закрывает находку 19.10 (`2026-10-19` «отсутствующая часть гейта даёт зелёное») ревизией канона
+- **observe_until:** 2026-11-30
+- **circuit_breakers:** defaults from AGENT_DELIVERY_HARNESS.md §3.4
