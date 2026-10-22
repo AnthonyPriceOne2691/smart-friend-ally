@@ -36,5 +36,5 @@ Prepare `1f64dd7`. Ревизии 2.71–2.74: правила «только р�
   `cqg@2.70`, объявления в `adapted.json` остаются верными
 
 ## Slice 3 — приёмка
-- [ ] T7: гейты, `check_gate_coverage.sh`, доктор (до/после), OKF, `swift test` обоих пакетов, smoke, строгий
-  `delivery_check` (L14), CI
+- [x] T7: гейты, `check_gate_coverage.sh`, доктор (до/после), OKF, `swift test` обоих пакетов, smoke, строгий
+  `delivery_check` (L14), CI — всё зелёное, числа в verify-report
