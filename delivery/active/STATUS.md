@@ -1,7 +1,7 @@
 # Active delivery status
 
 - **slug:** app-voice-loop
-- **stack:** delivery@2.07, cqg@2.70, okf@1.21
+- **stack:** delivery@2.07, cqg@2.74, okf@1.21
 - **class:** L
 - **kind:** feature
 - **repro_test:** n/a reason=не bugfix

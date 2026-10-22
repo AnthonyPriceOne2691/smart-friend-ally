@@ -1,7 +1,7 @@
 # Stack acceptance
 
 **Date:** 2026-10-02 · повторная приёмка 2026-10-18 — первый Swift-код (поставка `swift-contour`) · сверка при накате `cqg@2.70` 2026-10-18 (поставка `sync-cqg-2.70`): свои обходы впитанных каноном находок сняты, карта ролей — статусы канона · первый код приложения 2026-10-22 (поставка `app-voice-loop`): роли `cpu-in-async` и `unbounded-list` — правила SwiftLint, оракул артефакта `check_app_artifact.sh`, jscpd — второй прогон
-**Stack:** delivery@2.07 · cqg@2.70 · okf@1.21 · stack-map@1.54
+**Stack:** delivery@2.07 · cqg@2.74 · okf@1.21 · stack-map@1.54
 **Где лежат каноны:** снимок в `docs/canon/` (вариант C, коммитится), провенанс — `docs/canon/VENDORED.json` (`agent-canon-stack` @ `76c42c3`, `dirty: false`, значения с префиксами `git:`/`sha256:`; обновляется через `apply_update.py` — `4c3caa1` → `859152d` → `9323136` → `b5241ac` → `2eff5ed` → `c5585a5` → `76c42c3` (оба последних — из чистого клона), замок `scripts/lint/payload.lock.json`)
 
 checked_at: 2026-10-18
