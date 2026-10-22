@@ -9,29 +9,29 @@
 - [x] T3: `eval-smoke.md` — строки B1–B12 с оракулом и ожиданием, до кода; `phase: implement`
 
 ## Slice 1 — формат
-- [ ] T4: `Wav.swift` — WAV PCM16 моно и FNV-1a с префиксом `fnv1a:`; заголовок `ALLY-BLACKBOX/1` и строка записи в
+- [x] T4: `Wav.swift` — WAV PCM16 моно и FNV-1a с префиксом `fnv1a:`; заголовок `ALLY-BLACKBOX/1` и строка записи в
   `BlackBoxRecord.swift`; B12; свойство «WAV туда и обратно» на отсчётах с зерном
 
 ## Slice 2 — хранилище
-- [ ] T5: `BlackBoxPorts.swift` (диск, лента, реплика, слова хода, разветвитель), `BlackBox.swift` — каталог сессии, файлы
+- [x] T5: `BlackBoxPorts.swift` (диск, лента, реплика, слова хода, разветвитель), `BlackBox.swift` — каталог сессии, файлы
   хода в порядке «звук, затем запись», `audience` и `isPrivate`, предел с пересчётом с диска, счёт потерь, `eraseAll`,
   строка консоли (длинные строки — ресурсом, `inline_prompt`); двойники диска и ленты; B1–B3, B6–B9; мутации: без
   предела — B7, без `isPrivate` — B8, запись хода раньше звука — B1, без удаления файлов хода при отказе — B8
   <!-- замер выше 780 строк — стоп, escalation.md и сразу к ведущему: предел и стирание в D3.2 либо подпись предохранителя -->
 
 ## Slice 3 — слова хода через настоящую сессию
-- [ ] T6: `TraceSink.write(_:words:)` по умолчанию, её реплика в `Session` до первой записи после `hear`,
+- [x] T6: `TraceSink.write(_:words:)` по умолчанию, её реплика в `Session` до первой записи после `hear`,
   `TurnOutcome.modelText`, поле `audience` (если R ещё не слит) — правки `Session` и `TurnTrace` минимальные; B4, B5, B10; тесты D1.1 (A1–A6, A14–A18) и D2 (S1–S12) зелёные без правок; мутации: сессия не
   передаёт слова — B10, реализация по умолчанию пишет слова — B1 и B10; свойство «записей ящика = строк следа» на
   случайных событиях с зерном
 
 ## Slice 4 — гейт данных ребёнка
-- [ ] T7: `check_child_data.py` — сигнатура `ALLY-BLACKBOX/`, `.allybox` в `DATA_EXT`, докстринг; `*.allybox` в
+- [x] T7: `check_child_data.py` — сигнатура `ALLY-BLACKBOX/`, `.allybox` в `DATA_EXT`, докстринг; `*.allybox` в
   `.gitignore`; смоук S6 `delivery/evals/smoke/child_data_blackbox.sh` (B11) со строкой в README и `run.sh`; доктор —
   DEAD 0, канарейка WAV на месте
 
 ## Slice 5 — знание
-- [ ] T8: `ops/black-box.md` (обе стороны, форматы с замером, хранилище и класс защиты, предел, режим, серия,
+- [x] T8: `ops/black-box.md` (обе стороны, форматы с замером, хранилище и класс защиты, предел, режим, серия,
   `implementation:`), `ops/child-data.md` (`.gitignore` и гейт в его `implementation:` — `okf_sync_gate`),
   `safety-below-model.md` (журнал нарушений в записи ящика), `session.md`, `overview.md`, `KNOWLEDGE.md` (решения 22.10,
   таблица данных); индексы, `knowledge/log.md`; `okf_validate` зелёный
