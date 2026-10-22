@@ -1,0 +1,34 @@
+# Active delivery status
+
+- **slug:** contract-fixes
+- **stack:** delivery@2.07, cqg@2.74, okf@1.21
+- **class:** M
+- **kind:** bugfix
+- **repro_test:** Packages/AllyDiscipline/Tests/DisciplineTests/ContentTests.swift::testPointerSparesTheLastProhibition, ::testDangerScriptOutranksABareTopicFallback; Packages/AllyDiscipline/Tests/DisciplineTests/ContractTests.swift::testEllipticTailYieldsToTheFullQuestion — пишутся до правки и краснеют на коде main (H1, H4, H6, H7, H9–H11)
+- **diagnosis:** n/a reason=механизмы найдены сразу замером и чтением кода: `pointed()` вытесняет предложения с конца, не зная о запрете (разбор П3 router-events); `fallback()` ставит запасную фразу темы выше заготовки нарушения (тот же разбор); `extraQuestions()` оставляет последний открытый вопрос, даже обрывок (находка D3)
+- **phase:** specify
+- **builder:** agent:claude-code
+- **verifier:** process:ci
+- **human_ok_spec:** deferred (reason=примеры H1–H16 у ведущего на подпись родителю 2026-10-22; до подписи — стоп)
+- **human_ok_plan:** n/a
+- **shape-oracles:** cqg-deployed
+- **behavior-oracles:** tests-present
+- **artifact_oracle:** n/a reason=поставка не собирает приложение: пакет SwiftPM проверяют его тесты в CI на Linux, сборка не оракул (§6.5a)
+- **ci-oracles:** tooling
+- **worktree:** ../Smart frend Ally-wt-contract
+- **parallel_sessions:** merge-guard,manual-deploy
+  <!-- §5.1a: интеграция в main только через scripts/merge_guard.sh; параллельно — поставки приложения (wt-shell, wt-wiring) и чёрного ящика (wt-blackbox); общие файлы CLAUDE.md, INDEX.md, knowledge/log.md правятся малыми добавлениями -->
+- **hooks:** not-deployed
+- **blockers:** none
+- **waivers:** none
+- **new_dependency:** none
+- **runtime_paths:** none reason=контракт хода — чистая функция над готовым текстом, решением маршрутизатора и режимом: без экрана, прав, железа и ввода-вывода
+- **irreversible_surfaces:** none reason=продукт офлайн; поставка не добавляет ни отправки, ни выкатки
+- **model_surface:** n/a reason=модель продукта кодом в репозитории не вызывается: контракт судит готовый текст, замер берёт сохранённые ответы
+- **rule_enforcers:** n/a reason=model_surface не объявлена списком; реестр «правило персоны v2.4 → исполнитель → статус» — таблица в knowledge/engineering/safety-below-model.md
+- **canon_drift_waiver:** no
+- **baseline_growth_waiver:** no
+- **observability:** 1
+- **observe_signal:** в чёрном ящике живых сессий ход со стражем страха несёт и запрет модели, и указатель на взрослого; срезанный ответ «как сделать опасное» звучит заготовкой этой опасности; вопрос в конце понятен без срезанного соседа (оценка родителя на слух); до неё паритет и тесты пакета зелёные в каждом PR
+- **observe_until:** 2026-11-30
+- **circuit_breakers:** defaults from AGENT_DELIVERY_HARNESS.md §3.4
