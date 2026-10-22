@@ -13,3 +13,14 @@
   `knowledge/log.md`
 - [ ] T8: eval-smoke, verify-report (дайджест, L43), строгий `delivery_check`, CI; handoff в том же PR: архив, INDEX
   с уроками L65, L66, L67, `contract-fixes` в список наблюдений CLAUDE.md; PR из черновика в готовый; мерж — ведущий
+
+## Где остановился (2026-10-22, вечер — стоп по слову ведущего: родитель закругляется)
+
+- Сделано: спека подписана родителем (H1–H16, решения H4 и H8), план с отброшенными вариантами и задачи — в git.
+  Кода и тестов нет; эталон `output_filter.py` и `contract.json` не тронуты. Слепых судей не запускал.
+- Прототипы замера — вне git, в `local/spike/contract-fixes/`: `sim.py` (правка 3 на эталоне, H14), `ellip.py`
+  (признак обрывка), `lastq.py`, `qclass.py`, `fear_pointer.py` (H16 — 2706 ответов под стражем страха).
+- **Следующий шаг — T1:** тесты-воспроизведения H1, H4 (`ContentTests.testPointerSparesTheLastProhibition`), H6, H7
+  (`ContentTests.testDangerScriptOutranksABareTopicFallback`), H9–H11 (пробы `elliptic_tail` в `ContractTests` и
+  `testEllipticTailYieldsToTheFullQuestion`). Прогнать на коде main — красные, факт в `decisions.md`. Потом T2–T4 одним
+  шагом (эталон, `contract.json`, Swift), чтобы ветка не стояла с красным CI. Слепые судьи (T6) — завтра.
