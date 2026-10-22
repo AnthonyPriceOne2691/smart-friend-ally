@@ -3,18 +3,12 @@
  "check_ast_gate.py": "python-`ast` не разбирает Swift; роли его правил держат пользовательские правила SwiftLint в ратчете `check_swiftlint_ratchet.sh` (`.swiftlint.yml`, по ключам ниже)",
  "check_ast_gate.py:silent-except": "роль держит правило SwiftLint `empty_catch` (`.swiftlint.yml`, ратчет `check_swiftlint_ratchet.sh`): пустой `catch {}` — ошибка",
  "check_ast_gate.py:inline-prompt": "роль держит правило SwiftLint `inline_prompt`: русский текст длиннее 40 знаков литералом в Sources — ошибка; тексты и правила речи — в ресурсах пакета (KNOWLEDGE.md П10)",
- "check_ast_gate.py:cpu-in-async": {
-  "reason": "в Swift-пакетах нет `async`: ремонт текста и контракт хода — синхронные чистые функции над одной репликой; правило вернётся с асинхронным кодом приложения",
-  "until": "App/*.swift"
- },
- "check_ast_gate.py:unbounded-list": {
-  "reason": "Swift-двойник требует анализа типов, а в пакете нет накопления без предела — функции над одной репликой; вернётся с кодом приложения",
-  "until": "App/*.swift"
- },
+ "check_ast_gate.py:cpu-in-async": "роль держит правило SwiftLint `blocking_wait` (`.swiftlint.yml`, ратчет `check_swiftlint_ratchet.sh`): `.wait()` семафора и группы, `Thread.sleep`, `usleep` — ошибка; блокирующий `llama_decode` идёт на своей очереди модели, не в кооперативном пуле",
+ "check_ast_gate.py:unbounded-list": "роль держит правило SwiftLint `unbounded_stream`: `AsyncStream` и `AsyncThrowingStream` без `bufferingPolicy` — ошибка; эндпоинтов-списков в офлайн-приложении нет, накопление без предела у него — буфер потока",
  "check_grep_gate.sh": "паттерны правил питоновские; роли держат пользовательские правила SwiftLint и проверка имён файлов в ратчете `check_swiftlint_ratchet.sh` (по ключам ниже)",
  "check_grep_gate.sh:config-access": "роль держит правило SwiftLint `env_access`: `ProcessInfo.processInfo.environment` и `getenv(` — ошибка",
  "check_grep_gate.sh:di-indirection": "в Swift нет `importlib` и динамической загрузки модулей: зависимости таргетов фиксирует SPM, обращение назад не соберётся",
- "check_grep_gate.sh:service-no-web": "веб-слоя в продукте нет: приложение офлайн (CONSTITUTION), сетевых фреймворков в пакетах нет",
+ "check_grep_gate.sh:service-no-web": "веб-слоя в продукте нет: приложение офлайн (CONSTITUTION); сеть в исходниках ловит правило SwiftLint `no_network`, в собранном .app — `check_app_artifact.sh`",
  "check_grep_gate.sh:no-grab-bag-module": "роль держит ратчет SwiftLint `check_swiftlint_ratchet.sh`: файл utils/misc/common/helpers.swift в Sources — находка",
  "check_grep_gate.sh:blind-error": "роль держит правило SwiftLint `empty_catch`: ошибка, проглоченная пустым `catch`, — ошибка гейта",
  "check_grep_gate.sh:unstructured-log": "роль держит правило SwiftLint `no_print`: `print`, `debugPrint`, `NSLog` — ошибка; журнал — os.Logger",
