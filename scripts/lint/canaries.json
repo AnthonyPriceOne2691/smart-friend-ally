@@ -23,5 +23,21 @@
  "check_digest_report.py": {
   "path": "delivery/active/verify-report.md",
   "content": "# канарейка: число дайджеста подложено — сверка с пересчётом обязана покраснеть\nasserts_reviewed_by: n/a\nasserts_without_example: 999\n"
+ },
+ "check_swiftlint_ratchet.sh:blocking_wait": {
+  "path": "App/Sources/BlockingCanary.swift",
+  "content": "import Foundation\n\n// канарейка роли cpu-in-async: семафор держит поток — правило blocking_wait обязано покраснеть\nfunc blockingCanary() { DispatchSemaphore(value: 0).wait() }\n"
+ },
+ "check_swiftlint_ratchet.sh:unbounded_stream": {
+  "path": "App/Sources/StreamCanary.swift",
+  "content": "// канарейка роли unbounded-list: поток без политики буфера — правило unbounded_stream обязано покраснеть\nlet streamCanary = AsyncStream<Int> { $0.finish() }\n"
+ },
+ "check_swiftlint_ratchet.sh:no_network": {
+  "path": "App/Sources/NetworkCanary.swift",
+  "content": "import Foundation\n\n// канарейка границы «продукт не ходит в сеть»: URLSession — правило no_network обязано покраснеть\nlet networkCanary = URLSession.shared\n"
+ },
+ "check_app_artifact.sh": {
+  "path": "App/build/Canary.app/Info.plist",
+  "content": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!-- канарейка: ключ ATS в собранном .app — оракул артефакта обязан покраснеть -->\n<plist version=\"1.0\"><dict>\n<key>NSAppTransportSecurity</key><dict><key>NSAllowsArbitraryLoads</key><true/></dict>\n<key>NSMicrophoneUsageDescription</key><string>Слушает фразу</string>\n<key>NSSpeechRecognitionUsageDescription</key><string>Распознаёт на телефоне</string>\n</dict></plist>\n"
  }
 }

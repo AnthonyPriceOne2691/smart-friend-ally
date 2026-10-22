@@ -6,10 +6,13 @@
 
 included:
   - Packages
+  - App
 
 excluded:
   - Packages/AllyDiscipline/.build
   - Packages/AllyCore/.build
+  - Packages/AllyLlama/.build
+  - App/build
   - Packages/AllyDiscipline/Tests/DisciplineTests/Fixtures
 
 disabled_rules:
@@ -72,4 +75,19 @@ custom_rules:
     regex: '"[^"\n]*[А-Яа-яЁё][^"\n]{40,}"'
     excluded: ".*/Tests/.*"
     message: "Тексты и правила речи — в ресурсах (repair.json и др.), не литералом в коде"
+    severity: error
+  no_network:            # граница CONSTITUTION «продукт не ходит в сеть»; артефакт судит check_app_artifact.sh
+    name: "Сеть в продукте"
+    regex: '\b(URLSession|NSURLSession|NWConnection|NWPathMonitor|WKWebView|SFSpeechRecognizer|AssetInventory)\b|^\s*import\s+(Network|WebKit|CloudKit|StoreKit)\b'
+    message: "Продукт офлайн: сеть, веб, загрузка ассетов и серверное распознавание запрещены"
+    severity: error
+  blocking_wait:         # роль cpu-in-async (check_ast_gate.py:cpu-in-async): поток пула не ждёт вслепую
+    name: "Блокирующее ожидание"
+    regex: '\.wait\(\s*(timeout:[^)]*)?\)|\bThread\.sleep\(|\busleep\('
+    message: "Семафор, sleep и wait держат поток: жди через async или свою очередь"
+    severity: error
+  unbounded_stream:      # роль unbounded-list (check_ast_gate.py:unbounded-list): у буфера есть граница
+    name: "Поток без политики буфера"
+    regex: '(?<!-> )\bAsync(Throwing)?Stream(<[^>\n]*>)?(\s*\{|\((?![^)\n]*(bufferingPolicy|unfolding))|\.makeStream\((?![^)\n]*bufferingPolicy))'
+    message: "AsyncStream без bufferingPolicy копит без предела: задай .bufferingNewest/.bufferingOldest"
     severity: error

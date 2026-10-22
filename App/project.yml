@@ -1,0 +1,42 @@
+# XcodeGen 2.46: the source of Ally.xcodeproj (generated, not in git). The team lives in the ignored Local.xcconfig.
+name: Ally
+options:
+  deploymentTarget:
+    iOS: "26.0"
+configFiles:
+  Debug: Ally.xcconfig
+packages:
+  AllyCore:
+    path: ../Packages/AllyCore
+  AllyLlama:
+    path: ../Packages/AllyLlama
+settings:
+  base:
+    CODE_SIGN_STYLE: Automatic
+    SWIFT_VERSION: "5.0"
+    GENERATE_INFOPLIST_FILE: YES
+    INFOPLIST_KEY_UILaunchScreen_Generation: YES
+    TARGETED_DEVICE_FAMILY: "1"
+    MARKETING_VERSION: "0.1"
+    CURRENT_PROJECT_VERSION: "1"
+targets:
+  Ally:
+    type: application
+    platform: iOS
+    sources:
+      - path: Sources
+      - path: Resources
+        buildPhase: resources
+    dependencies:
+      - package: AllyCore
+      - package: AllyLlama
+    entitlements:
+      path: Ally.entitlements
+      properties:
+        com.apple.developer.kernel.increased-memory-limit: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.anthonypriceone.ally
+        INFOPLIST_KEY_CFBundleDisplayName: Ally
+        INFOPLIST_KEY_NSMicrophoneUsageDescription: "Ally слушает фразу взрослого, чтобы подруга ответила голосом."
+        INFOPLIST_KEY_NSSpeechRecognitionUsageDescription: "Речь распознаётся на телефоне, без сети."
