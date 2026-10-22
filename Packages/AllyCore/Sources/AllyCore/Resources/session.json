@@ -1,0 +1,15 @@
+{
+  "_about": "The session's data (D2 session-core, signed by the parent 2026-10-22): each phrase with the turn mode whose contract it passes — an empty text is that mode's own canned reply of the contract (one copy); her goodbyes as whole utterances (lowercase, ё as е, marks as spaces, the friend's name dropped); misses in a row before rest; the range of the parent's key session_limit_minutes and the console line for a refused value.",
+  "phrases": {
+    "greeting": {"mode": "talk", "text": "Привет! Это я, Элли. Что у тебя нового?"},
+    "misheard": {"mode": "talk", "text": ""},
+    "rest": {"mode": "goodbye", "text": "Что-то я тебя не слышу. Я немножко посплю. Нажми на меня, когда захочешь поболтать!"},
+    "goodbye": {"mode": "goodbye", "text": "Я так наболталась, что уже засыпаю! Беги поиграй с мамой или папой. Пока-пока!"}
+  },
+  "goodbye_words": ["пока", "пока пока", "ну пока", "все пока", "ну все пока", "ладно пока", "до свидания", "до завтра",
+                    "мне пора", "я пошла", "я ухожу", "спокойной ночи"],
+  "friend_name": "элли",
+  "misses_before_rest": 2,
+  "limit_minutes": {"default": 10, "min": 1, "max": 60},
+  "limit_note": "лимит вне {min}–{max} мин — взято {default}"
+}

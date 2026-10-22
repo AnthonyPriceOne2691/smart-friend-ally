@@ -74,17 +74,24 @@ final class ScriptedModel: LanguageModel, @unchecked Sendable {
     }
 }
 
-/// A voice double: records each sentence; `hold` keeps `speak` suspended until `stop`.
+/// A voice double: records each sentence and runs `tick` (a session moves virtual time by it); `hold` keeps `speak`
+/// suspended until `stop`, from the sentence after the first `from`.
 final class RecordingVoice: VoiceOutput, @unchecked Sendable {
     private struct State { var log: [String] = [], stopped = false, held: CheckedContinuation<Void, Never>? }
-    private let state = Locked(State()), hold: Bool
+    private let state = Locked(State()), hold: Bool, from: Int, tick: @Sendable () -> Void
     var sentences: [String] { state { $0.log } }
     var stopped: Bool { state { $0.stopped } }
-    init(hold: Bool = false) { self.hold = hold }
+    init(hold: Bool = false, from: Int = 0, tick: @escaping @Sendable () -> Void = {}) {
+        (self.hold, self.from, self.tick) = (hold, from, tick)
+    }
 
     func speak(_ sentence: String) async throws {
-        state { $0.log.append(sentence) }
-        guard hold else { return }
+        let count = state { (s: inout State) -> Int in
+            s.log.append(sentence)
+            return s.log.count
+        }
+        tick()
+        guard hold, count > from else { return }
         await withCheckedContinuation { (wake: CheckedContinuation<Void, Never>) in
             if state({ (s: inout State) -> Bool in
                 if !s.stopped { s.held = wake }
@@ -105,4 +112,63 @@ final class RecordingVoice: VoiceOutput, @unchecked Sendable {
 /// Waits (real time, up to 10 s) until the condition holds — the runner moves on its own tasks.
 func eventually(_ condition: () -> Bool) async {
     for _ in 0..<10_000 where !condition() { try? await Task.sleep(nanoseconds: 1_000_000) }
+}
+
+/// A model double for sessions: each call answers the next reply at once (the last one again when they run out);
+/// `fails` ends every reply with an error that is not a cancellation.
+final class ReplyQueue: LanguageModel, @unchecked Sendable {
+    private struct State { var replies: [String], calls = 0, cancelled = false, ending: () -> Void = {} }
+    private let state: Locked<State>, fails: Bool
+    var calls: Int { state { $0.calls } }
+    var cancelled: Bool { state { $0.cancelled } }
+    init(_ replies: [String], fails: Bool = false) { (state, self.fails) = (Locked(State(replies: replies)), fails) }
+
+    func reply(to utterance: String) -> AsyncThrowingStream<String, Error> {
+        let (stream, output) = AsyncThrowingStream<String, Error>.makeStream(bufferingPolicy: .bufferingOldest(10))
+        let text = state { (s: inout State) -> String in
+            s.calls += 1
+            s.ending = { output.finish() }
+            return s.replies.count > 1 ? s.replies.removeFirst() : s.replies.first ?? ""
+        }
+        if fails {
+            output.finish(throwing: ReplyFailure())
+        } else {
+            output.yield(text)
+            output.finish()
+        }
+        return stream
+    }
+
+    func cancel() {
+        state { (s: inout State) -> () -> Void in
+            s.cancelled = true
+            return s.ending
+        }()
+    }
+}
+
+struct ReplyFailure: Error {}
+
+/// A router double: a decision by the whole utterance, a pass otherwise.
+struct TableRouter: TurnRouting {
+    let table: [String: Route]
+    func route(_ utterance: String) -> Route { table[utterance] ?? Route(.pass) }
+}
+
+/// A trace sink double: keeps every record.
+final class RecordingSink: TraceSink, @unchecked Sendable {
+    private let state = Locked([TurnTrace]())
+    var records: [TurnTrace] { state { $0 } }
+    func write(_ trace: TurnTrace) { state { $0.append(trace) } }
+}
+
+/// The states a session went through, in order.
+final class StateLog: @unchecked Sendable {
+    private let state = Locked([SessionState]())
+    var log: [SessionState] { state { $0 } }
+    func record(_ next: SessionState) { state { $0.append(next) } }
+}
+
+extension TestClock {
+    func advance(to time: Double) { advance(by: time - now()) }
 }
