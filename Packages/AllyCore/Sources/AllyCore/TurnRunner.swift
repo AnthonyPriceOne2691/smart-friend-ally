@@ -23,7 +23,9 @@ public final class TurnRunner {
         self.firstSentenceTimeout = firstSentenceTimeout
     }
 
-    public func run(_ utterance: String) async throws -> TurnOutcome {
+    /// - Parameter decision: the router's; with her utterance it reaches the contract (her address is not echoed,
+    ///   a topic's adult pointer is kept).
+    public func run(_ utterance: String, decision: RouterDecision = .pass) async throws -> TurnOutcome {
         let watchdog = Watchdog()
         let timer = Task { [clock, model, firstSentenceTimeout] in
             try await clock.sleep(seconds: firstSentenceTimeout)
@@ -31,7 +33,8 @@ public final class TurnRunner {
         }
         defer { timer.cancel() }
         return try await withTaskCancellationHandler {
-            var state = TurnState(contract: TurnContract(mode: mode), start: clock.now())
+            let contract = TurnContract(mode: mode, heard: utterance, decision: decision)
+            var state = TurnState(contract: contract, start: clock.now())
             try await stream(utterance, into: &state, watchdog: watchdog)
             try Task.checkCancellation()
             return try await finish(&state, timedOut: watchdog.state == .fired)
