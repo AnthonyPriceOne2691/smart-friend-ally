@@ -70,12 +70,15 @@ public actor Session {
         let script = route.key.flatMap { key in Router.script(for: key).map { (key: key, line: $0) } }
         let head = head(script.map { "script:" + $0.key }, mode: last ? .goodbye : .talk, route: route)
         move(to: .thinking)
-        guard let outcome = await respond(text, route: route, line: script?.line, head: head) else { return }
+        // A forgotten utterance never reaches the model: a script sounds as ever, else the contract's canned reply.
+        let line = script?.line ?? (route.forget ? "" : nil)
+        guard let outcome = await respond(text, route: route, line: line, head: head) else { return }
         await after(outcome, route: route, head: head, last: last)
     }
 
-    /// A script sounds without the model; else the model answers with the decision (an unknown script key — as a
-    /// guard without a topic). Her utterance and the decision reach the contract either way.
+    /// A script (or, for a forgotten utterance, nothing — the contract's canned reply) sounds without the model; else
+    /// the model answers with the decision (an unknown script key — as a guard without a topic). Her utterance and the
+    /// decision reach the contract either way.
     private func respond(_ text: String, route: Route, line: String?, head: TraceHead) async -> TurnOutcome? {
         if let line {
             let turn = TurnContract(mode: head.mode, heard: text, decision: route.decision).finish(line)
