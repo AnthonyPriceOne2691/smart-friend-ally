@@ -6,12 +6,12 @@
 - **kind:** feature
 - **repro_test:** n/a reason=не bugfix
 - **diagnosis:** n/a reason=не bugfix
-- **phase:** specify
+- **phase:** implement
 - **builder:** agent:claude-code
 - **verifier:** process:ci
-- **human_ok_spec:** pending
-  <!-- спека с примерами S1–S14 и три текста сессии ждут подписи родителя до кода (L33); итог передаёт ведущий -->
-- **human_ok_plan:** n/a
+- **human_ok_spec:** yes (родитель 2026-10-22 «Подписываю (Рекомендую)»; ReleaseGate перенесён в R решением ведущего по правилу переноса)
+  <!-- подписаны примеры S1–S12, три текста сессии и ответы на вопросы 2–7 (decisions.md); спека — коммит 4862a9c, подпись — отдельным коммитом до кода (L33) -->
+- **human_ok_plan:** yes (родитель 2026-10-22 «Подписываю (Рекомендую)»; ReleaseGate перенесён в R решением ведущего по правилу переноса)
 - **shape-oracles:** cqg-deployed
 - **behavior-oracles:** tests-present
 - **artifact_oracle:** n/a reason=поставка не собирает приложение: пакет SwiftPM проверяют его тесты в CI на Linux, сборка не оракул (§6.5a); проводку в App и сборку несёт D2.2
@@ -31,6 +31,6 @@
 - **canon_drift_waiver:** no
 - **baseline_growth_waiver:** no
 - **observability:** 1
-- **observe_signal:** S1–S14 и покрытие AllyCore ≥ 70% зелёные в каждом PR; после D2.2 в живых сессиях родителя у каждой сессии одна запись следа на ход и причина конца (limit, goodbye_word, rest, parent), прощание по лимиту звучит не позже первого хода после 600 с
+- **observe_signal:** S1–S12 и покрытие AllyCore ≥ 70% зелёные в каждом PR; после D2.2 в живых сессиях родителя у каждой сессии одна запись следа на ход и причина конца (limit, goodbye_word, rest, parent), прощание по лимиту звучит не позже первого хода после 600 с
 - **observe_until:** 2026-11-30
 - **circuit_breakers:** defaults from AGENT_DELIVERY_HARNESS.md §3.4
