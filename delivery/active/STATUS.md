@@ -1,0 +1,37 @@
+# Active delivery status
+
+- **slug:** child-shell
+- **stack:** delivery@2.07, cqg@2.74, okf@1.21
+- **class:** M
+- **kind:** feature
+- **repro_test:** n/a reason=не bugfix
+- **diagnosis:** n/a reason=не bugfix
+- **phase:** specify
+- **builder:** agent:claude-code
+- **verifier:** process:ci
+  <!-- облик судит родитель на глаз по снимкам вида на Mac (П32); снимков экрана телефона нет никогда (L46) -->
+- **human_ok_spec:** pending (спека Ш1, снимки облика и вопросы 1–7 decisions.md — родителю через ведущего, 2026-10-22)
+- **human_ok_plan:** pending (разбиение оболочки на три поставки Ш1 → Ш2 → Ш3 — вопрос 1 родителю)
+- **shape-oracles:** cqg-deployed
+- **behavior-oracles:** tests-present
+  <!-- план: ShellCore — тесты и покрытие ≥ 70% на Linux (джоба swift); ShellUI — снимки и пиксельные пробы на Mac (локально и ручная джоба ios.yml) -->
+- **artifact_oracle:** n/a reason=Ш1 не собирает приложение: пакет SwiftPM судят его тесты (ядро — Linux CI, рисунок — снимки на Mac), сборка не оракул (§6.5a); экран в бандле iOS — Ш3
+- **ci-oracles:** tooling
+- **worktree:** ../Smart frend Ally-wt-shell
+- **parallel_sessions:** merge-guard,manual-deploy
+  <!-- §5.1a: интеграция в main только через scripts/merge_guard.sh; на телефон приложение ставится отдельным решением -->
+- **hooks:** not-deployed
+- **blockers:** none
+  <!-- зависимость, а не остановка: код Ш1 — после подписи родителя (D1.2 уже в main, ca2befe); Ш3 — после мержа D2.2 app-session и R child-lock -->
+- **waivers:** none
+- **new_dependency:** Packages/AllyShell/Package.swift reason=новый манифест SwiftPM без внешних зависимостей: ShellCore — Foundation и локальный ../AllyCore (фазы сессии SessionState), ShellUI — SwiftUI из SDK Apple под #if canImport(SwiftUI), тесты — XCTest из тулчейна; Rive, Lottie и другие библиотеки не берём (решение родителя 2026-10-22: 2D в SwiftUI) by=agent:claude-code
+- **runtime_paths:** none reason=Ш1 — пакет SwiftPM: позы, раскладка и палитра проверяются тестами на Linux, рисунок — снимками вида на Mac; экран в приложении на телефоне (App/) появится в Ш3 и будет объявлен там
+- **irreversible_surfaces:** none reason=продукт офлайн; поставка не добавляет ни отправки, ни трат, ни выкатки, ни публикации
+- **model_surface:** n/a reason=оболочка не трогает поверхность модели: промпт, реестр с пином и сэмплингом и пакет модели объявлены D1.2; экран только рисует фазу сессии и ничего не говорит
+- **rule_enforcers:** n/a reason=model_surface не объявлена списком; правил речи оболочка не исполняет — их держат контракт хода и сессия (knowledge/engineering/safety-below-model.md)
+- **canon_drift_waiver:** no
+- **baseline_growth_waiver:** no
+- **observability:** 1
+- **observe_signal:** после Ш3 в тесте родителя на телефоне четыре позы (спит, слушает, думает, говорит) узнаются на глаз в каждой сессии, скорость модели с экраном Элли не ниже 95% от консоли, footprint выше консоли не больше чем на 10 МБ; до этого V1–V10 зелёные в каждом PR, покрытие ShellCore ≥ 70%
+- **observe_until:** 2026-11-30
+- **circuit_breakers:** defaults from AGENT_DELIVERY_HARNESS.md §3.4
