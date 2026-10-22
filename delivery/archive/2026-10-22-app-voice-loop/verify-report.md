@@ -3,8 +3,8 @@
 **Date:** 2026-10-22
 **Verifier:** process:ci (гейты, тесты, паритет, оракул артефакта); телефон — родитель и агент, числа из журнала хода
 **asserts_reviewed_by:** n/a (все утверждения ведут к одобренным примерам — дайджест ниже, asserts_without_example: 0; A23 подписан родителем 2026-10-20)
-**CI run:** https://github.com/AnthonyPriceOne2691/smart-friend-ally/actions/runs/39833947421 (quality, зелёный на `fc84b78`); ручная macOS-джоба — https://github.com/AnthonyPriceOne2691/smart-friend-ally/actions/runs/39831715919
-**Commit:** `5718357` (правки по телефону), мерж `main` с session-core — `a4fe500`; эта сдача — следующим коммитом, PR #35
+**CI run:** https://github.com/AnthonyPriceOne2691/smart-friend-ally/actions/runs/39843739362 (quality, зелёный на сдаче `0c8b55c`: swift, gates, delivery со сверкой дайджеста); ручная macOS-джоба — https://github.com/AnthonyPriceOne2691/smart-friend-ally/actions/runs/39831715919
+**Commit:** `5718357` (правки по телефону); мержи `main` — session-core `a4fe500`, router-events `cf5a480` (вызов `TurnRunner.run(_:)` — с решением маршрутизатора по умолчанию `.pass`, сборки и тесты AllyCore 27 и AllyDiscipline 50 — зелёные); PR #35
 
 **Итог:** READY FOR HANDOFF — по решению родителя 2026-10-22 с одним проваленным и двумя отложенными примерами: A10
 (первый замер p95 2,65 с при пороге 2,5, правка внесена, не перемерена), A11 и A12 (не проверены). Waiver — в STATUS.
