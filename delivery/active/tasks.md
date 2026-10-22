@@ -11,8 +11,8 @@ L16 (`knowledge/product/`), L47, L48, L49 (маршрутизатор и его 
   G1–G11 списком), plan, tasks, decisions с вопросами родителю 1–9 — коммит 0ffd2df
 - [x] T2: подпись родителя под спекой и планом, ответы на вопросы 1–9 — отдельным коммитом до кода; `human_ok_spec`,
   `human_ok_plan` → `yes` (родитель 2026-10-22 «Подписываю (Рекомендую)»: 1–9 по рекомендациям, разбиение принято)
-- [ ] T3: после мержа D1.2 — слить `origin/main` (без перезаписи истории, L35); `eval-smoke.md` — строки W1–W11 с
-  оракулом и ожиданием, до кода; `phase: implement`
+- [x] T3: `eval-smoke.md` — строки W1–W11 с оракулом и ожиданием, до кода; `phase: implement` (часть в AllyCore — сразу,
+  проводка в App — после мержа D1.2, решение ведущего 2026-10-22)
 
 ### Slice 1 — драйвер и след (AllyCore, Linux)
 - [ ] T4: `Conversation.swift` — `Listener`, `TalkState` с позой, поток `updates`, `wake()`/`stop()`, поколение сессии,
@@ -25,7 +25,9 @@ L16 (`knowledge/product/`), L47, L48, L49 (маршрутизатор и его 
   «forget не смотрим»; тесты S1–S12 и D1.1 зелёные без правок
 
 ### Slice 3 — приложение
-- [ ] T7: `PhoneListener.swift` (слушание D1.2 за `Listener`, одноразовые этапы); `VoiceLoop` на `Conversation`:
+- [ ] T7: после мержа D1.2 — слить `origin/main` (без перезаписи истории, L35); `PhoneListener.swift` (слушание D1.2 за
+  `Listener`, одноразовые этапы); `VoiceLoop` на `Conversation` — правки в нём минимальные и одним блоком (там же
+  работает поставка голоса):
   `RouterRouting`, `TraceFile(Caches/turns.jsonl)`, штамп, ключ лимита из `UserDefaults`, `@Published talk`, `wake()`,
   `stop()`; консоль — «Разбудить», «Стоп», строки состояния, лимита и самопроверки маршрутизатора; `TurnLog` больше не
   пишется; SwiftLint и оракул артефакта зелёные на Mac
