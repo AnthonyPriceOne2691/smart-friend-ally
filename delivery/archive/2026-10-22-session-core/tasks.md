@@ -36,7 +36,7 @@
   `delivery_check --require-ci --diff-base origin/main` (L14)
 - [x] T10: verify-report — `swift test` и покрытие AllyCore ≥ 70%, сводка утверждений Swift (новые тест-файлы в ней,
   L26), мутации, `mergeable` и ссылка на зелёный CI (L35)
-- [x] T11: сдача — `delivery/archive/<дата>-session-core` в том же PR, `.gitkeep`, строка INDEX (уроки — L50–L52),
+- [x] T11: сдача — `delivery/archive/<дата>-session-core` в том же PR, `.gitkeep`, строка INDEX (уроки L50, L51, L52 — рождены этой поставкой, раньше ссылаться было не на что),
   `session-core` в обязательствах CLAUDE.md, `observe_until` 2026-11-30; мерж — ведущий
 
 ## Перенесено (не эта поставка)
