@@ -3,10 +3,11 @@ import Foundation
 /// A condition of a topic's clause in router.json, parsed once (`condition` of router_core.py): alternatives «a|b»,
 /// each «!»-negatable. A term is «?predicate»; «free A», «own A», «not A» — an occurrence not negated, hers (not
 /// negated, not a grown-up's), negated; «L~R» — within three words, «L>R» — R within three words after L; or atoms.
-/// An atom is a CONCEPT, a word of «@set», «#» (a number in digits) or «#5» (five digits or more); «+» joins atoms.
+/// An atom is a CONCEPT, a word of «@set», «#» (a number in digits) or «#5» (five digits or more); «+» joins atoms in
+/// every term («own A+B» — an occurrence of either).
 struct Condition: Sendable {
     enum Term: Sendable {
-        case predicate(String), mode(String, String), near([String], [String], after: Bool), atoms([String])
+        case predicate(String), mode(String, [String]), near([String], [String], after: Bool), atoms([String])
     }
 
     let alternatives: [(negated: Bool, term: Term)]
@@ -22,7 +23,7 @@ struct Condition: Sendable {
         let atoms = { (side: Substring) in side.split(separator: "+").map(String.init) }
         if body.hasPrefix("?") { return .predicate(String(body.dropFirst())) }
         if let space = body.firstIndex(of: " ") {
-            return .mode(String(body[..<space]), String(body[body.index(after: space)...]))
+            return .mode(String(body[..<space]), atoms(body[body.index(after: space)...]))
         }
         if let mark = body.firstIndex(of: "~") ?? body.firstIndex(of: ">") {
             return .near(atoms(body[..<mark]), atoms(body[body.index(after: mark)...]), after: body[mark] == ">")
@@ -43,6 +44,7 @@ extension Scene {
     static let predicates: [String: @Sendable (Scene) -> Bool] = [
         "pretend": { $0.pretend }, "rule": { $0.ruleStatement }, "question": { $0.question },
         "parent_away": { $0.parentAway }, "frame": { $0.has("FRAME") }, "alone": { $0.anyWord("alone") },
+        "intent": { $0.intent },
         "tale": { $0.has("FRAME") && !$0.anyWord("me_obj") }  // somebody else's story: no «мне», «меня», «нас»
     ]
 
@@ -63,7 +65,7 @@ extension Scene {
     func holds(_ term: Condition.Term) -> Bool {
         switch term {
         case .predicate(let name): return predicate(name)
-        case .mode(let mode, let atom): return positions([atom]).contains { occurs($0, mode) }
+        case .mode(let mode, let atoms): return positions(atoms).contains { occurs($0, mode) }
         case .near(let left, let right, let after):
             let rights = positions(right)
             return positions(left).contains { index in

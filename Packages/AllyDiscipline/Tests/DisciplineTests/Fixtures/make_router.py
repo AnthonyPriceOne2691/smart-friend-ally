@@ -29,7 +29,7 @@ sys.path[:0] = [str(PROTO)]
 import router_core as rc  # noqa: E402
 import sets  # noqa: E402
 
-ROWS, PLAIN, FICTIONAL = 60, 6, ("сон", "тем", "мурк")
+ROWS, PLAIN, FICTIONAL = 80, 6, ("сон", "тем", "мурк")
 
 
 def exact():
@@ -47,7 +47,7 @@ def exact():
     block = ",\n".join("    %s: %s" % (json.dumps(c), json.dumps(w, ensure_ascii=False)) for c, w in found.items())
     text = re.sub(r'  "exact_only": \{.*?\n?  \},?\n|  "exact_only": \{\},\n', '  "exact_only": {\n%s\n  },\n' % block,
                   text, count=1, flags=re.S)
-    DATA.write_text(re.sub(r'"exact_hash": "[0-9a-f]*"', '"exact_hash": "%s"' % rc.lexicon_hash(raw), text, count=1),
+    DATA.write_text(re.sub(r'"exact_hash": "[^"]*"', '"exact_hash": "%s"' % rc.lexicon_hash(raw), text, count=1),
                     encoding="utf-8")
     print("router.json: %d doubles over %d concepts, healthy %s" % (
         sum(map(len, found.values())), len(found), rc.load(str(DATA)).healthy))

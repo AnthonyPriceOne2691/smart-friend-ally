@@ -1,0 +1,34 @@
+# Active delivery status
+
+- **slug:** router-events
+- **stack:** delivery@2.07, cqg@2.74, okf@1.21
+- **class:** M
+- **kind:** feature
+- **repro_test:** n/a reason=не bugfix
+- **diagnosis:** n/a reason=не bugfix
+- **phase:** handoff
+- **builder:** agent:claude-code
+- **verifier:** process:ci
+- **human_ok_spec:** yes (решения родителя 2026-10-19 и упрощение «базовые случаи»; тексты П3 подписаны 18.10 и разобраны ведущим по поручению родителя 2026-10-19 — local/checkpoint/router-scripts-basic.json; правка плиты — решение родителя 4)
+- **human_ok_plan:** n/a
+- **shape-oracles:** cqg-deployed
+- **behavior-oracles:** tests-present
+- **artifact_oracle:** n/a reason=поставка не собирает приложение: пакет SwiftPM проверяют его тесты в CI на Linux, сборка не оракул (§6.5a); бандл iOS проверит поставка приложения
+- **ci-oracles:** tooling
+- **worktree:** ../Smart frend Ally-wt-router
+- **parallel_sessions:** merge-guard,manual-deploy
+  <!-- §5.1a: интеграция в main только через scripts/merge_guard.sh; параллельно — D1.2 (App, AllyLlama), D2 (документы); накат sync-cqg-2.74 влит слиянием main (faa1876); общие файлы CLAUDE.md, INDEX.md, knowledge/log.md правятся малыми добавлениями -->
+- **hooks:** not-deployed
+- **blockers:** none
+- **waivers:** none
+- **new_dependency:** none
+- **runtime_paths:** none reason=маршрутизатор, контракт хода и режим turn у discipline-replay — чистые функции над репликой, решением и сохранённым ответом: без экрана, прав, железа и ввода-вывода; голосовой цикл — поставка приложения
+- **irreversible_surfaces:** none reason=продукт офлайн; поставка не добавляет ни отправки, ни выкатки
+- **model_surface:** n/a reason=модель продукта кодом в репозитории не вызывается: маршрутизатор решает до модели, контракт судит готовый текст, справочный прогон берёт сохранённые ответы v2.4
+- **rule_enforcers:** n/a reason=model_surface не объявлена списком; реестр «правило персоны v2.4 → исполнитель → статус» — таблица в knowledge/engineering/safety-below-model.md
+- **canon_drift_waiver:** no
+- **baseline_growth_waiver:** no
+- **observability:** 1
+- **observe_signal:** поставка приложения зовёт `Router` до модели на каждой реплике; в чёрном ящике живых сессий журнал решения несёт вид, тему, id правил и хэш данных без слов девочки; на таблетки, бутылку под раковиной, ягоды с куста, плиту, кипяток, нож, подоконник, лёд, дорогу, чужую собаку, дым и «у меня кровь» звучит подписанная фраза своей темы, на «больно» ответ модели несёт указатель на взрослого, игровые ответы заготовок не получают (оценка родителя на слух); до неё паритет и тесты пакета зелёные в каждом PR
+- **observe_until:** 2026-11-30
+- **circuit_breakers:** defaults from AGENT_DELIVERY_HARNESS.md §3.4
