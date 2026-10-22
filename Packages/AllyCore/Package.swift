@@ -7,7 +7,8 @@ let package = Package(
     products: [.library(name: "AllyCore", targets: ["AllyCore"])],
     dependencies: [.package(path: "../AllyDiscipline")],
     targets: [
-        .target(name: "AllyCore", dependencies: [.product(name: "Discipline", package: "AllyDiscipline")]),
+        .target(name: "AllyCore", dependencies: [.product(name: "Discipline", package: "AllyDiscipline")],
+                resources: [.process("Resources")]),
         .testTarget(
             name: "AllyCoreTests",
             dependencies: ["AllyCore", .product(name: "Discipline", package: "AllyDiscipline")]

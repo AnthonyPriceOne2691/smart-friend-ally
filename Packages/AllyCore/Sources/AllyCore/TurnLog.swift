@@ -21,13 +21,16 @@ public struct TurnLog: Encodable, Sendable {
     }
 
     /// The journal line: JSON with sorted snake_case keys; nil only if encoding fails.
-    public func jsonLine() -> String? {
-        let encoder = JSONEncoder()
-        (encoder.outputFormatting, encoder.keyEncodingStrategy) = ([.sortedKeys], .convertToSnakeCase)
-        return (try? encoder.encode(self)).flatMap { String(data: $0, encoding: .utf8) }
-    }
+    public func jsonLine() -> String? { journalLine(self) }
 
     static func wordless(_ value: String) -> String {
         value.unicodeScalars.contains { (0x0400...0x04FF).contains($0.value) } ? "redacted" : value
     }
+}
+
+/// A journal line of the turn log or the trace: JSON with sorted snake_case keys; nil only if encoding fails.
+func journalLine<Value: Encodable>(_ value: Value) -> String? {
+    let encoder = JSONEncoder()
+    (encoder.outputFormatting, encoder.keyEncodingStrategy) = ([.sortedKeys], .convertToSnakeCase)
+    return (try? encoder.encode(value)).flatMap { String(data: $0, encoding: .utf8) }
 }
