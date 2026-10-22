@@ -40,6 +40,9 @@ public struct PassThroughRouting: TurnRouting {
 public struct RouterRouting: TurnRouting {
     public init() {}
 
+    /// The router's data passed their self-test at load; when not, every turn is a guard without a topic (fail-closed).
+    public static var healthy: Bool { !Router.shared.route("").record.rules.contains("selftest_failed") }
+
     public func route(_ utterance: String) -> Route {
         let routed = Router.shared.route(utterance, state: RouterState(game: false))
         return Route(routed.decision, rules: routed.record.rules, dataHash: routed.record.dataHash,
