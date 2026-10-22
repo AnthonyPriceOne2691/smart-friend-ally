@@ -135,7 +135,7 @@ final class RouterTests: XCTestCase {
     }
 
     /// Ablation, the mutation gate's role: with a rule off, one of the probes comes out differently.
-    func testEveryRuleSwitchedOffChangesAProbe() {  // R11 E39
+    func testEveryRuleSwitchedOffChangesAProbe() {  // R11 E39 E50
         let idle = routerRules.filter { rule in
             routerData.selftest.allSatisfy { decided($0.text, game: $0.game ?? false, off: [rule]) == $0.want }
         }
@@ -208,7 +208,7 @@ final class RouterTests: XCTestCase {
 
     /// A guard against a slow decision in the test build, each row its best of three (a busy machine's pauses are not
     /// the decision's); R12's 5 ms p95 is measured in release (discipline-replay).
-    func testDecisionIsFast() throws {  // R12 E28 E38
+    func testDecisionIsFast() throws {  // R12 E28 E38 E49
         let clock = ContinuousClock()
         let times = try routerRows().map { row in
             (0..<3).map { _ in clock.measure { _ = Router.shared.route(row.text) } }.min() ?? .zero
