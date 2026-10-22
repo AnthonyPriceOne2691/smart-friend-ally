@@ -6,7 +6,7 @@
 - **kind:** feature
 - **repro_test:** n/a reason=не bugfix
 - **diagnosis:** n/a reason=не bugfix
-- **phase:** specify
+- **phase:** implement
 - **builder:** agent:claude-code
 - **verifier:** process:ci
 - **human_ok_spec:** yes (родитель 2026-10-20 «Подписываю»; имена подтверждены)
@@ -21,7 +21,7 @@
   <!-- §5.1a: интеграция в main только через scripts/merge_guard.sh; на телефон приложение ставится отдельным решением, а не следствием мержа -->
 - **hooks:** not-deployed
 - **blockers:** none
-  <!-- зависимость, а не остановка: implement D1.2 начинается после подписи и после мержа предпосылки D1.1 voice-core (spec.md, «Предпосылка») -->
+  <!-- предпосылки выполнены: подпись родителя 2026-10-20, D1.1 voice-core слита 2026-10-22 (сквош bc5447c) -->
 - **waivers:** max_runtime_paths=3 reason=решение родителя E1 2026-10-19 (AskUserQuestion ведущего): только для D1 — перенос в продукт настроек звука, распознавания и модели, исполненных зондом 17.10 на этом телефоне (local/spike/phone, knowledge/engineering/model-on-phone.md); пути App/Sources/Audio/, App/Sources/Speech/, Packages/AllyLlama/; предел 800 строк и 25 файлов не поднимается; дальше — один рисковый путь на поставку by=human:anthony at=2026-10-19
 - **new_dependency:** Packages/AllyLlama/Package.swift reason=новый манифест SwiftPM: binaryTarget llama.cpp b10809 (xcframework релиза по url и checksum d6813b3b…, бинаря в git нет; тот же рантайм, что у зонда и стенда v2.4; iOS-срез линкует Foundation, Metal, Accelerate, сетевых символов в nm -u нет — проверено 2026-10-19); зависимость от ../AllyCore — локальный путь by=agent:claude-code
 - **new_dependency:** llama.cpp-b10809 reason=рантайм модели на телефоне (решение 2026-10-17, knowledge/engineering/model-on-phone.md): E4B — 0,4–0,5 ГБ footprint из 6 ГБ, p95 до первого звука 1,9 с; LiteRT-LM отклонён — GPU-делегат закрыт, Swift API — превью; лицензия MIT (gh api repos/ggml-org/llama.cpp/license, L36), релиз 2026-09-04, sha256 ассета в API совпадает с файлом зонда; строка дублирует путь манифеста, потому что гейт new-dependency .binaryTarget не разбирает (dependency_manifests.py:252-262) by=agent:claude-code

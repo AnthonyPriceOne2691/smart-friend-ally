@@ -1,11 +1,14 @@
 # Tasks
 
 ## Slice 0 — подпись и предпосылка
-- [ ] T0: родитель подтверждает список имён E5 (только «Элли») и подписывает спеку и план — `human_ok_spec`, `human_ok_plan`
-- [ ] T1: D1.1 `voice-core` — ветка `feat/voice-core` от main, документы из раздела «Предпосылка» (примеры — таблицей,
+- [x] T0: родитель подтверждает список имён E5 (только «Элли») и подписывает спеку и план — `human_ok_spec`, `human_ok_plan`
+  (родитель 2026-10-20 «Подписываю», коммит `3a5f8af`)
+- [x] T1: D1.1 `voice-core` — ветка `feat/voice-core` от main, документы из раздела «Предпосылка» (примеры — таблицей,
   подпись — ссылкой на коммит этой спеки); `Packages/AllyCore`, тесты A1–A6 и A14–A18 с метками `// A<n>`; шаг сверки
   дайджеста A19 в `quality.yml` и запись в `adapted.json`; `LINT_SWIFT_PACKAGES` и jscpd видят `AllyCore`; CI зелёный; `merge_guard`
-- [ ] T2: ребейз этой ветки на main с D1.1; `eval-smoke.md` — строки A7–A13, A20–A24 с командой и ожиданием, до кода
+  (PR #33, сквош `bc5447c` 2026-10-22)
+- [x] T2: ребейз этой ветки на main с D1.1; `eval-smoke.md` — строки A7–A13, A20–A24 с командой и ожиданием, до кода
+  (не ребейз, а мерж `origin/main` — ветка уже на origin, без force-push; решение ведущего 2026-10-22)
 
 ## Slice 1 — модель
 - [ ] T3: `Packages/AllyLlama`: `binaryTarget` b10809 (checksum с `pragma: allowlist secret`), `LlamaModel` за `LanguageModel` —
