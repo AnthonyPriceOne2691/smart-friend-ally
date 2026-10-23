@@ -42,6 +42,7 @@ xcuserdata/
 *.xcodeproj/
 App/build/
 App/Ally.entitlements
+App/Info.plist
 App/Local.xcconfig
 
 # --- Python: механика контура ---

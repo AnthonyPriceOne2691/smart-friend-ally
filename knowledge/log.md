@@ -1,5 +1,17 @@
 # Knowledge Bundle Update Log
 
+## 2026-10-23 — детский экран в приложении: венок, тап, стоп, метка, перерыв (оболочка Ш3)
+
+* **Update**: `engineering/character-rendering` — как сделано в Ш3 (венок `Crown` и `CrownArt`, экран `ChildShell`,
+  сонное шевеление, 120 Гц), порядок серии Ш3 → Ш2б; `implementation:` += `Crown.swift`, `CrownArt.swift`,
+  `ChildShell.swift`. `product/look-and-feel` — правила 2, 3, 4, 13, 15 в коде, цвета венка прототипа;
+  `implementation:` += `Tap.swift`, `AdultZone.swift`. `product/session-limit` — перерыв после лимита по умолчанию
+  выключен («Без перерыва»), ключ 0–180; `implementation:` += `Nap.swift`. `product/child-mode`,
+  `engineering/session` — заглушка R → оболочка. `engineering/voice-loop` — детский экран, «Гид-доступ», ключ перерыва.
+  `engineering/safety-below-model` — экран путь реплики не меняет. `references/repo-map` — `AllyShell` в приложении.
+* **Источник**: поставка `child-shell-app` (оболочка Ш3; Ш3 и Ш2б подписаны родителем 2026-10-23 «Подписываю
+  (Рекомендую)», перерыв — ответ «Без перерыва»).
+
 ## 2026-10-23 — слух: спекуляция — ответ модели начинается в её паузе
 
 * **Update**: `engineering/session` — `Speculation` (общий план реплики, этапы `spec_*`, `spec_stale` до D5);
