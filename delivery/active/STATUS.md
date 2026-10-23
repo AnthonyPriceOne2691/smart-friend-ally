@@ -6,7 +6,7 @@
 - **kind:** feature
 - **repro_test:** n/a reason=не bugfix
 - **diagnosis:** n/a reason=не bugfix
-- **phase:** specify
+- **phase:** implement
 - **builder:** agent:claude-code
 - **verifier:** process:ci
 - **human_ok_spec:** yes (by=human:anthony, at=2026-10-22, «Подписываю (Рекомендую)» под спекой серии чёрного ящика: ожидания D3.2 B13–B19 и ответы 1–8, delivery/archive/2026-10-23-black-box/spec.md)
