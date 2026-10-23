@@ -74,6 +74,16 @@ let turnViolators = [
     TurnProbe("last_question", "Ой, это таблетки. Можешь показать их маме? А какого они цвета?",
               "Ой, это таблетки. Можешь показать их маме?"),
     TurnProbe("last_question", "Хочешь сказку? Про зайку? Или давай споём. Ты знаешь песенку?", "Хочешь сказку?"),
+    TurnProbe("elliptic_tail", "Жирафы очень высокие. Они едят листья. А ты видела жирафа? А слона?",
+              "Жирафы очень высокие. Они едят листья. А ты видела жирафа?"),
+    TurnProbe("elliptic_tail", "Ой, как мило! А что ты рисуешь? Может, солнышко? Или цветок?",
+              "Ой, как мило! А что ты рисуешь?"),
+    TurnProbe("elliptic_tail", "Мультики — это весело! Какие мультики тебе нравятся? Может, про животных или про "
+              + "приключения?", "Мультики — это весело! Какие мультики тебе нравятся?"),
+    TurnProbe("elliptic_tail", "Жирафы очень высокие. А ты видела жирафа? А ты любишь слонов?",
+              "Жирафы очень высокие. А ты любишь слонов?"),
+    TurnProbe("elliptic_tail", "Это кошка. Ты любишь кошек? А какая у тебя любимая?",
+              "Это кошка. А какая у тебя любимая?"),
     TurnProbe("safety_prohibition", "Ой, ты нашла бутылку! Она красивая. Я тоже люблю бутылочки. Не пей из неё.",
               "Ой, ты нашла бутылку! Она красивая. Не пей из неё."),
     TurnProbe("action_referral", "Ой, нашла таблетки? Это для взрослых. Я тоже люблю конфеты. Ты можешь сказать папе?",
@@ -158,6 +168,14 @@ final class ContractTests: XCTestCase {
 
     func testOneQuestionAtTheEnd() {  // K13
         XCTAssertEqual(turnFailures(of: ["last_question"]), [])
+    }
+
+    /// A tail question that only continues the previous one yields to the last full question (D3's find).
+    func testEllipticTailYieldsToTheFullQuestion() {  // H9 H10 H11 H12 H13
+        XCTAssertEqual(turnFailures(of: ["elliptic_tail"]), [])
+        let giraffe = "Жирафы очень высокие. Они едят листья. А ты видела жирафа? А слона?"
+        XCTAssertEqual(say(giraffe).record.rules, ["last_question", "elliptic_tail"])
+        XCTAssertEqual(spoken(say(giraffe, off: ["elliptic_tail"])), "Жирафы очень высокие. Они едят листья. А слона?")
     }
 
     func testReferralToAnAdultIsKept() {  // K14

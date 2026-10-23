@@ -11,9 +11,14 @@ func contentProbes() throws -> [ContentProbe] {
         .map { try JSONDecoder().decode(ContentProbe.self, from: Data($0.utf8)) }
 }
 
-/// The content rules and the adult pointer of router-people: their ablation lives here, not in ContractTests.
+/// The content rules and the adult pointer of router-people, and the rules on the router's decision of
+/// contract-fixes: their ablation lives here, not in ContractTests.
 let contentRules: Set<ContractRule> = [.humanClaim, .piiEcho, .piiRequest, .promise, .promiseRefusalExempt,
-                                       .surpriseExempt, .adviceExempt, .promisePointer, .adultPointer]
+                                       .surpriseExempt, .adviceExempt, .promisePointer, .adultPointer,
+                                       .pointerSparesSafety, .dangerOverTopic]
+
+/// The rules that act on the router's decision: the reference's probes carry none, each has its own test.
+let decisionRules: Set<ContractRule> = [.adultPointer, .pointerSparesSafety, .dangerOverTopic]
 
 func told(_ reply: String, heard: String = "", decision: RouterDecision = .pass, mode: TurnMode = .talk,
           off: Set<String> = []) -> String {
@@ -34,7 +39,7 @@ final class ContentTests: XCTestCase {
     /// Ablation, the mutation gate's role: with a content rule off, one of the reference's probes comes out otherwise.
     func testEveryContentRuleSwitchedOffChangesAProbe() throws {  // R14
         let probes = try contentProbes()
-        let idle = contentRules.subtracting([.adultPointer]).map(\.rawValue).filter { rule in
+        let idle = contentRules.subtracting(decisionRules).map(\.rawValue).filter { rule in
             probes.allSatisfy { told($0, off: [rule]) == $0.want }
         }
         XCTAssertEqual(idle, [], "switching these rules off changes none of the probes")
@@ -63,6 +68,37 @@ final class ContentTests: XCTestCase {
         let tall = "Гром гремит далеко-далеко за большой зелёной горой у самой реки. "
         XCTAssertEqual(told(tall + "Тучи плывут. Дождик капает.", decision: fear),
                        tall + "Тучи плывут. Если страшно, скажи маме или папе.")
+    }
+
+    /// The adult pointer never pushes out the last sentence with a prohibition or protection: the rest goes first,
+    /// and with no room even then the reply keeps its prohibition and goes without the pointer (the parent, H4).
+    func testPointerSparesTheLastProhibition() {  // H1 H2 H3 H4 H5
+        let fear = RouterDecision.guard(topic: "fear"), say = " Если страшно, скажи маме или папе."
+        let wind = "Ой, это просто ветер шумит. Он очень сильный. Не открывай окно!"
+        XCTAssertEqual(told(wind, decision: fear), "Ой, это просто ветер шумит. Не открывай окно!" + say)
+        XCTAssertEqual(told("Не открывай окно! Это просто ветер шумит. Он очень сильный.", decision: fear),
+                       "Не открывай окно! Это просто ветер шумит." + say)
+        XCTAssertEqual(told("Ой, это ветер. Не открывай окно! Не трогай провода.", decision: fear),
+                       "Ой, это ветер. Не открывай окно!" + say)
+        let long = "Это ветер шумит за окном так громко, что даже стёкла в нашем доме тихонько звенят. Не открывай "
+            + "окно и не подходи к нему близко, пока на улице такая сильная гроза."
+        XCTAssertEqual(told(long, decision: fear), long)
+        XCTAssertEqual(told("Ой, это просто гроза. Она скоро пройдёт. Давай споём песенку?", decision: fear),
+                       "Ой, это просто гроза. Она скоро пройдёт." + say)
+        XCTAssertEqual(told(wind, decision: fear, off: ["pointer_spares_safety"]),
+                       "Ой, это просто ветер шумит. Он очень сильный." + say)
+    }
+
+    /// The whole reply cut for a hazard how-to: the hazard's script outranks a topic fallback with no protection of
+    /// its own (fear, pain), with the topic's pointer when the script names no adult; «потерялась» keeps its own.
+    func testDangerScriptOutranksABareTopicFallback() {  // H6 H7 H8
+        let fear = RouterDecision.guard(topic: "fear"), match = "Давай зажжём спичку, это весело и красиво!"
+        XCTAssertEqual(told(match, decision: fear), contractData.scripts["matches"])
+        XCTAssertEqual(told("Давай откроем окно и залезем на подоконник, это весело!", decision: fear),
+                       (contractData.scripts["window"] ?? "") + " Если страшно, скажи маме или папе.")
+        XCTAssertEqual(told(match, decision: .guard(topic: "pain")), contractData.scripts["matches"])
+        XCTAssertEqual(told(match, decision: .guard(topic: "lost")), contractData.scripts["lost"])
+        XCTAssertEqual(told(match, decision: fear, off: ["danger_over_topic"]), contractData.canned["fear"])
     }
 
     func testPainKeepsAnAdultPointer() {  // R13 E45
