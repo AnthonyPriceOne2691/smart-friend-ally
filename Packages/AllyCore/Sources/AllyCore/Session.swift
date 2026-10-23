@@ -32,11 +32,13 @@ public struct SessionParts: Sendable {
 /// The structure of a talk is code (П1): a canned greeting, turns through the router hook and the contract, «не
 /// расслышала» and rest on misses, her goodbye and the soft limit closed by a canned goodbye — one record per turn.
 /// The limit is checked at turn boundaries: a turn begun before it is finished, the first utterance after it is the
-/// last turn, in `goodbye` mode; a turn with a router topic does not close the session.
+/// last turn, in `goodbye` mode; a turn with a router topic does not close the session. What Elly said last sets the
+/// kind of her next turn — how long the ear waits for silence (D7).
 public actor Session {
-    private let parts: SessionParts, settings: SessionSettings, data = SessionData.shared
-    private let current = Locked(SessionState.asleep)
-    private var id = "", start = 0.0, count = 0, misses = 0, heard: String?, cancel: (@Sendable () -> Void)?
+    private let parts: SessionParts, settings: SessionSettings, data = SessionData.shared, kinds = TurnKinds.shared
+    private let current = Locked(SessionState.asleep), expecting = Locked(TurnKind.open)
+    private var id = "", start = 0.0, count = 0, misses = 0, heard: String?, listening: TurnKind?
+    private var cancel: (@Sendable () -> Void)?
 
     public init(_ parts: SessionParts, settings: SessionSettings = SessionSettings()) {
         (self.parts, self.settings) = (parts, settings)
@@ -44,18 +46,28 @@ public actor Session {
 
     public nonisolated var state: SessionState { current { $0 } }
 
+    /// The kind of her next turn, by what Elly said last; «не расслышала» keeps it — she says the same again.
+    public nonisolated var expect: TurnKind { expecting { $0 } }
+
     /// One event at a time; an event of another state changes nothing. `stop` comes in while a turn runs.
     public func handle(_ event: SessionEvent) async {
         switch (state, event) {
         case (.asleep, .wake): await greet()
-        case (.listening, .heard(let text)), (.windingDown, .heard(let text)): await hear(text)
-        case (.listening, .silence), (.windingDown, .silence): await missed()
+        case (.listening, .heard), (.windingDown, .heard), (.listening, .silence), (.windingDown, .silence):
+            await answer(event)
         case (let now, .stop) where now != .asleep: stop()
         default: return
         }
     }
 
     private var late: Bool { parts.clock.now() - start >= settings.limit }
+
+    /// Her utterance or silence: every record it brings names the kind the ear listened with.
+    private func answer(_ event: SessionEvent) async {
+        listening = expect
+        defer { listening = nil }
+        if case .heard(let text) = event { await hear(text) } else { await missed() }
+    }
 
     private func greet() async {
         (id, start, count, misses) = (UUID().uuidString, parts.clock.now(), 0, 0)
@@ -98,6 +110,7 @@ public actor Session {
     /// A last turn without a topic closes the session with the goodbye, unless the contract has already said the
     /// mode's own canned goodbye; with a topic she listens on; else she listens — past the limit, for the last time.
     private func after(_ outcome: TurnOutcome, route: Route, head: TraceHead, last: Bool) async {
+        expectAfter(outcome.turn.sentences)
         guard last, route.decision == .pass else {
             write(head, outcome)
             return move(to: last || late ? .windingDown : .listening)
@@ -131,8 +144,14 @@ public actor Session {
         let head = head("session:" + key, mode: mode, route: nil)
         move(to: next)
         guard await say(turn.sentences, head) else { return false }
+        if key != "misheard" { expectAfter(turn.sentences) }
         write(head, TurnOutcome(turn: turn, times: TurnTimes(), modelTimeout: false), end: end)
         return true
+    }
+
+    private func expectAfter(_ sentences: [String]) {
+        let next = kinds.kind(after: sentences)
+        expecting { $0 = next }
     }
 
     private func say(_ sentences: [String], _ head: TraceHead) async -> Bool {
@@ -170,7 +189,8 @@ public actor Session {
     private func head(_ source: String?, mode: TurnMode, route: Route?) -> TraceHead {
         count += 1
         return TraceHead(session: id, turn: count, phase: state, mode: mode, source: source, route: route,
-                         elapsed: parts.clock.now() - start, limit: settings.limit, audience: parts.audience)
+                         elapsed: parts.clock.now() - start, limit: settings.limit, audience: parts.audience,
+                         turnKind: listening)
     }
 
     private func write(_ head: TraceHead, _ outcome: TurnOutcome?, cancelled: Bool = false, error: String? = nil,

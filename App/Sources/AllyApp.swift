@@ -18,7 +18,8 @@ struct AllyApp: App {
 }
 
 /// «Для взрослых» (A12): readiness, signing days, the session's state and limit; what was heard and said stays on
-/// this screen. «Разбудить» starts a session, «Стоп» silences her at once (D2.2).
+/// this screen. «Разбудить» starts a session, «Я всё» ends the utterance while she listens (D7), «Стоп» silences her
+/// at once (D2.2).
 struct Console: View {
     @ObservedObject var loop: VoiceLoop
 
@@ -40,6 +41,8 @@ struct Console: View {
             HStack {
                 Button("Разбудить", action: loop.wake).buttonStyle(.borderedProminent)
                     .disabled(!loop.screen.ready || loop.talk.phase != .asleep).accessibilityIdentifier("console.wake")
+                Button("Я всё", action: loop.done).buttonStyle(.bordered)
+                    .disabled(loop.talk.pose != .listens).accessibilityIdentifier("console.done")
                 Button("Стоп", action: loop.stop).buttonStyle(.bordered)
                     .disabled(loop.talk.phase == .asleep).accessibilityIdentifier("console.stop")
             }
