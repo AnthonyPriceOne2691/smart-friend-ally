@@ -13,11 +13,13 @@ final class VoiceLoop: ObservableObject {
     @Published private(set) var screen = Screen()
     @Published private(set) var talk = TalkState()  // the session for a screen: phase, pose, why the last one ended
     private var conversation: Conversation?
-    // The child mode (R): who may talk on the child screen, whether it is shown, an exception in the container; its own
-    // session (audience `supervised`) and the last wake, which the next one waits for — one ear for both sessions.
+    // The child mode (R, R2): who may talk on the child screen, whether it is shown, an exception in the container, the
+    // acceptance's line; its own session (audience `supervised`, or `child` once the acceptance holds) and the last
+    // wake, which the next one waits for — one ear for both sessions.
     @Published private(set) var access = ChildAccess.parentOnly([])
     @Published private(set) var child = false
     @Published private(set) var exception = false
+    @Published private(set) var acceptance = ""
     private var childMode: ChildMode?, childTalk: Conversation?, running: Task<Void, Never>?
     private let recognizer = DictationRecognizer(), audio = AudioIO(), files = FileManager.default
     private let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
@@ -97,11 +99,13 @@ final class VoiceLoop: ObservableObject {
             SessionParts(model: model, voice: echo, sink: sink, router: RouterRouting(), audience: audience,
                          stamp: stamp)
         }
-        let conversation = Conversation(parts(.parent), settings: settings, listener: ear)
-        let childTalk = Conversation(parts(.supervised), settings: settings, listener: ear)
-        (self.conversation, self.childTalk) = (conversation, childTalk)
         childMode = ChildMode(personaSHA256: versions["persona"] ?? "", model: versions["weights"] ?? "")
         refreshAccess()
+        // The acceptance lies in the bundle and has no term (R2): `child` holds for the whole launch, so the child
+        // session's audience is chosen once — the black box keeps only the supervised one.
+        let conversation = Conversation(parts(.parent), settings: settings, listener: ear)
+        let childTalk = Conversation(parts(access == .child ? .child : .supervised), settings: settings, listener: ear)
+        (self.conversation, self.childTalk) = (conversation, childTalk)
         Task { for await state in childTalk.updates where child { show(state) } }
         screen.lines.append(settings.note ?? "лимит: \(Int(settings.limit / 60)) мин")
         if !RouterRouting.healthy { screen.lines.append("маршрутизатор: самопроверка не прошла") }
@@ -112,13 +116,14 @@ final class VoiceLoop: ObservableObject {
     /// wake on the child screen and when a child session ends.
     func refreshAccess() {
         guard let childMode else { return }
-        (access, exception) = (childMode.access(), childMode.present)
+        (access, exception, acceptance) = (childMode.access(), childMode.present, childMode.acceptance)
     }
 
-    /// «Дочке, при мне»: the parent's session stops, the child screen opens while the exception holds.
+    /// «Дочке, при мне»: the parent's session stops; the child screen opens while the exception or the acceptance
+    /// holds. The stop sign in its corner returns to this console in both modes (the console's own lock is not R2's).
     func handOver() {
         refreshAccess()
-        guard access.until != nil, let conversation else { return }
+        guard access.open, let conversation else { return }
         Task { await conversation.stop() }
         child = true
         talk = childTalk?.state ?? TalkState()
@@ -127,7 +132,7 @@ final class VoiceLoop: ObservableObject {
     /// A tap on the circle of the child screen; past the exception's term she does not wake and the console returns.
     func childWake() {
         refreshAccess()
-        guard access.until != nil else { return leaveChild() }
+        guard access.open else { return leaveChild() }
         wake()
     }
 
@@ -149,7 +154,7 @@ final class VoiceLoop: ObservableObject {
         talk = state
         guard state.phase == .asleep, state.ended != nil else { return }
         refreshAccess()
-        if access.until == nil { leaveChild() }
+        if !access.open { leaveChild() }
     }
 
     private func leaveChild() {

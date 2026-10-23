@@ -35,8 +35,10 @@ struct Console: View {
             Text(loop.screen.heard).foregroundStyle(.secondary)
             Text(loop.screen.said).bold()
             Text("Элли: " + Self.word(loop.talk.phase)).accessibilityIdentifier("console.phase")
-            ForEach(ReleaseGate.lines(loop.access, zone: .current), id: \.self) { Text($0).font(.caption) }
-                .accessibilityIdentifier("console.lock")
+            ForEach(ReleaseGate.lines(loop.access, zone: .current) + [loop.acceptance], id: \.self) {
+                Text($0).font(.caption)
+            }
+            .accessibilityIdentifier("console.lock")
             HStack {
                 Button("Разбудить", action: loop.wake).buttonStyle(.borderedProminent)
                     .disabled(!loop.screen.ready || loop.talk.phase != .asleep).accessibilityIdentifier("console.wake")
@@ -45,7 +47,7 @@ struct Console: View {
             }
             HStack {
                 Button("Дочке, при мне", action: loop.handOver).buttonStyle(.bordered)
-                    .disabled(loop.access.until == nil || loop.talk.phase != .asleep)
+                    .disabled(!loop.access.open || loop.talk.phase != .asleep)
                     .accessibilityIdentifier("console.handOver")
                 Button("Закрыть детский режим", action: loop.closeChildMode).buttonStyle(.bordered)
                     .disabled(!loop.exception).accessibilityIdentifier("console.closeChildMode")
