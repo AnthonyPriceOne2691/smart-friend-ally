@@ -52,3 +52,4 @@
 - `child-shell-app`
 - `accent-tokenizers`
 - `accent-logic`
+- `test-session`
