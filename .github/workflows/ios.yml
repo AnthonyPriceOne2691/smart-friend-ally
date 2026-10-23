@@ -28,6 +28,8 @@ jobs:
           xcodegen --version
       - name: AllyLlama tests (A23; без весов — пропуск)
         run: swift test --disable-keychain --package-path Packages/AllyLlama
+      - name: AllyCore tests on macOS (G7 — подпись родителя на CryptoKit; на Linux пропуск)
+        run: swift test --disable-keychain --package-path Packages/AllyCore --filter SignatureTests
       - name: Ally.app для устройства без подписи
         run: |
           cd App && xcodegen generate
