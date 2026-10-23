@@ -43,10 +43,10 @@
 ### `Packages/AllyVoice` — движок за протоколом
 
 - `SpeechEngine.swift`:
-  - `protocol SpeechEngine: Sendable { func synthesize(_ text: String, voice: VoiceSpec) throws -> SpeechAudio }`;
+  - `protocol SpeechEngine: Sendable { func synthesize(_ text: String, voice: VoicePreset) throws -> SpeechAudio }`;
   - `SpeechAudio` — отсчёты float32, частота, этапы (текст, длительность, денойзинг, вокодер);
-  - `VoiceSpec` — стиль, скорость синтеза, шаги, seed;
-  - пол скорости — `VoiceSpec.minSpeed = 0.85`, ниже — ошибка (Z4).
+  - `VoicePreset` — стиль, скорость синтеза, шаги, seed;
+  - пол скорости — `VoicePreset.minSpeed = 0.85`, ниже — ошибка (Z4).
 - `SupertonicText.swift`: текст → индексы шаг в шаг с supertonic-py 1.3.1, на скалярах Unicode — NFKD, замены символов,
   U+0301 как обычный символ словаря, метка языка `ru`. Из стенда переносится всё, кроме многоязычного списка и нарезки
   на куски: фраза приходит одна.
