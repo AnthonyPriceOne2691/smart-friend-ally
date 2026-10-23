@@ -5,14 +5,6 @@ import Foundation
 /// first and its record last; a failed write takes the turn's files back and is counted, never thrown — the session
 /// goes on. Past the limit the sound is not kept, the record is.
 public final class BlackBox: TraceSink, @unchecked Sendable {
-    public struct Settings: Sendable {
-        public let limitBytes: Int, warnShare: Double
-
-        public init(limitBytes: Int = 1 << 30, warnShare: Double = 0.8) {
-            (self.limitBytes, self.warnShare) = (limitBytes, warnShare)
-        }
-    }
-
     /// What «erase all» did: how many sessions and bytes went, or nothing — a session with the parent by is on.
     public enum Erase: Equatable, Sendable {
         case erased(sessions: Int, bytes: Int), busy
@@ -30,11 +22,12 @@ public final class BlackBox: TraceSink, @unchecked Sendable {
     private struct EncodingFailed: Error {}
 
     private let disk: BlackBoxDisk, tape: VoiceTape?, clock: TurnClock, wall: @Sendable () -> Date
-    private let settings: Settings, state = Locked(State())
+    /// The limit and the share of it from which the console asks to pull (1 GB, 80% — the parent's answers 2026-10-22).
+    private let limit: Int, warnShare = 0.8, state = Locked(State())
 
     public init(disk: BlackBoxDisk, tape: VoiceTape? = nil, clock: TurnClock = SystemClock(),
-                wall: @escaping @Sendable () -> Date = { Date() }, settings: Settings = Settings()) {
-        (self.disk, self.tape, self.clock, self.wall, self.settings) = (disk, tape, clock, wall, settings)
+                wall: @escaping @Sendable () -> Date = { Date() }, limitBytes: Int = 1 << 30) {
+        (self.disk, self.tape, self.clock, self.wall, limit) = (disk, tape, clock, wall, limitBytes)
         let held = (try? disk.files().values.reduce(0, +)) ?? 0
         state { $0.total = held }
     }
@@ -74,7 +67,7 @@ public final class BlackBox: TraceSink, @unchecked Sendable {
     /// The console line: off in the parent's console, recording with the room left, full, a folder in the backup;
     /// turns not kept; what an erase removed.
     public var status: String {
-        let now = state { $0 }, used = Self.mb(now.total), room = Self.mb(settings.limitBytes)
+        let now = state { $0 }, used = Self.mb(now.total), room = Self.mb(limit)
         let lost = now.lost > 0 ? " · не записано ходов: \(now.lost)" : ""
         if let erased = now.erased {
             let sessions = erased.sessions, freed = Self.mb(erased.bytes)
@@ -82,8 +75,8 @@ public final class BlackBox: TraceSink, @unchecked Sendable {
         }
         guard disk.isPrivate else { return "не пишу: каталог в бэкапе" + lost }
         guard now.open else { return "запись выключена" + (now.total > 0 ? " · \(used) МБ" : "") + lost }
-        guard now.total < settings.limitBytes else { return "● ящик полон: выгрузи и сотри" + lost }
-        let warn = Double(now.total) >= settings.warnShare * Double(settings.limitBytes) ? " — выгрузи на Mac" : ""
+        guard now.total < limit else { return "● ящик полон: выгрузи и сотри" + lost }
+        let warn = Double(now.total) >= warnShare * Double(limit) ? " — выгрузи на Mac" : ""
         return "● запись: \(used) из \(room) МБ" + warn + lost
     }
 
@@ -106,7 +99,7 @@ public final class BlackBox: TraceSink, @unchecked Sendable {
     private func keep(_ turn: Turn) throws {
         let now = state { $0 }, number = String(format: "%04d", turn.trace.turn)
         let child = turn.utterance.flatMap { $0.samples.isEmpty ? nil : Wav.file($0.samples, rate: $0.rate) }
-        let fits = now.total + (child?.count ?? 0) + (turn.voice?.data.count ?? 0) <= settings.limitBytes
+        let fits = now.total + (child?.count ?? 0) + (turn.voice?.data.count ?? 0) <= limit
         var files: [(name: String, data: Data)] = []
         var childAudio = BlackBoxRecord.Audio(missing: childMissing(turn, fits: fits))
         if let child, let heard = turn.utterance, fits {

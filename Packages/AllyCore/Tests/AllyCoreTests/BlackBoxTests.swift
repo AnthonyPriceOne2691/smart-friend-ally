@@ -158,13 +158,10 @@ final class BlackBoxTests: XCTestCase {
         await rig.session.handle(.silence)
         let kept = try rig.kept()
         XCTAssertEqual(kept.map(\.source), ["session:greeting", "session:misheard", "session:rest"])
-        XCTAssertEqual(kept[1].heard, "")
-        XCTAssertEqual(kept[1].said, [misheard])
+        XCTAssertEqual([kept[1].heard, kept[2].heard], ["", nil])
+        XCTAssertEqual([kept[1].said, kept[2].said], [[misheard], rest])
         XCTAssertEqual(kept[1].childAudio.seconds, 1.2)
-        XCTAssertNil(kept[2].heard)
-        XCTAssertEqual(kept[2].childAudio.missing, "silence")
-        XCTAssertEqual(kept[2].said, rest)
-        XCTAssertEqual(kept[2].end, "rest")
+        XCTAssertEqual([kept[2].childAudio.missing, kept[2].end], ["silence", "rest"])
     }
 
     func testStopKeepsTheCutVoiceAndTheMoment() async throws {  // B5
@@ -178,10 +175,8 @@ final class BlackBoxTests: XCTestCase {
         await rig.session.handle(.stop)
         await turn.value
         let cut = try XCTUnwrap(rig.kept().last)
-        XCTAssertTrue(cut.cancelled)
+        XCTAssertTrue(cut.cancelled && cut.said == nil && cut.modelText == nil)
         XCTAssertEqual(cut.end, "parent")
-        XCTAssertNil(cut.said)
-        XCTAssertNil(cut.modelText)
         XCTAssertEqual([cut.ellyAudio.seconds, cut.timing.interruptedAt, cut.childAudio.seconds], [0.7, 20, 0.8])
     }
 
@@ -192,15 +187,13 @@ final class BlackBoxTests: XCTestCase {
         await rig.say("Два", heard(1, at: 20))
         await rig.say("Пока!", nil)
         XCTAssertTrue(rig.disk.paths.isEmpty)
-        XCTAssertEqual(rig.trace.records.count, 4)
         XCTAssertEqual(rig.trace.records.map(\.audience), Array(repeating: "parent", count: 4))
         XCTAssertEqual(rig.box.status, "запись выключена")
         let next = BoxRig(replies: ["Ура!"], after: rig)
         await next.session.handle(.wake)
         await next.say("Привет", heard(1, at: 40))
         await next.say("Пока!", nil)
-        XCTAssertEqual(try next.kept().map(\.turn), [1, 2, 3])
-        XCTAssertEqual(try next.kept().map(\.audience), Array(repeating: "supervised", count: 3))
+        XCTAssertEqual(try next.kept().map { "\($0.turn) \($0.audience)" }, (1...3).map { "\($0) supervised" })
     }
 
     func testLimitStopsTheSoundNotTheRecord() async throws {  // B7

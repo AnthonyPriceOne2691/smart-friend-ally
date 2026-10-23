@@ -44,7 +44,10 @@
        14 строк — CLAUDE.md на сдаче править только на месте. СЛЕДУЮЩИЙ ШАГ — T9: влить origin/main (если D2.2 слита —
        сверить правки Session/TurnTrace и поле audience, L35), строгий delivery_check; затем T10 — PR, CI, verify-report
        и факты eval-smoke; затем T11 — архив, уроки L56–L58, CLAUDE.md. -->
-- [ ] T9: слить `origin/main`, когда скажет ведущий; сразу строгий `delivery_check --require-ci --diff-base origin/main` (L14)
+- [x] T9: слить `origin/main`, когда скажет ведущий; сразу строгий `delivery_check --require-ci --diff-base origin/main` (L14)
+  <!-- 2026-10-23: main bf6e80e (D2.2) влит — ad29fdd; конфликты сложением; найдено и починено: Conversation терял
+       audience и слова (класс L50), пример через Conversation и две мутации; свой SplitMix заменён SeededGenerator D2.2;
+       строка «Стыки» D2.2 поправлена. Строгий delivery_check — 0 ошибок; предохранитель net 765 из 800 -->
 - [ ] T10: verify-report — `swift test` и покрытие AllyCore ≥ 70%, сводка утверждений Swift (новый тест-файл в ней, L26)
   и сверка дайджеста до пуша (L43), мутации, смоук S6, `mergeable` и ссылка на зелёный CI (L35)
 - [ ] T11: сдача — `delivery/archive/<дата>-black-box` в том же PR, `.gitkeep`, строка INDEX (уроки L56–L58),
