@@ -12,6 +12,8 @@ excluded:
   - Packages/AllyDiscipline/.build
   - Packages/AllyCore/.build
   - Packages/AllyLlama/.build
+  - Packages/AllyOnnx/.build
+  - Packages/AllyVoice/.build
   - Packages/AllyShell/.build
   - Packages/AllySpeechText/.build
   - App/build
