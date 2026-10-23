@@ -71,6 +71,13 @@ final class RuAccentReplayTests: XCTestCase {
         XCTAssertEqual(pairs.mismatches, [])
     }
 
+    func testAnswersLandInOrderEvenWhenTheirCountDiffers() throws {
+        // Z14, проба причуды: у «йодатович» четыре гипотезы — две пары и два ответа; второй ложится на «мука»
+        let four = try probe("four")
+        XCTAssertEqual(four.python, "Там йод+атович и йодатов+ич.")
+        XCTAssertEqual(four.mismatches, [])
+    }
+
     func testFixCapitalKeepsTargetOfOtherLength() throws {
         // Z14, проба причуды: «Еж» → «ёжик» другой длины — цель как есть; «Ежик» → «Ёжик» — регистр исходного
         let capital = try probe("capital")
@@ -86,10 +93,18 @@ final class RuAccentReplayTests: XCTestCase {
     }
 
     func testModelMarkAtPositionZeroLandsOnLastLetter() throws {
-        // Z14, проба причуды: STRESS_PRIMARY модели слов на [bos] — «+» перед последней буквой
+        // Z14, проба причуды: STRESS_PRIMARY модели слов на [bos] — «+» перед последней буквой; STRESS_SECONDARY — мимо
         let mark = try probe("render0")
         XCTAssertEqual(mark.python, "Кошк+а.")
         XCTAssertEqual(mark.mismatches, [])
+    }
+
+    func testTextFilterAndPunctuationLikePython() throws {
+        // Z14, проба текста: фильтр снимает «"», «…», «–», «+»; « - » остаётся; «о» → «+о»; пробел перед «,» и «.»
+        // уходит, хвост из пробелов остаётся
+        let text = try probe("text")
+        XCTAssertEqual(text.python, "Мама сказала привет - и ушла +о море, а 5 кот+ов  спят.  ")
+        XCTAssertEqual(text.mismatches, [])
     }
 
     func testLogicCallsV3aTokenizers() throws {
