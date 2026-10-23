@@ -37,8 +37,8 @@ implementation:
   Mac в `local/shell-snapshots/`; на Linux снимки пропускаются видимо. Снимков экрана телефона нет никогда (L46).
 - **Текст для синтеза** — `Packages/AllySpeechText` (ударения, закреплённый словарь, правила чтения; данные —
   `Resources/speech-text.json`): `swift test --disable-keychain --package-path Packages/AllySpeechText`.
-- **Память о ребёнке** — `Packages/AllyMemory` (факты с опорой на ход, замена по дате, блок для промпта, «стереть всё»;
-  слова блока — `Resources/memory.json`) поверх общего SQLite приложения `Packages/AllySQLite` (системный модуль
+- **Память о ребёнке** — `Packages/AllyMemory` (факты с опорой на ход, замена по дате, блок для промпта, «стереть всё»,
+  запрет на любом пути; слова блока — `Resources/memory.json`, правила запрета — `Resources/forbidden.json`) поверх общего SQLite приложения `Packages/AllySQLite` (системный модуль
   `CSQLite` и тонкая обёртка): `swift test --disable-keychain --package-path Packages/AllyMemory`;
   [Memory](/engineering/memory.md).
 - **Контур:** `python3 scripts/delivery_check.py` — фазы поставки;
