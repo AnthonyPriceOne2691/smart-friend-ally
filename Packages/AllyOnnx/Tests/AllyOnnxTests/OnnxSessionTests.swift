@@ -10,19 +10,19 @@ final class OnnxSessionTests: XCTestCase {
         }
     }
 
-    func testLinkedRuntimeIsTheOfficial128() {
+    func testLinkedRuntimeIsTheOfficial128() { // Z1: the one runtime of the graph is the official 1.28.0
         XCTAssertEqual(OnnxRuntime.version, "1.28.0")
         XCTAssertEqual(OnnxRuntime.apiVersion, 28)
     }
 
-    func testRunReturnsNamedOutputsWithShape() throws {
+    func testRunReturnsNamedOutputsWithShape() throws { // Z2: parity needs exact tensors in and out
         let session = try OnnxSession(path: addModel)
         let a: [Float] = [1, 2, 3, 4, 5, 6], b: [Float] = [0.5, 0.5, 0.5, -1, -2, -3]
         let out = try session.run(["a": .float(a, shape: [2, 3]), "b": .float(b, shape: [2, 3])], outputs: ["c"])
         XCTAssertEqual(out["c"], .float([1.5, 2.5, 3.5, 3, 3, 3], shape: [2, 3]))
     }
 
-    func testRunsAreRepeatableAndIndependent() throws {
+    func testRunsAreRepeatableAndIndependent() throws { // Z2
         let session = try OnnxSession(path: addModel)
         let inputs: [String: OnnxTensor] = ["a": .float([1, 1, 1], shape: [1, 3]),
                                             "b": .float([2, 3, 4], shape: [1, 3])]
@@ -31,14 +31,14 @@ final class OnnxSessionTests: XCTestCase {
         XCTAssertEqual(first["c"]?.floats, [3, 4, 5])
     }
 
-    func testMissingFileNamesThePath() {
+    func testMissingFileNamesThePath() { // Z7: an error with its reason, not a crash
         let path = URL(fileURLWithPath: "/nonexistent/vocoder.onnx")
         XCTAssertThrowsError(try OnnxSession(path: path)) { error in
             XCTAssertTrue("\(error)".contains("/nonexistent/vocoder.onnx"), "\(error)")
         }
     }
 
-    func testShapeAndValuesMustAgree() throws {
+    func testShapeAndValuesMustAgree() throws { // Z7
         let session = try OnnxSession(path: addModel)
         let wrong: [String: OnnxTensor] = ["a": .float([1, 2], shape: [1, 3]), "b": .float([1, 2, 3], shape: [1, 3])]
         XCTAssertThrowsError(try session.run(wrong, outputs: ["c"])) { error in
@@ -46,14 +46,14 @@ final class OnnxSessionTests: XCTestCase {
         }
     }
 
-    func testOrtErrorCarriesItsMessage() throws {
+    func testOrtErrorCarriesItsMessage() throws { // Z7
         let session = try OnnxSession(path: addModel)
         XCTAssertThrowsError(try session.run(["a": .float([1, 2, 3], shape: [1, 3])], outputs: ["c"])) { error in
             XCTAssertTrue("\(error)".hasPrefix("Run add.onnx: "), "\(error)")
         }
     }
 
-    func testOptionsAreWhatTheVoiceAsks() {
+    func testOptionsAreWhatTheVoiceAsks() { // Z5: 2 threads, no spin-wait
         XCTAssertEqual(OnnxOptions().description, "threads=2 spin=0")
         XCTAssertEqual(OnnxOptions(intraOpThreads: 4, allowSpinning: true).description, "threads=4 spin=1")
     }

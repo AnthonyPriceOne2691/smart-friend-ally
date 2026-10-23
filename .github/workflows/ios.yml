@@ -1,7 +1,7 @@
 # Ручная macOS-джоба приложения (поставка app-voice-loop, решение E3): раз на поставку, а не на каждый PR — минута
 # macOS стоит десяти Linux (CQG §8.7), а ядро и форму кода уже судит Linux-джоба quality. Что делает: тесты AllyLlama
-# (A23 без весов — пропуск виден, П34), AllyOnnx и AllyVoice (серия голоса V1: Z2–Z7 без весов — пропуск), сборка
-# Ally.app для устройства без подписи, оракул артефакта (A7).
+# (A23 без весов — пропуск виден, П34), AllyOnnx и AllyVoice (серия голоса: Z2–Z7 без весов — пропуск),
+# тесты AllyShell со снимками (V8), сборка Ally.app без подписи, оракул артефакта (A7).
 # Подписанную сборку, права (A8) и телефон (A9–A12) судит человек с Mac: команды — knowledge/engineering/voice-loop.md.
 name: ios
 
@@ -33,6 +33,11 @@ jobs:
         run: swift test --disable-keychain --package-path Packages/AllyOnnx
       - name: AllyVoice tests (Z2–Z7; без весов и эталонов в ~/models — пропуск)
         run: swift test --disable-keychain --package-path Packages/AllyVoice
+      - name: AllyCore tests on macOS (G7 — подпись родителя на CryptoKit; на Linux пропуск)
+        run: swift test --disable-keychain --package-path Packages/AllyCore --filter SignatureTests
+      # Оболочка (child-shell): рисунок SwiftUI и пиксельные пробы снимков (V8) — только на macOS; ядро судит Linux.
+      - name: AllyShell tests (V1–V9, снимки V8)
+        run: swift test --disable-keychain --package-path Packages/AllyShell
       - name: Ally.app для устройства без подписи
         run: |
           cd App && xcodegen generate

@@ -43,10 +43,10 @@
 ### `Packages/AllyVoice` — движок за протоколом
 
 - `SpeechEngine.swift`:
-  - `protocol SpeechEngine: Sendable { func synthesize(_ text: String, voice: VoicePreset) throws -> SpeechAudio }`;
+  - `protocol SpeechEngine: Sendable { func synthesize(_ text: String, voice: VoiceSpec) throws -> SpeechAudio }`;
   - `SpeechAudio` — отсчёты float32, частота, этапы (текст, длительность, денойзинг, вокодер);
-  - `VoicePreset` — стиль, скорость синтеза, шаги, seed;
-  - пол скорости — `VoicePreset.minSpeed = 0.85`, ниже — ошибка (Z4).
+  - `VoiceSpec` — стиль, скорость синтеза, шаги, seed;
+  - пол скорости — `VoiceSpec.minSpeed = 0.85`, ниже — ошибка (Z4).
 - `SupertonicText.swift`: текст → индексы шаг в шаг с supertonic-py 1.3.1, на скалярах Unicode — NFKD, замены символов,
   U+0301 как обычный символ словаря, метка языка `ru`. Из стенда переносится всё, кроме многоязычного списка и нарезки
   на куски: фраза приходит одна.
@@ -106,6 +106,9 @@
 
 Рекомендую (а): время — одна из двух проверок, которые ведущий поручил V1. Если факт подойдёт к 780, переносится (б)
 через `escalation.md`.
+
+**Факт (2026-10-23):** V1 вышла 903 строки (AllyOnnx 300, AllyVoice 603) — стоп на 780, `escalation.md`, ведущий
+разрезал V1 на V1a `voice-onnx` (эта поставка) и V1b `voice-engine` по готовым коммитам.
 
 ## Риски и запасные пути
 

@@ -36,6 +36,10 @@
   "path": "App/Sources/NetworkCanary.swift",
   "content": "import Foundation\n\n// канарейка границы «продукт не ходит в сеть»: URLSession — правило no_network обязано покраснеть\nlet networkCanary = URLSession.shared\n"
  },
+ "check_swiftlint_ratchet.sh:child_screen_text": {
+  "path": "Packages/AllyShell/Sources/ShellUI/TextCanary.swift",
+  "content": "import SwiftUI\n\n// канарейка правила экрана 1: надпись в детском экране — правило child_screen_text обязано покраснеть\nlet textCanary = Text(\"Элли\")\n"
+ },
  "check_app_artifact.sh": {
   "path": "App/build/Canary.app/Info.plist",
   "content": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!-- канарейка: ключ ATS в собранном .app — оракул артефакта обязан покраснеть -->\n<plist version=\"1.0\"><dict>\n<key>NSAppTransportSecurity</key><dict><key>NSAllowsArbitraryLoads</key><true/></dict>\n<key>NSMicrophoneUsageDescription</key><string>Слушает фразу</string>\n<key>NSSpeechRecognitionUsageDescription</key><string>Распознаёт на телефоне</string>\n</dict></plist>\n"
