@@ -1,3 +1,4 @@
+import Foundation  // clock_gettime: Darwin on the Mac, Glibc on Linux CI
 import XCTest
 @testable import Discipline
 
@@ -23,6 +24,15 @@ func decided(_ text: String, game: Bool = false, off: Set<String> = [], by route
 let routerRules = ["known_exact", "glue", "child_costs", "negation", "adult_agent", "pretend", "rule", "story",
                    "adult_scene", "ask", "fear", "stove_source", "fire_verb", "game", "frame", "tale"]
     + routerData.hazards.flatMap { hazard in (hazard.clauses ?? []).map { "\(hazard.topic).\($0.first ?? "")" } }
+
+/// The CPU time the current thread spends in `work` — not wall time: the scheduler's pauses do not count.
+func cpuTime(_ work: () -> Void) -> Duration {
+    var start = timespec(), end = timespec()
+    clock_gettime(CLOCK_THREAD_CPUTIME_ID, &start)
+    work()
+    clock_gettime(CLOCK_THREAD_CPUTIME_ID, &end)
+    return .seconds(end.tv_sec - start.tv_sec) + .nanoseconds(end.tv_nsec - start.tv_nsec)
+}
 
 final class RouterTests: XCTestCase {
     func testMatchesTheReferenceOnTheOpenSets() throws {  // R10 E26 E36 E48
@@ -206,12 +216,12 @@ final class RouterTests: XCTestCase {
         XCTAssertEqual(broken, [])
     }
 
-    /// A guard against a slow decision in the test build, each row its best of three (a busy machine's pauses are not
-    /// the decision's); R12's 5 ms p95 is measured in release (discipline-replay).
+    /// A guard against a slow decision in the test build: the thread's CPU time per row, its best of three — a busy
+    /// machine's scheduler pauses are not the decision's (wall time failed merge_guard at load 110–170); R12's 5 ms p95
+    /// is measured in release (discipline-replay).
     func testDecisionIsFast() throws {  // R12 E28 E38 E49
-        let clock = ContinuousClock()
         let times = try routerRows().map { row in
-            (0..<3).map { _ in clock.measure { _ = Router.shared.route(row.text) } }.min() ?? .zero
+            (0..<3).map { _ in cpuTime { _ = Router.shared.route(row.text) } }.min() ?? .zero
         }.sorted()
         XCTAssertLessThan(times[times.count * 95 / 100], .milliseconds(50))  // R12
     }
