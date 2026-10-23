@@ -3,6 +3,9 @@
 Уроки (§2.2a) — в `plan.md`: L33, L52, L34, L41, L50, L51, L25, L46, L19, L26, L28, L16, L7, L2, L38, L35, L14, L43,
 L37, L6; не применимы — L1, L12, L15, L22, L44, L36, L40, L47–L49 (причины там же).
 
+> **Стоп 2026-10-23 на предохранителе:** T7–T11 сделаны (код и знание), дифф — net 946 из 800 (план 621). До решения
+> по `escalation.md` (подпись исключения или разрез) не пушится: pre-push держит предохранитель. Дальше — T12–T14.
+>
 > **Остановка 2026-10-22 (родитель закругляется на сегодня).** Сделано: T1–T3, первый коммит кода — T4 без UI-части,
 > T5 (V7), T6 (V6): тесты зелёные на Mac, обе мутации красные по нужной причине, покрытие `ShellCore` 96% (32 из 33
 > строк), ратчет SwiftLint — 0 находок. **Завтра — T7** (`Pose.swift`, V1–V5, V9 с мутациями), затем срез 3: вернуть в
@@ -22,7 +25,7 @@ L37, L6; не применимы — L1, L12, L15, L22, L44, L36, L40, L47–L49
 - [x] T4 (часть ядра): первым коммитом кода — `KNOWLEDGE.md` §12 п.6 и строка «Способ показа» в `CLAUDE.md` (первая
   версия в 2D, L16); `Packages/AllyShell/Package.swift` с `ShellCore` и `ShellCoreTests`; `LINT_SWIFT_PACKAGES` +=
   `Packages/AllyShell` (`quality.yml`); `.swiftlint.yml` — исключение `.build`
-- [ ] T4 (часть рисунка, со срезом 3): таргеты `ShellUI` и `ShellUITests` в `Package.swift`; `XCTSkip` снимков на Linux;
+- [x] T4 (часть рисунка, со срезом 3): таргеты `ShellUI` и `ShellUITests` в `Package.swift`; `XCTSkip` снимков на Linux;
   `LINT_SWIFT_PACKAGES` += `Packages/AllyShell` (`quality.yml`), шаг `ios.yml`, третья пара jscpd, `.swiftlint.yml`
   (исключение `.build`); прогон джобы `swift` на пустом пакете — гейт покрытия видит `ShellCore` (L26)
 
@@ -31,19 +34,19 @@ L37, L6; не применимы — L1, L12, L15, L22, L44, L36, L40, L47–L49
   1,94; все пары ≥ 3 — красный)
 - [x] T6: `Layout.swift` — круг, центр, полосы, цель стопа; V6; мутация «без `w − 48`» краснит V6 (272 → 275,2, полосы
   24 → 22,4, центр 292 → 290,4)
-- [ ] T7: `Pose.swift` — позы семи фаз по числам v3; V1–V5, V9; мутации: глаза спящей открыты (V1), `windingDown` как
+- [x] T7: `Pose.swift` — позы семи фаз по числам v3; V1–V5, V9; мутации: глаза спящей открыты (V1), `windingDown` как
   `thinking` (V2, V5), колебание ступенькой (V9)
   <!-- замер выше 780 строк — стоп, escalation.md и сразу к ведущему: убранство пузыря и второй размер V6 в Ш2 либо подпись предохранителя -->
 
 ## Slice 3 — рисунок и снимки
-- [ ] T8: `Axolotl.swift` — части в своих координатах с точками поворота, обводка под заливкой, градиенты кожи и жабр
-- [ ] T9: `Bubble.swift` (вода, тень, обод с полосой, плёнка, блики) и `ShellScene.swift` (небо, сборка кадра фазы)
-- [ ] T10: `SnapshotTests` — семь PNG в `local/shell-snapshots/`, пробы глаз, рта и обода (V8); правило
+- [x] T8: `Axolotl.swift` — части в своих координатах с точками поворота, обводка под заливкой, градиенты кожи и жабр
+- [x] T9: `Bubble.swift` (вода, тень, обод с полосой, плёнка, блики) и `ShellScene.swift` (небо, сборка кадра фазы)
+- [x] T10: `SnapshotTests` — семь PNG в `local/shell-snapshots/`, пробы глаз, рта и обода (V8); правило
   `child_screen_text` и канарейка (V10); мутация «рот открыт у слушающей» краснит V8; снимки Ш1 рядом со снимками зонда —
   глазом, расхождения облика — родителю до сдачи
 
 ## Slice 4 — знание
-- [ ] T11: `implementation:` у `engineering/character-rendering` и `product/look-and-feel` (пути `Packages/AllyShell/…`),
+- [x] T11: `implementation:` у `engineering/character-rendering` и `product/look-and-feel` (пути `Packages/AllyShell/…`),
   карта репозитория `references/repo-map.md`, `knowledge/log.md`; `okf_validate` зелёный
 
 ## Slice 5 — сдача

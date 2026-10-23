@@ -22,8 +22,8 @@
 - **parallel_sessions:** merge-guard,manual-deploy
   <!-- §5.1a: интеграция в main только через scripts/merge_guard.sh; на телефон приложение ставится отдельным решением -->
 - **hooks:** not-deployed
-- **blockers:** none
-  <!-- зависимость, а не остановка: код Ш1 — после подписи родителя (D1.2 уже в main, ca2befe); Ш3 — после мержа D2.2 app-session и R child-lock -->
+- **blockers:** предохранитель max_loc_diff пробит — net 946 из 800 (план 621); решение — escalation.md: подпись исключения (A, рекомендую) или разрез до 780 (B)
+  <!-- Ш3 — после мержа R child-lock; D2.2 app-session уже в main (bf6e80e) -->
 - **waivers:** none
 - **new_dependency:** Packages/AllyShell/Package.swift reason=новый манифест SwiftPM без внешних зависимостей: ShellCore — Foundation и локальный ../AllyCore (фазы сессии SessionState), ShellUI — SwiftUI из SDK Apple под #if canImport(SwiftUI), тесты — XCTest из тулчейна; Rive, Lottie и другие библиотеки не берём (решение родителя 2026-10-22: 2D в SwiftUI) by=agent:claude-code
 - **runtime_paths:** none reason=Ш1 — пакет SwiftPM: позы, раскладка и палитра проверяются тестами на Linux, рисунок — снимками вида на Mac; экран в приложении на телефоне (App/) появится в Ш3 и будет объявлен там

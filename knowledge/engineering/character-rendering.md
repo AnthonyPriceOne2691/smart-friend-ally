@@ -7,9 +7,13 @@ tags: [engineering, character, rendering, adr]
 generated:
   by: claude_code/opus-5.5
   at: 2026-10-22T23:40:00+03:00
-# Кода ещё нет: спека оболочки Ш1 ждёт подписи. Ш1 вписывает сюда пути рисунка и поз (`Packages/AllyShell/…`) —
-# тогда гейт code↔canon начнёт держать этот ADR.
-implementation: []
+# Рисунок первой версии — поставка оболочки Ш1 (`child-shell`): движение частей и рисунок в SwiftUI.
+implementation:
+  - Packages/AllyShell/Sources/ShellCore/Frame.swift
+  - Packages/AllyShell/Sources/ShellUI/Axolotl.swift
+  - Packages/AllyShell/Sources/ShellUI/Face.swift
+  - Packages/AllyShell/Sources/ShellUI/Bubble.swift
+  - Packages/AllyShell/Sources/ShellUI/ShellScene.swift
 ---
 
 # Context
@@ -56,6 +60,11 @@ WWDC25 soft-deprecated), Unity as a Library (на iOS только полный 
 
 Принцип кадра — из прототипа: каждый кадр меняет только повороты, сдвиги, масштабы и прозрачность частей. Вход — контракт
 слоя экрана D2.2 и R: фаза сессии `talk.phase`, поза, причина конца; действия `wake()` и `stop()`.
+
+**Как сделано в Ш1:** `Frame` (`ShellCore`, Linux) превращает позу фазы в момент t в движение частей — парение, дыхание,
+хвост, шесть жабр, глаза, тень; `Axolotl`, `Face`, `Bubble` и `ShellScene` (`ShellUI`) рисуют их одним `Canvas` в
+единицах персонажа. Части не прыгают между кадрами 1/120 с внутри фазы (свойство V9). Облик судят снимки вида на Mac
+(`ImageRenderer`, 1320×2868) с пиксельными пробами глаз, рта и обода (V8) и глаз родителя.
 
 **Следующий шаг — после теста первой версии:** Rive «2.5D» основным кандидатом, RealityKit + VRMKit запасным, клипы
 HEVC резервом. Решает зонд ниже, где база для сравнения — 2D первой версии, и слепой выбор родителя (V1) с реакцией

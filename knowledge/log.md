@@ -1,5 +1,13 @@
 # Knowledge Bundle Update Log
 
+## 2026-10-23 — детский экран: облик Элли в коде (оболочка Ш1)
+
+* **Update**: `product/look-and-feel` — позы состояний, раскладка и палитра в коде (`implementation:` — `Pose.swift`,
+  `Layout.swift`, `Palette.swift`), правило «без надписей» — SwiftLint `child_screen_text`. `engineering/character-rendering`
+  — как сделано в Ш1: `Frame` и рисунок одним `Canvas`, снимки на Mac с пробами (`implementation:` — `Frame.swift` и
+  `ShellUI`). `references/repo-map` — пакет `AllyShell`, снимки в `local/shell-snapshots/`.
+* **Источник**: поставка `child-shell` (оболочка Ш1; спека подписана родителем 2026-10-22 «Подписываю (Рекомендую)»).
+
 ## 2026-10-22 — сессия в приложении: слушание по состоянию, маршрутизатор на живом ходе, переустановка одной командой
 
 * **Update**: `engineering/session` — драйвер `Conversation` (слушание только в listening и windingDown, одно за раз,
