@@ -27,8 +27,10 @@ implementation:
   `swift test --package-path Packages/AllyDiscipline`.
 - **Ядро голосового цикла** — `Packages/AllyCore` (ход через контракт, конец реплики, журнал хода без слов, реестр
   модели, сессия с мягким лимитом и крючком маршрутизатора, драйвер сессии со слухом `Conversation`, маршрутизатор на
-  живом ходе `RouterRouting`, след хода и его файл `TraceFile`; тексты сессии — `Resources/session.json`):
-  `swift test --package-path Packages/AllyCore` (тулчейн Xcode: `DEVELOPER_DIR`).
+  живом ходе `RouterRouting`, след хода и его файл `TraceFile`; тексты сессии — `Resources/session.json`; энциклопедия
+  «почему» `Encyclopedia` — основы Snowball, SQLite FTS5 через `AllySQLite`, списки — `Resources/encyclopedia.json`):
+  `swift test --package-path Packages/AllyCore` (тулчейн Xcode: `DEVELOPER_DIR`). Паритет энциклопедии со стендом —
+  `swift run -c release --package-path Packages/AllyCore encyclopedia-replay <база.jsonl> [конфиг.json] < вопросы.jsonl`.
 - **Детский экран (оболочка)** — `Packages/AllyShell`: `ShellCore` (позы фаз, кадры, раскладка, палитра — Linux) и
   `ShellUI` (Элли, пузырь и небо в SwiftUI под `#if canImport(SwiftUI)`). Снимки семи фаз и лист `sheet.png` пишет
   `swift test --disable-keychain --package-path Packages/AllyShell` на Mac в `local/shell-snapshots/`; на Linux снимки

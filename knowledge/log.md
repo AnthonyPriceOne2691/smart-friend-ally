@@ -8,6 +8,15 @@
   `AllyOnnx`, `AllySherpa`, пин пары в страже, фикстура `add.onnx` в git. `engineering/voice-loop` — копирование
   Silero на телефон, строка консоли, сравнение с энергией без файла. `references/repo-map` — пакет `AllyHearing`.
 * **Источник**: поставка `silero-vad` (D7.2 серии «слух»; примеры U16–U21 подписаны родителем 2026-10-23).
+## 2026-10-23 — энциклопедия «почему»: движок, подсказка только когда поиск уверен
+
+* **Creation**: `engineering/encyclopedia` (Design) — порядок решения и правила `knowledge.*`, строгое покрытие по
+  формулировкам с замером 2026-10-23, основы Snowball, SQLite FTS5 в памяти через `AllySQLite`, отказ закрытый, запись без
+  слов, схема карточки и серия Э1–Э2; `implementation:` — исходники движка и `encyclopedia.json`.
+* **Update**: `product/persona` — поиск по основам слов, ссылка на движок; `references/research/kids-encyclopedia` —
+  строка о замере 2026-10-23 и перенумерации приёмки; `references/research/index`, `engineering/index`,
+  `references/repo-map` — новые входные точки; `KNOWLEDGE.md` §12 п. 5 и §13 — решение 2026-10-23.
+* **Источник**: поставка `encyclopedia-core` (Э1; спека и план подписаны родителем 2026-10-23).
 
 ## 2026-10-23 — память: запрет на любом пути записи (memory-guard)
 
