@@ -2,24 +2,30 @@ import AllyCore
 import Foundation
 
 /// The phone's ear for the session (D2.2): the listening half of the D1.2 turn — the recognizer's phrase, the
-/// end-of-speech detector with the registry's tail, the microphone until the speech ends or `listen_timeout` passes —
-/// and the stage times of that listening for the record of the turn that answers it.
+/// end-of-speech detector with the tail of her turn's kind from the hearing registry (D7), the microphone until the
+/// speech ends, she says «я всё» or `listen_timeout` passes — and the stage times of that listening for the record of
+/// the turn that answers it.
 final class PhoneListener: Listener, @unchecked Sendable {
-    private let recognizer: DictationRecognizer, audio: AudioIO, registry: ModelRegistry
+    private let recognizer: DictationRecognizer, audio: AudioIO, hearing: Hearing
     private let resetSound: @Sendable () -> Void, firstSound: @Sendable () -> Double?, heard: @Sendable (String) -> Void
     private let last = Locked<(stages: [String: Double], voiced: Double?)>(([:], nil))
+    private let ending = Locked<TurnEnding?>(nil)
 
-    init(recognizer: DictationRecognizer, audio: AudioIO, registry: ModelRegistry,
+    init(recognizer: DictationRecognizer, audio: AudioIO, hearing: Hearing,
          resetSound: @escaping @Sendable () -> Void, firstSound: @escaping @Sendable () -> Double?,
          heard: @escaping @Sendable (String) -> Void) {
-        (self.recognizer, self.audio, self.registry) = (recognizer, audio, registry)
+        (self.recognizer, self.audio, self.hearing) = (recognizer, audio, hearing)
         (self.resetSound, self.firstSound, self.heard) = (resetSound, firstSound, heard)
     }
 
-    func listen() async throws -> String? {
-        let phrase = try await recognizer.phrase(onText: heard)
-        let detector = TurnDetector(kind: .closed, timing: registry.turn)
-        guard let end = try await audio.listen(detector, timeout: registry.listenTimeout, feed: phrase.feed) else {
+    func endTurn() { ending { $0 }?.ask() }
+
+    func listen(_ kind: TurnKind) async throws -> String? {
+        let phrase = try await recognizer.phrase(onText: heard), turnEnding = TurnEnding()
+        ending { $0 = turnEnding }
+        defer { ending { $0 = nil } }
+        let detector = TurnDetector(kind: kind, timing: hearing.turn, ending: turnEnding)
+        guard let end = try await audio.listen(detector, timeout: hearing.listenTimeout, feed: phrase.feed) else {
             await phrase.cancel()
             heard("(тишина)")
             return nil
@@ -27,8 +33,9 @@ final class PhoneListener: Listener, @unchecked Sendable {
         let text = try await phrase.finish(), recognized = ProcessInfo.processInfo.systemUptime
         if text.isEmpty { heard("(не расслышала)") }
         resetSound()
-        let stages = ["tail": end.ended - end.voiced, "recognize": recognized - end.ended,
+        var stages = ["tail": end.ended - end.voiced, "recognize": recognized - end.ended,
                       "tap_buffer": audio.bufferSeconds]
+        if let reason = turnEnding.reason, reason != .tail { stages["turn_" + reason.rawValue] = 1 }
         last { $0 = (stages, end.voiced) }
         return text
     }

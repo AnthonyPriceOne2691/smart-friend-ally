@@ -8,9 +8,10 @@ struct Talk {
     let clock: TestClock, sink: RecordingSink, model: ReplyQueue, voice: RecordingVoice, ear: ScriptedEar
     let states: StateLog, conversation: Conversation
 
-    init(_ answers: [ScriptedEar.Answer], replies: [String] = [], limit: String? = nil, seconds: Double = 0) {
+    init(_ answers: [ScriptedEar.Answer], replies: [String] = [], limit: String? = nil, seconds: Double = 0,
+         holdVoice: Bool = false) {
         let clock = TestClock(), sink = RecordingSink(), states = StateLog()
-        let voice = RecordingVoice { clock.advance(by: seconds) }, model = ReplyQueue(replies)
+        let voice = RecordingVoice(hold: holdVoice) { clock.advance(by: seconds) }, model = ReplyQueue(replies)
         let ear = ScriptedEar(answers, clock: clock, voice: voice)
         let parts = SessionParts(model: model, voice: voice, sink: sink, clock: clock, onState: { states.record($0) })
         conversation = Conversation(parts, settings: SessionSettings(limitMinutes: limit), listener: ear)
@@ -89,6 +90,37 @@ final class ConversationTests: XCTestCase {
         XCTAssertEqual(talk.model.calls, 1)
         XCTAssertEqual(talk.sink.records.last?.end, "limit")
         XCTAssertEqual(talk.conversation.state.phase, .asleep)
+    }
+
+    func testTheKindOfHerTurnFollowsWhatEllySaidLast() async {  // U2
+        let talk = Talk([.init(text: "Я была в зоопарке"), .init(text: "Да"), .init(text: ""), .init(text: nil)],
+                        replies: ["Ух ты! Хочешь, расскажу про жирафа?",
+                                  "Жираф самый высокий. Давай посчитаем до пяти!"])
+        await talk.conversation.wake()
+        XCTAssertEqual(talk.ear.kinds, [.open, .closed, .counting, .counting])
+        XCTAssertEqual(talk.sink.records.map(\.turnKind), [nil, "open", "closed", "counting", "counting"])
+        XCTAssertEqual(talk.sink.records.map(\.source),
+                       ["session:greeting", "model", "model", "session:misheard", "session:rest"])
+        XCTAssertEqual(talk.sink.records.last?.end, "rest")
+        XCTAssertEqual(talk.model.calls, 2)
+        for line in talk.sink.records.compactMap({ $0.jsonLine() }) {
+            XCTAssertNil(line.range(of: "[А-Яа-яЁё]", options: .regularExpression), line)
+        }
+    }
+
+    /// «Я всё» reaches the ear only while it listens; said before any speech, it is an utterance without words.
+    func testDoneEndsTheUtteranceOnlyWhileTheEarListens() async {  // U4
+        let talk = Talk([.init(text: "", held: true), .init(text: nil)], holdVoice: true)
+        await talk.conversation.done()
+        let session = Task { await talk.conversation.wake() }
+        await eventually { talk.voice.sentences.count == 1 }
+        await talk.conversation.done()
+        talk.voice.stop()
+        await eventually { talk.ear.calls == 1 }
+        await talk.conversation.done()
+        await session.value
+        XCTAssertEqual(talk.ear.ended, 1)
+        XCTAssertEqual(talk.voice.sentences, greeting + [misheard] + restPhrase)
     }
 
     func testTheScreenSeesEveryPhaseInOrder() async {  // W7
