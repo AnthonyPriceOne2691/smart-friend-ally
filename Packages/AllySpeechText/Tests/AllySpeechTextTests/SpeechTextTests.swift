@@ -32,38 +32,55 @@ final class SpeechTextTests: XCTestCase {
     }
 
     func testPinnedStressAndNameRecordOverThePlacer() throws {
-        // Z9: двойник ошибается в «здорово» и в имени — таблица поверх него
+        // Z9: двойник ошибается в «здорово», в «летом» (как RUAccent — «лётом») и в имени — таблица поверх него
         let placer = FormsPlacer(["здорово": "здор+ово", "что": "чт+о", "ты": "т+ы", "это": "+это",
-                                  "знаешь": "зн+аешь", "привет": "прив+ет", "я": "+я", "элли": "элл+и"])
+                                  "знаешь": "зн+аешь", "привет": "прив+ет", "я": "+я", "элли": "элл+и",
+                                  "купаться": "куп+аться", "летом": "л+ётом"])
         let bundled = SpeechTextPipeline(placer: placer, table: try SpeechTextTable.bundled())
         let praise = try bundled.prepare("Здорово, что ты это знаешь!")
         XCTAssertEqual(praise.engine.components(separatedBy: ",").first, "Здо́рово")
-        XCTAssertEqual(try bundled.prepare("Привет, я Элли!").engine, "Приве́т, я Э́лли!")
-        // Вымышленная запись имени — настоящую даёт второй круг образцов
-        let named = SpeechTextPipeline(placer: placer, table: try mechanismTable())
-        let hello = try named.prepare("Привет, я Элли!")
-        XCTAssertEqual(hello.engine, "Приве́т, я Э́л-ли!")
+        XCTAssertEqual(try bundled.prepare("Купаться летом").engine, "Купа́ться ле́том")
+        // Запись имени второго круга — только во входе движка
+        let hello = try bundled.prepare("Привет, я Элли!")
+        XCTAssertEqual(hello.engine, "Приве́т, я Э́льли!")
         XCTAssertEqual(hello.shown, "Привет, я Элли!")
     }
 
     func testReadingRulesWithExceptions() throws {
-        // Z10: таблица пакета; строки второго круга — когда ведущий передаст проверенную таблицу
+        // Z10: таблица пакета — проверенные строки второго круга, по утверждению на строку
         let table = try SpeechTextTable.bundled()
-        let rules = ["сег+одня": "сево́дня", "н+ового": "но́вова", "ег+о": "ево́", "ничег+о": "ничево́",
-                     "тог+о": "тово́", "+этого": "э́това", "всег+о": "всево́", "моег+о": "моево́", "с+инего": "си́нева"]
-        for (form, voice) in rules.sorted(by: { $0.key < $1.key }) {
-            XCTAssertEqual(try spoken(form, table), voice, form)
-        }
-        // Исключения не меняются: мутация «исключение не сработало» краснит каждую строку
-        let kept = ["мн+ого": "мно́го", "немн+ого": "немно́го", "стр+ого": "стро́го", "д+орого": "до́рого",
-                    "уб+ого": "убо́го", "пол+ого": "поло́го", "ог+о": "ого́"]
-        for (form, voice) in kept.sorted(by: { $0.key < $1.key }) {
-            XCTAssertEqual(try spoken(form, table), voice, form)
+        XCTAssertEqual(try spoken("сег+одня", table), "сево́дня")
+        XCTAssertEqual(try spoken("чег+о", table), "чево́")
+        XCTAssertEqual(try spoken("тог+о", table), "тово́")
+        XCTAssertEqual(try spoken("всег+о", table), "всево́")
+        XCTAssertEqual(try spoken("моег+о", table), "моево́")
+        XCTAssertEqual(try spoken("ничег+о", table), "ничево́")  // ударение — проверить на слух (`notes`)
+        XCTAssertEqual(try spoken("ег+о", table), "йиво́")  // не «ево́»: оно сдвигало ударение на первый слог
+        XCTAssertEqual(try spoken("больш+ого", table), "большо́ва")
+        XCTAssertEqual(try spoken("н+ового", table), "но́вова")
+        XCTAssertEqual(try spoken("+этого", table), "э́това")
+        XCTAssertEqual(try spoken("с+инего", table), "си́нева")
+        XCTAssertEqual(try spoken("д+орого", table), "до́рога")  // синтезатор сам говорит «до́рово»
+        XCTAssertEqual(try spoken("ск+учно", table), "ску́шно")
+        XCTAssertEqual(try spoken("здр+авствуй", table), "здра́ствуй")
+        XCTAssertEqual(try spoken("ч+естный", table), "че́сный")
+        XCTAssertEqual(try spoken("сч+астье", table), "ща́стье")
+        XCTAssertEqual(try spoken("м+ягкий", table), "мя́хкий")
+        // Исключения — «г» остаётся, буквы те же: мутация «исключение не сработало» краснит каждую строку.
+        // Не добавлены — синтезатор и так читает верно, 8 из 8: слово идёт в движок без замены.
+        let kept = ["мн+ого", "немн+ого", "намн+ого", "ненамн+ого", "премн+ого", "стр+ого", "нестр+ого", "настр+ого",
+                    "нед+орого", "зад+орого", "уб+ого", "пол+ого", "отл+ого", "ог+о", "огог+о", "л+его", "ди+его"]
+        let plain = ["чт+о", "чт+обы", "кон+ечно", "с+олнце", "с+ердце", "пр+аздник", "гр+устный", "счит+ать",
+                     "сме+ётся", "нр+авится", "куп+аться", "бо+яться", "легк+о"]
+        for form in kept + plain {
+            let letters = form.replacingOccurrences(of: "+", with: "")
+            XCTAssertEqual(try spoken(form, table).replacingOccurrences(of: "\u{301}", with: ""), letters, form)
         }
     }
 
     func testMarkStaysOnTheSameVowel() throws {
-        // Z11: «коне́чно» — фикстурой до строки второго круга; правило, меняющее число гласных, таблицу не грузит
+        // Z11: «коне́чно» — фикстурой (второй круг строку не взял: синтезатор сам говорит «конешно»); правило,
+        // меняющее число гласных, таблицу не грузит
         XCTAssertEqual(try spoken("кон+ечно", try mechanismTable()), "коне́шно")
         XCTAssertEqual(try spoken("Сег+одня", try SpeechTextTable.bundled()), "Сево́дня")
         XCTAssertThrowsError(try SpeechTextTable(words: ["конечно": "кнешн"])) {
@@ -110,7 +127,7 @@ final class SpeechTextTests: XCTestCase {
         let phrase = "Привет, я Элли! Сегодня здорово!"
         let text = try SpeechTextPipeline(placer: placer, table: try SpeechTextTable.bundled()).prepare(phrase)
         XCTAssertEqual(text.shown, phrase)
-        XCTAssertEqual(text.engine, "Приве́т, я Э́лли! Сево́дня здо́рово!")
+        XCTAssertEqual(text.engine, "Приве́т, я Э́льли! Сево́дня здо́рово!")
         let trace = String(bytes: try JSONEncoder().encode(text.trace), encoding: .utf8) ?? "нет следа"
         XCTAssertFalse(trace.unicodeScalars.contains { (0x400...0x4FF).contains($0.value) }, trace)
     }
