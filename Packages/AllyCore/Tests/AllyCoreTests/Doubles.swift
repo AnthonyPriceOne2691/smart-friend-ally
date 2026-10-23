@@ -172,3 +172,85 @@ final class StateLog: @unchecked Sendable {
 extension TestClock {
     func advance(to time: Double) { advance(by: time - now()) }
 }
+
+/// An ear double: answers from a script — her text, `""` or silence (nil), at a virtual time if one is given; a held
+/// answer waits for `release`. It notes the screen's phase at each call, the most calls at once and the listenings
+/// during which she said something.
+final class ScriptedEar: Listener, @unchecked Sendable {
+    struct Answer { var text: String?, at: Double?, held = false }
+    private struct State {
+        var answers: [Answer], phases: [SessionState] = [], inFlight = 0, most = 0, overlaps = 0
+        var gate: CheckedContinuation<Void, Never>?, open = false
+    }
+    private let state: Locked<State>, clock: TestClock, voice: RecordingVoice
+    private let phase = Locked<@Sendable () -> SessionState>({ .asleep })
+
+    init(_ answers: [Answer], clock: TestClock, voice: RecordingVoice) {
+        (state, self.clock, self.voice) = (Locked(State(answers: answers)), clock, voice)
+    }
+
+    func watch(_ conversation: Conversation) { phase { $0 = { conversation.state.phase } } }
+
+    var calls: Int { state { $0.phases.count } }
+    var phases: [SessionState] { state { $0.phases } }
+    var most: Int { state { $0.most } }
+    var overlaps: Int { state { $0.overlaps } }
+
+    func listen() async throws -> String? {
+        let now = phase { $0 }(), spoken = voice.sentences.count
+        let answer = state { (s: inout State) -> Answer in
+            s.phases.append(now)
+            s.inFlight += 1
+            s.most = max(s.most, s.inFlight)
+            return s.answers.isEmpty ? Answer(text: nil) : s.answers.removeFirst()
+        }
+        if answer.held { await hold() }
+        if let at = answer.at { clock.advance(to: at) }
+        let said = voice.sentences.count != spoken
+        state { (s: inout State) in
+            s.inFlight -= 1
+            s.overlaps += said ? 1 : 0
+        }
+        return answer.text
+    }
+
+    /// Lets the held listening answer.
+    func release() {
+        state { (s: inout State) -> CheckedContinuation<Void, Never>? in
+            guard let gate = s.gate else {
+                s.open = true
+                return nil
+            }
+            s.gate = nil
+            return gate
+        }?.resume()
+    }
+
+    private func hold() async {
+        await withCheckedContinuation { (wake: CheckedContinuation<Void, Never>) in
+            let open = state { (s: inout State) -> Bool in
+                guard s.open else {
+                    s.gate = wake
+                    return false
+                }
+                s.open = false
+                return true
+            }
+            if open { wake.resume() }
+        }
+    }
+}
+
+/// SplitMix64: a fixed seed gives the same tape on every run.
+struct SeededGenerator: RandomNumberGenerator {
+    private var state: UInt64
+    init(seed: UInt64) { state = seed }
+
+    mutating func next() -> UInt64 {
+        state &+= 0x9E37_79B9_7F4A_7C15
+        var mixed = state
+        mixed = (mixed ^ (mixed >> 30)) &* 0xBF58_476D_1CE4_E5B9
+        mixed = (mixed ^ (mixed >> 27)) &* 0x94D0_49BB_1331_11EB
+        return mixed ^ (mixed >> 31)
+    }
+}
