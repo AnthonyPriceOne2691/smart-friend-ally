@@ -1,5 +1,11 @@
 # Knowledge Bundle Update Log
 
+## 2026-10-23 — расстановщик ударений: логика RUAccent на Swift
+
+* **Update**: `engineering/accent-placer` — логика V3b (`RuAccentPlacer`, «ё», омографы, ударения, текст, словари) с
+  причудами Python, стыки `AccentModels` и `AccentTokenizers`, оракул — повтор Python по записи; `implementation:` —
+  исходники логики. `engineering/index` — строка концепта.
+* **Источник**: поставка `accent-logic` (V3b серии голоса; доля V3b в Z14–Z16, подпись родителя 2026-10-23).
 ## 2026-10-23 — расстановщик ударений: токенизаторы RUAccent на Swift
 
 * **Creation**: `engineering/accent-placer` (Design) — пакет `AllyAccent`, `Encoding` и три токенизатора RUAccent с
