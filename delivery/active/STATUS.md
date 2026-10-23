@@ -19,7 +19,7 @@
 - **worktree:** ../Smart frend Ally-wt-accentonnx
 - **parallel_sessions:** merge-guard,manual-deploy
 - **hooks:** not-deployed
-- **blockers:** none
+- **blockers:** Z18 «до 1e-4 с onnxruntime 1.31» недостижим на ORT 1.28.0 (разница 0,038 и 0,171 — ядра ORT, решения те же) — escalation.md
   <!-- зависимость, а не остановка: Z14–Z17 ждут мержа V3b accent-logic (RuAccentPlacer, AccentModels); Z18 — без неё -->
 - **waivers:** none
 - **new_dependency:** none
