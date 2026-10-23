@@ -17,6 +17,11 @@
   отчётом по id правил, заражение по её репликам сессии, SQL-функция `forbidden` в триггерах `fact` и `seen`;
   `implementation:` — `Forbidden.swift`, `forbidden.json`. `engineering/index` — строка концепта.
 * **Источник**: поставка `memory-guard` (M29 спеки серии, подписанной родителем 2026-10-23; разбиение — ведущий).
+## 2026-10-23 — расстановщик ударений: токенизаторы RUAccent на Swift
+
+* **Creation**: `engineering/accent-placer` (Design) — пакет `AllyAccent`, `Encoding` и три токенизатора RUAccent с
+  паритетом HF; `implementation:` — исходники пакета. **Update**: `engineering/index`, `references/repo-map`.
+* **Источник**: поставка `accent-tokenizers` (V3a серии голоса; часть Z14, подпись родителя 2026-10-23).
 ## 2026-10-23 — слух: спекуляция — ответ модели начинается в её паузе
 
 * **Update**: `engineering/session` — `Speculation` (общий план реплики, этапы `spec_*`, `spec_stale` до D5);
