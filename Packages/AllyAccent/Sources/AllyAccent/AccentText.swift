@@ -43,7 +43,8 @@ enum AccentText {
             }
         }
         if pieces.count > 1, pieces[pieces.count - 1].allSatisfy(isSpace) {
-            pieces[pieces.count - 2] += pieces.removeLast()
+            let tail = pieces.removeLast()
+            pieces[pieces.count - 1] += tail
         }
         return pieces.map(string)
     }
