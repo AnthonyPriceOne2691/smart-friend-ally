@@ -10,5 +10,6 @@
     `swaFullOff`; X1, X6, X7 зелёные на Mac с весами, мутация «commit и retract не удаляют хвост» краснит X1 и X6;
     A23 — 37 из 37 токенов и ответов при n_ctx 4096 и 8192
 - [ ] T6: знания — `on-device-model`, `session`, `safety-below-model`, `knowledge/log.md`
-- [ ] T7: телефон — X8 в сессии с родителем; eval-smoke, verify-report (L43), строгий `delivery_check`, CI; архив в
-  том же PR с уроками L95, L96, L97; мерж — ведущий
+- [ ] T7: телефон — X8 в общую сессию теста (постоянное решение родителя); eval-smoke, verify-report (L43), строгий
+  `delivery_check`, CI; архив в том же PR с уроками L95, L96, L97; slug `kv-spoken` — строкой в конец
+  `delivery/OBSERVATIONS.md`, не в CLAUDE.md (правило ведущего 2026-10-23); мерж — ведущий
