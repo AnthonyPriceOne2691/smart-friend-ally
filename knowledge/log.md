@@ -1,5 +1,14 @@
 # Knowledge Bundle Update Log
 
+## 2026-10-23 — детский экран: Элли живая (оболочка Ш2а)
+
+* **Update**: `engineering/character-rendering` — как сделано в Ш2а: аниматор `Motion` (пружины ω = 11 на шести группах
+  поз, накопленные фазы, моргание с зерном, зевок после прощания), частота кадров по позе и нагреву, `LiveScene` на
+  `TimelineView`; `implementation:` += `Motion.swift`, `FrameRate.swift`, `LiveScene.swift`. `product/look-and-feel` —
+  правило 10 в коде (переходы, моргание, пробуждение, зевок, Reduce Motion).
+* **Источник**: поставка `child-shell-motion` (оболочка Ш2а; примеры V11–V18 подписаны родителем 2026-10-23
+  «Подписываю (Рекомендую)»).
+
 ## 2026-10-23 — детский экран: облик Элли в коде (оболочка Ш1)
 
 * **Update**: `product/look-and-feel` — позы состояний, раскладка и палитра в коде (`implementation:` — `Pose.swift`,

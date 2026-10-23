@@ -10,6 +10,9 @@ generated:
 # Рисунок первой версии — поставка оболочки Ш1 (`child-shell`): движение частей и рисунок в SwiftUI.
 implementation:
   - Packages/AllyShell/Sources/ShellCore/Frame.swift
+  - Packages/AllyShell/Sources/ShellCore/Motion.swift
+  - Packages/AllyShell/Sources/ShellCore/FrameRate.swift
+  - Packages/AllyShell/Sources/ShellUI/LiveScene.swift
   - Packages/AllyShell/Sources/ShellUI/Axolotl.swift
   - Packages/AllyShell/Sources/ShellUI/Face.swift
   - Packages/AllyShell/Sources/ShellUI/Bubble.swift
@@ -65,6 +68,13 @@ WWDC25 soft-deprecated), Unity as a Library (на iOS только полный 
 хвост, шесть жабр, глаза, тень; `Axolotl`, `Face`, `Bubble` и `ShellScene` (`ShellUI`) рисуют их одним `Canvas` в
 единицах персонажа. Части не прыгают между кадрами 1/120 с внутри фазы (свойство V9). Облик судят снимки вида на Mac
 (`ImageRenderer`, 1320×2868) с пиксельными пробами глаз, рта и обода (V8) и глаз родителя.
+
+**Как сделано в Ш2а:** `Motion` (`ShellCore`) шагает кадр по фазе сессии — пружины ω = 11 на весах шести групп поз
+(четыре позы сессии, «говорит» — разговор и взмах, «спит» — просто и после прощания), так что любая смена — пружина между
+группами без скачка (V11, V12); фазы колебаний накапливают темп; моргание по расписанию прототипа на генераторе с
+зерном; после прощания — зевок и сон. `FrameRate`: 30, 120, 30, 60 кадров по позе, при нагреве serious — 30, critical —
+15; Reduce Motion — 0,4 размаха. `LiveScene` (`ShellUI`) ведёт `Motion` через `TimelineView` с этой частотой; полосы
+пробуждения и засыпания — снимки на Mac (V18). Между зевком и сном глаза на миг приоткрываются — так в прототипе.
 
 **Следующий шаг — после теста первой версии:** Rive «2.5D» основным кандидатом, RealityKit + VRMKit запасным, клипы
 HEVC резервом. Решает зонд ниже, где база для сравнения — 2D первой версии, и слепой выбор родителя (V1) с реакцией

@@ -11,20 +11,20 @@ L22, L1, L12, L36, L37 (причины там же). Уроки этой пос�
 - [x] T3: `eval-smoke.md` — строки V11–V18 до кода; `phase: implement`
 
 ## Slice 1 — ядро движения
-- [ ] T4: `Pose` — зевок, высота рта, смесь поз, спокойный размах; `Frame` из накопленных фаз (V1–V9 Ш1 зелёные без
+- [x] T4: `Pose` — зевок, высота рта, смесь поз, спокойный размах; `Frame` из накопленных фаз (V1–V9 Ш1 зелёные без
   правок)
-- [ ] T5: `Motion` — пружины, фазы, моргание с зерном, зевок после прощания; V11–V15, V17; мутации: без пружин (V11,
+- [x] T5: `Motion` — пружины, фазы, моргание с зерном, зевок после прощания; V11–V15, V17; мутации: без пружин (V11,
   V12), зевок после стопа (V15), моргание во сне (V13), спокойный размах не уменьшен (V17)
-- [ ] T6: `FrameRate` и `Heat`; V16; мутация «слушает 60» краснит V16
+- [x] T6: `FrameRate` и `Heat`; V16; мутация «слушает 60» краснит V16
   <!-- замер выше 780 строк — стоп, escalation.md и сразу к ведущему: V18 и V17 в Ш2б либо подпись предохранителя -->
 
 ## Slice 2 — живой вид и полосы
-- [ ] T7: `LiveScene` (`TimelineView` с частотой по позе, аниматор в `@State`, нагрев, Reduce Motion); `ShellScene`
+- [x] T7: `LiveScene` (`TimelineView` с частотой по позе, аниматор в `@State`, нагрев, Reduce Motion); `ShellScene`
   рисует готовый кадр; высота рта в `Face`
-- [ ] T8: полосы пробуждения и засыпания V18 в `local/shell-snapshots/motion/` с пробами; лист Ш1 (V8) не меняется
+- [x] T8: полосы пробуждения и засыпания V18 в `local/shell-snapshots/motion/` с пробами; лист Ш1 (V8) не меняется
 
 ## Slice 3 — знание и сдача
-- [ ] T9: ADR `character-rendering` — `implementation:` += `Motion.swift`, `LiveScene.swift`; `knowledge/log.md`
+- [x] T9: ADR `character-rendering` — `implementation:` += `Motion.swift`, `LiveScene.swift`; `knowledge/log.md`
 - [ ] T10: слить `origin/main`; строгий `delivery_check --require-ci --diff-base origin/main` (L14); пуш, PR, CI
 - [ ] T11: verify-report (дайджест, мутации, CI, `mergeable`); `check_digest_report.py` до пуша сдачи (L43); архив в
   том же PR, строка INDEX (L86–L88), обязательство в `CLAUDE.md`; доклад ведущему «готово к мержу»
