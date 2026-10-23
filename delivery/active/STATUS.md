@@ -6,7 +6,7 @@
 - **kind:** feature
 - **repro_test:** n/a reason=не bugfix
 - **diagnosis:** n/a reason=не bugfix
-- **phase:** implement
+- **phase:** verify
 - **builder:** agent:claude-code
 - **verifier:** process:ci
 - **human_ok_spec:** yes (by=human:anthony, at=2026-10-23; «Подписываю (Рекомендую)» через ведущего — примеры U7–U15 в спеке серии «слух», подпись 3b68733, спека 74ada91)
@@ -21,7 +21,7 @@
        D5 kv-spoken (spec_stale), голос V3/V4 (PhoneListener), D7.2 после V1 -->
 - **hooks:** not-deployed
 - **blockers:** none
-- **waivers:** none
+- **waivers:** acceptance=U14,U15 reason=ответ 8 родителя в подписи серии 2026-10-23: проверки на телефоне — после D7.1, в сессии теста вместе с U6 D7; код, тесты U7–U13, мутации, сборка без подписи и оракул артефакта — зелёные by=human:anthony at=2026-10-23
 - **new_dependency:** none
 - **runtime_paths:** App/Sources/Speech/
   <!-- §12.6, один путь: текст диктовки на «возможно, конец» (finalize(through:) без конца ввода) — поведение
