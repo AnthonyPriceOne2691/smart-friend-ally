@@ -18,8 +18,8 @@ pre-commit и строгий `delivery_check --require-ci --diff-base origin/mai
 Урок поставки — L121.
 
 - [x] T1: документы поставки первым коммитом (L33)
-- [ ] T2: перечень телефонных проверок — waiver'ы архивов, eval-smoke, ожидания серий в архивах и ветках
-- [ ] T3: `knowledge/ops/test-session.md` — подготовка, шаг владельца, проверки по порядку, чем закончить; `ops/index`,
-  `log`, указатели в `voice-loop.md` и `CLAUDE.md`
-- [ ] T4: сверка id механикой, verify-report, строгий `delivery_check`, архив, урок L121, slug в `delivery/OBSERVATIONS.md`;
-  PR, CI, доклад
+- [x] T2: перечень телефонных проверок — waiver'ы архивов, eval-smoke, ожидания серий в архивах и ветках (39 id)
+- [x] T3: `knowledge/ops/test-session.md` — подготовка, шаг владельца, проверки по порядку, чем закончить; `ops/index`,
+  `log`, указатели в `voice-loop.md` и `CLAUDE.md` — d1acf36; пометки после слияния main (Ш3, voice-fx, Э1) — сдача
+- [x] T4: сверка id механикой, verify-report, строгий `delivery_check`, архив, урок L121, slug в `delivery/OBSERVATIONS.md`;
+  PR, CI, доклад — сдача
