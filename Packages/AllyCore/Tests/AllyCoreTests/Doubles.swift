@@ -174,13 +174,13 @@ extension TestClock {
 }
 
 /// An ear double: answers from a script — her text, `""` or silence (nil), at a virtual time if one is given; a held
-/// answer waits for `release`. It notes the screen's phase at each call, the most calls at once and the listenings
-/// during which she said something.
+/// answer waits for `release` or her «я всё». It notes the screen's phase and the turn kind at each call, the most
+/// calls at once, the listenings during which she said something and the «я всё» it got.
 final class ScriptedEar: Listener, @unchecked Sendable {
     struct Answer { var text: String?, at: Double?, held = false }
     private struct State {
-        var answers: [Answer], phases: [SessionState] = [], inFlight = 0, most = 0, overlaps = 0
-        var gate: CheckedContinuation<Void, Never>?, open = false
+        var answers: [Answer], phases: [SessionState] = [], kinds: [TurnKind] = [], inFlight = 0, most = 0
+        var overlaps = 0, ended = 0, gate: CheckedContinuation<Void, Never>?, open = false
     }
     private let state: Locked<State>, clock: TestClock, voice: RecordingVoice
     private let phase = Locked<@Sendable () -> SessionState>({ .asleep })
@@ -195,11 +195,14 @@ final class ScriptedEar: Listener, @unchecked Sendable {
     var phases: [SessionState] { state { $0.phases } }
     var most: Int { state { $0.most } }
     var overlaps: Int { state { $0.overlaps } }
+    var kinds: [TurnKind] { state { $0.kinds } }
+    var ended: Int { state { $0.ended } }
 
-    func listen() async throws -> String? {
+    func listen(_ kind: TurnKind) async throws -> String? {
         let now = phase { $0 }(), spoken = voice.sentences.count
         let answer = state { (s: inout State) -> Answer in
             s.phases.append(now)
+            s.kinds.append(kind)
             s.inFlight += 1
             s.most = max(s.most, s.inFlight)
             return s.answers.isEmpty ? Answer(text: nil) : s.answers.removeFirst()
@@ -212,6 +215,12 @@ final class ScriptedEar: Listener, @unchecked Sendable {
             s.overlaps += said ? 1 : 0
         }
         return answer.text
+    }
+
+    /// Her «я всё»: counted, and the held listening answers now.
+    func endTurn() {
+        state { $0.ended += 1 }
+        release()
     }
 
     /// Lets the held listening answer.

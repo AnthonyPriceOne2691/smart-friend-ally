@@ -1,12 +1,13 @@
 import Foundation
 
 /// The registry of the model and its parameters (П10), `model.json`: the core reads the weights file and size, the
-/// persona, the voice, timing and timeouts; runtime and sampling are the model package's; pins — `model_surface.txt`.
+/// persona, the voice and the first-sentence timeout; runtime and sampling are the model package's; pins —
+/// `model_surface.txt`; the hearing's timing is `hearing.json` (`Hearing`).
 public struct ModelRegistry: Decodable, Sendable {
     public struct Model: Decodable, Sendable { public let file: String, bytes: Int64 }
 
     public let model: Model, persona: String, voice: String
-    public let turn: TurnTiming, listenTimeout: Double, firstSentenceTimeout: Double
+    public let firstSentenceTimeout: Double
 
     public static func decode(_ data: Data) throws -> ModelRegistry {
         let decoder = JSONDecoder()

@@ -4,6 +4,5 @@
               "n_seq_max": 4, "kv_unified": true, "swa_full": true, "lazy": "on", "flash_attn": "auto"},
   "sampling": {"temperature": 0.7, "top_p": 0.95, "top_k": 40, "min_p": 0.05, "seed": 42, "max_tokens": 256},
   "persona": "persona.v2.4.ru.md", "voice": "com.apple.voice.enhanced.ru-RU.Milena", "voice_rate": 0.42,
-  "turn": {"tails": {"closed": 0.8}, "tentative": 0.3, "pre_roll": 1.5, "max_turn": 20},
-  "listen_timeout": 8, "first_sentence_timeout": 10
+  "first_sentence_timeout": 10
 }
