@@ -47,3 +47,4 @@
 - `silero-vad`
 - `memory-guard`
 - `accent-tokenizers`
+- `accent-logic`

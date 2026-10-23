@@ -11,7 +11,7 @@
 - [x] T4: `RuAccentPlacer` и зависимость на `../AllySpeechText`; адаптер `RuAccentTokenizers` над токенизаторами V3a
 - [x] T5: запись V3a → фикстура стенда 385 КБ (генератор `local/spike/tts-swift/scripts/make_accent_replay.py`,
   самопроверка Python) → Z14 163 из 163 и 9 фраз страницы, Z15 8 из 8, Z16 на Mac; 9 проб причуд; мутации 25 из 25
-- [ ] T6: слить main после мержа V3a (PR #55, f416f21 — слито 3d97898, дифф только свой); eval-smoke, verify-report (L43), строгий
+- [x] T6: слить main после мержа V3a (PR #55, f416f21 — слито 3d97898, дифф только свой); eval-smoke, verify-report (L43), строгий
   `delivery_check`, CI на Linux; архив в том же PR с уроком L102; slug `accent-logic` — строкой в конец
   `delivery/OBSERVATIONS.md`; мерж — ведущий
 
