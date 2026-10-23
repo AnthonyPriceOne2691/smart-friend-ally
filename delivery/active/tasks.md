@@ -11,26 +11,28 @@
   отдельным коммитом до кода; вопрос ведущего — дословно в `decisions.md`
 - [x] T4: `eval-smoke.md` (P1–P11); эталон `reference.py`, `parity.py`, `cards54.jsonl` — хэши в `eval-smoke.md` до
   прогона Swift (L19); P11 на 54 карточках стенда и конфиге стенда — `decisions.md`
-- [ ] T5: зависимость от `AllySQLite` по интерфейсу `memory-core` (ответ на В1); локально — снимок пакета из их
+- [x] T5: зависимость от `AllySQLite` по интерфейсу `memory-core` (ответ на В1); локально — снимок пакета из их
   worktree, вне git; перед PR — снимок удалить и слить main после мержа `memory-core`
 
 ### Slice 1 — основы слов
-- [ ] T6: `RussianStemmer.swift`, `StemmerTests` (P1: выборка 100 пар; весь словарь — на Mac); мутация «без а/я»
+- [x] T6: `RussianStemmer.swift`, `StemmerTests` (P1: выборка 100 пар; весь словарь — на Mac); мутация «без а/я»
 
 ### Slice 2 — текст и поиск
-- [ ] T7: `EncyclopediaText.swift`, `encyclopedia.json`, `EncyclopediaIndex.swift` (FTS5 в памяти, `bm25`, буст);
+- [x] T7: `EncyclopediaText.swift`, `encyclopedia.json`, `EncyclopediaIndex.swift` (FTS5 в памяти, `bm25`, буст);
   тестовая база; P2–P5; мутации «буст», «синонимы», «и вместо или»
 
 ### Slice 3 — решение и самопроверка
-- [ ] T8: `Encyclopedia.swift`: порядок правил, запись, хэш, самопроверка; P6–P10; мутации «покрытие по всей карточке»,
+- [x] T8: `Encyclopedia.swift`: порядок правил, запись, хэш, самопроверка; P6–P10; мутации «покрытие по всей карточке»,
   «без моё», «без деликатного», «самопроверка без первых формулировок»
-  <!-- замер выше 780 строк — стоп, escalation.md: replay и P11 в Э2 либо подпись предохранителя -->
+  <!-- замер выше 780 строк — стоп, escalation.md: replay и P11 в Э2 либо подпись предохранителя.
+       Факт 2026-10-23: 10 файлов, net 672 из 800 (+19% к плану 563); тесты AllyCore 60 из 60; мутации 7 из 8 убиты
+       своими примерами, буст — паритетом P11; P11 300 из 300 -->
 
 ### Slice 4 — инструмент и паритет
-- [ ] T9: `encyclopedia-replay`; P11 — паритет с эталоном на Mac, хэши в verify-report
+- [x] T9: `encyclopedia-replay`; P11 — паритет с эталоном на Mac, хэши в verify-report
 
 ### Slice 5 — знание и сдача
-- [ ] T10: концепт `engineering/encyclopedia.md`, места L16 поиском, индекс, карта, `knowledge/log.md`
+- [x] T10: концепт `engineering/encyclopedia.md`, места L16 поиском, индекс, карта, `knowledge/log.md`
 - [ ] T11: слить main, строгий `delivery_check --require-ci --diff-base origin/main`, verify-report (тесты, покрытие,
   дайджест, мутации, P11, ревью рисковых мест, `mergeable`, CI)
 - [ ] T12: сдача в том же PR: архив, INDEX (уроки из L77–L79, по строке), `CLAUDE.md`; доклад «готово к мержу»
