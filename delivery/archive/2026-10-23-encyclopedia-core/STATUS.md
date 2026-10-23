@@ -6,7 +6,7 @@
 - **kind:** feature
 - **repro_test:** n/a reason=не bugfix
 - **diagnosis:** n/a reason=не bugfix
-- **phase:** verify
+- **phase:** handoff
 - **builder:** agent:claude-code
 - **verifier:** process:ci
 - **human_ok_spec:** yes (by=human:anthony, at=2026-10-23, «Подписываю (Рекомендую)»: серия Э1–Э2, примеры P1–P11, ожидания P12–P20, вопросы 1–6 по рекомендациям; 100 карточек)
@@ -21,7 +21,7 @@
 - **worktree:** ../Smart frend Ally-wt-encyclopedia
 - **parallel_sessions:** merge-guard,manual-deploy
   <!-- §5.1a: в main только через scripts/merge_guard.sh; на телефон — отдельным решением. Э1 трогает новые файлы AllyCore,
-       Package.swift AllyCore, knowledge и CLAUDE.md — конфликты сложением, перед PR — слияние main -->
+       Package.swift AllyCore, knowledge и delivery/OBSERVATIONS.md — конфликты сложением, перед PR — слияние main -->
 - **hooks:** not-deployed
 - **blockers:** none
   <!-- зависимость, а не остановка: Э1 пишется против интерфейса Packages/AllySQLite из memory-core (пример M22 там);

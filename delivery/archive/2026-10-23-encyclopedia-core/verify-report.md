@@ -3,7 +3,7 @@
 **Date:** 2026-10-23
 **Verifier:** process:ci
 **asserts_reviewed_by:** n/a (все утверждения ведут к примерам спеки — дайджест ниже, asserts_without_example: 0; P1–P10 подписаны родителем 2026-10-23 «Подписываю (Рекомендую)»)
-**CI run:** — (PR открыт после мержа `memory-core` 824f372; ссылка будет вписана после зелёного прогона)
+**CI run:** https://github.com/AnthonyPriceOne2691/smart-friend-ally/actions/runs/40012216916 (PR #56, коммит 6c244d6: `delivery`, `gates`, `swift` — зелёные с первого прогона; `mergeable: MERGEABLE`, `CLEAN` — проверено до ссылки, L35)
 **Commit:** код и знание — f88b09d, fdfd258, 140b096; спека — ffc8523, подпись — 8bc7a1a, eval-smoke — 3caff02; слияние main — e6af07e, 9bf9ed5 (memory-core 824f372); пределы тремя точками — 5c5ccec, 19e247f
 
 ## Shape oracles
@@ -23,8 +23,9 @@
 ## Behavior oracles
 - [x] PASS — `swift test` AllyCore на Mac (Xcode 27) после слияния main 9bf9ed5: 91 тест из 91, из них 12 — P1–P10;
   после точек порогов (5c5ccec) `EncyclopediaTests` — 9 из 9
-- [x] PASS — покрытие AllyCore (`check_swift_coverage.sh`, Mac, до слияния main): 25 файлов `Sources/`, 1331 из 1370
-  строк, 97%; после слияния — джоба CI `swift` на Linux (SQLite 3.45.1 с FTS5)
+- [x] PASS — покрытие AllyCore после слияния main — джоба CI `swift` на Linux (SQLite 3.45.1 с FTS5): 27 файлов
+  `Sources/`, 1581 из 1634 строк, 96% (порог 70%); слепота гейта проверена порогом 101% (краснеет). P1–P10 прошли на
+  Linux: FTS5 в `libsqlite3` образа есть
 - [x] PASS — мутации в ту же сессию (П30), исходник восстанавливался из git до и после каждой: 7 из 8 убиты своими
   примерами — правило справки (P6), без «моё» и без деликатного (P7), синонимы не раскрываются и запрос «и» вместо
   «или» (P4), самопроверка без первых формулировок (P9), окончание первой группы без «а/я» (P1)
@@ -46,8 +47,6 @@
   поиск p50 0,046 мс, p95 0,076 мс
 
 ## Spec coverage gaps
-- **CI на Linux** (FTS5 в `libsqlite3` 3.45.1 образа) — прогон PR; проба в контейнере Ubuntu 24.04 той же версии
-  пакета зелёная (2026-10-23).
 - **Подключение к сессии, база карточек, телефон** — Э2 `app-encyclopedia`.
 
 ## Ревью рисковых мест
@@ -70,12 +69,12 @@
 | Metric | Value |
 |---|---|
 | files_touched / loc_diff | 10 code (+14 process docs) / +690/−4 (net +686); предохранитель — 10 файлов, net 686 из 800 |
-| commits | 15 до отчёта: 10 до первого слияния main, слияния — e6af07e и 9bf9ed5 (memory-core), точки порогов — 5c5ccec, 19e247f |
+| commits | 17 с коммитом сдачи: 10 до первого слияния main, слияния — e6af07e и 9bf9ed5 (memory-core), точки порогов — 5c5ccec, 19e247f, отчёт — 6c244d6 |
 | time_to_accepted_spec | 0.9h |
 | rework_after_done | 0 (handoff not declared yet) |
 | harness_hardened | yes — `EncyclopediaTests.swift`, `StemmerTests.swift` (новые оракулы), паритет P11 со стендом |
 | implement_retries | 3 — пять находок SwiftLint (кортеж, Data → String) и хэш тестовой базы (порядок ключей JSON) исправлены до коммита; после слияния main — точки порогов по L90 |
-| verify_fails_before_green | 0 локально; CI — с PR |
+| verify_fails_before_green | 0 — первый прогон CI на PR #56 зелёный |
 | est_token_or_cost | n/a |
 
 ## Assertion digest (ревью ожиданий, не кода)
@@ -138,8 +137,8 @@ asserts_without_example: 0
 
 ## Verdict
 
-Implement и verify сделаны локально, main с `AllySQLite` слит (9bf9ed5); ждёт зелёного CI на PR.
+Implement и verify сделаны, main с `AllySQLite` слит (9bf9ed5), CI на PR #56 зелёный с первого прогона.
 
-- [ ] READY FOR HANDOFF — после зелёного CI
+- [x] READY FOR HANDOFF
 - [ ] NEED CONVERGE (new tasks)
 - [ ] BLOCKED

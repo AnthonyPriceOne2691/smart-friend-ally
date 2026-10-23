@@ -33,9 +33,9 @@
 
 ### Slice 5 — знание и сдача
 - [x] T10: концепт `engineering/encyclopedia.md`, места L16 поиском, индекс, карта, `knowledge/log.md`
-- [ ] T11: слить main, строгий `delivery_check --require-ci --diff-base origin/main`, verify-report (тесты, покрытие,
+- [x] T11: слить main, строгий `delivery_check --require-ci --diff-base origin/main`, verify-report (тесты, покрытие,
   дайджест, мутации, P11, ревью рисковых мест, `mergeable`, CI)
-- [ ] T12: сдача в том же PR: архив, INDEX (уроки из L77–L79, по строке), slug — в `delivery/OBSERVATIONS.md`
+- [x] T12: сдача в том же PR: архив, INDEX (уроки из L77–L79, по строке), slug — в `delivery/OBSERVATIONS.md`
   (`CLAUDE.md` не трогаем — слово ведущего 2026-10-23); доклад «готово к мержу»
 
 ## Э2 `app-encyclopedia` — своя ветка после мержа Э1

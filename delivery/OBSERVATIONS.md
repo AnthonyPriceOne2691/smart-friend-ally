@@ -44,3 +44,4 @@
 - `voice-onnx`
 - `turn-speculation`
 - `memory-core`
+- `encyclopedia-core`
