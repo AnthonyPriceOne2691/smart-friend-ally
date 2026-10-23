@@ -100,3 +100,8 @@ M29	XCTAssertEqual(try db.run("INSERT INTO t VALUES ('собака')"), 1)
 `asserts_reviewed_by: n/a (все утверждения ведут к одобренным примерам)`.
 
 asserts_without_example: 0
+
+## Verdict
+- [x] READY FOR HANDOFF
+- [ ] NEED CONVERGE (new tasks)
+- [ ] BLOCKED

@@ -9,4 +9,5 @@ L28, L33, L45, L50 — как применены, сказано в `plan.md`.
 - [x] T3: `Forbidden.swift`, `forbidden.json`, триггеры, проверка в `write`, `MemorySession.heard`,
   `WriteReport.refused`; `MemoryGuardTests` (M29); мутации: триггер снят, проверка снята, заражение снято
 - [x] T4: знание — `engineering/memory.md`, `knowledge/log.md`; `okf_validate`, `okf_sync_gate`
-- [x] T5: слить main, PR, CI, verify-report, сдача: архив, строка INDEX, `memory-guard` в `delivery/OBSERVATIONS.md`
+- [x] T5: слить main, PR, CI, verify-report, сдача: архив, строка INDEX с уроком L95 (рождён этой поставкой — раньше
+  ссылаться было не на что), `memory-guard` в `delivery/OBSERVATIONS.md`
