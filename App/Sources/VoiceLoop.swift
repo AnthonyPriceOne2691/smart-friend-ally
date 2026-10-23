@@ -13,6 +13,12 @@ final class VoiceLoop: ObservableObject {
     @Published private(set) var screen = Screen()
     @Published private(set) var talk = TalkState()  // the session for a screen: phase, pose, why the last one ended
     private var conversation: Conversation?
+    // The child mode (R): who may talk on the child screen, whether it is shown, an exception in the container; its own
+    // session (audience `supervised`) and the last wake, which the next one waits for — one ear for both sessions.
+    @Published private(set) var access = ChildAccess.parentOnly([])
+    @Published private(set) var child = false
+    @Published private(set) var exception = false
+    private var childMode: ChildMode?, childTalk: Conversation?, running: Task<Void, Never>?
     private let recognizer = DictationRecognizer(), audio = AudioIO(), files = FileManager.default
     private let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
     private var model: LlamaModel?, registry: ModelRegistry?, voice: SystemVoice?, versions: [String: String] = [:]
@@ -54,17 +60,22 @@ final class VoiceLoop: ObservableObject {
         if screen.ready { converse(model, registry, voice) }
     }
 
-    /// A tap on the sleeping friend: she greets and then talks without buttons until the session sleeps.
+    /// A tap on the sleeping friend: she greets and then talks without buttons until the session sleeps. The session of
+    /// the shown screen wakes after the last one has ended: its microphone cannot be cancelled (L60).
     func wake() {
-        guard let conversation, talk.phase == .asleep else { return }
+        guard let talker = child ? childTalk : conversation, talk.phase == .asleep else { return }
         (screen.heard, screen.said) = ("", "")
-        Task { await conversation.wake() }
+        let previous = running
+        running = Task {
+            await previous?.value
+            await talker.wake()
+        }
     }
 
     /// The parent's stop: silence now, no phrase.
     func stop() {
-        guard let conversation else { return }
-        Task { await conversation.stop() }
+        guard let talker = child ? childTalk : conversation else { return }
+        Task { await talker.stop() }
     }
 
     /// The session (D2.2): the router before the model, the parent's limit key (`-session_limit_minutes 2` at launch),
@@ -82,12 +93,68 @@ final class VoiceLoop: ObservableObject {
             return TraceStamp(versions: versions, memory: Self.memory(model), thermal: thermal,
                               stages: ear.takeStages())
         }
-        let parts = SessionParts(model: model, voice: echo, sink: sink, router: RouterRouting(), stamp: stamp)
-        let conversation = Conversation(parts, settings: settings, listener: ear)
-        self.conversation = conversation
+        let parts = { (audience: Audience) in
+            SessionParts(model: model, voice: echo, sink: sink, router: RouterRouting(), audience: audience,
+                         stamp: stamp)
+        }
+        let conversation = Conversation(parts(.parent), settings: settings, listener: ear)
+        let childTalk = Conversation(parts(.supervised), settings: settings, listener: ear)
+        (self.conversation, self.childTalk) = (conversation, childTalk)
+        childMode = ChildMode(personaSHA256: versions["persona"] ?? "", model: versions["weights"] ?? "")
+        refreshAccess()
+        Task { for await state in childTalk.updates where child { show(state) } }
         screen.lines.append(settings.note ?? "лимит: \(Int(settings.limit / 60)) мин")
         if !RouterRouting.healthy { screen.lines.append("маршрутизатор: самопроверка не прошла") }
-        Task { for await state in conversation.updates { talk = state } }
+        Task { for await state in conversation.updates where !child { talk = state } }
+    }
+
+    /// The lock from the container, the bundle and the build (R): at launch, on the console, at the hand-over, at each
+    /// wake on the child screen and when a child session ends.
+    func refreshAccess() {
+        guard let childMode else { return }
+        (access, exception) = (childMode.access(), childMode.present)
+    }
+
+    /// «Дочке, при мне»: the parent's session stops, the child screen opens while the exception holds.
+    func handOver() {
+        refreshAccess()
+        guard access.until != nil, let conversation else { return }
+        Task { await conversation.stop() }
+        child = true
+        talk = childTalk?.state ?? TalkState()
+    }
+
+    /// A tap on the circle of the child screen; past the exception's term she does not wake and the console returns.
+    func childWake() {
+        refreshAccess()
+        guard access.until != nil else { return leaveChild() }
+        wake()
+    }
+
+    /// The stop sign on the child screen: silence at once, no phrase, and the console — one action.
+    func childStop() {
+        stop()
+        leaveChild()
+    }
+
+    /// «Закрыть детский режим»: the exception goes; a new one needs a new signature.
+    func closeChildMode() {
+        childMode?.close()
+        refreshAccess()
+        if child { childStop() }
+    }
+
+    /// A state of the child session; when one ends, the term is checked at this boundary, not in the middle of a talk.
+    private func show(_ state: TalkState) {
+        talk = state
+        guard state.phase == .asleep, state.ended != nil else { return }
+        refreshAccess()
+        if access.until == nil { leaveChild() }
+    }
+
+    private func leaveChild() {
+        child = false
+        talk = conversation?.state ?? TalkState()
     }
 
     /// What the iOS memory limit counts (L22): footprint now and its lifetime peak, headroom left; conversation tokens.

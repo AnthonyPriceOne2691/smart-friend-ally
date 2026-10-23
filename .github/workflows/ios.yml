@@ -28,6 +28,8 @@ jobs:
           xcodegen --version
       - name: AllyLlama tests (A23; без весов — пропуск)
         run: swift test --disable-keychain --package-path Packages/AllyLlama
+      - name: AllyCore tests on macOS (G7 — подпись родителя на CryptoKit; на Linux пропуск)
+        run: swift test --disable-keychain --package-path Packages/AllyCore --filter SignatureTests
       # Оболочка (child-shell): рисунок SwiftUI и пиксельные пробы снимков (V8) — только на macOS; ядро судит Linux.
       - name: AllyShell tests (V1–V9, снимки V8)
         run: swift test --disable-keychain --package-path Packages/AllyShell
