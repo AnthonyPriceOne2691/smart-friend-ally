@@ -66,6 +66,7 @@ final class HearingTests: XCTestCase {
                        "GigaAM нет: tokens.txt — 5 байт вместо 196 — диктовка")
         XCTAssertEqual(gigaam.choose(sizes: sizes, pairServes: false).line,
                        "GigaAM нет: ONNX Runtime без API 28 — диктовка")
+        XCTAssertEqual(gigaam.unopened, "GigaAM нет: модель не открылась — диктовка")
         XCTAssertEqual(asr.label("dictation"), "dictation")
         XCTAssertEqual(gigaam.label("gigaam"), "gigaam-v3-ctc:224757733")
     }

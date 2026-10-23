@@ -110,6 +110,11 @@ public struct Recognition: Decodable, Equatable, Sendable {
         return ("dictation", texts.fallback.replacingOccurrences(of: "{reason}", with: reason))
     }
 
+    /// The console line when the files were there but sherpa did not open the model: dictation listens.
+    public var unopened: String {
+        RecognizerTexts.shared.fallback.replacingOccurrences(of: "{reason}", with: RecognizerTexts.shared.load)
+    }
+
     /// The record's `versions.asr`: `dictation`, or GigaAM by its files' bytes.
     public func label(_ engine: String) -> String {
         engine == "gigaam" ? "gigaam-v3-ctc:\(gigaam.reduce(0) { $0 + $1.bytes })" : "dictation"
@@ -118,7 +123,7 @@ public struct Recognition: Decodable, Equatable, Sendable {
 
 /// `recognizers.json`: the console's words when GigaAM is asked and dictation listens.
 struct RecognizerTexts: Decodable, Sendable {
-    let fallback, missing, size, pair: String
+    let fallback, missing, size, pair, load: String
 
     static let shared: RecognizerTexts = {
         guard let url = Bundle.module.url(forResource: "recognizers", withExtension: "json"),

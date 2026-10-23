@@ -3,16 +3,6 @@ import AllyHearing
 import AllyOnnx
 import XCTest
 
-/// The repository of this file and its `local/` with the data outside git: a worktree's `.git` is a file naming a
-/// gitdir inside the main clone's `.git/worktrees`, and the main clone keeps `local/`.
-private let repo = URL(fileURLWithPath: #filePath).appendingPathComponent("../../../../..").standardized
-private let localData: URL = {
-    let git = (try? String(contentsOf: repo.appendingPathComponent(".git"), encoding: .utf8)) ?? ""
-    guard git.hasPrefix("gitdir: ") else { return repo.appendingPathComponent("local") }
-    let gitdir = URL(fileURLWithPath: git.dropFirst(8).trimmingCharacters(in: .whitespacesAndNewlines))
-    return gitdir.appendingPathComponent("../../../local").standardized
-}()
-
 /// A phrase of the spike's end-of-turn set and its trace: Silero's flags per window, run-length encoded.
 private struct Phrase: Decodable { let id: String, wav: String }
 private struct Trace: Decodable { let id: String, rle: [[Int]]? }

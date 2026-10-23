@@ -3,5 +3,6 @@
   "fallback": "GigaAM нет: {reason} — диктовка",
   "missing": "нет файла {file}",
   "size": "{file} — {found} байт вместо {bytes}",
-  "pair": "ONNX Runtime без API 28"
+  "pair": "ONNX Runtime без API 28",
+  "load": "модель не открылась"
 }
