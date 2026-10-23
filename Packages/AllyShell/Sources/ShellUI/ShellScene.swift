@@ -3,15 +3,19 @@ import AllyCore
 import ShellCore
 import SwiftUI
 
-/// The picture of the child screen for one phase of the session at one moment: the pink sky, the bubble and Ellie in
-/// it, laid out by `Layout`. No words and no controls — the tap, the adult's label and stop join in Ш3, motion in Ш2.
+/// The picture of the child screen for one frame: the pink sky, the bubble and Ellie in it, laid out by `Layout`. No
+/// words and no controls — the tap, the adult's label and stop join in Ш3; `LiveScene` animates it.
 public struct ShellScene: View {
-    let phase: SessionState, time: Double, voice: Double?, mic: Double?, safeTop: Double, safeBottom: Double
+    let frame: Frame, safeTop: Double, safeBottom: Double
 
+    public init(frame: Frame, safeTop: Double = 0, safeBottom: Double = 0) {
+        (self.frame, self.safeTop, self.safeBottom) = (frame, safeTop, safeBottom)
+    }
+
+    /// A still frame of one phase at one moment (Ш1's snapshots).
     public init(phase: SessionState, time: Double, voice: Double? = nil, mic: Double? = nil, safeTop: Double = 0,
                 safeBottom: Double = 0) {
-        (self.phase, self.time, self.voice, self.mic) = (phase, time, voice, mic)
-        (self.safeTop, self.safeBottom) = (safeTop, safeBottom)
+        self.init(frame: Frame.at(phase, time: time, voice: voice, mic: mic), safeTop: safeTop, safeBottom: safeBottom)
     }
 
     public var body: some View {
@@ -29,7 +33,7 @@ public struct ShellScene: View {
         world.translateBy(x: centre.x, y: centre.y)
         world.scaleBy(x: layout.unit, y: layout.unit)
         world.clip(to: circle(.zero, 194))
-        Axolotl(frame: Frame.at(phase, time: time, voice: voice, mic: mic), unit: layout.unit).draw(world)
+        Axolotl(frame: frame, unit: layout.unit).draw(world)
         bubble.front(ctx)
     }
 
