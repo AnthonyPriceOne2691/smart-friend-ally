@@ -13,6 +13,7 @@ implementation:
   - Packages/AllyCore/Sources/AllyCore/TurnTrace.swift
   - Packages/AllyCore/Sources/AllyCore/Conversation.swift
   - Packages/AllyCore/Sources/AllyCore/TraceFile.swift
+  - Packages/AllyCore/Sources/AllyCore/Speculation.swift
 ---
 
 # Purpose
@@ -50,6 +51,11 @@ implementation:
   прозвучало (`TurnKinds`, [Turn detector](/engineering/turn-detector.md)), «не расслышала» тип не меняет; драйвер
   передаёт тип слуху, записи, которые отвечают на услышанное или тишину, несут `turn_kind`. «Я всё» — `done()`: слух
   кончает реплику сразу, только пока сессия слушает.
+- **Спекуляция** (D7.1, `Speculation`): на «возможно, конец» слух отдаёт текст этого момента, и сессия молча начинает
+  ответ модели — только на реплику, которую ход отдал бы модели (общий `plan`: не скрипт, не её прощание, не `forget`).
+  На хвосте с тем же текстом (по буквам) ход берёт начатый ответ; продолжение речи, тишина, другой текст или стоп его
+  бросают — у `LlamaModel` отменённый ход уходит из KV, дописанный до броска остаётся до D5 (`spec_stale`). Состояние и
+  записи от спекуляции не меняются; этапы `spec_reused`, `spec_lead`, `spec_cancels`, `spec_stale` — у записи ответа.
 - **Слушание по состоянию** (`Conversation`, D2.2): тап будит сессию, дальше драйвер зовёт слух (`Listener`) только
   пока сессия слушает — в listening и windingDown — и никогда во время голоса; реплика → `heard`, «никто не говорил» →
   `silence`, ошибка слуха — как тишина. Слушание одно за раз: микрофон D1.2 нельзя отменить, поэтому новая сессия ждёт

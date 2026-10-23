@@ -14,7 +14,8 @@ generated:
 # цикл приложения, который зовёт контракт на каждом ответе (app-voice-loop);
 # маршрутизатор на живом ходе приложения и реплика с forget вне модели (app-session);
 # указатель не вытесняет запрет, заготовка опасности старше страха, вопрос-обрывок уступает (contract-fixes);
-# тип хода и «я всё» (turn-detector) меняют только то, сколько слух ждёт тишины, а не путь реплики.
+# тип хода и «я всё» (turn-detector) меняют только то, сколько слух ждёт тишины, а не путь реплики;
+# спекуляция (turn-speculation) пускает к модели только реплику, которую пустил бы ход: скрипт, прощание и forget — нет.
 implementation:
   - Packages/AllyDiscipline/Sources/Discipline/Repair.swift
   - Packages/AllyCore/Sources/AllyCore/TurnRunner.swift
