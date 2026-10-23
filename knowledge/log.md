@@ -8,6 +8,28 @@
   консоли из `lines.json`; `implementation:` — `LlamaSettings.swift`, `lines.json`. `engineering/safety-below-model` —
   срезанное контрактом в память модели не попадает. `engineering/index` — строка сессии.
 * **Источник**: поставка `kv-spoken` (D5 серии «живой разговор»; примеры X1–X8 подписаны родителем 2026-10-23).
+## 2026-10-23 — детский экран в приложении: венок, тап, стоп, метка, перерыв (оболочка Ш3)
+
+* **Update**: `engineering/character-rendering` — как сделано в Ш3 (венок `Crown` и `CrownArt`, экран `ChildShell`,
+  сонное шевеление, 120 Гц), порядок серии Ш3 → Ш2б; `implementation:` += `Crown.swift`, `CrownArt.swift`,
+  `ChildShell.swift`. `product/look-and-feel` — правила 2, 3, 4, 13, 15 в коде, цвета венка прототипа;
+  `implementation:` += `Tap.swift`, `AdultZone.swift`. `product/session-limit` — перерыв после лимита по умолчанию
+  выключен («Без перерыва»), ключ 0–180; `implementation:` += `Nap.swift`. `product/child-mode`,
+  `engineering/session` — заглушка R → оболочка. `engineering/voice-loop` — детский экран, «Гид-доступ», ключ перерыва.
+  `engineering/safety-below-model` — экран путь реплики не меняет. `references/repo-map` — `AllyShell` в приложении.
+* **Источник**: поставка `child-shell-app` (оболочка Ш3; Ш3 и Ш2б подписаны родителем 2026-10-23 «Подписываю
+  (Рекомендую)», перерыв — ответ «Без перерыва»).
+## 2026-10-23 — расстановщик ударений: логика RUAccent на Swift
+
+* **Update**: `engineering/accent-placer` — логика V3b (`RuAccentPlacer`, «ё», омографы, ударения, текст, словари) с
+  причудами Python, стыки `AccentModels` и `AccentTokenizers`, оракул — повтор Python по записи; `implementation:` —
+  исходники логики. `engineering/index` — строка концепта.
+* **Источник**: поставка `accent-logic` (V3b серии голоса; доля V3b в Z14–Z16, подпись родителя 2026-10-23).
+## 2026-10-23 — расстановщик ударений: токенизаторы RUAccent на Swift
+
+* **Creation**: `engineering/accent-placer` (Design) — пакет `AllyAccent`, `Encoding` и три токенизатора RUAccent с
+  паритетом HF; `implementation:` — исходники пакета. **Update**: `engineering/index`, `references/repo-map`.
+* **Источник**: поставка `accent-tokenizers` (V3a серии голоса; часть Z14, подпись родителя 2026-10-23).
 ## 2026-10-23 — слух: Silero VAD на sherpa-onnx и общем ORT, активность голоса за протоколом
 
 * **Update**: `engineering/turn-detector` — активность голоса за протоколом (энергия или Silero), тишина от речи за
@@ -16,6 +38,22 @@
   `AllyOnnx`, `AllySherpa`, пин пары в страже, фикстура `add.onnx` в git. `engineering/voice-loop` — копирование
   Silero на телефон, строка консоли, сравнение с энергией без файла. `references/repo-map` — пакет `AllyHearing`.
 * **Источник**: поставка `silero-vad` (D7.2 серии «слух»; примеры U16–U21 подписаны родителем 2026-10-23).
+## 2026-10-23 — энциклопедия «почему»: движок, подсказка только когда поиск уверен
+
+* **Creation**: `engineering/encyclopedia` (Design) — порядок решения и правила `knowledge.*`, строгое покрытие по
+  формулировкам с замером 2026-10-23, основы Snowball, SQLite FTS5 в памяти через `AllySQLite`, отказ закрытый, запись без
+  слов, схема карточки и серия Э1–Э2; `implementation:` — исходники движка и `encyclopedia.json`.
+* **Update**: `product/persona` — поиск по основам слов, ссылка на движок; `references/research/kids-encyclopedia` —
+  строка о замере 2026-10-23 и перенумерации приёмки; `references/research/index`, `engineering/index`,
+  `references/repo-map` — новые входные точки; `KNOWLEDGE.md` §12 п. 5 и §13 — решение 2026-10-23.
+* **Источник**: поставка `encyclopedia-core` (Э1; спека и план подписаны родителем 2026-10-23).
+## 2026-10-23 — обработка голоса после синтеза (голос V4a)
+
+* **Creation**: `engineering/voice-fx` (Design): своё TD-PSOLA по цепочке стенда третьего круга (эквалайзер — V4b,
+  разрез родителя), свой трекер основного тона по методу Boersma 1993 вместо YIN прототипа (замер дребезга), пресет
+  «Совсем малышка» — данные строки конфига; `implementation:` — C-ядро и обёртка `AllyVoiceFX`. `engineering/index`, `references/repo-map` —
+  новый пакет.
+* **Источник**: поставка `voice-fx` (V4a серии голоса; примеры Z27–Z31 подписаны родителем 2026-10-23).
 
 ## 2026-10-23 — память: запрет на любом пути записи (memory-guard)
 

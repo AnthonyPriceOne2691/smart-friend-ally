@@ -45,6 +45,11 @@
 - `turn-speculation`
 - `memory-core`
 - `silero-vad`
+- `encyclopedia-core`
+- `voice-engine`
+- `voice-fx`
 - `memory-guard`
 - `kv-spoken`
+- `child-shell-app`
 - `accent-tokenizers`
+- `accent-logic`

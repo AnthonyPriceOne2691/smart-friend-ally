@@ -123,6 +123,22 @@ final class MotionTests: XCTestCase {
         XCTAssertEqual(pose?.armRight ?? 0, 32, accuracy: 1e-3)
     }
 
+    /// A tap on the sleeper: her body squashes about (0; 40) and wobbles back; the eyes stay shut.
+    func testATapSquashesTheSleeperAndSheSettles() {  // V23
+        for (calm, height) in [(false, 0.944), (true, 0.972)] {
+            let motion = Motion(seed: 1)
+            for _ in 0..<240 { _ = motion.step(step, phase: .asleep, calm: calm) }
+            motion.poke(calm: calm)
+            let shots = (0..<120).map { _ in motion.step(step, phase: .asleep, calm: calm) }
+            let squash = shots[Int((0.12 / step).rounded()) - 1].squash
+            XCTAssertEqual(1 + squash, height, accuracy: 0.005, "calm \(calm)")
+            if !calm { XCTAssertEqual(1 - 0.75 * squash, 1.042, accuracy: 0.005) }
+            XCTAssertTrue(shots.dropFirst(71).allSatisfy { abs($0.squash) <= 0.005 })
+            XCTAssertTrue(zip(shots, shots.dropFirst()).allSatisfy { abs($1.squash - $0.squash) <= 0.01 })
+            XCTAssertTrue(shots.allSatisfy { abs($0.eyeOpen - 0.06) < 1e-9 && $0.pose.eyesShut == 1 })
+        }
+    }
+
     private func jump(_ now: [Double], _ before: [Double]) -> Double {
         zip(now, before).map { abs($0 - $1) }.max() ?? 0
     }
