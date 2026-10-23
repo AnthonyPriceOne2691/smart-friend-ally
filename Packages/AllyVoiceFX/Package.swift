@@ -1,8 +1,8 @@
 // swift-tools-version:5.10
 import PackageDescription
 
-// Voice processing after synthesis (voice series V4a): own TD-PSOLA with an own autocorrelation pitch tracker and an
-// RBJ biquad EQ, in plain C. Only Foundation and C — the package builds and tests on Linux.
+// Voice processing after synthesis (voice series V4a): own TD-PSOLA with an own autocorrelation pitch tracker, in
+// plain C; the chain's EQ arrives with V4b. Only Foundation and C — the package builds and tests on Linux.
 let package = Package(
     name: "AllyVoiceFX",
     platforms: [.iOS(.v17), .macOS(.v14)],

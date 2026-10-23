@@ -1,7 +1,7 @@
 // TD-PSOLA of the voice-samples-2 stand (scripts/dsp.py, round 3): analysis marks on the dominant-polarity peaks of
 // the 900 Hz low-passed signal, two-period Hann grains laid out at the target period, 5 ms grains in unvoiced
 // stretches. Formants move by resampling first (8-tap windowed sinc of the stand's psola_c); PSOLA then sets the
-// pitch and restores the duration. Then the EQ cascade and the stand's 0.97 peak guard.
+// pitch and restores the duration. Then the stand's 0.97 peak guard; the chain's EQ arrives with V4b.
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
@@ -208,8 +208,7 @@ static void peak_guard(float *x, int n) {
     for (int k = 0; m > 0.97f && k < n; k++) x[k] *= 0.97f / m;
 }
 
-int ally_fx_process(const float *x, int n, int sr, double pitch_st, double formant_st,
-                    const AllyEQBand *bands, int nbands, float *out) {
+int ally_fx_process(const float *x, int n, int sr, double pitch_st, double formant_st, float *out) {
     if (sr <= 0 || n < 0) return -1;
     if (n == 0) return 0;
     double beta = pow(2.0, pitch_st / 12), alpha = pow(2.0, formant_st / 12);
@@ -222,7 +221,6 @@ int ally_fx_process(const float *x, int n, int sr, double pitch_st, double forma
     memcpy(out, y, sizeof(float) * (size_t)keep);
     memset(out + keep, 0, sizeof(float) * (size_t)(n - keep));
     free(y);
-    ally_eq(out, n, sr, bands, nbands);
     peak_guard(out, n);
     return 0;
 }

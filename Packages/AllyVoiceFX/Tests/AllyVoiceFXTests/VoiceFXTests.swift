@@ -6,7 +6,7 @@ final class VoiceFXTests: XCTestCase {
     func testPitchAndFormantShiftMoveF0AndEnvelope() throws {
         // Z27: vowel F0 200 Hz, envelope peak 1000 Hz; PSOLA +9 / +5 → 336 Hz ± 2%, 1 s ± 1%, harmonic 1335 Hz ± 5%
         let x = Signals.vowel()
-        let y = try VoiceFX(pitch: 9, formant: 5, bands: []).process(x, rate: Signals.rate)
+        let y = try VoiceFX(pitch: 9, formant: 5).process(x, rate: Signals.rate)
         XCTAssertEqual(y.count, x.count)
         XCTAssertEqual(Signals.f0(y), 336.4, accuracy: 336.4 * 0.02)
         XCTAssertEqual(Signals.activeSeconds(y), 1.0, accuracy: 0.01)
@@ -16,7 +16,7 @@ final class VoiceFXTests: XCTestCase {
     func testZeroShiftKeepsTheVowel() throws {
         // Z28: PSOLA 0 / 0 → F0, duration and the strongest harmonic in place ± 1%
         let x = Signals.vowel()
-        let y = try VoiceFX(pitch: 0, formant: 0, bands: []).process(x, rate: Signals.rate)
+        let y = try VoiceFX(pitch: 0, formant: 0).process(x, rate: Signals.rate)
         XCTAssertEqual(Signals.f0(y), Signals.f0(x), accuracy: Signals.f0(x) * 0.01)
         XCTAssertEqual(Signals.activeSeconds(y), Signals.activeSeconds(x), accuracy: 0.01)
         XCTAssertEqual(Signals.strongest(y), Signals.strongest(x), accuracy: Signals.strongest(x) * 0.01)
@@ -29,7 +29,7 @@ final class VoiceFXTests: XCTestCase {
         let before = Signals.f0(x)
         for _ in 0..<3 {
             let pitch = rng.next(in: -6...10), formant = rng.next(in: 0...6)
-            let y = try VoiceFX(pitch: pitch, formant: formant, bands: []).process(x, rate: Signals.rate)
+            let y = try VoiceFX(pitch: pitch, formant: formant).process(x, rate: Signals.rate)
             let ratio = pow(2, pitch / 12)
             XCTAssertEqual(Signals.f0(y) / before, ratio, accuracy: ratio * 0.02, "pitch \(pitch) formant \(formant)")
         }
