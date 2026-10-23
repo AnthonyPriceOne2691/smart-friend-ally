@@ -2,7 +2,7 @@ import Discipline
 
 /// The router's decision as the session acts on it, with the journal fields of its record: a script sounds without
 /// the model, a guard and a pass go to the model with the decision. `Routed` of Discipline has no public init, so the
-/// fields are carried here; R maps `Router.shared` into this.
+/// fields are carried here; `RouterRouting` maps `Router.shared` into this.
 public struct Route: Equatable, Sendable {
     public let decision: RouterDecision, rules: [String], dataHash: String, forget: Bool
 
@@ -28,9 +28,24 @@ public protocol TurnRouting: Sendable {
     func route(_ utterance: String) -> Route
 }
 
-/// Until R connects the router: every utterance goes to the model.
+/// Every utterance to the model: sessions without the router (tests, the default of `SessionParts`).
 public struct PassThroughRouting: TurnRouting {
     public init() {}
 
     public func route(_ utterance: String) -> Route { Route(.pass) }
+}
+
+/// The router of `Discipline` before the model, on the live turn (D2.2): every utterance, the game flag off — there
+/// are no games yet.
+public struct RouterRouting: TurnRouting {
+    public init() {}
+
+    /// The router's data passed their self-test at load; when not, every turn is a guard without a topic (fail-closed).
+    public static var healthy: Bool { !Router.shared.route("").record.rules.contains("selftest_failed") }
+
+    public func route(_ utterance: String) -> Route {
+        let routed = Router.shared.route(utterance, state: RouterState(game: false))
+        return Route(routed.decision, rules: routed.record.rules, dataHash: routed.record.dataHash,
+                     forget: routed.forget)
+    }
 }

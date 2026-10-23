@@ -4,12 +4,15 @@ import CryptoKit
 import os
 import SwiftUI
 
-/// The voice loop behind the adult console (D1): warm-up by stages, then per tap — speech, recognition, a turn through
-/// the contract (mode `talk`, TurnRunner's default), her voice, one wordless journal line in `Caches/turns.jsonl`.
+/// The voice loop behind the adult console: warm-up by stages, then a session (D2.2) — a tap wakes her, she listens by
+/// herself while the session listens, each utterance goes through the router and each reply through the contract, one
+/// wordless record a turn in `Caches/turns.jsonl`.
 @MainActor
 final class VoiceLoop: ObservableObject {
-    struct Screen { var lines: [String] = [], heard = "", said = "", ready = false, busy = false }
+    struct Screen { var lines: [String] = [], heard = "", said = "", ready = false }
     @Published private(set) var screen = Screen()
+    @Published private(set) var talk = TalkState()  // the session for a screen: phase, pose, why the last one ended
+    private var conversation: Conversation?
     private let recognizer = DictationRecognizer(), audio = AudioIO(), files = FileManager.default
     private let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
     private var model: LlamaModel?, registry: ModelRegistry?, voice: SystemVoice?, versions: [String: String] = [:]
@@ -48,53 +51,47 @@ final class VoiceLoop: ObservableObject {
                     "voice": voice.voice?.identifier ?? "", "weights": "\(registry.model.file):\(registry.model.bytes)"]
         (self.registry, self.model, self.voice) = (registry, model, voice)
         screen.ready = speech.ready && microphone && voice.voice != nil
+        if screen.ready { converse(model, registry, voice) }
     }
 
-    func talk() {
-        guard screen.ready, !screen.busy, let model, let registry, let voice else { return }
-        screen.busy = true
-        Task {
-            do { try await turn(model, registry, voice) } catch { screen.lines.append("ход: \(error)") }
-            screen.busy = false
-        }
-    }
-
-    private func turn(_ model: LlamaModel, _ registry: ModelRegistry, _ voice: SystemVoice) async throws {
+    /// A tap on the sleeping friend: she greets and then talks without buttons until the session sleeps.
+    func wake() {
+        guard let conversation, talk.phase == .asleep else { return }
         (screen.heard, screen.said) = ("", "")
-        let phrase = try await recognizer.phrase { text in Task { @MainActor in self.screen.heard = text } }
-        let detector = TurnDetector(kind: .closed, timing: registry.turn)
-        guard let end = try await audio.listen(detector, timeout: registry.listenTimeout, feed: phrase.feed) else {
-            await phrase.cancel()
-            return screen.heard = "(тишина)"
-        }
-        let text = try await phrase.finish(), recognized = uptime
-        screen.heard = text.isEmpty ? "(не расслышала)" : text
-        guard !text.isEmpty else { return }
-        voice.resetFirstSound()
-        let runner = TurnRunner(model: model, voice: voice, firstSentenceTimeout: registry.firstSentenceTimeout)
-        let outcome = try await runner.run(text)
-        screen.said = outcome.turn.sentences.joined(separator: " ")
-        let stages = ["tail": end.ended - end.voiced, "recognize": recognized - end.ended,
-                      "speech_end_to_sound": voice.firstSound.map { $0 - end.voiced },
-                      "tap_buffer": audio.bufferSeconds].compactMapValues { $0 }
-        screen.lines.append("ход: " + line(stages))
-        let thermal = ["nominal", "fair", "serious", "critical"][ProcessInfo.processInfo.thermalState.rawValue]
-        let log = TurnLog(outcome: outcome, stages: stages, versions: versions, memory: memory(model), thermal: thermal)
-        if let entry = log.jsonLine() { append(entry) }
+        Task { await conversation.wake() }
     }
 
-    /// One line into `Caches/turns.jsonl`: out of the backup, pulled to the Mac with `devicectl device copy from`.
-    private func append(_ entry: String) {
-        let url = caches.appendingPathComponent("turns.jsonl")
-        if !files.fileExists(atPath: url.path) { files.createFile(atPath: url.path, contents: nil) }
-        guard let handle = try? FileHandle(forWritingTo: url) else { return }
-        handle.seekToEndOfFile()
-        handle.write(Data((entry + "\n").utf8))
-        try? handle.close()
+    /// The parent's stop: silence now, no phrase.
+    func stop() {
+        guard let conversation else { return }
+        Task { await conversation.stop() }
+    }
+
+    /// The session (D2.2): the router before the model, the parent's limit key (`-session_limit_minutes 2` at launch),
+    /// a wordless record a turn with the listening's stages into `Caches/turns.jsonl`; heard and said go to the screen.
+    private func converse(_ model: LlamaModel, _ registry: ModelRegistry, _ voice: SystemVoice) {
+        let heard: @Sendable (String) -> Void = { text in Task { @MainActor in self.screen.heard = text } }
+        let ear = PhoneListener(recognizer: recognizer, audio: audio, registry: registry,
+                                resetSound: { voice.resetFirstSound() }, firstSound: { voice.firstSound }, heard: heard)
+        let echo = EchoVoice(voice) { sentence in Task { @MainActor in self.screen.said += sentence + " " } }
+        let settings = SessionSettings(limitMinutes: UserDefaults.standard.object(forKey: SessionSettings.key)
+            .map { "\($0)" })
+        let versions = versions, sink = TraceFile(url: caches.appendingPathComponent("turns.jsonl"))
+        let stamp: @Sendable () -> TraceStamp = {
+            let thermal = ["nominal", "fair", "serious", "critical"][ProcessInfo.processInfo.thermalState.rawValue]
+            return TraceStamp(versions: versions, memory: Self.memory(model), thermal: thermal,
+                              stages: ear.takeStages())
+        }
+        let parts = SessionParts(model: model, voice: echo, sink: sink, router: RouterRouting(), stamp: stamp)
+        let conversation = Conversation(parts, settings: settings, listener: ear)
+        self.conversation = conversation
+        screen.lines.append(settings.note ?? "лимит: \(Int(settings.limit / 60)) мин")
+        if !RouterRouting.healthy { screen.lines.append("маршрутизатор: самопроверка не прошла") }
+        Task { for await state in conversation.updates { talk = state } }
     }
 
     /// What the iOS memory limit counts (L22): footprint now and its lifetime peak, headroom left; conversation tokens.
-    private func memory(_ model: LlamaModel) -> [String: Int] {
+    nonisolated private static func memory(_ model: LlamaModel) -> [String: Int] {
         var info = task_vm_info_data_t()
         var count = mach_msg_type_number_t(MemoryLayout<task_vm_info_data_t>.size / MemoryLayout<natural_t>.size)
         let status = withUnsafeMutablePointer(to: &info) {

@@ -1,5 +1,16 @@
 # Knowledge Bundle Update Log
 
+## 2026-10-22 — сессия в приложении: слушание по состоянию, маршрутизатор на живом ходе, переустановка одной командой
+
+* **Update**: `engineering/session` — драйвер `Conversation` (слушание только в listening и windingDown, одно за раз,
+  поздний результат остановленной сессии не попадает в новую), `TalkState` для экрана, маршрутизатор подключён, реплика
+  с `forget` к модели не идёт, этапы слушания в следе и `TraceFile`; `implementation:` — `Conversation.swift`,
+  `TraceFile.swift`. `engineering/safety-below-model` — раздел «Маршрутизатор на живом ходе», строки реестра «опасное»
+  и «адрес»; `implementation:` — `Routing.swift`, `Session.swift`. `engineering/voice-loop` — сессия вместо хода по
+  тапу, переустановка одной командой, лимит аргументом запуска, поля следа `TurnTrace`. `references/repo-map`,
+  `engineering/index` — новые входные точки.
+* **Источник**: поставка `app-session` (D2.2; спека и план подписаны родителем 2026-10-22 «Подписываю (Рекомендую)»).
+
 ## 2026-10-22 — облик персонажа: первая версия в 2D
 
 * **Update**: `engineering/character-rendering` (ADR, `stable`) — первая версия — 2D-вектор в SwiftUI `Canvas` по
