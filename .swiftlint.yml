@@ -16,6 +16,7 @@ excluded:
   - Packages/AllyVoice/.build
   - Packages/AllyShell/.build
   - Packages/AllySpeechText/.build
+  - Packages/AllyVoiceFX/.build
   - App/build
   - Packages/AllyDiscipline/Tests/DisciplineTests/Fixtures
 
