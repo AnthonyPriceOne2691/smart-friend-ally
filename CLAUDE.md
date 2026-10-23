@@ -105,8 +105,8 @@ Ally держится в полной синхронизации с каноно
   (`cqg@2.72`) — доказательства дописаны в тот же инцидент, части доложены из payload'а. Находка 17.10 о поставке, уехавшей
   в архив тем же коммитом (`2026-10-17-archived-handoff-signature`), закрыта судьёй в `delivery@2.04`: строгий
   `delivery_check` с `--diff-base` судит такую поставку сам, обход L24 больше не нужен.
-- **Обязательства наблюдения:** до **2026-11-30** — `persona-session-blackbox` (сдвинуто: сигнал наступит со спайком),
-  `na-expiry-stopper`, `sync-cqg-2.55`, `state-refresh`, `spike-memory-limit`, `look-and-feel`, `look-and-feel-research`, `snout-instead-of-trunk`, `flower-crown`, `crown-centered`, `character-axolotl`, `spike-model-bakeoff`, `visual-approved`, `sync-cqg-2.63`, `spike-phone-llm`, `incident-archived-handoff`, `persona-v2`, `swift-contour`, `turn-contract`, `sync-cqg-2.70`, `closing-question`, `router-core`, `router-people`, `voice-core`, `sync-cqg-2.74`, `session-core`, `app-session`, `router-events`, `app-voice-loop`, `black-box`, `child-shell`, `child-lock`, `voice-text`, `contract-fixes`, `turn-detector`, `voice-text-table`, `child-shell-motion`, `release-gate`, `memory-core`. Остальные закрыты `observed.md` 17.10. Недельный
+- **Обязательства наблюдения:** до **2026-11-30** — по строке на поставку в `delivery/OBSERVATIONS.md` (дописывается при
+  сдаче, срок — `observe_until` в архивном STATUS). Остальные закрыты `observed.md` 17.10. Недельный
   `canon-freshness` гоняет `delivery_check` (Delivery §13.1): просрочку видно и без поставок.
 - **Спайк на телефоне** (`KNOWLEDGE.md` §12): шаг 1 сделан — лимит памяти приложения ≈3,3 ГБ без entitlement и
   ≈6,0 ГБ с `increased-memory-limit`, бесплатная Personal Team его выдаёт (`knowledge/engineering/memory-limit.md`).
