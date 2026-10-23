@@ -174,13 +174,27 @@ extension TestClock {
 }
 
 /// An ear double: answers from a script — her text, `""` or silence (nil), at a virtual time if one is given; a held
-/// answer waits for `release`. It notes the screen's phase at each call, the most calls at once and the listenings
-/// during which she said something.
+/// answer waits for `release` or her «я всё». It notes the screen's phase and the turn kind at each call, the most
+/// calls at once, the listenings during which she said something and the «я всё» it got.
 final class ScriptedEar: Listener, @unchecked Sendable {
-    struct Answer { var text: String?, at: Double?, held = false }
+    /// A moment of her pause (D7.1): at a virtual time an action runs, an event goes to the session, and the ear waits
+    /// until the session has taken it.
+    struct Pause {
+        var at: Double, event: EarEvent?, action: (@Sendable () -> Void)?, until: (@Sendable () -> Bool)?
+        init(at: Double, event: EarEvent? = nil, action: (@Sendable () -> Void)? = nil,
+             until: (@Sendable () -> Bool)? = nil) {
+            (self.at, self.event, self.action, self.until) = (at, event, action, until)
+        }
+    }
+    struct Answer {
+        var text: String?, at: Double?, held = false, pauses: [Pause] = []
+        init(text: String?, at: Double? = nil, held: Bool = false, pauses: [Pause] = []) {
+            (self.text, self.at, self.held, self.pauses) = (text, at, held, pauses)
+        }
+    }
     private struct State {
-        var answers: [Answer], phases: [SessionState] = [], inFlight = 0, most = 0, overlaps = 0
-        var gate: CheckedContinuation<Void, Never>?, open = false
+        var answers: [Answer], phases: [SessionState] = [], kinds: [TurnKind] = [], inFlight = 0, most = 0
+        var overlaps = 0, ended = 0, gate: CheckedContinuation<Void, Never>?, open = false
     }
     private let state: Locked<State>, clock: TestClock, voice: RecordingVoice
     private let phase = Locked<@Sendable () -> SessionState>({ .asleep })
@@ -195,14 +209,23 @@ final class ScriptedEar: Listener, @unchecked Sendable {
     var phases: [SessionState] { state { $0.phases } }
     var most: Int { state { $0.most } }
     var overlaps: Int { state { $0.overlaps } }
+    var kinds: [TurnKind] { state { $0.kinds } }
+    var ended: Int { state { $0.ended } }
 
-    func listen() async throws -> String? {
+    func listen(_ kind: TurnKind, events: @escaping @Sendable (EarEvent) -> Void) async throws -> String? {
         let now = phase { $0 }(), spoken = voice.sentences.count
         let answer = state { (s: inout State) -> Answer in
             s.phases.append(now)
+            s.kinds.append(kind)
             s.inFlight += 1
             s.most = max(s.most, s.inFlight)
             return s.answers.isEmpty ? Answer(text: nil) : s.answers.removeFirst()
+        }
+        for pause in answer.pauses {
+            clock.advance(to: pause.at)
+            pause.action?()
+            if let event = pause.event { events(event) }
+            if let until = pause.until { await eventually(until) }
         }
         if answer.held { await hold() }
         if let at = answer.at { clock.advance(to: at) }
@@ -212,6 +235,12 @@ final class ScriptedEar: Listener, @unchecked Sendable {
             s.overlaps += said ? 1 : 0
         }
         return answer.text
+    }
+
+    /// Her «я всё»: counted, and the held listening answers now.
+    func endTurn() {
+        state { $0.ended += 1 }
+        release()
     }
 
     /// Lets the held listening answer.
@@ -314,4 +343,79 @@ final class TimedReply: LanguageModel, @unchecked Sendable {
     }
 
     func cancel() {}
+}
+
+/// A model double for the answer begun in her pause (D7.1): each call follows the next plan — `held` waits for the
+/// test (`first` lets its first sentence out, `finish` the whole answer), `timed` moves the clock and answers at once.
+/// It notes when each call came and with what, cancelled and finished calls, and the most answers at once; `cancel`
+/// stops the newest live call, as `LlamaModel` stops its current turn.
+final class SpecModel: LanguageModel, @unchecked Sendable {
+    enum Plan { case held(first: String, full: String), timed(String, after: Double) }
+    struct Call { let utterance: String, at: Double; var cancelled = false, finished = false }
+    private struct Live { let output: AsyncThrowingStream<String, Error>.Continuation, plan: Plan }
+    private struct State { var plans: [Plan], calls: [Call] = [], live: [Int: Live] = [:], inFlight = 0, most = 0 }
+    private let state: Locked<State>, clock: TestClock
+
+    init(_ plans: [Plan], clock: TestClock) { (state, self.clock) = (Locked(State(plans: plans)), clock) }
+
+    var calls: [Call] { state { $0.calls } }
+    var most: Int { state { $0.most } }
+    /// What stays in the model's memory: finished, not cancelled.
+    var memory: [String] { calls.filter { $0.finished && !$0.cancelled }.map(\.utterance) }
+
+    func reply(to utterance: String) -> AsyncThrowingStream<String, Error> {
+        let (stream, output) = AsyncThrowingStream<String, Error>.makeStream(bufferingPolicy: .bufferingNewest(1))
+        let (index, plan) = state { (s: inout State) -> (Int, Plan) in
+            let plan = s.plans.isEmpty ? Plan.timed("Ага.", after: 0) : s.plans.removeFirst()
+            s.calls.append(Call(utterance: utterance, at: clock.now()))
+            s.inFlight += 1
+            s.most = max(s.most, s.inFlight)
+            s.live[s.calls.count - 1] = Live(output: output, plan: plan)
+            return (s.calls.count - 1, plan)
+        }
+        if case .timed(let text, let after) = plan {
+            clock.advance(by: after)
+            output.yield(text)
+            finish(index)
+        }
+        return stream
+    }
+
+    func first(_ index: Int) {
+        guard let live = state({ $0.live[index] }), case .held(let first, _) = live.plan else { return }
+        live.output.yield(first)
+    }
+
+    func finish(_ index: Int) {
+        let live = state { (s: inout State) -> Live? in
+            guard let live = s.live.removeValue(forKey: index) else { return nil }
+            s.calls[index].finished = true
+            s.inFlight -= 1
+            return live
+        }
+        if let live, case .held(_, let full) = live.plan { live.output.yield(full) }
+        live?.output.finish()
+    }
+
+    /// Whatever is still being answered ends now — the voice speaks while the model writes on.
+    func finishLive() { state { Array($0.live.keys) }.forEach(finish) }
+
+    func cancel() {
+        let live = state { (s: inout State) -> Live? in
+            guard let index = s.live.keys.max(), let live = s.live.removeValue(forKey: index) else { return nil }
+            s.calls[index].cancelled = true
+            s.inFlight -= 1
+            return live
+        }
+        live?.output.finish()
+    }
+}
+
+/// A trace sink double that also keeps the words of each record.
+final class WordSink: TraceSink, @unchecked Sendable {
+    private let state = Locked([(TurnTrace, TurnWords)]())
+    var records: [TurnTrace] { state { $0.map(\.0) } }
+    var words: [TurnWords] { state { $0.map(\.1) } }
+    func write(_ trace: TurnTrace) { write(trace, words: TurnWords()) }
+    func write(_ trace: TurnTrace, words: TurnWords) { state { $0.append((trace, words)) } }
 }

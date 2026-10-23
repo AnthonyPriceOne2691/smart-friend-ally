@@ -18,7 +18,8 @@ struct AllyApp: App {
 }
 
 /// «Для взрослых» (A12): readiness, signing days, the session's state and limit; what was heard and said stays on
-/// this screen. «Разбудить» starts a session, «Стоп» silences her at once (D2.2).
+/// this screen. «Разбудить» starts a session, «Я всё» ends the utterance while she listens (D7), «Стоп» silences her
+/// at once (D2.2).
 struct Console: View {
     @ObservedObject var loop: VoiceLoop
 
@@ -35,17 +36,21 @@ struct Console: View {
             Text(loop.screen.heard).foregroundStyle(.secondary)
             Text(loop.screen.said).bold()
             Text("Элли: " + Self.word(loop.talk.phase)).accessibilityIdentifier("console.phase")
-            ForEach(ReleaseGate.lines(loop.access, zone: .current), id: \.self) { Text($0).font(.caption) }
-                .accessibilityIdentifier("console.lock")
+            ForEach(ReleaseGate.lines(loop.access, zone: .current) + [loop.acceptance], id: \.self) {
+                Text($0).font(.caption)
+            }
+            .accessibilityIdentifier("console.lock")
             HStack {
                 Button("Разбудить", action: loop.wake).buttonStyle(.borderedProminent)
                     .disabled(!loop.screen.ready || loop.talk.phase != .asleep).accessibilityIdentifier("console.wake")
+                Button("Я всё", action: loop.done).buttonStyle(.bordered)
+                    .disabled(loop.talk.pose != .listens).accessibilityIdentifier("console.done")
                 Button("Стоп", action: loop.stop).buttonStyle(.bordered)
                     .disabled(loop.talk.phase == .asleep).accessibilityIdentifier("console.stop")
             }
             HStack {
                 Button("Дочке, при мне", action: loop.handOver).buttonStyle(.bordered)
-                    .disabled(loop.access.until == nil || loop.talk.phase != .asleep)
+                    .disabled(!loop.access.open || loop.talk.phase != .asleep)
                     .accessibilityIdentifier("console.handOver")
                 Button("Закрыть детский режим", action: loop.closeChildMode).buttonStyle(.bordered)
                     .disabled(!loop.exception).accessibilityIdentifier("console.closeChildMode")

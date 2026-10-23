@@ -62,7 +62,7 @@ struct Face {
         ctx.translateBy(x: pose.mouthX, y: -4)
         ctx.scaleBy(x: pose.mouthWidth, y: 1)
         var inside = ctx
-        inside.scaleBy(x: 1, y: max(0.02, min(pose.mouthOpen, 1.2)))
+        inside.scaleBy(x: 1, y: max(0.02, min(pose.mouthOpen, 1.2) * pose.mouthTall))
         inside.fill(ellipse(0, 6.5, 10, 7.5), with: .color(Color(Palette.mouth)))
         inside.fill(ellipse(1, 10, 6.2, 3.6), with: .color(Color(Palette.tongue)))
         let smile = 0.55 + 0.45 * pose.smile

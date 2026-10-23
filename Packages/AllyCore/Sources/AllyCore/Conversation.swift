@@ -21,10 +21,15 @@ public struct TalkState: Equatable, Sendable {
     }
 }
 
+/// What the ear says while it listens (D7.1): her tentative end with the text so far, her speech coming back.
+public enum EarEvent: Equatable, Sendable { case tentative(String), resumed }
+
 /// The ear of a session, one utterance a call: her text, `""` when she spoke but no words came, nil when nobody spoke
-/// before the timeout.
+/// before the timeout; it waits for silence as long as the kind of her turn asks (D7) and tells `events` of her pauses.
 public protocol Listener: Sendable {
-    func listen() async throws -> String?
+    func listen(_ kind: TurnKind, events: @escaping @Sendable (EarEvent) -> Void) async throws -> String?
+    /// Her «я всё»: the listening in flight ends now, as if the silence had lasted; nothing when none is.
+    func endTurn()
 }
 
 /// A session with an ear: `wake` greets, then listens only while the session listens — never while she speaks — and
@@ -65,6 +70,13 @@ public actor Conversation {
         await task.value
     }
 
+    /// Her «я всё» — a tap on Elly while she listens, the console's button: the utterance ends now; nothing unless the
+    /// session listens.
+    public func done() {
+        guard session.state.listens else { return }
+        listener.endTurn()
+    }
+
     /// The parent's stop: silence now, no phrase; a listening in flight ends on its own and its result is not taken.
     public func stop() async {
         running = false
@@ -75,7 +87,20 @@ public actor Conversation {
         defer { running = false }
         await session.handle(.wake)
         while session.state.listens {
-            let heard = await Task { [listener] in try await listener.listen() }.result
+            let (events, feed) = AsyncStream.makeStream(of: EarEvent.self, bufferingPolicy: .bufferingOldest(128))
+            let relay = Task { [session] in
+                for await event in events {
+                    switch event {
+                    case .tentative(let text): await session.handle(.tentative(text))
+                    case .resumed: await session.handle(.resumed)
+                    }
+                }
+            }
+            let heard = await Task { [listener, session] in
+                try await listener.listen(session.expect) { feed.yield($0) }
+            }.result
+            feed.finish()
+            await relay.value  // her pauses reach the session before what she said
             if case .success(let text?) = heard {
                 await session.handle(.heard(text))
             } else {

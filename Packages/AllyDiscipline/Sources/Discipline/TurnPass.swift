@@ -10,7 +10,8 @@ enum ContractRule: String, CaseIterable {
     case closingQuestion = "closing_question", humanClaim = "human_claim", piiEcho = "pii_echo"
     case piiRequest = "pii_request", promise, promiseRefusalExempt = "promise_refusal_exempt"
     case surpriseExempt = "surprise_exempt", adviceExempt = "advice_exempt", promisePointer = "promise_pointer"
-    case adultPointer = "adult_pointer"
+    case adultPointer = "adult_pointer", pointerSparesSafety = "pointer_spares_safety"
+    case dangerOverTopic = "danger_over_topic", ellipticTail = "elliptic_tail"
 }
 
 /// The first sentence that broke a content rule: nothing after it is spoken.

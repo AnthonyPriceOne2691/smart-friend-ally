@@ -21,19 +21,51 @@ public enum TurnEvent: Equatable, Sendable {
     case ended(lastVoiced: Double, byLimit: Bool)
 }
 
+/// One listening's end between the ear and the detector: her «я всё» asked from outside the audio thread — taken on the
+/// next frame —, why the detector ended the turn, for the ear's record, and her pauses as they come (D7.1).
+public final class TurnEnding: Sendable {
+    public enum Reason: String, Sendable { case tail, limit, done }
+    private let state = Locked<(asked: Bool, reason: Reason?)>((false, nil))
+    private let pauses: @Sendable (TurnEvent) -> Void
+
+    /// - Parameter pauses: the tentative end and the resumed speech, on the audio thread.
+    public init(pauses: @escaping @Sendable (TurnEvent) -> Void = { _ in }) { self.pauses = pauses }
+
+    func saw(_ event: TurnEvent) { pauses(event) }
+
+    public func ask() { state { $0.asked = true } }
+
+    /// Why the turn ended; nil until it has.
+    public var reason: Reason? { state { $0.reason } }
+
+    func take() -> Bool {
+        state { (now: inout (asked: Bool, reason: Reason?)) -> Bool in
+            defer { now.asked = false }
+            return now.asked
+        }
+    }
+
+    func ended(_ reason: Reason) { state { $0.reason = reason } }
+}
+
 /// End of speech by energy, the probe's thresholds: the floor of the first 8 frames clamped to [−75; −35] dB, the
 /// threshold max(floor + 12, −48), speech after 3 loud frames. A tentative end lets a later delivery start recognition
-/// silently; `preRoll` seconds before the start go with it; `maxTurn` ends a turn noise would never let end.
+/// silently; `preRoll` seconds before the start go with it; `maxTurn` ends a turn noise would never let end; her «я
+/// всё» (`ending`) ends it on the next frame, as the tail would.
 public struct TurnDetector {
     public private(set) var preRoll: [[Float]] = []
     private var ringTimes: [Double] = [], calibration: [Float] = [], floorDb: Float = -50, loud = 0
     private var start: Double?, lastVoiced: Double?, tentativeSent = false
-    private let tail: Double, timing: TurnTiming
+    private let tail: Double, timing: TurnTiming, ending: TurnEnding?
 
-    public init(kind: TurnKind, timing: TurnTiming) { (tail, self.timing) = (timing.tail(kind), timing) }
+    public init(kind: TurnKind, timing: TurnTiming, ending: TurnEnding? = nil) {
+        (tail, self.timing, self.ending) = (timing.tail(kind), timing, ending)
+    }
+
     /// One frame of samples heard at `time` seconds; at most one event.
     public mutating func process(_ samples: [Float], at time: Double) -> TurnEvent? {
         guard !samples.isEmpty else { return nil }
+        if ending?.take() == true { return end(.done, at: time) }
         let db = 10 * log10(max(samples.reduce(0) { $0 + $1 * $1 } / Float(samples.count), 1e-10))
         if start == nil { remember(samples, at: time) }
         guard calibration.count >= 8 else {
@@ -41,7 +73,7 @@ public struct TurnDetector {
             floorDb = min(max(calibration.min() ?? -50, -75), -35)
             return nil
         }
-        if let begun = start, time - begun >= timing.maxTurn { return end(byLimit: true, at: time) }
+        if let begun = start, time - begun >= timing.maxTurn { return end(.limit, at: time) }
         return db > max(floorDb + 12, -48) ? loudFrame(at: time) : quietFrame(at: time)
     }
 
@@ -55,21 +87,24 @@ public struct TurnDetector {
         }
         guard tentativeSent else { return nil }
         tentativeSent = false
+        ending?.saw(.resumed(at: time))
         return .resumed(at: time)
     }
 
     private mutating func quietFrame(at time: Double) -> TurnEvent? {
         loud = 0
         guard start != nil, let last = lastVoiced else { return nil }
-        if time - last >= tail { return end(byLimit: false, at: time) }
+        if time - last >= tail { return end(.tail, at: time) }
         guard !tentativeSent, time - last >= timing.tentative else { return nil }
         tentativeSent = true
+        ending?.saw(.tentativeEnd(lastVoiced: last))
         return .tentativeEnd(lastVoiced: last)
     }
 
-    private mutating func end(byLimit: Bool, at time: Double) -> TurnEvent {
+    private mutating func end(_ reason: TurnEnding.Reason, at time: Double) -> TurnEvent {
         defer { (start, lastVoiced, tentativeSent, loud) = (nil, nil, false, 0) }
-        return .ended(lastVoiced: lastVoiced ?? time, byLimit: byLimit)
+        ending?.ended(reason)
+        return .ended(lastVoiced: lastVoiced ?? time, byLimit: reason == .limit)
     }
 
     /// The ring before the start: back to the newest frame at least `preRoll` seconds older than this one.

@@ -9,18 +9,22 @@ struct Respelled {
 
 extension SpeechTextTable {
     /// Слово ответа расстановщика → слово для голоса. Запись имени заменяет его целиком, правила чтения её не трогают;
-    /// закреплённое ударение заменяет только номер ударной; правила чтения меняют буквы, номер ударной — тот же.
+    /// закреплённое ударение заменяет номер ударной и «ё», поставленную расстановщиком; правила чтения меняют буквы,
+    /// номер ударной — тот же.
     func respell(_ word: SpokenWord) -> Respelled {
         let key = word.letters.lowercased()
         if let name = names[key] {
             let letters = SpokenWord.cased(name.letters, like: word.letters)
             return Respelled(word: SpokenWord(letters: letters, stress: name.stress), pinned: true)
         }
-        var out = Respelled(word: word, pinned: stress[key] != nil)
-        if let pinned = stress[key] { out.word.stress = pinned.stress }
-        let last = out.word.vowelCount - 1
-        let spelled = spelling(key, stressedLast: out.word.stress == last)
-        if spelled != key {
+        var out = Respelled(word: word)
+        if let pinned = stress[Self.plain(key)] {
+            out.word = SpokenWord(letters: SpokenWord.cased(pinned.letters, like: word.letters), stress: pinned.stress)
+            out.pinned = true
+        }
+        let base = out.word.letters.lowercased()
+        let spelled = spelling(base, stressedLast: out.word.stress == out.word.vowelCount - 1)
+        if spelled != base {
             out.word.letters = SpokenWord.cased(spelled, like: word.letters)
             out.respelled = true
         }
