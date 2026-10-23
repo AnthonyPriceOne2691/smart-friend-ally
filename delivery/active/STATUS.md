@@ -6,7 +6,7 @@
 - **kind:** feature
 - **repro_test:** n/a reason=не bugfix
 - **diagnosis:** n/a reason=не bugfix
-- **phase:** implement
+- **phase:** verify
 - **builder:** agent:claude-code
 - **verifier:** process:ci
 - **human_ok_spec:** yes (by=human:anthony, at=2026-10-23; «Подписываю (Рекомендую)» через ведущего — примеры U22–U28 в спеке серии «слух», подпись 3b68733, спека 74ada91)
@@ -18,11 +18,10 @@
 - **worktree:** ../Smart frend Ally-wt-gigaam
 - **parallel_sessions:** merge-guard,manual-deploy
   <!-- §5.1a: интеграция только через scripts/merge_guard.sh; на телефон — решением родителя. Код — после мержа D7.2
-       (AllyHearing, sherpa в AllyOnnx) -->
+       (f0d62ef: AllyHearing, sherpa в AllyOnnx); main слит сложением -->
 - **hooks:** not-deployed
 - **blockers:** none
-  <!-- код ждёт мержа D7.2: до него ветка держит документы -->
-- **waivers:** none
+- **waivers:** acceptance=U28 reason=ответ 8 родителя в подписи серии «слух» 2026-10-23 на вопрос ведущего («… Проверки на телефоне — дважды: после части 2 и после части 4. Подписываешь?» — «Подписываю (Рекомендую)»): Silero и GigaAM (U20, U21, U28) — после D7.3, в сессии теста; постоянное решение родителя 2026-10-23 — все проверки на телефоне в общую сессию теста, сливаем по зелёным Mac и GitHub («Да, всё в общую сессию (Рекомендую)»); код, тесты U22–U26 на Mac и Linux, мутации, сборка без подписи и оракул артефакта — зелёные; по умолчанию слушает диктовка, GigaAM — только с `engine: gigaam` в реестре и файлами на телефоне by=human:anthony at=2026-10-23
 - **new_dependency:** none
 - **runtime_paths:** Packages/AllyHearing/
   <!-- §12.6, один путь: GigaAM на устройстве — загрузка весов external data, память, время расшифровки -->

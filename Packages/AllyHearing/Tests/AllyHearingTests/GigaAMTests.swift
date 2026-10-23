@@ -63,9 +63,10 @@ final class GigaAMTests: XCTestCase {
     func testGigaAMHypothesesAreTheSpikes() throws {  // U23
         guard let cv = set("cv.jsonl", spike: "ctc_cv.jsonl"), let noisy = set("cv_child_noise.jsonl",
                                                                             spike: "ctc_cv_child_noise.jsonl"),
-              let recognizer = GigaAMRecognizer(model: study.appendingPathComponent("model.int8.onnx"),
-                                                tokens: study.appendingPathComponent("tokens.txt"))
+              FileManager.default.fileExists(atPath: study.appendingPathComponent("model.int8.onnx").path)
         else { throw XCTSkip("U23 пропущен: нет GigaAM в ~/models или наборов в local/ — паритет не проверен") }
+        let recognizer = try XCTUnwrap(GigaAMRecognizer(model: study.appendingPathComponent("model.int8.onnx"),
+                                                        tokens: study.appendingPathComponent("tokens.txt")))
         var peak = 0.0
         XCTAssertEqual(cv.clips.count, 300)
         XCTAssertEqual(try same(recognizer, cv.clips, cv.expected, peak: &peak), 300)
@@ -74,15 +75,36 @@ final class GigaAMTests: XCTestCase {
     }
 
     func testExternalDataGivesTheSameHypothesesInLessMemory() throws {  // U24
-        let before = footprint()
         guard let cv = set("cv.jsonl", spike: "ctc_cv.jsonl"),
-              let recognizer = GigaAMRecognizer(model: external.appendingPathComponent("model.int8.onnx"),
-                                                tokens: external.appendingPathComponent("tokens.txt"))
+              FileManager.default.fileExists(atPath: external.appendingPathComponent("model.int8.onnx.data").path)
         else { throw XCTSkip("U24 пропущен: нет весов external data в local/ — память не проверена") }
+        let before = footprint()
+        let recognizer = try XCTUnwrap(GigaAMRecognizer(model: external.appendingPathComponent("model.int8.onnx"),
+                                                        tokens: external.appendingPathComponent("tokens.txt")))
         let loaded = footprint() - before
         var peak = 0.0
         XCTAssertEqual(try same(recognizer, cv.clips, cv.expected, peak: &peak), 300)
         XCTAssertLessThanOrEqual(loaded, 450)
         XCTAssertLessThanOrEqual(peak - before, 500)
+    }
+
+    /// The registry's choice from the models folder as the app makes it: the external-data files — GigaAM; an empty
+    /// folder — dictation and the console line; dictation asked — dictation whatever lies there.
+    func testTheRegistryChoosesGigaAMFromTheModelsFolder() throws {  // U22
+        let registry = repo.appendingPathComponent("App/Resources/hearing.json")
+        let hearing = try Hearing.decode(Data(contentsOf: registry)), files = try XCTUnwrap(hearing.asr).gigaam
+        guard FileManager.default.fileExists(atPath: external.appendingPathComponent("model.int8.onnx.data").path)
+        else { throw XCTSkip("U22 на Mac пропущен: нет весов external data в local/ — выбор из папки не проверен") }
+        let asked = Hearing(turn: hearing.turn, listenTimeout: hearing.listenTimeout,
+                            asr: Recognition(engine: "gigaam", gigaam: files))
+        let gigaam = GigaAMRecognizer.choose(asked, models: external)
+        XCTAssertNotNil(gigaam.decode)
+        XCTAssertEqual([gigaam.label, gigaam.line ?? ""], ["gigaam-v3-ctc:224757733", ""])
+        let nowhere = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let empty = GigaAMRecognizer.choose(asked, models: nowhere)
+        XCTAssertNil(empty.decode)
+        XCTAssertEqual([empty.label, empty.line ?? ""],
+                       ["dictation", "GigaAM нет: нет файла model.int8.onnx — диктовка"])
+        XCTAssertNil(GigaAMRecognizer.choose(hearing, models: external).decode)
     }
 }
