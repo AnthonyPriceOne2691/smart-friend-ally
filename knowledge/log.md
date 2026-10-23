@@ -7,6 +7,12 @@
   `engineering/voice-loop` — текст диктовки на «возможно, конец». `engineering/safety-below-model` — спекуляция не
   обходит план реплики.
 * **Источник**: поставка `turn-speculation` (D7.1 серии «слух»; примеры U7–U15 подписаны родителем 2026-10-23).
+## 2026-10-23 — движок голоса Supertonic за протоколом (голос V1b)
+
+* **Creation**: `engineering/voice-engine` (Design): `SpeechEngine`, фраза за вызов, скорость синтеза не ниже 0,85, веса в
+  external data на общем ORT, паритет с Python бит в бит; `implementation:` — исходники `AllyVoice`.
+  `engineering/index`, `references/repo-map` — новый пакет.
+* **Источник**: поставка `voice-engine` (V1b серии голоса; спека подписана родителем 2026-10-23).
 
 ## 2026-10-23 — один ONNX Runtime на приложение (голос V1a)
 
