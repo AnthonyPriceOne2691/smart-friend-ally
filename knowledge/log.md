@@ -1,5 +1,12 @@
 # Knowledge Bundle Update Log
 
+## 2026-10-23 — слух: спекуляция — ответ модели начинается в её паузе
+
+* **Update**: `engineering/session` — `Speculation` (общий план реплики, этапы `spec_*`, `spec_stale` до D5);
+  `implementation:` — `Speculation.swift`. `engineering/turn-detector` — события паузы до сессии.
+  `engineering/voice-loop` — текст диктовки на «возможно, конец». `engineering/safety-below-model` — спекуляция не
+  обходит план реплики.
+* **Источник**: поставка `turn-speculation` (D7.1 серии «слух»; примеры U7–U15 подписаны родителем 2026-10-23).
 ## 2026-10-23 — движок голоса Supertonic за протоколом (голос V1b)
 
 * **Creation**: `engineering/voice-engine` (Design): `SpeechEngine`, фраза за вызов, скорость синтеза не ниже 0,85, веса в

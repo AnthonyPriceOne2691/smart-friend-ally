@@ -22,12 +22,16 @@ public enum TurnEvent: Equatable, Sendable {
 }
 
 /// One listening's end between the ear and the detector: her «я всё» asked from outside the audio thread — taken on the
-/// next frame — and why the detector ended the turn, for the ear's record.
+/// next frame —, why the detector ended the turn, for the ear's record, and her pauses as they come (D7.1).
 public final class TurnEnding: Sendable {
     public enum Reason: String, Sendable { case tail, limit, done }
     private let state = Locked<(asked: Bool, reason: Reason?)>((false, nil))
+    private let pauses: @Sendable (TurnEvent) -> Void
 
-    public init() {}
+    /// - Parameter pauses: the tentative end and the resumed speech, on the audio thread.
+    public init(pauses: @escaping @Sendable (TurnEvent) -> Void = { _ in }) { self.pauses = pauses }
+
+    func saw(_ event: TurnEvent) { pauses(event) }
 
     public func ask() { state { $0.asked = true } }
 
@@ -81,6 +85,7 @@ public struct TurnDetector {
         }
         guard tentativeSent else { return nil }
         tentativeSent = false
+        ending?.saw(.resumed(at: time))
         return .resumed(at: time)
     }
 
@@ -90,6 +95,7 @@ public struct TurnDetector {
         if time - last >= tail { return end(.tail, at: time) }
         guard !tentativeSent, time - last >= timing.tentative else { return nil }
         tentativeSent = true
+        ending?.saw(.tentativeEnd(lastVoiced: last))
         return .tentativeEnd(lastVoiced: last)
     }
 
