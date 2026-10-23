@@ -16,6 +16,9 @@ public enum OnnxRuntime {
     }
     /// The C API version this layer asks for: `ORT_API_VERSION` of the headers.
     public static let apiVersion = Int(ORT_API_VERSION)
+
+    /// Whether the linked build serves this C API version (sherpa-onnx 1.13.8 asks for 28; D7.2).
+    public static func serves(api: Int) -> Bool { OrtGetApiBase().pointee.GetApi(UInt32(api)) != nil }
 }
 
 /// A tensor into or out of a session: float32 or int64 values, row-major, with their shape.
