@@ -27,7 +27,7 @@
 
 | Поставка | Что | План, строк | Файлов | Рисковый путь | Когда |
 |---|---|---|---|---|---|
-| Э1 `encyclopedia-core` | основы Snowball, поиск FTS5 через `AllySQLite`, правило, самопроверка, запись, `encyclopedia-replay` | ≈ 563 | 10 | — | после подписи и пакета `AllySQLite` в main |
+| Э1 `encyclopedia-core` | основы Snowball, поиск FTS5 через `AllySQLite`, правило, самопроверка, запись, `encyclopedia-replay` | ≈ 563 | 10 | — | эта ветка; PR — после мержа `memory-core` |
 | Э2 `app-encyclopedia` | 100 карточек, тесты базы, крючок сессии, режим `why`, подсказка, след, приложение, телефон | ≈ 360 (C — ≈ 410) | ≈ 12 | только при формате C — `Packages/AllyLlama/` | после мержа Э1; карточки агенты пишут параллельно с Э1 |
 
 ## Approach — Э1
@@ -63,7 +63,8 @@
 
 - Swift tools 5.10, XCTest, джоба `swift` на Linux; на Mac — `DEVELOPER_DIR` Xcode, SwiftPM с `--disable-keychain`.
 - AllyCore → `AllySQLite` через `.package(path:)`: пакет проекта, гейт `new-dependency` его не считает.
-- Порядок с пакетом: в main раньше — +3 строки; Э1 раньше — поставка `sqlite-core` (вопрос ведущему В1).
+- Порядок с пакетом (ответ на В1): Э1 пишется против интерфейса `AllySQLite` из `memory-core` (`SQLiteConnection`,
+  `exec`, `rows` с привязкой `SQLiteValue`, `transaction`, `SQLiteError`); PR — после его мержа.
 
 ## Budget Э1 (800 строк, 25 файлов, рисковых путей 0)
 

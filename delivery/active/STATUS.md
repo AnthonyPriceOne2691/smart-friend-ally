@@ -9,10 +9,10 @@
 - **phase:** specify
 - **builder:** agent:claude-code
 - **verifier:** process:ci
-- **human_ok_spec:** pending (спека серии Э1–Э2 у родителя через ведущего: примеры P1–P11 Э1 таблицей, ожидания Э2 P12–P20 списком, вопросы 1–6 в decisions.md)
+- **human_ok_spec:** yes (by=human:anthony, at=2026-10-23, «Подписываю (Рекомендую)»: серия Э1–Э2, примеры P1–P11, ожидания P12–P20, вопросы 1–6 по рекомендациям; 100 карточек)
   <!-- одна подпись на серию, как у D3: гейт ищет в тестах поставки каждый id из таблиц её спеки, поэтому P12–P20 —
        списком; Э2 переносит их таблицей в свою спеку со ссылкой на коммит этой (L33, L51) -->
-- **human_ok_plan:** pending (подписывается вместе со спекой)
+- **human_ok_plan:** yes (by=human:anthony, at=2026-10-23, подписан вместе со спекой)
 - **shape-oracles:** cqg-deployed
 - **behavior-oracles:** tests-present
   <!-- P1–P10 — тесты AllyCore на Linux (SQLite 3.45.1 с FTS5); P11 — encyclopedia-replay против эталона на Mac -->
@@ -24,8 +24,8 @@
        Package.swift AllyCore, knowledge и CLAUDE.md — конфликты сложением, перед PR — слияние main -->
 - **hooks:** not-deployed
 - **blockers:** none
-  <!-- зависимость, а не остановка: implement — после подписи и общего пакета Packages/AllySQLite в main (вводит
-       memory-core; если Э1 раньше — sqlite-core, вопрос ведущему В1). Карточки Э2 агенты могут писать параллельно с Э1 -->
+  <!-- зависимость, а не остановка: Э1 пишется против интерфейса Packages/AllySQLite из memory-core (пример M22 там);
+       PR Э1 — после мержа memory-core (ответ ведущего на В1). Карточки Э2 агенты могут писать параллельно с Э1 -->
 - **waivers:** none
 - **new_dependency:** none
   <!-- Snowball — свой перенос (BSD-3, gh api 2026-10-23); SQLite — системный, через пакет проекта AllySQLite
