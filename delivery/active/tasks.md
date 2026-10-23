@@ -15,7 +15,7 @@ L36, L37, L42, L43 (`CLAUDE.md`), L25 (`App/Resources/model.json` — повер
 - [x] T2: подпись родителя под спекой и планом, ответы на вопросы 1–8 — отдельным коммитом до кода; `human_ok_spec`,
   `human_ok_plan` → `yes` (родитель 2026-10-23 «Подписываю (Рекомендую)», by=human:anthony: 1–8 по рекомендациям;
   в U3 и U5 — 1,2 с и 30 с)
-- [ ] T3: `eval-smoke.md` — строки U1–U6 с оракулом и ожиданием, до кода; `phase: implement`
+- [x] T3: `eval-smoke.md` — строки U1–U6 с оракулом и ожиданием, до кода; `phase: implement`
 
 ### Slice 1 — тип хода (AllyCore, Linux)
 - [ ] T4: `TurnKinds.swift` и `Resources/turn_kinds.json`; U1 и реляционный оракул на 200 ходах; мутации «вопросительное
