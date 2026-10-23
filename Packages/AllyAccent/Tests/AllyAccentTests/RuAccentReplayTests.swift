@@ -33,7 +33,7 @@ final class RuAccentReplayTests: XCTestCase {
     func testStandPhrasesMatchPython() throws {
         // Z14: 163 позиции стенда без имён — текст Python в 163 из 163; 9 фраз страницы (несколько предложений) — тоже
         let positions = try Replay.shared.get().positions
-        let stand = positions.filter { $0.cat != "page" && $0.cat != "Z16" }
+        let stand = positions.filter { Int($0.pos).map { $0 < 1000 } ?? false }
         let page = positions.filter { $0.cat == "page" }
         XCTAssertEqual(stand.count, 163)
         XCTAssertEqual(try mismatches(stand), [])
