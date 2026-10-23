@@ -254,3 +254,64 @@ struct SeededGenerator: RandomNumberGenerator {
         return mixed ^ (mixed >> 31)
     }
 }
+
+/// A disk double for the black box: files in memory (bytes, or a size alone for an old preloaded file), the writes in
+/// order, a failure on the write whose path ends with `failOn`, and the flag «out of the backup and protected».
+final class MemoryDisk: BlackBoxDisk, @unchecked Sendable {
+    private struct State { var files: [String: Data] = [:], sizes: [String: Int] = [:], order: [String] = [] }
+    private let state: Locked<State>, failOn: String?
+    let isPrivate: Bool
+
+    init(isPrivate: Bool = true, preload sizes: [String: Int] = [:], failOn: String? = nil) {
+        (state, self.isPrivate, self.failOn) = (Locked(State(sizes: sizes)), isPrivate, failOn)
+    }
+
+    var paths: [String] { state { (Array($0.files.keys) + Array($0.sizes.keys)).sorted() } }
+    var order: [String] { state { $0.order } }
+    func data(_ path: String) -> Data? { state { $0.files[path] } }
+
+    func files() throws -> [String: Int] { state { $0.files.mapValues(\.count).merging($0.sizes) { new, _ in new } } }
+
+    func write(_ data: Data, to path: String) throws {
+        if let failOn, path.hasSuffix(failOn) { throw DiskFailure() }
+        state { (s: inout State) in
+            s.files[path] = data
+            s.order.append(path)
+        }
+    }
+
+    func remove(_ path: String) throws {
+        let gone = { (key: String) in key == path || key.hasPrefix(path + "/") }
+        state { (s: inout State) in
+            s.files = s.files.filter { !gone($0.key) }
+            s.sizes = s.sizes.filter { !gone($0.key) }
+        }
+    }
+}
+
+struct DiskFailure: Error {}
+
+/// A tape double: the queued recordings, one per take; nil when they run out.
+final class QueueTape: VoiceTape, @unchecked Sendable {
+    private let state: Locked<[RecordedVoice]>
+    init(_ recordings: [RecordedVoice]) { state = Locked(recordings) }
+    func take() -> RecordedVoice? { state { $0.isEmpty ? nil : $0.removeFirst() } }
+}
+
+/// A model double that thinks `delay` of virtual time, then answers the whole reply at once.
+final class TimedReply: LanguageModel, @unchecked Sendable {
+    private let text: String, delay: Double, clock: TestClock
+    init(_ text: String, after delay: Double, clock: TestClock) {
+        (self.text, self.delay, self.clock) = (text, delay, clock)
+    }
+
+    func reply(to utterance: String) -> AsyncThrowingStream<String, Error> {
+        let (stream, output) = AsyncThrowingStream<String, Error>.makeStream(bufferingPolicy: .bufferingOldest(10))
+        clock.advance(by: delay)
+        output.yield(text)
+        output.finish()
+        return stream
+    }
+
+    func cancel() {}
+}

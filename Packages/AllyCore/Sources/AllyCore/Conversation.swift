@@ -40,7 +40,7 @@ public actor Conversation {
     public init(_ parts: SessionParts, settings: SessionSettings = SessionSettings(), listener: Listener) {
         let board = Board(), sink = EndWatch(sink: parts.sink, board: board)
         let watched = SessionParts(model: parts.model, voice: parts.voice, sink: sink, clock: parts.clock,
-                                   router: parts.router, stamp: parts.stamp) { state in
+                                   router: parts.router, audience: parts.audience, stamp: parts.stamp) { state in
             parts.onState(state)
             board.move(to: state)
         }
@@ -109,13 +109,15 @@ final class Board: Sendable {
     }
 }
 
-/// The session's sink as the conversation sees it: every record goes on, and the one that ends a session names why —
-/// it is written before the session moves to sleep.
+/// The session's sink as the conversation sees it: every record goes on with its words, and the one that ends a
+/// session names why — it is written before the session moves to sleep.
 struct EndWatch: TraceSink {
     let sink: TraceSink, board: Board
 
-    func write(_ trace: TurnTrace) {
+    func write(_ trace: TurnTrace) { write(trace, words: TurnWords()) }
+
+    func write(_ trace: TurnTrace, words: TurnWords) {
         if let end = trace.end { board.end(end) }
-        sink.write(trace)
+        sink.write(trace, words: words)
     }
 }

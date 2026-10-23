@@ -15,6 +15,7 @@ local/
 *.sqlite3
 *.db
 *.realm
+*.allybox
 
 # --- Веса моделей: гигабайты, качаются отдельно ---
 models/
