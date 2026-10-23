@@ -22,7 +22,8 @@ public final class MemoryStore {
         db = try Self.open(directory, flags: flags)
     }
 
-    /// Writes a session's candidates as one transaction; a session begun before the last erase writes nothing.
+    /// Writes a session's candidates as one transaction; a session begun before the last erase writes nothing; a value
+    /// under the never-stored list or tainted by her lines is not written and counts by its rule.
     @discardableResult
     public func write(_ session: MemorySession) throws -> WriteReport {
         var report = WriteReport()
@@ -30,8 +31,15 @@ public final class MemoryStore {
             report.olderThanWipe = true
             return report
         }
+        let taint = Taint(heard: session.heard)
         try db.transaction {
-            for candidate in session.candidates { try apply(candidate, session, &report) }
+            for candidate in session.candidates {
+                if let rule = Forbidden.shared.rule(candidate.value) ?? taint.rule(candidate.value) {
+                    report.refused[rule, default: 0] += 1
+                } else {
+                    try apply(candidate, session, &report)
+                }
+            }
         }
         return report
     }
@@ -94,6 +102,7 @@ public final class MemoryStore {
 
     private static func open(_ directory: URL, flags: Int32) throws -> SQLiteConnection {
         let db = try SQLiteConnection(path: directory.appendingPathComponent(fileName).path, flags: flags)
+        try Forbidden.install(on: db)
         for pragma in Schema.pragmas {
             try db.exec(pragma.set)
             guard try db.rows("PRAGMA \(pragma.name)").first?.first == pragma.value else {
