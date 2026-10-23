@@ -1,0 +1,33 @@
+# Active delivery status
+
+- **slug:** voice-accent
+- **stack:** delivery@2.07, cqg@2.74, okf@1.21
+- **class:** L
+- **kind:** feature
+- **repro_test:** n/a reason=не bugfix
+- **diagnosis:** n/a reason=не bugfix
+- **phase:** plan
+- **builder:** agent:claude-code
+- **verifier:** process:ci
+- **human_ok_spec:** yes (by=human:anthony, at=2026-10-23, «Подписываю (Рекомендую)» — подпись серии голоса V1–V4, спека серии — коммит 68202f0; у V3 — примеры Z14–Z18; вопрос ведущего дословно: «Голос Элли: описание работы готово, это серия из 4 частей. (1) Движок голоса на телефоне и общая основа для голоса и слуха. (2) Произношение: ударения, «сево́дня», «но́вова», «Элли» — только для голоса, тексты не меняются. (3) Расстановщик ударений на телефоне. (4) Голос в приложении вместо Milena: «тоньше» (подъём высоты), первая фраза звучит не позже чем через 2,5 с после её речи. Сам голос и таблица произношения подставятся одной строкой после второго круга образцов. Пока файлов голоса на телефоне нет, звучит Milena, и в консоли видно, чего не хватает. Первая фраза — 8 шагов (качественнее), если укладываемся в 2,5 с, иначе 5 шагов. Подписываешь?»)
+- **human_ok_plan:** no
+- **shape-oracles:** cqg-deployed
+- **behavior-oracles:** tests-present
+- **artifact_oracle:** n/a reason=поставка не собирает приложение: пакеты SwiftPM проверяют их тесты (Linux и ручная джоба ios на Mac); бинарь с расстановщиком — V4
+- **ci-oracles:** tooling
+- **worktree:** ../Smart frend Ally-wt-voiceaccent
+- **parallel_sessions:** merge-guard,manual-deploy
+- **hooks:** not-deployed
+- **blockers:** план с поправкой +50% ≈ 1610 строк при стоп-линии 780 — escalation.md, решение до кода
+- **waivers:** none
+- **new_dependency:** none
+- **runtime_paths:** none reason=до решения по escalation.md кода нет; нативный рантайм вывода — Packages/AllyOnnx (V1), V3 будет его вызывать
+- **irreversible_surfaces:** none reason=продукт офлайн; поставка не трогает приложение и телефон
+- **model_surface:** n/a reason=языковая модель и промпт не меняются: расстановщик ударений работает после контракта хода
+- **rule_enforcers:** n/a reason=model_surface не объявлена списком
+- **canon_drift_waiver:** no
+- **baseline_growth_waiver:** no
+- **observability:** 1
+- **observe_signal:** Z14–Z18 зелёные в ручной джобе ios на каждом бампе ORT; с V4 — ударения на слух родителя в сессии (Z26)
+- **observe_until:** 2026-11-30
+- **circuit_breakers:** defaults from AGENT_DELIVERY_HARNESS.md §3.4
