@@ -52,7 +52,7 @@ implementation:
 | `scripts/`, `scripts/lint/` | механика контура; канонные файлы правятся только перевендориванием; продуктовые — `scripts/reinstall_app.sh` (E4), `scripts/child_mode.sh` (R) |
 | `docs/canon/` | снимок канонов с самопроверкой (вариант C) |
 | `App/` | приложение iOS: `project.yml`, `Sources/` (консоль, цикл, звук, распознавание), `Resources/` (персона, реестр) |
-| `Packages/` | Swift-пакеты: `AllyDiscipline` (дисциплина ответа), `AllyCore` (ядро хода), `AllyLlama` (модель), `AllyShell` (детский экран), `AllySpeechText` (текст для синтеза), `AllyOnnx` (один ONNX Runtime приложения) |
+| `Packages/` | Swift-пакеты: `AllyDiscipline` (дисциплина ответа), `AllyCore` (ядро хода), `AllyLlama` (модель), `AllyShell` (детский экран), `AllySpeechText` (текст для синтеза), `AllyOnnx` (один ONNX Runtime приложения), `AllyVoice` (движок голоса) |
 | `local/` | данные ребёнка и прочее локальное — игнорируется, гейт не пускает в git |
 
 # Грабли
