@@ -1,7 +1,8 @@
 import AllySQLite
 
 /// The memory database, schema 1. The closed lists are CHECKs: neither the model nor a bug adds a category. A fact
-/// keeps the sessions that said it (`seen`), so a confirmation counts once per session in any order of writing.
+/// keeps the sessions that said it (`seen`), so a confirmation counts once per session in any order of writing. A value
+/// under the never-stored list is refused by the triggers on any path of writing (`forbidden`, `Forbidden.install`).
 enum Schema {
     static let version: Int64 = 1
 
@@ -40,6 +41,14 @@ enum Schema {
           session TEXT NOT NULL, started REAL NOT NULL, turn INTEGER NOT NULL, value TEXT NOT NULL,
           anchor REAL NOT NULL, PRIMARY KEY (fact_id, session));
         CREATE INDEX IF NOT EXISTS fact_entity ON fact (entity_id, trait, status);
+        CREATE TRIGGER IF NOT EXISTS fact_insert_forbidden BEFORE INSERT ON fact
+          WHEN forbidden(NEW.value) OR forbidden(NEW.value_key) BEGIN SELECT RAISE(ABORT, 'forbidden value'); END;
+        CREATE TRIGGER IF NOT EXISTS fact_update_forbidden BEFORE UPDATE OF value, value_key ON fact
+          WHEN forbidden(NEW.value) OR forbidden(NEW.value_key) BEGIN SELECT RAISE(ABORT, 'forbidden value'); END;
+        CREATE TRIGGER IF NOT EXISTS seen_insert_forbidden BEFORE INSERT ON seen
+          WHEN forbidden(NEW.value) BEGIN SELECT RAISE(ABORT, 'forbidden value'); END;
+        CREATE TRIGGER IF NOT EXISTS seen_update_forbidden BEFORE UPDATE OF value ON seen
+          WHEN forbidden(NEW.value) BEGIN SELECT RAISE(ABORT, 'forbidden value'); END;
         """
 
     /// A fact from its sessions: value, session and turn of the earliest; the confidence — the best anchor plus 0.05

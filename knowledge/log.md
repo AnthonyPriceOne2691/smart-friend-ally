@@ -8,6 +8,12 @@
   консоли из `lines.json`; `implementation:` — `LlamaSettings.swift`, `lines.json`. `engineering/safety-below-model` —
   срезанное контрактом в память модели не попадает. `engineering/index` — строка сессии.
 * **Источник**: поставка `kv-spoken` (D5 серии «живой разговор»; примеры X1–X8 подписаны родителем 2026-10-23).
+## 2026-10-23 — память: запрет на любом пути записи (memory-guard)
+
+* **Update**: `engineering/memory` — «не хранится никогда» исполняется: правила `forbidden.json`, проверка записи с
+  отчётом по id правил, заражение по её репликам сессии, SQL-функция `forbidden` в триггерах `fact` и `seen`;
+  `implementation:` — `Forbidden.swift`, `forbidden.json`. `engineering/index` — строка концепта.
+* **Источник**: поставка `memory-guard` (M29 спеки серии, подписанной родителем 2026-10-23; разбиение — ведущий).
 ## 2026-10-23 — слух: спекуляция — ответ модели начинается в её паузе
 
 * **Update**: `engineering/session` — `Speculation` (общий план реплики, этапы `spec_*`, `spec_stale` до D5);

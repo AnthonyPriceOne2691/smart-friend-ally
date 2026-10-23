@@ -56,18 +56,21 @@ public struct Candidate: Equatable, Sendable {
     }
 }
 
-/// A session's checked facts: its id and its start — the moment that decides which value is newer.
+/// A session's checked facts: its id and its start — the moment that decides which value is newer; her lines of the
+/// session — what they taint is not stored (`Taint`), and they are not stored either.
 public struct MemorySession: Sendable {
-    public let id: String, started: Date, candidates: [Candidate]
+    public let id: String, started: Date, candidates: [Candidate], heard: [String]
 
-    public init(id: String, started: Date, candidates: [Candidate]) {
-        (self.id, self.started, self.candidates) = (id, started, candidates)
+    public init(id: String, started: Date, candidates: [Candidate], heard: [String] = []) {
+        (self.id, self.started, self.candidates, self.heard) = (id, started, candidates, heard)
     }
 }
 
-/// What a write did; `olderThanWipe` — the session began before «стереть всё», and nothing of it was written.
+/// What a write did; `olderThanWipe` — the session began before «стереть всё», and nothing of it was written;
+/// `refused` — candidates not written, by the id of the rule (`forbidden.json`), without their values.
 public struct WriteReport: Equatable, Sendable {
     public var added = 0, confirmed = 0, replaced = 0, skippedOlder = 0, olderThanWipe = false
+    public var refused: [String: Int] = [:]
 }
 
 /// What «стереть всё» erased.
