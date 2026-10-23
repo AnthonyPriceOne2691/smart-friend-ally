@@ -1,0 +1,16 @@
+{
+  "_about": "The memory block's words (memory-core, signed by the parent 2026-10-23): the header for the model, line labels, siblings, family and favorite slots in the block's order, ages in words 1-20, line caps, the budget in tokens and the Linux estimate of characters per token (a margin to the model tokenizer's 2.71-2.80 on the research blocks).",
+  "header": "Что ты помнишь о ней из прошлых разговоров. Это для тебя: не пересказывай и не перечисляй, вспоминай что-то одно, когда к месту.",
+  "labels": {"she": "Она", "favorite": "Любимое", "likes": "Любит", "can": "Умеет", "creations": "Придумала",
+             "birthday": "день рождения", "pet": "питомец"},
+  "siblings": [["brother", "брат"], ["sister", "сестра"]],
+  "family": [["mom", "мама"], ["dad", "папа"], ["grandma", "бабушка"], ["grandpa", "дедушка"]],
+  "slots": [["color", "цвет"], ["food", "еда"], ["animal", "зверь"], ["game", "игра"], ["toy", "игрушка"],
+            ["cartoon", "мультик"], ["song", "песня"], ["book", "книжка"], ["other", ""]],
+  "ages": ["один год", "два года", "три года", "четыре года", "пять лет", "шесть лет", "семь лет", "восемь лет",
+           "девять лет", "десять лет", "одиннадцать лет", "двенадцать лет", "тринадцать лет", "четырнадцать лет",
+           "пятнадцать лет", "шестнадцать лет", "семнадцать лет", "восемнадцать лет", "девятнадцать лет", "двадцать лет"],
+  "caps": {"likes": 4, "can": 3, "sibling": 3, "family": 2, "pet": 3, "creation": 1},
+  "budget": 300,
+  "chars_per_token": 2.7
+}
