@@ -22,6 +22,7 @@ models/
 *.gguf
 *.safetensors
 *.onnx
+!Packages/AllyOnnx/Tests/AllyOnnxTests/add.onnx
 *.tflite
 *.litertlm
 *.mlpackage/
