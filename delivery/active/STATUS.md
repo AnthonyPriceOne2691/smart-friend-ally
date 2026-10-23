@@ -6,7 +6,7 @@
 - **kind:** feature
 - **repro_test:** n/a reason=не bugfix
 - **diagnosis:** n/a reason=не bugfix
-- **phase:** implement
+- **phase:** verify
 - **builder:** agent:claude-code
 - **verifier:** process:ci
 - **human_ok_spec:** yes (by=human:anthony, at=2026-10-23; «Подписываю (Рекомендую)» через ведущего — примеры U1–U28, вопросы 1–8 по рекомендациям decisions.md)
@@ -29,7 +29,7 @@
 - **hooks:** not-deployed
 - **blockers:** none
   <!-- подпись родителя 2026-10-23 — отдельным коммитом до кода (L33); код — после eval-smoke.md, фаза implement -->
-- **waivers:** none
+- **waivers:** acceptance=U6 reason=ответ 8 родителя в подписи серии 2026-10-23: проверки на телефоне — дважды, первая после D7.1 вместе с U14–U15; код, тесты U1–U5, мутации, A23, сборка без подписи и оракул артефакта — зелёные by=human:anthony at=2026-10-23
 - **new_dependency:** none
 - **runtime_paths:** none reason=звук и распознавание (App/Sources/Audio/, App/Sources/Speech/) и пакет модели не тронуты: хвост по типу хода — параметр определителя ядра, «я всё» — флаг определителя, оба с тестами на Linux; проводка PhoneListener, VoiceLoop и консоли проверяется на телефоне примером U6, как проводка D2.2
 - **irreversible_surfaces:** none reason=продукт офлайн; D7 меняет код и реестр слуха; на телефон ставится отдельным решением родителя вне мержа; отправки наружу, трат, выкатки и публикации нет

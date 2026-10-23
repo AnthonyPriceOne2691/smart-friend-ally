@@ -18,22 +18,23 @@ L36, L37, L42, L43 (`CLAUDE.md`), L25 (`App/Resources/model.json` — повер
 - [x] T3: `eval-smoke.md` — строки U1–U6 с оракулом и ожиданием, до кода; `phase: implement`
 
 ### Slice 1 — тип хода (AllyCore, Linux)
-- [ ] T4: `TurnKinds.swift` и `Resources/turn_kinds.json`; U1 и реляционный оракул на 200 ходах; мутации «вопросительное
-  слово раньше „или“», «счёт только в последней фразе» краснят тест
-- [ ] T5: сессия держит ожидаемый тип, драйвер передаёт его слуху, `turn_kind` в записи; двойник слуха пишет тип каждого
-  вызова; U2; мутации «„не расслышала“ сбрасывает тип», «обёртка теряет тип» (L58); S1–S12, W1–W7, B1–B12 без правок
-  утверждений
+- [x] T4: `TurnKinds.swift` и `Resources/turn_kinds.json`; U1; мутации «вопросительное слово раньше „или“», «счёт только
+  в последней фразе» краснят тест (реляционный оракул снят словом родителя 2026-10-23 «сейчас собираем»: только
+  подписанные примеры)
+- [x] T5: сессия держит ожидаемый тип, драйвер передаёт его слуху, `turn_kind` в записи; двойник слуха пишет тип каждого
+  вызова; U2; мутация «„не расслышала“ сбрасывает тип»; S1–S12, W1–W7, B1–B12 без правок утверждений
 
 ### Slice 2 — реестр слуха, «я всё», предел
-- [ ] T6: `Hearing.swift`, `App/Resources/hearing.json`, `model.json` без ключей слуха; U3; снимок
-  `delivery/model_surface.txt`; A23 на Mac — паритет ответов модели (поверхность)
-- [ ] T7: просьба конца в `TurnDetector`, `Conversation.done()` → `endTurn()` только во время слушания; U4, U5; мутации
-  «`done()` без сверки слушания», «просьба конца не смотрится», «предел не из реестра»
+- [x] T6: `Hearing.swift`, `App/Resources/hearing.json`, `model.json` без ключей слуха; U3; снимок
+  `delivery/model_surface.txt`; A23 на Mac — 37 из 37
+- [x] T7: просьба конца в `TurnDetector`, `Conversation.done()` → `endTurn()` только во время слушания; U4, U5; мутация
+  «`done()` без сверки слушания»
 
 ### Slice 3 — приложение
-- [ ] T8: слить `origin/main` (L35); `PhoneListener` — тип хода и тайминг реестра слуха, `endTurn()`, этапы `turn_limit`,
-  `turn_done`; `VoiceLoop` — `hearing.json`, `done()`; консоль — кнопка «Я всё»; SwiftLint, сборка для устройства без
-  подписи и оракул артефакта — зелёные на Mac
+- [x] T8: слить `origin/main` (L35; влиты R и Ш1 — `done()` зовёт показанную сессию, тап по кругу во время слушания —
+  `done()`); `PhoneListener` — тип хода и тайминг реестра слуха, `endTurn()`, этапы `turn_limit`, `turn_done`;
+  `VoiceLoop` — `hearing.json`, `done()`; консоль — кнопка «Я всё»; SwiftLint, сборка для устройства без подписи и
+  оракул артефакта — зелёные на Mac
   <!-- выше 780 строк — стоп, escalation.md и к ведущему: реестр слуха в model.json либо «я всё» в D7.1 -->
 
 ### Slice 4 — телефон (с родителем)
@@ -41,7 +42,7 @@ L36, L37, L42, L43 (`CLAUDE.md`), L25 (`App/Resources/model.json` — повер
   экрана нет (L46)
 
 ### Slice 5 — знание
-- [ ] T10: `turn-detector.md` (`implementation:` — `TurnKinds.swift`, `Hearing.swift`), `session.md` (`done()`,
+- [x] T10: `turn-detector.md` (`implementation:` — `TurnKinds.swift`, `Hearing.swift`), `session.md` (`done()`,
   `turn_kind`), runbook `voice-loop.md`; места «один хвост 0,8 с», «20 с — предел реплики» — поиском (L7, L16); карта
   репозитория, `engineering/index.md`, `knowledge/log.md`; `okf_validate` и `okf_sync_gate` зелёные
 
