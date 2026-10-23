@@ -45,3 +45,4 @@
 - `turn-speculation`
 - `memory-core`
 - `memory-guard`
+- `child-shell-app`

@@ -40,11 +40,11 @@ L23, L22, L15, L62, L94, L35, L14, L43; по затронутым путям —
 
 ## Slice 4 — знание и сдача
 - [x] T12: знание — места из плана (L16, L70), `implementation:` у концептов, `knowledge/log.md`
-- [ ] T13: слить `origin/main` сложением; строгий `delivery_check --require-ci --diff-base origin/main` (L14); пуш, PR, CI;
+- [x] T13: слить `origin/main` сложением; строгий `delivery_check --require-ci --diff-base origin/main` (L14); пуш, PR, CI;
   macOS-джоба `ios.yml` (сборка приложения) — по слову ведущего: минуты macOS ограничены
-- [ ] T14: verify-report (дайджест, мутации, CI, `mergeable`, «Исполнение рисковых путей» — общая сессия теста; waiver
+- [x] T14: verify-report (дайджест, мутации, CI, `mergeable`, «Исполнение рисковых путей» — общая сессия теста; waiver
   V29 с ответом родителя «Да, всё в общую сессию (Рекомендую)»); `check_digest_report.py` до пуша сдачи (L43); архив в
-  том же PR, строка INDEX с уроками L105–L107, slug — строкой в конец `delivery/OBSERVATIONS.md`; доклад ведущему «готово к мержу»
+  том же PR, строка INDEX (уроки L105, L106, L107 — рождены этой поставкой), slug — строкой в конец `delivery/OBSERVATIONS.md`; доклад ведущему «готово к мержу»
 
 ## Перенесено
 - **Ш2б `child-shell-light`** (после мержа Ш3): ночь, оттенок «думает», свечение и жемчужинки, пузырьки неба, воды,

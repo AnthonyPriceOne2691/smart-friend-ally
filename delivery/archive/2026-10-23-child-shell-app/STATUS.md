@@ -6,7 +6,7 @@
 - **kind:** feature
 - **repro_test:** n/a reason=не bugfix
 - **diagnosis:** n/a reason=не bugfix
-- **phase:** verify
+- **phase:** handoff
 - **builder:** agent:claude-code
 - **verifier:** process:ci
   <!-- облик судит родитель на глаз по снимкам на Mac (П32); снимков экрана телефона нет никогда (L46) -->
@@ -23,7 +23,7 @@
        отдельным решением родителя в общей сессии теста -->
 - **hooks:** not-deployed
 - **blockers:** none
-- **waivers:** none
+- **waivers:** acceptance=V29 reason=постоянное решение родителя 2026-10-23 на вопрос ведущего о телефонных проверках — «Да, всё в общую сессию (Рекомендую)»: экран в приложении, тап, «я всё», стоп, перерыв по ключу, системные полоски, 120 Гц и замер бюджета проверяются в общей сессии теста; код, тесты V19–V26, мутации, канарейки, сборка без подписи и оракул артефакта — зелёные by=human:anthony at=2026-10-23
 - **new_dependency:** none
 - **runtime_paths:** App/Sources/*.swift
   <!-- §12.6, один путь: экран в приложении — тело ChildScreen, перерыв в VoiceLoop, строка консоли; звук Audio/ и
