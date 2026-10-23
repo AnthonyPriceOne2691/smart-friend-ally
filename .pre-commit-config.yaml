@@ -89,12 +89,13 @@ repos:
       # Второй прогон гейта — Sources AllyLlama и App (поставка app-voice-loop): обе половины заняты пакетами,
       # третий — ядро и рисунок оболочки AllyShell (поставка child-shell);
       # общий корень `Packages` втянул бы `Tests/` и `.build/` (маска игнора знает только `**/tests/**`).
-      # четвёртый — Sources AllySpeechText (поставка voice-text), одна половина: вторая (frontend/src) пуста.
+      # четвёртый — Sources AllySpeechText (поставка voice-text), одна половина: пустой LINT_TS_SRC сбрасывает env
+      # джобы gates (AllyCore) на дефолт frontend/src, которого нет.
       # `files:` — Swift и конфиги порогов, как у шаблона (правка порогов судится порогами).
       - id: jscpd-dry-gate
         name: DRY — рост копипаста (jscpd clone-count ratchet)
         language: system
-        entry: bash -c 'cd "$(git rev-parse --show-toplevel)" && export LINT_JSCPD_PY_FORMAT=swift LINT_JSCPD_TS_FORMAT=swift LINT_JSCPD_TS_EXTS=swift:swift && LINT_PY_SRC=Packages/AllyDiscipline/Sources LINT_TS_SRC=Packages/AllyCore/Sources bash scripts/lint/check_jscpd_gate.sh && LINT_PY_SRC=Packages/AllyLlama/Sources LINT_TS_SRC=App/Sources bash scripts/lint/check_jscpd_gate.sh && LINT_PY_SRC=Packages/AllyShell/Sources/ShellCore LINT_TS_SRC=Packages/AllyShell/Sources/ShellUI bash scripts/lint/check_jscpd_gate.sh && LINT_PY_SRC=Packages/AllySpeechText/Sources bash scripts/lint/check_jscpd_gate.sh'
+        entry: bash -c 'cd "$(git rev-parse --show-toplevel)" && export LINT_JSCPD_PY_FORMAT=swift LINT_JSCPD_TS_FORMAT=swift LINT_JSCPD_TS_EXTS=swift:swift && LINT_PY_SRC=Packages/AllyDiscipline/Sources LINT_TS_SRC=Packages/AllyCore/Sources bash scripts/lint/check_jscpd_gate.sh && LINT_PY_SRC=Packages/AllyLlama/Sources LINT_TS_SRC=App/Sources bash scripts/lint/check_jscpd_gate.sh && LINT_PY_SRC=Packages/AllyShell/Sources/ShellCore LINT_TS_SRC=Packages/AllyShell/Sources/ShellUI bash scripts/lint/check_jscpd_gate.sh && LINT_PY_SRC=Packages/AllySpeechText/Sources LINT_TS_SRC= bash scripts/lint/check_jscpd_gate.sh'
         files: ^((Packages|App)/.*\.swift|\.pre-commit-config\.yaml|scripts/lint/.*)$
         pass_filenames: false
 
