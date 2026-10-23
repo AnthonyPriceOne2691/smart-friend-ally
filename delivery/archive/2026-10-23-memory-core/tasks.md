@@ -49,7 +49,7 @@ L57 (`scripts/lint/check_child_data.py`, `.gitignore`, `delivery/evals/smoke/`),
   origin/main` (L14); verify-report — `swift test` и покрытие AllyMemory ≥ 70% (своё `Sources/`, L41), сводка утверждений
   Swift с новыми тест-файлами (L26), мутации, смоук S7, `mergeable` и ссылка на зелёный CI; `STRICT=1 BASE=origin/main
   python3 scripts/lint/check_digest_report.py` до пуша сдачи (L43)
-- [x] T10: сдача — `delivery/archive/<дата>-memory-core` в том же PR, `.gitkeep`, строка INDEX (уроки L74–L76),
+- [x] T10: сдача — `delivery/archive/<дата>-memory-core` в том же PR, `.gitkeep`, строка INDEX с уроками L74, L75, L76 (рождены этой поставкой — раньше ссылаться было не на что),
   `memory-core` в обязательствах CLAUDE.md, `observe_until` 2026-11-30; мерж — ведущий
 
 ## Перенесено (следующие поставки серии)
