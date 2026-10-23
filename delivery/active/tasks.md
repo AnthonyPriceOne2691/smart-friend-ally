@@ -7,10 +7,10 @@ L50, L51, L52, L59, L60, L61, L65, L66, L67, L68, L69, L70, L89, L90, L91 — к
 
 - [x] T1: документы `memory-extract` первым коммитом ветки, до кода (L33): STATUS, spec (M26–M28 дословно таблицей,
   ссылка на спеку серии 21d556c и подпись 37bb5a9), plan, tasks, decisions, eval-smoke
-- [ ] T2: ресурсы разбора и `ExtractPrompt` (M26)
-- [ ] T3: `ModelAnswer`, `remember` с повтором и записью (M27)
-- [ ] T4: `Anchors` — опора и ответ → кандидаты (M28); мутации плана
-- [ ] T5: знание — `engineering/memory`, раздел реестра `safety-below-model`, `knowledge/log.md`; `okf_validate`,
+- [x] T2: ресурсы разбора и `ExtractPrompt` (M26)
+- [x] T3: `ModelAnswer`, `remember` с повтором и записью (M27)
+- [x] T4: `Anchors` — опора и ответ → кандидаты (M28); мутации плана
+- [x] T5: знание — `engineering/memory`, раздел реестра `safety-below-model`, `knowledge/log.md`; `okf_validate`,
   `okf_sync_gate`
 - [ ] T6: слить main, PR, CI, verify-report, сдача: архив, строка INDEX с уроками L114, L115, L116, `memory-extract` в
   `delivery/OBSERVATIONS.md`

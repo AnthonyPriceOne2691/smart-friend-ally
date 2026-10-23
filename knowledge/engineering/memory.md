@@ -1,12 +1,12 @@
 ---
 type: Design
 title: Память о ребёнке — факты с опорой на её ход, замена по дате, блок для промпта
-description: Память-портрет в пакете AllyMemory над общим SQLite — что хранится, что не хранится никогда (проверка записи и триггер базы на любом пути), опора и уверенность кодом, замена однозначного по дате, узнавание сущностей, блок ≤ 300 токенов с несокращаемым ядром, «стереть всё» удалением файлов; что из серии ещё не подключено.
+description: Память-портрет в пакете AllyMemory над общим SQLite — что хранится, что не хранится никогда (проверка записи и триггер базы на любом пути), разбор разговора моделью с опорой на её слова, опора и уверенность кодом, замена однозначного по дате, узнавание сущностей, блок ≤ 300 токенов с несокращаемым ядром, «стереть всё» удалением файлов; что из серии ещё не подключено.
 status: draft
 tags: [engineering, memory, privacy, child]
 generated:
   by: claude_code/opus-5.5
-  at: 2026-10-23T23:00:00+03:00
+  at: 2026-10-24T01:30:00+03:00
 implementation:
   - Packages/AllyMemory/Sources/Memory/MemoryStore.swift
   - Packages/AllyMemory/Sources/Memory/Schema.swift
@@ -16,6 +16,13 @@ implementation:
   - Packages/AllyMemory/Sources/Memory/Resources/memory.json
   - Packages/AllyMemory/Sources/Memory/Forbidden.swift
   - Packages/AllyMemory/Sources/Memory/Resources/forbidden.json
+  - Packages/AllyMemory/Sources/Memory/Extract.swift
+  - Packages/AllyMemory/Sources/Memory/ExtractPrompt.swift
+  - Packages/AllyMemory/Sources/Memory/ModelAnswer.swift
+  - Packages/AllyMemory/Sources/Memory/Anchors.swift
+  - Packages/AllyMemory/Sources/Memory/Resources/extract.json
+  - Packages/AllyMemory/Sources/Memory/Resources/extract.system.ru.md
+  - Packages/AllyMemory/Sources/Memory/Resources/extract.user.ru.md
 ---
 
 # Purpose
@@ -24,8 +31,9 @@ implementation:
 база живёт только на телефоне, настоящие имена — только в ней. Устройство выбрано замером справки
 ([Memory portrait](/references/research/memory-portrait.md), вариант B): факты с опорой на её ход против фиксированного
 профиля — детали 0,75 против 0,13, поправка «Мурка — кошка» 3 из 3 против 0 из 3. Серия подписана родителем 2026-10-23:
-`memory-core` (база и блок) → `memory-guard` (запрет на любом пути) → `memory-extract` (разбор моделью) → `memory-app`
-(телефон) → `memory-forget`; `memory-guard` и `memory-extract` — разбиение ведущего 2026-10-23, содержание подписанное.
+`memory-core` (база и блок) → `memory-guard` (запрет на любом пути) → `memory-extract` (запрос и опора) →
+`memory-sense` (чужое, выдуманное, любимое, отрицание) → `memory-quality` (качество на E4B) → `memory-app` (телефон) →
+`memory-forget`; разрезы — решения ведущего 2026-10-23, содержание подписанное.
 
 # Canonical rules
 
@@ -45,6 +53,16 @@ implementation:
 - **Опора и уверенность:** у факта — сессия и номер хода её реплики (тот же номер, что в следе и в чёрном ящике); слова
   девочки не копируются. Уверенность считает код по виду опоры: сказала сама — 0,9, опору нашёл код — 0,8, согласилась
   на предложение Элли — 0,6; каждая следующая сессия — лучшая опора плюс 0,05, не выше 1,0. Поля уверенности у входа нет.
+- **Разбор** (`MemoryStore.remember`): запрос — системный текст `extract.system.ru.md` как есть и `extract.user.ru.md`
+  с «что уже известно» (кто есть кто из активных фактов, без подробностей) и разговором по номерам ходов её реплик; в
+  шаблоне ответа каждое значение — «N: …». Модель — за протоколом `MemoryModel`; параметры 0,2 / seed 42 / грамматика
+  JSON из `extract.json`; хэш FNV-1a 64 запроса и параметры — в итоге `Extraction`. Мусор (нет объекта JSON или ни
+  одной категории шаблона) — один повтор с «Ответь ещё раз» и причиной; дважды — «не разобрана», в базу ничего.
+  **Опора** — слова значения в её реплике по номеру модели («сама»), в другой её реплике («код»), в реплике Элли перед
+  её «да» («согласилась»), иначе «без опоры» (скопированное из примера — тоже): не меньше половины слов значения без
+  служебных, сходство — общее начало ≥ max(3, длина − 2), числа — по значению. Возраст вне 1–20 и «кто» не из списка
+  отбрасываются до записи; отброшенное — поле и причина, без значений. Разобранное пишется одной сессией вместе с её
+  репликами (`heard`, заражение).
 - **Замена и подтверждение:** однозначное (имя, возраст, день рождения, вид, окрас, любимое в слоте) заменяется значением
   из сессии не старше активного, прежнее уходит в историю; более старая сессия новое не перетирает. Многозначное
   копится. Сессия считается для факта один раз (`seen`): повтор записи ничего не меняет, и порядок записи сессий не
@@ -64,8 +82,9 @@ implementation:
 
 # Что ещё не подключено (L50)
 
-Пока нет `memory-extract` и `memory-app`, у базы и блока нет вызывающего: Элли в приложении ещё ничего не помнит, а
-запрет и заражение исполняются только в тестах — её реплики (`heard`) подаст разбор.
+Пока нет `memory-app`, у базы, блока и разбора нет вызывающего: Элли в приложении ещё ничего не помнит, а модель
+разбор зовёт только в тестах — двойником; E4B подключат `memory-quality` (Mac) и `memory-app` (телефон). Вымысел,
+чужих питомцев, отрицание и маркеры любимого пока держит только промпт разбора (advisory) — код придёт в `memory-sense`.
 Разбор E4B после прощания, отбор реплик (только `pass` без `forget`, только детские сессии при родителе), очередь,
 блок в префиксе персоны, файлы на телефоне (`Application Support/Memory`, вне бэкапа, `NSFileProtectionComplete`) и
 кнопка «Стереть память» в консоли — следующие поставки серии; забыть один факт и счётчики брата и имени — `memory-forget`.
@@ -77,8 +96,9 @@ implementation:
 | База, запись сессии, стирание | `Packages/AllyMemory/Sources/Memory/MemoryStore.swift`, `Schema.swift`, `Facts.swift` |
 | Блок для промпта | `Packages/AllyMemory/Sources/Memory/MemoryBlock.swift`, `BlockLines.swift`, `Resources/memory.json` |
 | Запрет на любом пути | `Packages/AllyMemory/Sources/Memory/Forbidden.swift`, `Resources/forbidden.json`, триггеры в `Schema.swift` |
+| Разбор разговора | `Packages/AllyMemory/Sources/Memory/Extract.swift`, `ExtractPrompt.swift`, `ModelAnswer.swift`, `Anchors.swift`, `Resources/extract.*` |
 | Общий SQLite | `Packages/AllySQLite` (функция для триггера — `SQLiteConnection.function`) |
-| Примеры M15–M25, M29 | `Packages/AllyMemory/Tests/MemoryTests/`, `Packages/AllySQLite/Tests/`, смоук S7 |
+| Примеры M15–M29 | `Packages/AllyMemory/Tests/MemoryTests/`, `Packages/AllySQLite/Tests/`, смоук S7 |
 
 # Related
 
@@ -90,4 +110,5 @@ implementation:
 
 - Поставка `memory-core` (спека и план подписаны родителем 2026-10-23 «Подписываю (Рекомендую)»).
 - Поставка `memory-guard` (M29 из той же спеки серии).
+- Поставка `memory-extract` (M26–M28 из той же спеки серии).
 - [Memory portrait](/references/research/memory-portrait.md) — замеры варианта B, приёмка M1–M14.
