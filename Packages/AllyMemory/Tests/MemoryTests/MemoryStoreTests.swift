@@ -4,7 +4,7 @@ import XCTest
 
 final class MemoryStoreTests: StoreTestCase {
     /// M15: the first session — facts with their anchors, the code's confidence, the block exactly.
-    func testFirstSessionGivesFactsAndTheBlock() throws {
+    func testFirstSessionGivesFactsAndTheBlock() throws {  // M15
         let store = try makeStore()
         let report = try store.write(try Fixture.session("s1", "2026-10-05 18:00", Fixture.first))
         XCTAssertEqual(report, WriteReport(added: 14))
@@ -26,7 +26,7 @@ final class MemoryStoreTests: StoreTestCase {
     }
 
     /// M16: «Мурка — кошка, а не собака» — one pet, the dog goes to the history.
-    func testCorrectionMovesTheOldValueToTheHistory() throws {
+    func testCorrectionMovesTheOldValueToTheHistory() throws {  // M16
         let dog = Subject.pet(species: "собака", name: "Мурка")
         let store = try makeStore([try Fixture.session("s0", "2026-10-04 18:00", [
             Candidate(dog, .species, "собака", turn: 3), Candidate(dog, .name, "Мурка", turn: 3)
@@ -45,7 +45,7 @@ final class MemoryStoreTests: StoreTestCase {
     }
 
     /// M17: newer replaces older by the session's date; a replayed older session changes nothing.
-    func testUpdateByDateAndOlderSessionDoesNotOverwrite() throws {
+    func testUpdateByDateAndOlderSessionDoesNotOverwrite() throws {  // M17
         let brother = Fixture.brother, color = { (value: String) in
             Candidate(.child, .favorite, value, slot: .color, turn: 5) }
         let store = try makeStore([
@@ -70,7 +70,7 @@ final class MemoryStoreTests: StoreTestCase {
     }
 
     /// M18: a repeat in a later session confirms; the same session written twice changes nothing.
-    func testRepeatConfirmsOncePerSession() throws {
+    func testRepeatConfirmsOncePerSession() throws {  // M18
         let store = try makeStore([try Fixture.session("s1", "2026-10-05 18:00", [
             Candidate(Fixture.cat, .name, "Мурка", turn: 3),
             Candidate(Fixture.cat, .detail, "любит спать на батарее", turn: 12)
@@ -90,7 +90,7 @@ final class MemoryStoreTests: StoreTestCase {
     }
 
     /// M19: the confidence comes from the anchor — said, found, agreed — and a later session adds 0.05 to the best one.
-    func testConfidenceIsTheCodes() throws {
+    func testConfidenceIsTheCodes() throws {  // M19
         let likes = { (value: String, anchor: Anchor) in Candidate(.child, .likes, value, turn: 2, anchor: anchor) }
         let store = try makeStore([try Fixture.session("s1", "2026-10-05 18:00", [
             likes("лепить", .said), likes("кататься на велосипеде", .found), likes("рисовать", .agreed)
@@ -102,7 +102,7 @@ final class MemoryStoreTests: StoreTestCase {
     }
 
     /// M20: entities by relation and name: the unnamed grandma gets her name, «Тема» is «Тёма», two brothers, one fish.
-    func testEntitiesAreFoundByRelationAndName() throws {
+    func testEntitiesAreFoundByRelationAndName() throws {  // M20
         let store = try makeStore(try Fixture.family())
         let facts = try store.facts()
         XCTAssertEqual([Set(facts.map(\.entity)).count, facts.count], [7, 22])
@@ -115,7 +115,7 @@ final class MemoryStoreTests: StoreTestCase {
     }
 
     /// M21: «стереть всё» leaves no name in any file, and a session begun before it is refused.
-    func testEraseAllLeavesNoNameAndRefusesOlderSessions() throws {
+    func testEraseAllLeavesNoNameAndRefusesOlderSessions() throws {  // M21
         let folder = try makeFolder(), store = try MemoryStore(directory: folder)
         for session in try Fixture.family() { try store.write(session) }
         XCTAssertGreaterThan(try Fixture.occurrences(Fixture.names, in: folder), 0)

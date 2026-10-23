@@ -5,7 +5,7 @@ import XCTest
 final class SQLiteTests: XCTestCase {
     /// M22: values come back as bound, an error names SQLite's code and text, a failed transaction leaves nothing, the
     /// file keeps what was committed across a reopen.
-    func testValuesErrorsTransactionAndReopen() throws {
+    func testValuesErrorsTransactionAndReopen() throws {  // M22
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent("m22-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: directory) }

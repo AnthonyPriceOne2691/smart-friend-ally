@@ -4,7 +4,7 @@ import XCTest
 
 final class MemoryBlockTests: StoreTestCase {
     /// M23: over the budget the lowest ranks go first and the core stays; the line caps keep the last confirmed.
-    func testBudgetCutsByRankAndKeepsTheCore() throws {
+    func testBudgetCutsByRankAndKeepsTheCore() throws {  // M23
         let store = try makeStore([try Fixture.session("s1", "2026-10-05 18:00", Fixture.first)])
         let at120 = try store.block(budget: 120)
         XCTAssertEqual(at120.trimmed, ["был фиолетовый", "единорог Звёздочка"])
@@ -33,7 +33,7 @@ final class MemoryBlockTests: StoreTestCase {
 
     /// M24: the block's bytes do not depend on the order the sessions were written, on a second render or a reopen; a
     /// new detail of the cat changes only her line.
-    func testBlockBytesDoNotDependOnWriteOrder() throws {
+    func testBlockBytesDoNotDependOnWriteOrder() throws {  // M24
         let sessions = try Fixture.family()
         let folder = try makeFolder(), forward = try MemoryStore(directory: folder)
         for session in sessions { try forward.write(session) }
