@@ -40,6 +40,10 @@
   "path": "Packages/AllyShell/Sources/ShellUI/TextCanary.swift",
   "content": "import SwiftUI\n\n// канарейка правила экрана 1: надпись в детском экране — правило child_screen_text обязано покраснеть\nlet textCanary = Text(\"Элли\")\n"
  },
+ "check_swiftlint_ratchet.sh:child_screen_gestures": {
+  "path": "Packages/AllyShell/Sources/ShellUI/GestureCanary.swift",
+  "content": "import SwiftUI\n\n// канарейка правила экрана 3: долгое нажатие в детском экране — правило child_screen_gestures обязано покраснеть\nlet gestureCanary = LongPressGesture()\n"
+ },
  "check_app_artifact.sh": {
   "path": "App/build/Canary.app/Info.plist",
   "content": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!-- канарейка: ключ ATS в собранном .app — оракул артефакта обязан покраснеть -->\n<plist version=\"1.0\"><dict>\n<key>NSAppTransportSecurity</key><dict><key>NSAllowsArbitraryLoads</key><true/></dict>\n<key>NSMicrophoneUsageDescription</key><string>Слушает фразу</string>\n<key>NSSpeechRecognitionUsageDescription</key><string>Распознаёт на телефоне</string>\n</dict></plist>\n"

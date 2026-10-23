@@ -47,6 +47,9 @@ public struct Frame: Equatable, Sendable {
     /// How open the eyes are, how visible the eyeballs and the closed lids.
     public let eyeOpen: Double, eyeballs: Double, lids: Double
     public let shadowScale: Double, shadowOpacity: Double
+    /// How bright each glint of the crown is (`Crown.twinkle`) and how far a tap squashed her body (`Motion.poke`): the
+    /// body is 1 + squash high and 1 − 0.75 squash wide about (0; 40).
+    public let glints: [Double], squash: Double
 
     public static func at(_ phase: SessionState, time t: Double, voice: Double? = nil, mic: Double? = nil) -> Frame {
         Frame(Pose.at(phase, time: t, voice: voice, mic: mic), time: t)
@@ -55,8 +58,8 @@ public struct Frame: Equatable, Sendable {
     public init(_ pose: Pose, time t: Double) { self.init(pose, phases: Phases(time: t, pose: pose)) }
 
     /// `blink` — how far a blink has closed the eyes (0…1); `swing` — the share of the oscillations' swing (Reduce
-    /// Motion keeps 0.4).
-    public init(_ pose: Pose, phases: Phases, blink: Double = 0, swing: Double = 1) {
+    /// Motion keeps 0.4, and the glints stand still); `squash` — the tap's squash of the body.
+    public init(_ pose: Pose, phases: Phases, blink: Double = 0, swing: Double = 1, squash: Double = 0) {
         self.pose = pose
         rise = -sin(phases.float) * pose.float * swing + pose.bodyY
         breath = sin(phases.breath) * pose.breath * swing
@@ -76,6 +79,8 @@ public struct Frame: Equatable, Sendable {
         lids = smoothstep(0.35, 0.8, shut)
         shadowScale = 1 + rise * 0.005
         shadowOpacity = min(max(1 + rise * 0.012, 0.35), 1)
+        glints = Crown.glints.indices.map { Crown.twinkle($0, at: phases.time, calm: swing < 1) }
+        self.squash = squash
     }
 
     /// Turns, degrees: head, hands, tail, the six gills, the lean.
@@ -87,7 +92,7 @@ public struct Frame: Equatable, Sendable {
     /// Shares from 0 to about 1: breath, eyes, mouth, smile, gill lengths, shadow, blush, nearness.
     public var shares: [Double] {
         [breath, eyeballs, lids, pose.mouthOpen, pose.mouthTall, pose.mouthWidth, pose.smile, shadowScale,
-         shadowOpacity, pose.blush, pose.near, pose.eyeWide] + gillScales
+         shadowOpacity, pose.blush, pose.near, pose.eyeWide, squash] + gillScales
     }
 }
 
