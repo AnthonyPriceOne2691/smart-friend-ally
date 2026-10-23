@@ -101,4 +101,22 @@ final class TraceTests: XCTestCase {
         await child.wake()
         XCTAssertEqual(sink.records.map(\.audience), ["supervised", "supervised", "supervised"])
     }
+
+    /// The girl alone (R2): her session through the app's driver says so in every record; the black box keeps nothing.
+    func testASessionWithoutTheParentIsTracedAsChildAndNotKept() async {  // G18
+        let clock = TestClock(), disk = MemoryDisk(), voice = RecordingVoice(), trace = RecordingSink()
+        let ear = ScriptedEar([.init(text: "Я сегодня была в зоопарке"), .init(text: nil), .init(text: nil)],
+                              clock: clock, voice: voice)
+        let parts = SessionParts(model: ReplyQueue(["Ух ты, в зоопарке!"]), voice: voice,
+                                 sink: TraceFanOut([trace, BlackBox(disk: disk, clock: clock)]), clock: clock,
+                                 audience: .child)
+        let alone = Conversation(parts, listener: ear)
+        ear.watch(alone)
+        await alone.wake()
+        XCTAssertEqual(trace.records.map(\.audience), Array(repeating: "child", count: 4))
+        for line in trace.records.compactMap({ $0.jsonLine() }) {
+            XCTAssertTrue(line.contains("\"audience\":\"child\""), line)
+        }
+        XCTAssertEqual(disk.paths, [])
+    }
 }
