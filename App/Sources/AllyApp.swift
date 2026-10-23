@@ -12,9 +12,11 @@ struct AllyApp: App {
 }
 
 /// «Для взрослых» (A12): readiness, signing days, the session's state and limit; what was heard and said stays on
-/// this screen. «Разбудить» starts a session, «Стоп» silences her at once (D2.2).
+/// this screen. «Разбудить» starts a session, «Стоп» silences her at once (D2.2); the black box's line and «Стереть
+/// чёрный ящик» with the parent's yes, only while she sleeps (D3.2, B17).
 struct Console: View {
     @ObservedObject var loop: VoiceLoop
+    @State private var asking: (sessions: Int, bytes: Int)?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -29,16 +31,33 @@ struct Console: View {
             Text(loop.screen.heard).foregroundStyle(.secondary)
             Text(loop.screen.said).bold()
             Text("Элли: " + Self.word(loop.talk.phase)).accessibilityIdentifier("console.phase")
+            Text(loop.screen.box).font(.caption.monospaced()).accessibilityIdentifier("console.blackbox")
             HStack {
                 Button("Разбудить", action: loop.wake).buttonStyle(.borderedProminent)
                     .disabled(!loop.screen.ready || loop.talk.phase != .asleep).accessibilityIdentifier("console.wake")
                 Button("Стоп", action: loop.stop).buttonStyle(.bordered)
                     .disabled(loop.talk.phase == .asleep).accessibilityIdentifier("console.stop")
             }
+            Button("Стереть чёрный ящик") { asking = loop.boxHeld() }.buttonStyle(.bordered)
+                .disabled(loop.talk.phase != .asleep).accessibilityIdentifier("console.erase")
         }
         .padding()
+        .alert(Self.question(asking), isPresented: Binding(get: { asking != nil }, set: { if !$0 { asking = nil } })) {
+            Button("Стереть", role: .destructive, action: loop.eraseBox)
+            Button("Отмена", role: .cancel) {}
+        } message: {
+            Text("Сначала выгрузи на Mac.")
+        }
         .task { await loop.start() }
         .onAppear { UIApplication.shared.isIdleTimerDisabled = true }  // a locked phone stops the GPU work
+    }
+
+    /// «Стереть 5 сессий (41 МБ)?» — what the box holds before the parent's yes.
+    private static func question(_ held: (sessions: Int, bytes: Int)?) -> String {
+        let n = held?.sessions ?? 0, mb = Int((Double(held?.bytes ?? 0) / 1_048_576).rounded())
+        let tail = n % 100 / 10 == 1 ? 5 : n % 10
+        let w = tail == 1 ? "сессию" : (2...4).contains(tail) ? "сессии" : "сессий"
+        return "Стереть \(n) \(w) (\(mb) МБ)?"
     }
 
     private static func word(_ phase: SessionState) -> String {

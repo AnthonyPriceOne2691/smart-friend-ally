@@ -53,15 +53,25 @@ public final class BlackBox: TraceSink, @unchecked Sendable {
         }
     }
 
+    /// What the box holds on the disk — sessions and bytes — for the console's question before «erase all».
+    public func held() throws -> (sessions: Int, bytes: Int) {
+        let files = try disk.files()
+        return (Self.folders(files).count, files.values.reduce(0, +))
+    }
+
     /// Erases every session, never while a session with the parent by is on; the answer says what went (П22).
     public func eraseAll() throws -> Erase {
         guard !state({ $0.open }) else { return .busy }
-        let files = try disk.files()
-        let folders = Set(files.keys.compactMap { $0.split(separator: "/").first.map(String.init) })
-        for folder in folders.sorted() { try disk.remove(folder) }
+        let files = try disk.files(), folders = Self.folders(files)
+        for folder in folders { try disk.remove(folder) }
         let bytes = files.values.reduce(0, +)
         state { (s: inout State) in (s.total, s.session, s.erased) = (0, "", (folders.count, bytes)) }
         return .erased(sessions: folders.count, bytes: bytes)
+    }
+
+    /// The session folders on the disk: the first part of every path.
+    private static func folders(_ files: [String: Int]) -> [String] {
+        Set(files.keys.compactMap { $0.split(separator: "/").first.map(String.init) }).sorted()
     }
 
     /// The console line: off in the parent's console, recording with the room left, full, a folder in the backup;

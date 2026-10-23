@@ -249,6 +249,19 @@ final class BlackBoxTests: XCTestCase {
         XCTAssertEqual(busy.disk.paths.count, 4)
     }
 
+    func testConsoleAsksWithWhatTheBoxHoldsThenErases() async throws {  // B17
+        let mib = 1 << 20, old = ["A/0001.allybox": 20 * mib, "A/0001-child.wav": 1 * mib, "B/0001.allybox": 20 * mib]
+        let rig = BoxRig(replies: ["Ага."], disk: MemoryDisk(preload: old))
+        let held = try rig.box.held()
+        XCTAssertEqual([held.sessions, held.bytes], [2, 41 * mib])
+        await rig.session.handle(.wake)
+        XCTAssertEqual(try rig.box.eraseAll(), .busy)
+        await rig.say("Пока!", nil)
+        let before = try rig.disk.files().values.reduce(0, +)
+        XCTAssertEqual(try rig.box.eraseAll(), .erased(sessions: 3, bytes: before))
+        XCTAssertEqual([try rig.box.held().sessions, try rig.box.held().bytes], [0, 0])
+    }
+
     func testOneRecordPerTraceRecordThroughTheRealSession() async throws {  // B10
         let rig = BoxRig(replies: ["Какая пушистая Мурка!", "Красивое имя!", "Рыжая — это здорово!"],
                          routes: scriptRoutes)

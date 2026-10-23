@@ -9,13 +9,15 @@ import SwiftUI
 /// wordless record a turn in `Caches/turns.jsonl`.
 @MainActor
 final class VoiceLoop: ObservableObject {
-    struct Screen { var lines: [String] = [], heard = "", said = "", ready = false }
+    struct Screen { var lines: [String] = [], heard = "", said = "", ready = false, box = "" }
     @Published private(set) var screen = Screen()
     @Published private(set) var talk = TalkState()  // the session for a screen: phase, pose, why the last one ended
     private var conversation: Conversation?
     private let recognizer = DictationRecognizer(), audio = AudioIO(), files = FileManager.default
     private let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
     private var model: LlamaModel?, registry: ModelRegistry?, voice: SystemVoice?, versions: [String: String] = [:]
+    private var box: BlackBox?  // the black box (D3.2): it keeps only sessions with the parent by — `audience` is R's
+    private static let log = Logger(subsystem: "com.anthonypriceone.ally", category: "blackbox")
 
     func start() async {
         guard registry == nil else { return }
@@ -71,12 +73,15 @@ final class VoiceLoop: ObservableObject {
     /// a wordless record a turn with the listening's stages into `Caches/turns.jsonl`; heard and said go to the screen.
     private func converse(_ model: LlamaModel, _ registry: ModelRegistry, _ voice: SystemVoice) {
         let heard: @Sendable (String) -> Void = { text in Task { @MainActor in self.screen.heard = text } }
+        let disk = PhoneDisk(), box = BlackBox(disk: disk)
         let ear = PhoneListener(recognizer: recognizer, audio: audio, registry: registry,
-                                resetSound: { voice.resetFirstSound() }, firstSound: { voice.firstSound }, heard: heard)
+                                resetSound: { voice.resetFirstSound() }, firstSound: { voice.firstSound }, heard: heard,
+                                keep: { box.heard($0) })
         let echo = EchoVoice(voice) { sentence in Task { @MainActor in self.screen.said += sentence + " " } }
         let settings = SessionSettings(limitMinutes: UserDefaults.standard.object(forKey: SessionSettings.key)
             .map { "\($0)" })
-        let versions = versions, sink = TraceFile(url: caches.appendingPathComponent("turns.jsonl"))
+        let trace = TraceFile(url: caches.appendingPathComponent("turns.jsonl"))
+        let versions = versions, sink = TraceFanOut([trace, box])
         let stamp: @Sendable () -> TraceStamp = {
             let thermal = ["nominal", "fair", "serious", "critical"][ProcessInfo.processInfo.thermalState.rawValue]
             return TraceStamp(versions: versions, memory: Self.memory(model), thermal: thermal,
@@ -84,10 +89,35 @@ final class VoiceLoop: ObservableObject {
         }
         let parts = SessionParts(model: model, voice: echo, sink: sink, router: RouterRouting(), stamp: stamp)
         let conversation = Conversation(parts, settings: settings, listener: ear)
-        self.conversation = conversation
+        (self.conversation, self.box) = (conversation, box)
+        screen.lines.append("ящик: " + disk.note)
+        Self.log.info("ящик: \(disk.note, privacy: .public)")
+        refreshBox()
         screen.lines.append(settings.note ?? "лимит: \(Int(settings.limit / 60)) мин")
         if !RouterRouting.healthy { screen.lines.append("маршрутизатор: самопроверка не прошла") }
-        Task { for await state in conversation.updates { talk = state } }
+        Task {
+            for await state in conversation.updates {
+                talk = state
+                refreshBox()
+            }
+        }
+    }
+
+    /// What the box holds, for the console's question before «erase all».
+    func boxHeld() -> (sessions: Int, bytes: Int)? { try? box?.held() }
+
+    /// «Стереть чёрный ящик» after the parent's yes — only while she sleeps; the line then says what went (B17).
+    func eraseBox() {
+        guard let box, talk.phase == .asleep else { return }
+        do { _ = try box.eraseAll() } catch { screen.lines.append("ящик не стёрт: \(error)") }
+        refreshBox()
+    }
+
+    /// The box's line on the console and, when it changes, in the journal — words never, counts only (B13, L46).
+    private func refreshBox() {
+        guard let line = box?.status, line != screen.box else { return }
+        screen.box = line
+        Self.log.info("blackbox: \(line, privacy: .public)")
     }
 
     /// What the iOS memory limit counts (L22): footprint now and its lifetime peak, headroom left; conversation tokens.

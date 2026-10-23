@@ -7,16 +7,16 @@
 - [x] T2: `eval-smoke.md` — строки B13–B19 с оракулом и ожиданием, до кода; `phase: implement`
 
 ## Slice 1 — ядро и команда на Mac
-- [ ] T3: `BlackBox.held()` и общий подсчёт папок с `eraseAll`; тест `// B17`
+- [x] T3: `BlackBox.held()` и общий подсчёт папок с `eraseAll`; тест `// B17`
 - [ ] T4: `scripts/blackbox.py` (черновик параллельного агента — сверить с планом), смоук S7 `blackbox_pull.sh` (B15,
   B16) со строкой в README и `run.sh`; мутации «сторож git снят», «стирание без сверки»
 
 ## Slice 2 — приложение
-- [ ] T5: `App/Sources/BlackBox/PhoneDisk.swift` — класс защиты, пометка «не в бэкап» с чтением обратно, `isPrivate`
-- [ ] T6: крючок в `Phrase.feed` и формат в строке готовности; `PhoneListener` отдаёт `Utterance` ящику
-- [ ] T7: `VoiceLoop` — ящик вторым приёмником, строка ящика и журнал; консоль — строка, кнопка «Стереть чёрный ящик» с
+- [x] T5: `App/Sources/BlackBox/PhoneDisk.swift` — класс защиты, пометка «не в бэкап» с чтением обратно, `isPrivate`
+- [x] T6: крючок в `Phrase.feed` и формат в строке готовности; `PhoneListener` отдаёт `Utterance` ящику
+- [x] T7: `VoiceLoop` — ящик вторым приёмником, строка ящика и журнал; консоль — строка, кнопка «Стереть чёрный ящик» с
   подтверждением
-- [ ] T8: сборка для устройства без подписи (`xcodegen`, `xcodebuild … CODE_SIGNING_ALLOWED=NO`) и оракул артефакта;
+- [x] T8: сборка для устройства без подписи (`xcodegen`, `xcodebuild … CODE_SIGNING_ALLOWED=NO`) и оракул артефакта;
   SwiftLint 0
 
 ## Slice 3 — знание
