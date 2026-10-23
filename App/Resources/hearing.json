@@ -1,0 +1,4 @@
+{
+  "turn": {"tails": {"open": 1.8, "closed": 1.2, "counting": 2.5}, "tentative": 0.3, "pre_roll": 1.5, "max_turn": 30},
+  "listen_timeout": 8
+}

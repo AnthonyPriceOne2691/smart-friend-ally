@@ -1,0 +1,9 @@
+{
+  "_about": "What tells the kind of her next turn in what Elly just said (D7 turn-detector, series signed by the parent 2026-10-23): words of a counting request anywhere in Elly's turn → counting; in the last sentence, if it is a question: a choice word or a number word → closed, a question word → open, none of them (yes or no) → closed; not a question → open. Words are lowercase, «ё» as «е».",
+  "counting": ["посчитай", "посчитаем", "сосчитай", "досчитай", "считай", "считаем", "пересчитай"],
+  "choice": ["или"],
+  "number": ["сколько"],
+  "open": ["что", "чего", "чему", "чем", "почему", "зачем", "как", "какой", "какая", "какое", "какие", "какого", "какую",
+           "каким", "каких", "какими", "кто", "кого", "кому", "кем", "ком", "где", "куда", "откуда", "когда",
+           "чей", "чья", "чье", "чьи", "чьего", "чьей"]
+}
