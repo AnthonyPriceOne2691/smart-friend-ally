@@ -6,7 +6,7 @@
 - **kind:** feature
 - **repro_test:** n/a reason=не bugfix
 - **diagnosis:** n/a reason=не bugfix
-- **phase:** specify
+- **phase:** implement
 - **builder:** agent:claude-code
 - **verifier:** process:ci
   <!-- облик движения судит родитель на глаз по полосам кадров на Mac (П32); снимков экрана телефона нет никогда (L46) -->
