@@ -6,7 +6,7 @@
 - **kind:** feature
 - **repro_test:** n/a reason=не bugfix
 - **diagnosis:** n/a reason=не bugfix
-- **phase:** implement
+- **phase:** handoff
 - **builder:** agent:claude-code
 - **verifier:** process:ci
 - **human_ok_spec:** yes (родитель 2026-10-22 «Подписываю (Рекомендую)»: таблица «Пороги R2» и ответ на вопрос 9 — delivery/archive/2026-10-22-app-session/spec.md и decisions.md; примеры G12–G18 — пороги таблицы на своих границах)
@@ -22,7 +22,7 @@
        поставка голоса (VoiceLoop.swift), оболочка Ш2–Ш3; слияние main — сложением -->
 - **hooks:** not-deployed
 - **blockers:** none
-- **waivers:** none
+- **waivers:** phone=строка приёмки в консоли,«Дочке, при мне» и детский экран без присмотра reason=постоянное решение родителя 2026-10-23: все проверки на телефоне — в общую сессию теста, сливаем по зелёным Mac и GitHub; ответ родителя «Да, всё в общую сессию (Рекомендую)»; файла приёмки в сборке нет — без присмотра закрыт, консоль пишет «приёмка: нет файла приёмки»; ключ родителя в .github/allowed_signers кладёт D3.2 by=human:anthony at=2026-10-23
 - **new_dependency:** none
 - **runtime_paths:** none reason=приёмка — чистая функция ядра над файлом из бандла и сборкой; пути к телефону и подписи (`scripts/child_mode.sh`) поставка не трогает; приложение берёт файл из бандла, как ключ родителя в R
 - **irreversible_surfaces:** none reason=продукт офлайн; поставка не добавляет ни отправки, ни выкатки; файла приёмки в сборке нет — без присмотра закрыто
