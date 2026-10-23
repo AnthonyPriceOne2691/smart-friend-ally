@@ -17,6 +17,8 @@
 - [x] T6: знания — `on-device-model`, `session`, `safety-below-model`, `knowledge/log.md`
   — `session`, `voice-loop` (KV и строка `swa_full`; `on-device-model` — ADR выбора модели, граница памяти описана
     там, где описан KV, L70), `safety-below-model`, `engineering/index`, `log.md`
-- [ ] T7: телефон — X8 в общую сессию теста (постоянное решение родителя); eval-smoke, verify-report (L43), строгий
-  `delivery_check`, CI; архив в том же PR с уроками L111, L112, L113 (перенумерованы ведущим 2026-10-23: L95 занял memory-guard); slug `kv-spoken` — строкой в конец
-  `delivery/OBSERVATIONS.md`, не в CLAUDE.md (правило ведущего 2026-10-23); мерж — ведущий
+- [x] T7: телефон — X8 в общую сессию теста (постоянное решение родителя, waiver в STATUS); eval-smoke, verify-report
+  (L43 — дайджест совпал с пересчётом), строгий `delivery_check`, CI (Linux 40015897856 зелёный; macOS-джоба по метке
+  в очереди без раннера, её шаги прогнаны на Mac); архив в том же PR с уроками L111, L112, L113 (перенумерованы
+  ведущим 2026-10-23: L95 занял memory-guard); slug `kv-spoken` — строкой в конец `delivery/OBSERVATIONS.md`, не в
+  CLAUDE.md (правило ведущего 2026-10-23); мерж — ведущий
