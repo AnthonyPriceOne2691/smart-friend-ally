@@ -37,7 +37,7 @@ jobs:
     # Маски Swift для канонных гейтов (CQG §5.5: адаптация в конфиге). Те же значения стоят в entry хуков;
     # здесь — чтобы доктор, который зовёт гейт напрямую, судил тот же код, что и pre-commit.
     env:
-      LINT_LENGTH_GLOBS: "*.swift *.py"
+      LINT_LENGTH_GLOBS: "*.swift *.py *.c *.h"
       LINT_PY_SRC: Packages/AllyDiscipline/Sources
       LINT_JSCPD_PY_FORMAT: swift
       # Вторая половина jscpd — исходники AllyCore (voice-core): маска игнора гейта знает `**/tests/**` строчными,
