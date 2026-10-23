@@ -6,7 +6,7 @@
 - **kind:** feature
 - **repro_test:** n/a reason=не bugfix
 - **diagnosis:** n/a reason=не bugfix
-- **phase:** implement
+- **phase:** handoff
 - **builder:** agent:claude-code
 - **verifier:** process:ci
 - **human_ok_spec:** yes (by=human:anthony, at=2026-10-22, «Подписываю (Рекомендую)»: примеры B1–B12, ожидания D3.2–D3.3 B13–B22, вопросы 1–8 по рекомендациям)
