@@ -104,4 +104,22 @@ struct Wire {
         return [24, 16, 8, 0].map { UInt8(truncatingIfNeeded: count >> $0) } + field
     }
 }
+
+/// What the parent signs a file for — the namespace of `ssh-keygen -Y sign -n`: an exception's signature does not
+/// open the acceptance, nor the other way round (R, R2).
+public enum SignedFor: String, Sendable {
+    case exception = "ally-child-mode", acceptance = "ally-release"
+}
+
+extension SignedFile {
+    /// A file as the app found it, its signature checked by the parent's key for this purpose; nil — no file. No
+    /// signature or no key — not signed.
+    public static func read(_ bytes: Data?, armored: String?, signer: String?, for purpose: SignedFor) -> SignedFile? {
+        guard let bytes else { return nil }
+        let signed = armored.flatMap { armored in
+            signer.map { SSHSignature.verify(bytes, armored: armored, signer: $0, namespace: purpose.rawValue) }
+        } ?? false
+        return SignedFile(bytes: bytes, signed: signed)
+    }
+}
 #endif
