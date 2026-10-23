@@ -35,5 +35,10 @@
     "reason": "правило §6.5a «у артефакта сборки есть оракул» молчит у iOS-проекта: BUILD_MARKERS знают package.json, Makefile и justfile, но не XcodeGen и Xcode — declares_build() у Ally пуст (delivery/incidents/2026-10-22-build-markers-no-xcode.md)",
     "changed": "не правился; оракул артефакта — свой гейт check_app_artifact.sh, поле artifact_oracle объявлено в STATUS",
     "kind": "upstream-candidate"
+  },
+  "scripts/lint/assert_digest.sh": {
+    "reason": "id привязки утверждения — любой токен «буква + цифры» на добавленной строке, без сверки с таблицами примеров спеки: метка урока «(L90)» в комментарии записала четыре утверждения к «примеру L90», asserts_without_example: 0 и n/a над неподписанными ожиданиями (delivery/incidents/2026-10-23-digest-any-id-is-example.md)",
+    "changed": "не правился; в Ally id примера — первым токеном комментария (`// P6 … (L90)`)",
+    "kind": "upstream-candidate"
   }
 }

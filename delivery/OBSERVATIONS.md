@@ -45,6 +45,7 @@
 - `turn-speculation`
 - `memory-core`
 - `silero-vad`
+- `encyclopedia-core`
 - `memory-guard`
 - `child-shell-app`
 - `accent-tokenizers`
