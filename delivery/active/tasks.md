@@ -8,7 +8,7 @@
 
 ## Slice 1 — ядро и команда на Mac
 - [x] T3: `BlackBox.held()` и общий подсчёт папок с `eraseAll`; тест `// B17`
-- [ ] T4: `scripts/blackbox.py` (черновик параллельного агента — сверить с планом), смоук S7 `blackbox_pull.sh` (B15,
+- [x] T4: `scripts/blackbox.py` (черновик параллельного агента — сверить с планом), смоук S7 `blackbox_pull.sh` (B15,
   B16) со строкой в README и `run.sh`; мутации «сторож git снят», «стирание без сверки»
 
 ## Slice 2 — приложение
@@ -20,7 +20,7 @@
   SwiftLint 0
 
 ## Slice 3 — знание
-- [ ] T9: `ops/black-box`, `engineering/voice-loop` (команды выгрузки и стирания), `ops/child-data`, `knowledge/log.md`
+- [x] T9: `ops/black-box`, `engineering/voice-loop` (команды выгрузки и стирания), `ops/child-data`, `knowledge/log.md`
 
 ## Slice 4 — проверка и сдача
 - [ ] T10: verify-report, PR, CI; строгий `delivery_check`, `check_digest_report.py` до пуша (L43)

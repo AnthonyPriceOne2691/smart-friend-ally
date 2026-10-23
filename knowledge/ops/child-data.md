@@ -11,6 +11,7 @@ stale_after: 2027-01-02T00:00:00Z
 implementation:
   - .gitignore
   - scripts/lint/check_child_data.py
+  - scripts/blackbox.py
 ---
 
 # Purpose
@@ -29,8 +30,11 @@ implementation:
   родителя, без облака (решения пользователя 2026-10-02 и 2026-10-22) —
   [Black box](/ops/black-box.md).
 - **На Mac — только в `local/`.** Каталог игнорируется git; там живут выгрузки
-  чёрного ящика (`local/blackbox/`) и записи для сравнения распознавателей. Скрипт
-  выгрузки отказывается писать в каталог, синхронизируемый с iCloud.
+  чёрного ящика (`local/blackbox/`) и записи для сравнения распознавателей. Команда
+  выгрузки `scripts/blackbox.py` (D3.2) до любого копирования проверяет, что путь
+  игнорируется git (`git check-ignore`) и не синхронизируется с iCloud
+  (`kMDItemIsUbiquitous`, путь под `Mobile Documents`), — иначе отказ, на диске ничего;
+  на телефоне стирает только сессии, сверенные в `local/blackbox`.
 - **В git — никогда.** `.gitignore` закрывает `local/`, аудио, файлы баз и записи
   чёрного ящика (`*.allybox`) по расширению. Игнор обходится `git add -f` молча,
   поэтому гейт `scripts/lint/check_child_data.py` на каждом коммите и в CI проверяет
