@@ -1,5 +1,12 @@
 # Knowledge Bundle Update Log
 
+## 2026-10-24 — память: разбор разговора в кандидаты с опорой на её слова (memory-extract)
+
+* **Update**: `engineering/memory` — разбор: запрос из ресурсов `extract.*`, модель за протоколом, повтор при мусоре,
+  опора «сама / код / согласилась / без опоры»; серия с разрезом на `memory-sense` и `memory-quality`;
+  `implementation:` — `Extract.swift`, `ExtractPrompt.swift`, `ModelAnswer.swift`, `Anchors.swift`, ресурсы.
+  `engineering/safety-below-model` — реестр правил промпта разбора. `engineering/index`, `references/repo-map` — строки.
+* **Источник**: поставка `memory-extract` (M26–M28 спеки серии, подписанной родителем 2026-10-23; разрез — ведущий).
 ## 2026-10-23 — слух: Silero VAD на sherpa-onnx и общем ORT, активность голоса за протоколом
 
 * **Update**: `engineering/turn-detector` — активность голоса за протоколом (энергия или Silero), тишина от речи за
