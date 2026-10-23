@@ -34,8 +34,9 @@ implementation: []
   мастер-последовательность, разговор — её копия; префикс — файлом состояния в `Caches/`.
 - **Проект** — XcodeGen из `App/project.yml`; `.xcodeproj` и файл прав генерируются; команда разработчика — в
   игнорируемом `App/Local.xcconfig`, UDID — аргумент команд.
-- **Реестр** `App/Resources/model.json` — веса и размер, рантайм, сэмплинг, персона, голос, хвост, тайм-ауты (П10); пины
-  sha256 — в `delivery/model_surface.txt`, checksum рантайма — в `Package.swift`.
+- **Реестр** `App/Resources/model.json` — веса и размер, рантайм, сэмплинг, персона, голос, тайм-аут первой фразы (П10);
+  пины sha256 — в `delivery/model_surface.txt`, checksum рантайма — в `Package.swift`. Хвосты по типу хода, предел реплики
+  и тайм-аут слушания — реестр слуха `App/Resources/hearing.json` (D7).
 
 # Rejected alternatives
 
