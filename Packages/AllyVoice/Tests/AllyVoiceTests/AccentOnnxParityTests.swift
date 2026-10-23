@@ -44,6 +44,19 @@ enum AccentFixtures {
                                   accent: nn.appendingPathComponent("nn_accent/model.onnx"))
     }
 
+    /// Расстановщик целиком — один на прогон: словари (≈ 11 МБ JSON) и модели грузятся раз.
+    nonisolated(unsafe) static var shared: RuAccentPlacer?
+
+    static func placer() throws -> RuAccentPlacer {
+        if let shared { return shared }
+        _ = try models()
+        let made = try RUAccentVoice.placer(nn: nn, dictionaries: dictionaries)
+        shared = made
+        return made
+    }
+
+    static let dictionaries = Fixtures.home.appendingPathComponent("models/tts/ruaccent/dictionary-json")
+
     static func pipeline() throws -> URL {
         let file = parity.appendingPathComponent("pipeline.jsonl")
         guard FileManager.default.fileExists(atPath: file.path) else {
