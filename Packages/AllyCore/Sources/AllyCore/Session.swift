@@ -36,7 +36,7 @@ public struct SessionParts: Sendable {
 public actor Session {
     private let parts: SessionParts, settings: SessionSettings, data = SessionData.shared
     private let current = Locked(SessionState.asleep)
-    private var id = "", start = 0.0, count = 0, misses = 0, cancel: (@Sendable () -> Void)?
+    private var id = "", start = 0.0, count = 0, misses = 0, heard: String?, cancel: (@Sendable () -> Void)?
 
     public init(_ parts: SessionParts, settings: SessionSettings = SessionSettings()) {
         (self.parts, self.settings) = (parts, settings)
@@ -63,6 +63,7 @@ public actor Session {
     }
 
     private func hear(_ text: String) async {
+        heard = text  // her words go with the next record, whatever it is (D3)
         guard text.contains(where: \.isLetter) else { return await missed() }
         misses = 0
         let route = parts.router.route(text), last = state == .windingDown || late
@@ -174,8 +175,12 @@ public actor Session {
 
     private func write(_ head: TraceHead, _ outcome: TurnOutcome?, cancelled: Bool = false, error: String? = nil,
                        end: String? = nil) {
-        let stamp = parts.stamp()
-        parts.sink.write(TurnTrace(head, outcome: outcome, stamp: stamp, cancelled: cancelled, error: error, end: end))
+        let stamp = parts.stamp(), elapsed = parts.clock.now() - start
+        let words = TurnWords(heard: heard, modelText: outcome?.modelText, said: outcome?.turn.sentences,
+                              elapsed: elapsed)
+        heard = nil
+        parts.sink.write(TurnTrace(head, outcome: outcome, stamp: stamp, cancelled: cancelled, error: error, end: end),
+                         words: words)
     }
 
     nonisolated func move(to next: SessionState) {

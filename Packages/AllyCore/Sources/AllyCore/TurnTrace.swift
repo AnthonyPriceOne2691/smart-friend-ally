@@ -13,9 +13,12 @@ public struct TraceStamp: Sendable {
     }
 }
 
-/// Where the records go: a line per record on the phone (`TraceFile`, D2.2), the black box keeps them (D3).
+/// Where the records go: a line per record on the phone (`TraceFile`, D2.2), the black box keeps them with the words
+/// (D3).
 public protocol TraceSink: Sendable {
     func write(_ trace: TurnTrace)
+    /// The record with the turn's words; a sink that keeps no words drops them (`BlackBoxPorts.swift`).
+    func write(_ trace: TurnTrace, words: TurnWords)
 }
 
 /// The session's part of a record, known before the turn's work: whose session, which turn, in what state and mode,

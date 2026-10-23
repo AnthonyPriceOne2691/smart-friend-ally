@@ -102,7 +102,7 @@
 |---|---|---|
 | D1.2 `app-voice-loop` (сливается) | — | `VoiceLoop`, консоль, `AudioIO`, `DictationRecognizer`, `SystemVoice`, реестр; отложенные A10–A12 — в первый прогон D2.2 на телефоне |
 | «оболочка» (детский экран) | контракт слоя экрана; из R — `access`, `handOver()`, срок для метки | заменяет заглушку R; перерыв после прощания по лимиту |
-| D3 `black-box` | `TraceSink` (заменит `TraceFile` своим хранилищем); из R — `audience` в записи следа | слова и звук — только при `audience: supervised` |
+| D3 `black-box` | `TraceSink` — второй приёмник рядом с `TraceFile` через `TraceFanOut` (`TraceFile` остаётся; поправлено поставкой black-box 2026-10-23); из R — `audience` в записи следа | слова и звук — только при `audience: supervised` |
 | поставка голоса | протокол `VoiceOutput`, время первого звука для `speech_end_to_sound` | новый голос за тем же протоколом |
 | R2 `release-gate` | `ReleaseGate`, проверку подписи и поверхность из R | пороги целей 18.10 и файл приёмки без присмотра |
 

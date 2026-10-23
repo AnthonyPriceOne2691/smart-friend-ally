@@ -6,9 +6,11 @@ public struct TurnTimes: Equatable, Sendable {
     public var firstText: Double?, firstSentence: Double?, firstSound: Double?, replyEnd: Double?
 }
 
-/// What a turn said and how: the contract's turn (sentences, source, record), the stage times, a model timeout.
+/// What a turn said and how: the contract's turn (sentences, source, record), the stage times, a model timeout; the
+/// model's text before the contract — none for a script or a phrase of the session.
 public struct TurnOutcome: Sendable {
     public let turn: Turn, times: TurnTimes, modelTimeout: Bool
+    public var modelText: String?
 }
 
 /// One turn through the contract: sentence 1 sounds once its boundary is safe and `first` lets it out, the rest goes
@@ -70,7 +72,7 @@ public final class TurnRunner {
             try Task.checkCancellation()
             try await say(sentence, &state)
         }
-        return TurnOutcome(turn: turn, times: state.times, modelTimeout: timedOut)
+        return TurnOutcome(turn: turn, times: state.times, modelTimeout: timedOut, modelText: state.text)
     }
 
     private func say(_ sentence: String, _ state: inout TurnState) async throws {

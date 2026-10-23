@@ -14,10 +14,17 @@
 
 Три правила:
   local-dir    файл из `local/` в индексе: каталог только для локальных данных;
-  data-ext     расширение аудио или базы в индексе (.wav, .m4a, .sqlite, …);
-  data-magic   файл начинается сигнатурой аудио, видео, HEIC или SQLite, как бы
-               он ни назывался: переименованную запись (`voice.bin`) правило
+  data-ext     расширение аудио, базы или чёрного ящика в индексе (.wav, .m4a,
+               .sqlite, .allybox, …);
+  data-magic   файл начинается сигнатурой аудио, видео, HEIC, SQLite или записи
+               чёрного ящика (`ALLY-BLACKBOX/`), как бы он ни назывался:
+               переименованную запись (`voice.bin`, `case.json`) правило
                расширений пропускает.
+
+Текст разговора узнаётся только по заголовку записи чёрного ящика (поставка
+black-box): фразу, перепечатанную руками, гейт не видит — по кириллице в тексте
+он краснел бы на знании и фикстурах. Заголовок обязан стоять первой строкой в
+каждом текстовом файле ящика, и в производных на Mac тоже.
 
 ⚠ Сигнатура читается из РАБОЧЕГО дерева, а не из индекса: файл, добавленный в
 индекс и потом подменённый на диске, проверяется по подмене. Расширение и путь
@@ -37,7 +44,7 @@ from pathlib import Path
 
 DATA_EXT = {
     ".wav", ".m4a", ".caf", ".aif", ".aiff", ".mp3", ".flac", ".ogg", ".opus",
-    ".sqlite", ".sqlite3", ".db", ".realm",
+    ".sqlite", ".sqlite3", ".db", ".realm", ".allybox",
 }
 LOCAL_DIR = "local/"
 HEAD_BYTES = 16
@@ -61,6 +68,8 @@ def magic_kind(head: bytes) -> str | None:
         return "MP3"
     if head[:16] == b"SQLite format 3\x00":
         return "SQLite"
+    if head.startswith(b"ALLY-BLACKBOX/"):  # запись чёрного ящика: её слова и ответ Элли
+        return "чёрный ящик Ally"
     return None
 
 
@@ -85,7 +94,7 @@ def violations(root: Path, cached: list[str], others: list[str]) -> list[str]:
         if rel.startswith(LOCAL_DIR):
             found.append(f"{rel}: local-dir — каталог local/ только для локальных данных")
         elif Path(rel).suffix.lower() in DATA_EXT:
-            found.append(f"{rel}: data-ext — расширение аудио или базы в индексе")
+            found.append(f"{rel}: data-ext — расширение аудио, базы или чёрного ящика в индексе")
     flagged = {f.split(":", 1)[0] for f in found}
     for rel in dict.fromkeys(cached + others):
         if rel in flagged:

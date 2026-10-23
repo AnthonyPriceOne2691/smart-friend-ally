@@ -109,13 +109,15 @@ final class Board: Sendable {
     }
 }
 
-/// The session's sink as the conversation sees it: every record goes on, and the one that ends a session names why —
-/// it is written before the session moves to sleep.
+/// The session's sink as the conversation sees it: every record goes on with its words, and the one that ends a
+/// session names why — it is written before the session moves to sleep.
 struct EndWatch: TraceSink {
     let sink: TraceSink, board: Board
 
-    func write(_ trace: TurnTrace) {
+    func write(_ trace: TurnTrace) { write(trace, words: TurnWords()) }
+
+    func write(_ trace: TurnTrace, words: TurnWords) {
         if let end = trace.end { board.end(end) }
-        sink.write(trace)
+        sink.write(trace, words: words)
     }
 }
