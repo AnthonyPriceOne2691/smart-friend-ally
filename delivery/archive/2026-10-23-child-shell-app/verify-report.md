@@ -4,7 +4,7 @@
 **Verifier:** process:ci
 **asserts_reviewed_by:** n/a (все утверждения ведут к примерам спеки — дайджест ниже, asserts_without_example: 0; V19–V36 подписаны родителем 2026-10-23 «Подписываю (Рекомендую)», перерыв — «Без перерыва»)
 **CI run:** https://github.com/AnthonyPriceOne2691/smart-friend-ally/actions/runs/40016563898
-**Commit:** db68e91 (код и знание — 3e1e195, факты eval-smoke — 8f2eaef; спека — 4c61d3c, подпись — 48b39f7, eval-smoke до кода — 26d43d3; main влит до 1b70868, после сдачи — до f0d62ef; сдача — следующим коммитом, PR #61)
+**Commit:** db68e91 (код и знание — 3e1e195, факты eval-smoke — 8f2eaef; спека — 4c61d3c, подпись — 48b39f7, eval-smoke до кода — 26d43d3; main влит до 1b70868, после сдачи — до 2ca2c30; сдача — следующим коммитом, PR #61)
 
 ## Shape oracles
 - [x] PASS — pre-commit (STRICT=1) в CI и локально: `file-length` по маске `*.swift *.py`, снимок 0; jscpd — пара
@@ -46,8 +46,9 @@
   `CADisableMinimumFrameDurationOnPhone` = true, `CFBundleShortVersionString` 0.1 и `CFBundleVersion` 1 — как до Ш3;
   `bash scripts/lint/check_app_artifact.sh` — OK (4 бинаря, сети нет, права без подписи не проверены); мутация «Info.plist
   без ключа» — ERROR. at=2026-10-23
-- После слияния main до f0d62ef (D7.2 добавила пакет `AllyHearing` в приложение) — пересборка тем же `xcodebuild`:
-  BUILD SUCCEEDED; `check_app_artifact.sh` — OK (6 бинарей, сети нет). at=2026-10-23
+- После слияний main до f0d62ef (D7.2 добавила пакет `AllyHearing` в приложение) и до 2ca2c30 (энциклопедия в
+  `AllyCore`) — пересборка тем же `xcodebuild` после каждого: BUILD SUCCEEDED; `check_app_artifact.sh` — OK (6 бинарей,
+  сети нет). at=2026-10-23
 
 ## Исполнение рисковых путей
 
