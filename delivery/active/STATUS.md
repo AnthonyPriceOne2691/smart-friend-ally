@@ -24,7 +24,7 @@
   <!-- §5.1a: интеграция в main только через scripts/merge_guard.sh. Параллельно: V3 voice-accent (RUAccent, исполнитель V2),
        слух, память и другие поставки ведущего -->
 - **hooks:** not-deployed
-- **blockers:** none
+- **blockers:** предохранитель max_loc_diff (net 824 > 800, стоп-линия 780) — delivery/active/escalation.md
 - **waivers:** none
 - **new_dependency:** Packages/AllyVoiceFX/Package.swift reason=новый манифест SwiftPM: обработка голоса после синтеза — своё TD-PSOLA (порт алгоритма стенда dsp.py на C со своим автокорреляционным трекером) и эквалайзер RBJ; только Foundation и C, внешних зависимостей нет by=agent:claude-code
 - **runtime_paths:** none reason=обработка — чистая функция над отсчётами, без платформы, прав и железа; воспроизведение и тракт звука — V4b

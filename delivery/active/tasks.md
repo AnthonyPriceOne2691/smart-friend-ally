@@ -8,8 +8,9 @@
 - [x] T2: план, задачи, решения, eval-smoke; пресет «Совсем малышка»; замер прототипа `psola_c` и своего трекера на
   стенде — до кода
 - [x] T3: подпись родителя под Z27–Z31 и правками V4b (2026-10-23, «Подписываю (Рекомендую)») — отдельным коммитом
-- [ ] T4: C-ядро — `pitch.c` (свой трекер), `psola.c` (порт `dsp.py`), `eq.c`; `VoiceFX.swift`
-- [ ] T5: тесты Z27, Z28, Z29, Z31 (Linux); стенд Z30 (Mac) с контролем `psola_c`; CI — `LINT_SWIFT_PACKAGES`, jscpd
+- [x] T4: C-ядро — `pitch.c` (свой трекер), `psola.c` (порт `dsp.py`), `eq.c`; `VoiceFX.swift`
+- [x] T5: тесты Z27, Z28, Z29, Z31 (Linux); стенд Z30 (Mac) с контролем `psola_c`; CI — `LINT_SWIFT_PACKAGES`, jscpd
+- [ ] T5a: предохранитель — net 824 > 800 (план 640): `escalation.md`, решение родителя через ведущего
 - [ ] T6: verify-report, OKF (`engineering/voice-engine` — стадия обработки), PR, сдача с уроком L55, строки
   `voice-engine` и `voice-fx` в `delivery/OBSERVATIONS.md`
 
