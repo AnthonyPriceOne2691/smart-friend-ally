@@ -1,6 +1,7 @@
 # Tasks
 
-Уроки (§2.2a) — в `plan.md`: L63, L64, L50, L44, L51, L19, L33, L16, L52, L25, L46, L26, L43, L35, L14; не применимы — L62, L15,
+Уроки (§2.2a) — в `plan.md`: L63, L64, L50, L44, L51, L19, L33, L16, L52, L25, L46, L26, L43, L35, L14; L34 — бюджет
+ядра по Swift ядра (итог — урок L88); не применимы — L62, L15,
 L22, L1, L12, L36, L37 (причины там же). Уроки этой поставки на сдаче — L86–L88.
 
 ## Slice 0 — документы и подпись
@@ -25,9 +26,9 @@ L22, L1, L12, L36, L37 (причины там же). Уроки этой пос�
 
 ## Slice 3 — знание и сдача
 - [x] T9: ADR `character-rendering` — `implementation:` += `Motion.swift`, `LiveScene.swift`; `knowledge/log.md`
-- [ ] T10: слить `origin/main`; строгий `delivery_check --require-ci --diff-base origin/main` (L14); пуш, PR, CI
-- [ ] T11: verify-report (дайджест, мутации, CI, `mergeable`); `check_digest_report.py` до пуша сдачи (L43); архив в
-  том же PR, строка INDEX (L86–L88), обязательство в `CLAUDE.md`; доклад ведущему «готово к мержу»
+- [x] T10: слить `origin/main`; строгий `delivery_check --require-ci --diff-base origin/main` (L14); пуш, PR, CI
+- [x] T11: verify-report (дайджест, мутации, CI, `mergeable`); `check_digest_report.py` до пуша сдачи (L43); архив в
+  том же PR, строка INDEX (уроки L86, L87, L88 — рождены этой поставкой), обязательство в `CLAUDE.md`; доклад ведущему «готово к мержу»
 
 ## Перенесено
 - **Ш2б `child-shell-light`** (после мержа Ш2а): ночь, сиреневый оттенок, свечение и жемчужинки, пузырьки неба, воды,
