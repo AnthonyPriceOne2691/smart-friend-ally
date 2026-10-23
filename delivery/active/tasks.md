@@ -16,28 +16,31 @@ L57 (`scripts/lint/check_child_data.py`, `.gitignore`, `delivery/evals/smoke/`),
 - [x] T3: `eval-smoke.md` — строки M15–M25 с оракулом и ожиданием, до кода; `phase: implement`
 
 ### Slice 1 — пакет и база (Linux)
-- [ ] T4: общий пакет `Packages/AllySQLite` (решение ведущего 2026-10-23) — `CSQLite`, `SQLite.swift` без логики памяти,
+- [x] T4: общий пакет `Packages/AllySQLite` (решение ведущего 2026-10-23) — `CSQLite`, `SQLite.swift` без логики памяти,
   M22; если энциклопедия уже ввела его в main — слить main и сверить M22 с её тестами вместо своего пакета. Пакет памяти —
   `Package.swift` с `../AllySQLite`, `Schema.swift` (прагмы с чтением обратно), `Facts.swift`; `LINT_SWIFT_PACKAGES` +=
   `Packages/AllySQLite Packages/AllyMemory` в `quality.yml`, `.build` обоих — в исключения SwiftLint; сборка и тесты на
   Mac (`DEVELOPER_DIR`, `--disable-keychain`); мутации M22: транзакция без отката, ошибка без текста SQLite
-- [ ] T5: `MemoryStore.swift` — запись сессии одной транзакцией (личность, замена по дате, подтверждение, уверенность
+- [x] T5: `MemoryStore.swift` — запись сессии одной транзакцией (личность, замена по дате, подтверждение, уверенность
   кодом, эпоха стирания), `eraseAll`; M15–M21; мутации: уверенность не по виду опоры (M19), замена без сравнения дат
   (M17), удаление вместо истории (M16), стирание без `-wal` и без сверки эпохи (M21) краснят тесты
   <!-- замер выше 780 строк — стоп, escalation.md и сразу к ведущему: потолки строк блока в memory-app либо подпись
        предохранителя; состояния для консоли уже в memory-app -->
 
 ### Slice 2 — блок
-- [ ] T6: `MemoryBlock.swift`, `Resources/memory.json`; M23, M24; свойство на 200 лентах сессий с зерном (бюджет, ядро,
-  байты не зависят от порядка записи); мутации: ядро вырезается (M23), порядок по id вставки (M24)
+- [x] T6: `MemoryBlock.swift`, `BlockLines.swift`, `Resources/memory.json`; M23, M24; мутации: ядро вырезается (M23),
+  порядок по id вставки (M24). Свойство на 200 лентах снято словом родителя 2026-10-23 «сейчас собираем, оптимизировать
+  будем потом» — только подписанные примеры и требования гейтов; предупреждение детектора — в verify-report
+  <!-- факт 2026-10-23: тесты 9 из 9 и M22 на Mac (SQLite 3.54.0), покрытие AllySQLite 80%, AllyMemory 92%, мутации
+       10 из 10 убиты, SwiftLint 0 находок; предохранитель — net 1092 из 800, стоп: escalation.md -->
 
 ### Slice 3 — гейт данных ребёнка
-- [ ] T7: `check_child_data.py` — спутники базы по расширению, WAL и журнал по сигнатуре, докстринг; `.gitignore` —
+- [x] T7: `check_child_data.py` — спутники базы по расширению, WAL и журнал по сигнатуре, докстринг; `.gitignore` —
   `*.sqlite-*`, `*.db-*`; смоук S7 `delivery/evals/smoke/child_data_sqlite.sh` (M25) с отрицательным контролем «гейт main —
   выход 0», строки в README и `run.sh`; доктор — DEAD 0, канарейка гейта на месте
 
 ### Slice 4 — знание
-- [ ] T8: концепт `engineering/memory.md` (`implementation:` — исходники пакета; что подключено, а что ждёт `memory-extract`
+- [x] T8: концепт `engineering/memory.md` (`implementation:` — исходники пакета; что подключено, а что ждёт `memory-extract`
   и `memory-app`, L50); выжимка `KNOWLEDGE.md` §9 → концепт, в §9 — ссылка (OKF §6); `ops/child-data.md` (спутники базы);
   `engineering/index.md`, карта репозитория, `knowledge/log.md`; `okf_validate` и `okf_sync_gate` зелёные
 

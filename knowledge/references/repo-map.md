@@ -28,6 +28,10 @@ implementation:
   модели, сессия с мягким лимитом и крючком маршрутизатора, драйвер сессии со слухом `Conversation`, маршрутизатор на
   живом ходе `RouterRouting`, след хода и его файл `TraceFile`; тексты сессии — `Resources/session.json`):
   `swift test --package-path Packages/AllyCore` (тулчейн Xcode: `DEVELOPER_DIR`).
+- **Память о ребёнке** — `Packages/AllyMemory` (факты с опорой на ход, замена по дате, блок для промпта, «стереть всё»;
+  слова блока — `Resources/memory.json`) поверх общего SQLite приложения `Packages/AllySQLite` (системный модуль
+  `CSQLite` и тонкая обёртка): `swift test --disable-keychain --package-path Packages/AllyMemory`;
+  [Memory](/engineering/memory.md).
 - **Контур:** `python3 scripts/delivery_check.py` — фазы поставки;
   `.venv/bin/pre-commit run --all-files --verbose` — гейты;
   `python3 scripts/lint/contour_doctor.py` — судят ли гейты;
@@ -45,7 +49,7 @@ implementation:
 | `scripts/`, `scripts/lint/` | механика контура; канонные файлы правятся только перевендориванием; продуктовый — `scripts/reinstall_app.sh` (E4) |
 | `docs/canon/` | снимок канонов с самопроверкой (вариант C) |
 | `App/` | приложение iOS: `project.yml`, `Sources/` (консоль, цикл, звук, распознавание), `Resources/` (персона, реестр) |
-| `Packages/` | Swift-пакеты: `AllyDiscipline` (дисциплина ответа), `AllyCore` (ядро хода), `AllyLlama` (модель) |
+| `Packages/` | Swift-пакеты: `AllyDiscipline` (дисциплина ответа), `AllyCore` (ядро хода), `AllyLlama` (модель), `AllySQLite` (общий SQLite), `AllyMemory` (память о ребёнке) |
 | `local/` | данные ребёнка и прочее локальное — игнорируется, гейт не пускает в git |
 
 # Грабли

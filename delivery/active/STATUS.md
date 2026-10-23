@@ -26,8 +26,8 @@
        Packages/AllySQLite, решение ведущего 2026-10-23: вводит первый, кто сольётся), «оболочка», голос и речь (App); пакет памяти новый, AllyCore не трогается;
        конфликты в quality.yml, .swiftlint.yml, CLAUDE.md, INDEX.md, knowledge — сложением -->
 - **hooks:** not-deployed
-- **blockers:** none
-  <!-- остановка по процессу, а не блокер: после коммита спеки и плана исполнитель ждёт подписи родителя (ведущий) -->
+- **blockers:** предохранитель max_loc_diff — net 1092 из 800 при стопе плана 780 (план ≈ 605); escalation.md: исключение для memory-core или две поставки — решение родителя через ведущего
+  <!-- код подписанных примеров закоммичен локально и не отправлен: pre-push с таким диффом красный -->
 - **waivers:** none
 - **new_dependency:** Packages/AllySQLite/Package.swift reason=новый манифест SwiftPM без внешних пакетов (общий SQLite приложения, решение ведущего 2026-10-23): системный модуль CSQLite — libsqlite3 из SDK Apple (3.54.0 на Mac), на Linux CI — libsqlite3-dev 3.45.1 образа ubuntu-24.04 (сверено по описанию образа и пробой в контейнере Swift 6.4.1), обёртка AllySQLite — Foundation, тесты — XCTest тулчейна; GRDB, SQLite.swift и свой исходник SQLite не берём (decisions.md); если пакет раньше введёт энциклопедия, строка уходит при слиянии main by=agent:claude-code
 - **new_dependency:** Packages/AllyMemory/Package.swift reason=новый манифест SwiftPM без внешних пакетов: модуль Memory — Foundation и локальный ../AllySQLite, тесты — XCTest тулчейна by=agent:claude-code
