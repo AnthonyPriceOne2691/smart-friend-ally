@@ -52,6 +52,17 @@
 | verify_fails_before_green | 0 — первый прогон CI 40019400952 зелёный во всех трёх джобах |
 | est_token_or_cost | n/a |
 
+## Assertion digest (ревью ожиданий, не кода)
+
+База: `origin/main` · сгенерировано `assert_digest.sh`
+
+**Новых утверждений нет.**
+
+Это либо тесты не добавлялись (тогда чем закрыт DoD?), либо изменения
+только в реализации. Второе законно; первое — повод спросить.
+
+asserts_without_example: 0
+
 ## Verdict
 - [x] READY FOR HANDOFF
 - [ ] NEED CONVERGE (new tasks)
