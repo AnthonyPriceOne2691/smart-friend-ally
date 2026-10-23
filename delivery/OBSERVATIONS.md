@@ -42,3 +42,4 @@
 - `child-shell-motion`
 - `release-gate`
 - `voice-onnx`
+- `turn-speculation`

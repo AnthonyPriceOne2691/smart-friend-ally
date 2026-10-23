@@ -7,5 +7,5 @@
 - [x] T2: `eval-smoke.md` — U7–U15 до кода; `phase: implement`
 - [x] T3: `Speculation.swift`, события сессии и драйвера, `TurnEnding` с событиями; U7–U13; мутации
 - [x] T4: `Phrase.tentative()`, события в `PhoneListener`; SwiftLint, сборка без подписи, оракул артефакта
-- [ ] T5: знание; verify-report; строгий `delivery_check`, сверка дайджеста; PR, CI
-- [ ] T6: сдача — архив, строка INDEX (L72, L73), обязательство в CLAUDE.md; U14, U15 — телефон в сессии теста
+- [x] T5: знание; verify-report; строгий `delivery_check`, сверка дайджеста; PR, CI
+- [x] T6: сдача — архив, строка INDEX (L72, L73), обязательство в CLAUDE.md; U14, U15 — телефон в сессии теста
