@@ -35,4 +35,18 @@ final class SQLiteTests: XCTestCase {
         db = try SQLiteConnection(path: path)
         XCTAssertEqual(try db.rows("SELECT a, b FROM t"), [[.text("кошка Мурка"), .int(5)]])
     }
+
+    /// M29: the memory's trigger calls a function of the app; the function answers for every value, NULL is false.
+    func testFunction() throws {  // M29
+        let db = try SQLiteConnection(path: ":memory:")
+        try db.function("starts") { $0.hasPrefix("кош") }
+        XCTAssertEqual(try db.rows("SELECT starts('кошка'), starts('собака'), starts(NULL), starts(5)"),
+                       [[.int(1), .int(0), .int(0), .int(0)]])
+        try db.exec("CREATE TABLE t (a TEXT); CREATE TRIGGER no BEFORE INSERT ON t WHEN starts(NEW.a) "
+                    + "BEGIN SELECT RAISE(ABORT, 'refused'); END")
+        XCTAssertThrowsError(try db.run("INSERT INTO t VALUES ('кошка Мурка')")) { error in
+            XCTAssertEqual(error as? SQLiteError, SQLiteError(code: 19, message: "refused"))
+        }
+        XCTAssertEqual(try db.run("INSERT INTO t VALUES ('собака')"), 1)
+    }
 }
