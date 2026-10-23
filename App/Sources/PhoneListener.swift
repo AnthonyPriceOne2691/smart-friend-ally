@@ -20,12 +20,24 @@ final class PhoneListener: Listener, @unchecked Sendable {
 
     func endTurn() { ending { $0 }?.ask() }
 
-    func listen(_ kind: TurnKind) async throws -> String? {
-        let phrase = try await recognizer.phrase(onText: heard), turnEnding = TurnEnding()
+    func listen(_ kind: TurnKind, events: @escaping @Sendable (EarEvent) -> Void) async throws -> String? {
+        let phrase = try await recognizer.phrase(onText: heard)
+        let (pauses, feed) = AsyncStream.makeStream(of: TurnEvent.self, bufferingPolicy: .bufferingOldest(128))
+        defer { feed.finish() }  // a failed listening ends the relay too
+        let relay = Task {  // in order: her tentative end with the dictation's text so far, her speech coming back
+            for await pause in pauses {
+                if case .tentativeEnd = pause, let text = try? await phrase.tentative() { events(.tentative(text)) }
+                if case .resumed = pause { events(.resumed) }
+            }
+        }
+        let turnEnding = TurnEnding { feed.yield($0) }
         ending { $0 = turnEnding }
         defer { ending { $0 = nil } }
         let detector = TurnDetector(kind: kind, timing: hearing.turn, ending: turnEnding)
-        guard let end = try await audio.listen(detector, timeout: hearing.listenTimeout, feed: phrase.feed) else {
+        let end = try await audio.listen(detector, timeout: hearing.listenTimeout, feed: phrase.feed)
+        feed.finish()
+        await relay.value
+        guard let end else {
             await phrase.cancel()
             heard("(тишина)")
             return nil

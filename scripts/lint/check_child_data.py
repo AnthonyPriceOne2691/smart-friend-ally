@@ -14,12 +14,16 @@
 
 Три правила:
   local-dir    файл из `local/` в индексе: каталог только для локальных данных;
-  data-ext     расширение аудио, базы или чёрного ящика в индексе (.wav, .m4a,
-               .sqlite, .allybox, …);
-  data-magic   файл начинается сигнатурой аудио, видео, HEIC, SQLite или записи
-               чёрного ящика (`ALLY-BLACKBOX/`), как бы он ни назывался:
-               переименованную запись (`voice.bin`, `case.json`) правило
-               расширений пропускает.
+  data-ext     расширение аудио, базы, её спутников или чёрного ящика в индексе
+               (.wav, .m4a, .sqlite, .sqlite-wal, .db-journal, .allybox, …);
+  data-magic   файл начинается сигнатурой аудио, видео, HEIC, SQLite, WAL или
+               журнала SQLite, записи чёрного ящика (`ALLY-BLACKBOX/`), как бы он
+               ни назывался: переименованную запись (`voice.bin`, `case.json`)
+               правило расширений пропускает.
+
+Спутники базы (поставка memory-core): в режиме WAL свежие записи — имена из памяти
+о ребёнке — лежат в `-wal` до чекпойнта, журнал отката держит прежние страницы;
+проба 2026-10-23 — WAL с записью под тремя именами проходил гейт с выходом 0.
 
 Текст разговора узнаётся только по заголовку записи чёрного ящика (поставка
 black-box): фразу, перепечатанную руками, гейт не видит — по кириллице в тексте
@@ -45,7 +49,10 @@ from pathlib import Path
 DATA_EXT = {
     ".wav", ".m4a", ".caf", ".aif", ".aiff", ".mp3", ".flac", ".ogg", ".opus",
     ".sqlite", ".sqlite3", ".db", ".realm", ".allybox",
+    ".sqlite-wal", ".sqlite-shm", ".sqlite-journal", ".db-wal", ".db-shm", ".db-journal",
 }
+SQLITE_WAL = (b"\x37\x7f\x06\x82", b"\x37\x7f\x06\x83")   # магия WAL: две схемы контрольной суммы
+SQLITE_JOURNAL = bytes.fromhex("d9d505f920a163d7")             # магия журнала отката
 LOCAL_DIR = "local/"
 HEAD_BYTES = 16
 
@@ -68,6 +75,10 @@ def magic_kind(head: bytes) -> str | None:
         return "MP3"
     if head[:16] == b"SQLite format 3\x00":
         return "SQLite"
+    if head[:4] in SQLITE_WAL:          # WAL базы: свежие записи до чекпойнта
+        return "SQLite WAL"
+    if head[:8] == SQLITE_JOURNAL:      # журнал отката: прежние страницы
+        return "журнал SQLite"
     if head.startswith(b"ALLY-BLACKBOX/"):  # запись чёрного ящика: её слова и ответ Элли
         return "чёрный ящик Ally"
     return None

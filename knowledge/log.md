@@ -8,6 +8,22 @@
   новый пакет.
 * **Источник**: поставка `voice-fx` (V4a серии голоса; примеры Z27–Z31 подписаны родителем 2026-10-23).
 
+## 2026-10-23 — слух: спекуляция — ответ модели начинается в её паузе
+
+* **Update**: `engineering/session` — `Speculation` (общий план реплики, этапы `spec_*`, `spec_stale` до D5);
+  `implementation:` — `Speculation.swift`. `engineering/turn-detector` — события паузы до сессии.
+  `engineering/voice-loop` — текст диктовки на «возможно, конец». `engineering/safety-below-model` — спекуляция не
+  обходит план реплики.
+* **Источник**: поставка `turn-speculation` (D7.1 серии «слух»; примеры U7–U15 подписаны родителем 2026-10-23).
+## 2026-10-23 — память о ребёнке: база фактов и блок для промпта (memory-core)
+
+* **Creation**: `engineering/memory` (Design) — что хранится, опора на её ход и уверенность кодом, замена
+  однозначного по дате, узнавание сущностей, блок ≤ 300 токенов с ядром, «стереть всё» удалением файлов, общий SQLite
+  `AllySQLite`; что из серии ещё не подключено (L50); `implementation:` — исходники `Packages/AllyMemory`.
+* **Update**: `ops/child-data` — спутники базы (`-wal`, `-shm`, `-journal`) в игноре и в гейте, смоук S7.
+  `engineering/index`, `references/repo-map` — пакеты `AllySQLite` и `AllyMemory`. `KNOWLEDGE.md` §9 — ссылка на
+  концепт (OKF §6).
+* **Источник**: поставка `memory-core` (спека и план серии подписаны родителем 2026-10-23 «Подписываю (Рекомендую)»).
 ## 2026-10-23 — движок голоса Supertonic за протоколом (голос V1b)
 
 * **Creation**: `engineering/voice-engine` (Design): `SpeechEngine`, фраза за вызов, скорость синтеза не ниже 0,85, веса в
