@@ -1,16 +1,20 @@
 import Discipline
 import Foundation
 
-/// What the app stamps on every record: versions and hashes, memory, heat (П26).
+/// What the app stamps on every record: versions and hashes, memory, heat (П26) and the stage times of the listening
+/// the record answers (`tail`, `recognize`, `speech_end_to_sound`, `tap_buffer`) — with the turn's own they make the
+/// journal line of D1.2.
 public struct TraceStamp: Sendable {
-    public let versions: [String: String], memory: [String: Int], thermal: String
+    public let versions: [String: String], memory: [String: Int], thermal: String, stages: [String: Double]
 
-    public init(versions: [String: String] = [:], memory: [String: Int] = [:], thermal: String = "") {
-        (self.versions, self.memory, self.thermal) = (versions, memory, thermal)
+    public init(versions: [String: String] = [:], memory: [String: Int] = [:], thermal: String = "",
+                stages: [String: Double] = [:]) {
+        (self.versions, self.memory, self.thermal, self.stages) = (versions, memory, thermal, stages)
     }
 }
 
-/// Where the records go: a line per record on the phone (D2.2), the black box keeps them with the words (D3).
+/// Where the records go: a line per record on the phone (`TraceFile`, D2.2), the black box keeps them with the words
+/// (D3).
 public protocol TraceSink: Sendable {
     func write(_ trace: TurnTrace)
     /// The record with the turn's words; a sink that keeps no words drops them (`BlackBoxPorts.swift`).
@@ -38,7 +42,7 @@ public struct TurnTrace: Encodable, Sendable {
 
     init(_ head: TraceHead, outcome: TurnOutcome?, stamp: TraceStamp, cancelled: Bool = false, error: String? = nil,
          end: String? = nil) {
-        let log = outcome.map { TurnLog(outcome: $0) }
+        let log = outcome.map { TurnLog(outcome: $0, stages: stamp.stages) }
         (session, turn, phase, mode) = (head.session, head.turn, head.phase.rawValue, head.mode.rawValue)
         source = head.source ?? log?.source ?? "model"
         route = head.route.map {

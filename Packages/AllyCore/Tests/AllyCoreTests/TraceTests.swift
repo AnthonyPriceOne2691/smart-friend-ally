@@ -40,4 +40,40 @@ final class TraceTests: XCTestCase {
         XCTAssertEqual(records[5].elapsed, 605, accuracy: 1e-9)
         XCTAssertNil(records[0].route)
     }
+
+    func testTheTraceFileAppendsALinePerRecordWithTheAppsStages() async throws {  // W6
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let url = folder.appendingPathComponent("turns.jsonl")
+        try Data("{\"turn\":1}\n".utf8).write(to: url)
+        let stages = ["tail": 0.90, "recognize": 0.03, "speech_end_to_sound": 1.85, "tap_buffer": 0.02]
+        let file = TraceFile(url: url), model = ReplyQueue(["Жирафы очень высокие! У них длинная шея."])
+        let parts = SessionParts(model: model, voice: RecordingVoice(), sink: file, clock: TestClock(),
+                                 stamp: { TraceStamp(stages: stages) })
+        let session = Session(parts)
+        await session.handle(.wake)
+        await session.handle(.heard("Расскажи про жирафа"))
+        await session.handle(.stop)
+        let lines = try String(contentsOf: url, encoding: .utf8).split(separator: "\n").map(String.init)
+        XCTAssertEqual(lines.count, 4)
+        XCTAssertEqual(lines.first, "{\"turn\":1}")
+        XCTAssertEqual(file.failures, 0)
+        var sources: [String?] = []
+        for line in lines.dropFirst() {
+            let record = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(line.utf8)) as? [String: Any], line)
+            sources.append(record["source"] as? String)
+            XCTAssertNil(line.range(of: "[А-Яа-яЁё]", options: .regularExpression), line)
+            let keys = ["\"cancelled\":", "\"elapsed\":", "\"limit\":", "\"mode\":", "\"phase\":", "\"session\":",
+                        "\"source\":", "\"stages\":", "\"turn\":"].compactMap { line.range(of: $0)?.lowerBound }
+            XCTAssertEqual(keys.count, 9, line)
+            XCTAssertEqual(keys, keys.sorted(), line)
+        }
+        XCTAssertEqual(sources, ["session:greeting", "model", "session:stop"])
+        let turn = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(lines[2].utf8)) as? [String: Any])
+        let measured = try XCTUnwrap(turn["stages"] as? [String: Double])
+        XCTAssertEqual(Set(measured.keys), Set(stages.keys).union(["first_text", "first_sentence", "first_sound",
+                                                                    "reply_end"]))
+        for (stage, seconds) in stages { XCTAssertEqual(measured[stage] ?? -1, seconds, accuracy: 1e-9, stage) }
+    }
 }

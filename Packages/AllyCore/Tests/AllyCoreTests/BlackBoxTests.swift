@@ -60,15 +60,17 @@ struct BoxRig {
         return lines.allSatisfy { $0.range(of: "[А-Яа-яЁё]", options: .regularExpression) == nil } ? lines.count : -1
     }
 
-    /// The records this box wrote and still holds, in the order written; each file opens with the header (B12).
-    func kept() throws -> [Kept] {
-        let decoder = JSONDecoder()
-        decoder.keyDecodingStrategy = .convertFromSnakeCase
-        return try disk.order.filter { $0.hasSuffix(".allybox") }.compactMap { disk.data($0) }.map { data in
-            let lines = (String(bytes: data, encoding: .utf8) ?? "").split(separator: "\n")
-            XCTAssertEqual(lines.first, "ALLY-BLACKBOX/1")
-            return try decoder.decode(Kept.self, from: Data(lines[1].utf8))
-        }
+    func kept() throws -> [Kept] { try keptRecords(disk) }
+}
+
+/// The records a box wrote and still holds, in the order written; each file opens with the header (B12).
+func keptRecords(_ disk: MemoryDisk) throws -> [Kept] {
+    let decoder = JSONDecoder()
+    decoder.keyDecodingStrategy = .convertFromSnakeCase
+    return try disk.order.filter { $0.hasSuffix(".allybox") }.compactMap { disk.data($0) }.map { data in
+        let lines = (String(bytes: data, encoding: .utf8) ?? "").split(separator: "\n")
+        XCTAssertEqual(lines.first, "ALLY-BLACKBOX/1")
+        return try decoder.decode(Kept.self, from: Data(lines[1].utf8))
     }
 }
 
@@ -275,9 +277,30 @@ final class BlackBoxTests: XCTestCase {
         XCTAssertEqual(rig.wordlessTrace, 7)
     }
 
+    /// The app's path through the conversation driver (D2.2): the audience survives it, the words reach the box (L50).
+    func testTheConversationDriverKeepsAudienceAndWords() async throws {  // B10
+        let clock = TestClock(), disk = MemoryDisk(), voice = RecordingVoice(), trace = RecordingSink()
+        let box = BlackBox(disk: disk, clock: clock, wall: { wakeTime.addingTimeInterval(clock.now()) })
+        for audience in [Audience.parent, .supervised] {
+            let ear = ScriptedEar([.init(text: "Я сегодня была в зоопарке"), .init(text: nil), .init(text: nil)],
+                                  clock: clock, voice: voice)
+            let parts = SessionParts(model: ReplyQueue(["Ух ты, в зоопарке!"]), voice: voice,
+                                     sink: TraceFanOut([trace, box]), clock: clock, audience: audience)
+            let talk = Conversation(parts, listener: ear)
+            ear.watch(talk)
+            await talk.wake()
+        }
+        let kept = try keptRecords(disk)
+        let audiences = ["parent", "supervised"].flatMap { Array(repeating: $0, count: 4) }
+        XCTAssertEqual(trace.records.map(\.audience), audiences)
+        XCTAssertEqual(kept.map(\.source), ["session:greeting", "model", "session:misheard", "session:rest"])
+        XCTAssertEqual([kept[1].heard, kept[1].modelText], ["Я сегодня была в зоопарке", "Ух ты, в зоопарке!"])
+        XCTAssertEqual(Set(kept.map(\.audience)), ["supervised"])
+    }
+
     /// On seeded random sessions, the black box keeps exactly the trace's records, the numbers matching.
     func testRecordsMatchTheTraceOnSeededSessions() async throws {  // B10
-        var random = SplitMix(seed: 7)
+        var random = SeededGenerator(seed: 7)
         for _ in 0..<20 {
             let rig = BoxRig(replies: ["Ага."], routes: scriptRoutes)
             await rig.session.handle(.wake)
@@ -322,7 +345,7 @@ final class BlackBoxTests: XCTestCase {
         let places = keys.compactMap { text.range(of: $0)?.lowerBound }
         XCTAssertEqual(places, places.sorted())
         XCTAssertEqual(places.count, keys.count)
-        var random = SplitMix(seed: 42)  // any samples of any length read back bit for bit
+        var random = SeededGenerator(seed: 42)  // any samples of any length read back bit for bit
         for length in [1, 2, 159, 16_000, 32_001] {
             let samples = (0..<length).map { _ in Int16(truncatingIfNeeded: random.next()) }
             XCTAssertEqual(readBack(Wav.file(samples, rate: 16_000)), samples, "\(length)")
@@ -338,17 +361,4 @@ func readBack(_ wav: Data) -> [Int16] {
 extension Data {
     func le16(_ at: Int) -> Int { Int(self[at]) | Int(self[at + 1]) << 8 }
     func le32(_ at: Int) -> Int { le16(at) | le16(at + 2) << 16 }
-}
-
-/// A seeded generator: the same sessions and samples on every run.
-struct SplitMix: RandomNumberGenerator {
-    private var state: UInt64
-    init(seed: UInt64) { state = seed }
-
-    mutating func next() -> UInt64 {
-        state &+= 0x9e37_79b9_7f4a_7c15
-        var mixed = (state ^ (state >> 30)) &* 0xbf58_476d_1ce4_e5b9
-        mixed = (mixed ^ (mixed >> 27)) &* 0x94d0_49bb_1331_11eb
-        return mixed ^ (mixed >> 31)
-    }
 }
