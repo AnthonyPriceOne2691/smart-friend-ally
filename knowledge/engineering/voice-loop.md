@@ -145,7 +145,17 @@ shasum -a 256 ~/models/gemma-4-E4B-it-Q4_K_M.gguf    # 85a896a0… — пин в
 xcrun devicectl device copy to --device <UDID> --domain-type appDataContainer \
   --domain-identifier com.anthonypriceone.ally --source ~/models/gemma-4-E4B-it-Q4_K_M.gguf \
   --destination "Library/Application Support/Models/gemma-4-E4B-it-Q4_K_M.gguf"
+# Silero VAD (D7.2, 2,3 МБ, MIT): без файла слух — по энергии, консоль пишет «нет silero_vad.onnx — слушаю по энергии»
+curl -fL -o ~/models/silero_vad.onnx https://github.com/snakers4/silero-vad/raw/v6.2.3/src/silero_vad/data/silero_vad.onnx
+shasum -a 256 ~/models/silero_vad.onnx              # 1a153a22…8788e3, 2 327 524 байта — размер в hearing.json
+xcrun devicectl device copy to --device <UDID> --domain-type appDataContainer \
+  --domain-identifier com.anthonypriceone.ally --source ~/models/silero_vad.onnx \
+  --destination "Library/Application Support/Models/silero_vad.onnx"
 ```
+
+Консоль при запуске пишет, кто слушает: «слух: Silero · sherpa 1.13.8 · ORT 1.28.0» или причину энергии; след —
+`versions.vad`, время окон Silero — журнал (`devicectl … --console`, категория `hearing`). Те же фразы с энергией (U21) —
+без файла Silero на телефоне: удалить его из `Library/Application Support/Models` и перезапустить.
 
 Первый запуск новой подписи — доверие сертификату на телефоне: Настройки → Основные → VPN и управление устройством (L15).
 Бесплатная подпись живёт 7 дней: консоль пишет «подпись: осталось N дн.», при N ≤ 1 — «переустанови с Mac».

@@ -44,6 +44,7 @@
 - `voice-onnx`
 - `turn-speculation`
 - `memory-core`
+- `silero-vad`
 - `memory-guard`
 - `kv-spoken`
 - `accent-tokenizers`
