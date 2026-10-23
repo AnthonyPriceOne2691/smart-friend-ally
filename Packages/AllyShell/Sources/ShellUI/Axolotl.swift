@@ -17,7 +17,8 @@ struct Axolotl {
         var ctx = base
         ctx.translateBy(x: 0, y: -8 + frame.rise)
         ctx.concatenate(turn(pose.lean, around: CGPoint(x: 0, y: 60)))
-        ctx.concatenate(stretch(1 + pose.near, 1 + pose.near, around: CGPoint(x: 0, y: 40)))
+        let near = 1 + pose.near, squash = frame.squash  // a tap's squash rides the nearness (prototype `cGig`)
+        ctx.concatenate(stretch(near * (1 - 0.75 * squash), near * (1 + squash), around: CGPoint(x: 0, y: 40)))
         tail(ctx)
         skin(ctx, ellipse(-30, 141, 21, 13))
         skin(ctx, ellipse(30, 141, 21, 13))
@@ -81,6 +82,7 @@ struct Axolotl {
                                                                .init(color: .white.opacity(0), location: 1)],
                                                               at: CGPoint(x: -38, y: -88), radius: 40))
         Face(pose: pose, frame: frame).draw(ctx)
+        CrownArt(glints: frame.glints).draw(ctx)
     }
 
     private func gills(_ ctx: GraphicsContext) {

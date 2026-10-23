@@ -3,7 +3,8 @@
 #
 # Свой гейт проекта. Сборка — не оракул (KNOWLEDGE.md П24): права, ключи Info и сетевые символы роняют процесс на
 # телефоне или открывают сеть при зелёной сборке, поэтому проверяется то, что уедет на телефон:
-#   1. Info.plist — нет ключей сети (ATS, локальная сеть, Bonjour); ключи микрофона и распознавания непустые, по-русски.
+#   1. Info.plist — нет ключей сети (ATS, локальная сеть, Bonjour); ключи микрофона и распознавания непустые, по-русски;
+#      `CADisableMinimumFrameDurationOnPhone` = true (оболочка Ш3: без него ProMotion держит экран на 60 Гц).
 #   2. Бинарь, dylib корня и встроенные фреймворки (macOS, xcrun) — в `nm -u` нет URLSession/NSURLSession, `_nw_*`, `_socket`,
 #      `_connect`, `_getaddrinfo`; в `otool -L` нет Network, WebKit, CFNetwork, CloudKit. `NSURL` для файлов допустим.
 #   3. Права подписанной сборки — сверх подписи (application-identifier, team-identifier, get-task-allow) ровно
@@ -48,7 +49,10 @@ for k in bad:
     print(f"  ключ сети в Info: {k}")
 for k in weak:
     print(f"  ключ использования пуст или не по-русски: {k}")
-sys.exit(1 if bad or weak else 0)
+fast = info.get("CADisableMinimumFrameDurationOnPhone") is True
+if not fast:
+    print("  нет ключа CADisableMinimumFrameDurationOnPhone = true: детский экран не получит 120 Гц")
+sys.exit(1 if bad or weak or not fast else 0)
 PY
   then fail=1; fi
 

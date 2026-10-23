@@ -24,6 +24,7 @@ models/
 *.gguf
 *.safetensors
 *.onnx
+!Packages/AllyOnnx/Tests/AllyOnnxTests/add.onnx
 *.tflite
 *.litertlm
 *.mlpackage/
@@ -42,6 +43,7 @@ xcuserdata/
 *.xcodeproj/
 App/build/
 App/Ally.entitlements
+App/Info.plist
 App/Local.xcconfig
 
 # --- Python: механика контура ---

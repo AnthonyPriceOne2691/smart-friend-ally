@@ -27,16 +27,23 @@ implementation:
   `swift test --package-path Packages/AllyDiscipline`.
 - **Ядро голосового цикла** — `Packages/AllyCore` (ход через контракт, конец реплики, журнал хода без слов, реестр
   модели, сессия с мягким лимитом и крючком маршрутизатора, драйвер сессии со слухом `Conversation`, маршрутизатор на
-  живом ходе `RouterRouting`, след хода и его файл `TraceFile`; тексты сессии — `Resources/session.json`):
-  `swift test --package-path Packages/AllyCore` (тулчейн Xcode: `DEVELOPER_DIR`).
-- **Детский экран (оболочка)** — `Packages/AllyShell`: `ShellCore` (позы фаз, кадры, раскладка, палитра — Linux) и
-  `ShellUI` (Элли, пузырь и небо в SwiftUI под `#if canImport(SwiftUI)`). Снимки семи фаз и лист `sheet.png` пишет
-  `swift test --disable-keychain --package-path Packages/AllyShell` на Mac в `local/shell-snapshots/`; на Linux снимки
-  пропускаются видимо. Снимков экрана телефона нет никогда (L46).
+  живом ходе `RouterRouting`, след хода и его файл `TraceFile`; тексты сессии — `Resources/session.json`; энциклопедия
+  «почему» `Encyclopedia` — основы Snowball, SQLite FTS5 через `AllySQLite`, списки — `Resources/encyclopedia.json`):
+  `swift test --package-path Packages/AllyCore` (тулчейн Xcode: `DEVELOPER_DIR`). Паритет энциклопедии со стендом —
+  `swift run -c release --package-path Packages/AllyCore encyclopedia-replay <база.jsonl> [конфиг.json] < вопросы.jsonl`.
+- **Детский экран (оболочка)** — `Packages/AllyShell`: `ShellCore` (позы фаз, кадры, движение, раскладка, палитра,
+  венок, правило тапа `Tap`, перерыв после лимита `Nap` — Linux) и `ShellUI` (Элли с венком, пузырь и небо в SwiftUI
+  под `#if canImport(SwiftUI)`; экран дочки `ChildShell` с зоной взрослых). Приложение берёт `ShellUI` и `ShellCore`
+  через `App/project.yml`, тело `App/Sources/ChildScreen.swift` — `ChildShell`. Снимки семи фаз, лист `sheet.png`,
+  полосы движения и экран целиком (`app/`) пишет `swift test --disable-keychain --package-path Packages/AllyShell` на
+  Mac в `local/shell-snapshots/`; на Linux снимки пропускаются видимо. Снимков экрана телефона нет никогда (L46).
 - **Расстановщик ударений** — `Packages/AllyAccent` (RUAccent на Swift: токенизаторы; паритет на Mac — файлы в
   `~/models/tts/ruaccent` и `~/models/tts/ruaccent-parity`): `swift test --disable-keychain --package-path Packages/AllyAccent`.
 - **Текст для синтеза** — `Packages/AllySpeechText` (ударения, закреплённый словарь, правила чтения; данные —
   `Resources/speech-text.json`): `swift test --disable-keychain --package-path Packages/AllySpeechText`.
+- **Обработка голоса после синтеза** — `Packages/AllyVoiceFX` (C-ядро: трекер основного тона, PSOLA; эквалайзер — V4b;
+  обёртка `VoiceFX`, `PitchTrack`): `swift test --disable-keychain --package-path Packages/AllyVoiceFX`; звук против
+  цепочки стенда — `local/spike/voice-fx/scripts/port_vs_py.py` на Mac (Z30).
 - **Память о ребёнке** — `Packages/AllyMemory` (факты с опорой на ход, замена по дате, блок для промпта, «стереть всё»,
   запрет на любом пути; слова блока — `Resources/memory.json`, правила запрета — `Resources/forbidden.json`) поверх общего SQLite приложения `Packages/AllySQLite` (системный модуль
   `CSQLite` и тонкая обёртка): `swift test --disable-keychain --package-path Packages/AllyMemory`;
@@ -58,7 +65,7 @@ implementation:
 | `scripts/`, `scripts/lint/` | механика контура; канонные файлы правятся только перевендориванием; продуктовые — `scripts/reinstall_app.sh` (E4), `scripts/child_mode.sh` (R) |
 | `docs/canon/` | снимок канонов с самопроверкой (вариант C) |
 | `App/` | приложение iOS: `project.yml`, `Sources/` (консоль, цикл, звук, распознавание), `Resources/` (персона, реестр) |
-| `Packages/` | Swift-пакеты: `AllyDiscipline` (дисциплина ответа), `AllyCore` (ядро хода), `AllyLlama` (модель), `AllyShell` (детский экран), `AllySpeechText` (текст для синтеза), `AllyOnnx` (один ONNX Runtime приложения), `AllyVoice` (движок голоса), `AllySQLite` (общий SQLite), `AllyMemory` (память о ребёнке) |
+| `Packages/` | Swift-пакеты: `AllyDiscipline` (дисциплина ответа), `AllyCore` (ядро хода), `AllyLlama` (модель), `AllyShell` (детский экран), `AllySpeechText` (текст для синтеза), `AllyOnnx` (один ONNX Runtime приложения, sherpa-onnx), `AllyVoice` (движок голоса), `AllySQLite` (общий SQLite), `AllyMemory` (память о ребёнке), `AllyHearing` (слух: Silero VAD) |
 | `local/` | данные ребёнка и прочее локальное — игнорируется, гейт не пускает в git |
 
 # Грабли

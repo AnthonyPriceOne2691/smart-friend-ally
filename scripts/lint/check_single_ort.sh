@@ -56,6 +56,25 @@ done < <(find_manifests -name Package.swift -o -name Package.resolved -o -path .
 
 [ -f "$home" ] || fail "$home: missing — the app's ONNX Runtime lives there"
 
+# The pair (hearing D7.2, example U16): sherpa-onnx 1.13.8 is built against ORT's C API 28, so its xcframeworks and ORT
+# 1.28.0 move together, each pinned by its file and checksum; another version of either is refused, naming the file.
+if [ -f "$home" ] && grep -q 'sherpa-onnx-v' "$home"; then
+  while read -r file sum; do
+    grep -qF "$file" "$home" && grep -qF "$sum" "$home" ||
+      fail "$home: the pair is sherpa 1.13.8 with ORT 1.28.0 — no $file with its checksum"
+  done <<'PINS'
+sherpa-onnx-v1.13.8-ios-static.xcframework.zip 6b8e769cb153343270fdccbe92e3b3db0d1c421d67fa0989ab01fdf5b2fcf2de
+sherpa-onnx-v1.13.8-macos-static.xcframework.zip 93f7a064abe99e0d6185a88c5b36ce18c4bff35cd0d5e4e81f81151de8e3e7e5
+pod-archive-onnxruntime-c-1.28.0.zip b503cf5949ab718a1dff17d1643237ecc0fecf50ad86264572dcafddb140a327
+PINS
+  for found in $(grep -oE 'sherpa-onnx-v[0-9.]*[0-9]|onnxruntime-c-[0-9.]*[0-9]' "$home" | sort -u); do
+    case "$found" in
+      sherpa-onnx-v1.13.8 | onnxruntime-c-1.28.0) ;;
+      *) fail "$home: $found is not the pair (sherpa 1.13.8 with ORT 1.28.0)" ;;
+    esac
+  done
+fi
+
 if [ "$errors" -gt 0 ]; then
   echo "check_single_ort: $errors problem(s); one ONNX Runtime in the app — Packages/AllyOnnx" >&2
   exit 1

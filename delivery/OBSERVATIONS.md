@@ -44,5 +44,11 @@
 - `voice-onnx`
 - `turn-speculation`
 - `memory-core`
+- `silero-vad`
+- `encyclopedia-core`
+- `voice-engine`
+- `voice-fx`
 - `memory-guard`
+- `child-shell-app`
 - `accent-tokenizers`
+- `accent-logic`

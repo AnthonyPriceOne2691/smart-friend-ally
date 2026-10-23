@@ -1,4 +1,5 @@
 import AllyCore
+import AllyHearing
 import Foundation
 
 /// The phone's ear for the session (D2.2): the listening half of the D1.2 turn — the recognizer's phrase, the
@@ -8,13 +9,14 @@ import Foundation
 final class PhoneListener: Listener, @unchecked Sendable {
     private let recognizer: DictationRecognizer, audio: AudioIO, hearing: Hearing
     private let resetSound: @Sendable () -> Void, firstSound: @Sendable () -> Double?, heard: @Sendable (String) -> Void
+    private let activity: SileroActivity?  // D7.2: Silero tells speech from silence; nil — energy
     private let last = Locked<(stages: [String: Double], voiced: Double?)>(([:], nil))
     private let ending = Locked<TurnEnding?>(nil)
 
     init(recognizer: DictationRecognizer, audio: AudioIO, hearing: Hearing,
          resetSound: @escaping @Sendable () -> Void, firstSound: @escaping @Sendable () -> Double?,
-         heard: @escaping @Sendable (String) -> Void) {
-        (self.recognizer, self.audio, self.hearing) = (recognizer, audio, hearing)
+         heard: @escaping @Sendable (String) -> Void, activity: SileroActivity? = nil) {
+        (self.recognizer, self.audio, self.hearing, self.activity) = (recognizer, audio, hearing, activity)
         (self.resetSound, self.firstSound, self.heard) = (resetSound, firstSound, heard)
     }
 
@@ -33,8 +35,11 @@ final class PhoneListener: Listener, @unchecked Sendable {
         let turnEnding = TurnEnding { feed.yield($0) }
         ending { $0 = turnEnding }
         defer { ending { $0 = nil } }
-        let detector = TurnDetector(kind: kind, timing: hearing.turn, ending: turnEnding)
-        let end = try await audio.listen(detector, timeout: hearing.listenTimeout, feed: phrase.feed)
+        let detector = TurnDetector(kind: kind, timing: hearing.turn, ending: turnEnding, activity: activity)
+        let end = try await audio.listen(detector, timeout: hearing.listenTimeout) { [activity] buffer in
+            phrase.feed(buffer)
+            activity?.feed(buffer)  // the same tap buffers, before the detector's frames of them (D7.2)
+        }
         feed.finish()
         await relay.value
         guard let end else {

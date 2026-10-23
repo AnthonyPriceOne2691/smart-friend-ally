@@ -27,7 +27,7 @@ implementation:
 Приложение на телефоне родителя (D1.2 `app-voice-loop`, D2.2 `app-session`): тап «Разбудить» будит подругу, дальше
 разговор идёт сессией без кнопок — каждая реплика проходит маршрутизатор, каждый ответ модели — контракт хода. Запуск —
 всегда в консоль «Для взрослых»; детский экран открывает «Дочке, при мне» только по подписанному исключению родителя
-(R `child-lock`, [Child mode](/product/child-mode.md)), его облик — «оболочка». Здесь — что делает сессия и как собрать,
+(R `child-lock`, [Child mode](/product/child-mode.md)), его облик — «оболочка» (Ш3: Элли в пузыре с венком). Здесь — что делает сессия и как собрать,
 поставить, переустановить, открыть детский режим, запустить и проверить приложение командами.
 
 # Canonical rules
@@ -62,8 +62,8 @@ implementation:
 - **Данные:** веса — `Library/Application Support/Models` (каталог помечен «не в бэкап»), след хода —
   `Library/Caches/turns.jsonl` (вне бэкапа, без слов: кириллица пишется как `redacted`), услышанное и сказанное — только
   на экране.
-- **Чего нет:** режима `why`, памяти, перебивания и эхоподавления (D6), детского режима и экрана (R, «оболочка»),
-  экрана настроек под замком (D8).
+- **Чего нет:** режима `why`, перебивания и эхоподавления (D6), экрана настроек под замком (D8). Детский режим — R и
+  R2, его экран — «оболочка» Ш3; свет и пузырьки экрана — Ш2б.
 
 # Сборка на Mac
 
@@ -123,6 +123,13 @@ bash scripts/child_mode.sh <UDID> --until 2026-10-29T21:00:00+03:00 --dry  # т�
 удалено, приёмку из бандла убирает только новая сборка. Срок, истёкший посреди разговора, его не обрывает: проверка —
 на границах сессии.
 
+Детский экран (оболочка Ш3): Элли в пузыре с венком; тап по спящей — она сонно вздрагивает и просыпается, тап, пока
+слушает, — «я всё», пока говорит — ничего; строка состояния и полоска «домой» скрыты, системный свайп — со второго
+раза. Чтобы дочка не вышла из приложения совсем, родитель включает «Гид-доступ» (Настройки → Универсальный доступ →
+Гид-доступ; тройное нажатие боковой кнопки в приложении). Перерыв после прощания по лимиту по умолчанию выключен
+(ответ родителя «Без перерыва»); включается ключом запуска `-rest_after_limit_minutes 1` (0–180 минут): тап по
+спящей только шевелит её, консоль пишет «перерыв до …».
+
 # Установка, веса, запуск
 
 ```bash
@@ -130,12 +137,25 @@ xcrun devicectl device install app --device <UDID> build/Build/Products/Debug-ip
 xcrun devicectl device process launch --device <UDID> --console --terminate-existing com.anthonypriceone.ally
 # лимит сессии на прогон (ключ session_limit_minutes, 1–60; вне диапазона — 10 и строка в консоли):
 xcrun devicectl device process launch --device <UDID> --terminate-existing com.anthonypriceone.ally -- -session_limit_minutes 2
+# перерыв после прощания по лимиту (ключ rest_after_limit_minutes, 0–180; по умолчанию 0 — без перерыва):
+xcrun devicectl device process launch --device <UDID> --terminate-existing com.anthonypriceone.ally -- \
+  -session_limit_minutes 1 -rest_after_limit_minutes 1
 # первый запуск создаёт Models и пишет «модели нет: скопируй с Mac»; затем веса (4,64 ГБ, ≈ 3,5 мин по Wi-Fi):
 shasum -a 256 ~/models/gemma-4-E4B-it-Q4_K_M.gguf    # 85a896a0… — пин в delivery/model_surface.txt
 xcrun devicectl device copy to --device <UDID> --domain-type appDataContainer \
   --domain-identifier com.anthonypriceone.ally --source ~/models/gemma-4-E4B-it-Q4_K_M.gguf \
   --destination "Library/Application Support/Models/gemma-4-E4B-it-Q4_K_M.gguf"
+# Silero VAD (D7.2, 2,3 МБ, MIT): без файла слух — по энергии, консоль пишет «нет silero_vad.onnx — слушаю по энергии»
+curl -fL -o ~/models/silero_vad.onnx https://github.com/snakers4/silero-vad/raw/v6.2.3/src/silero_vad/data/silero_vad.onnx
+shasum -a 256 ~/models/silero_vad.onnx              # 1a153a22…8788e3, 2 327 524 байта — размер в hearing.json
+xcrun devicectl device copy to --device <UDID> --domain-type appDataContainer \
+  --domain-identifier com.anthonypriceone.ally --source ~/models/silero_vad.onnx \
+  --destination "Library/Application Support/Models/silero_vad.onnx"
 ```
+
+Консоль при запуске пишет, кто слушает: «слух: Silero · sherpa 1.13.8 · ORT 1.28.0» или причину энергии; след —
+`versions.vad`, время окон Silero — журнал (`devicectl … --console`, категория `hearing`). Те же фразы с энергией (U21) —
+без файла Silero на телефоне: удалить его из `Library/Application Support/Models` и перезапустить.
 
 Первый запуск новой подписи — доверие сертификату на телефоне: Настройки → Основные → VPN и управление устройством (L15).
 Бесплатная подпись живёт 7 дней: консоль пишет «подпись: осталось N дн.», при N ≤ 1 — «переустанови с Mac».

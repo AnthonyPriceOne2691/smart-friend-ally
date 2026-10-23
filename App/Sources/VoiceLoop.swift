@@ -1,7 +1,9 @@
 import AllyCore
+import AllyHearing
 import AllyLlama
 import CryptoKit
 import os
+import ShellCore
 import SwiftUI
 
 /// The voice loop behind the adult console: warm-up by stages, then a session (D2.2) — a tap wakes her, she listens by
@@ -20,6 +22,8 @@ final class VoiceLoop: ObservableObject {
     @Published private(set) var child = false
     @Published private(set) var exception = false
     @Published private(set) var acceptance = ""
+    // The break after a goodbye by the limit (Ш3): the parent's key, none by default («Без перерыва», 2026-10-23).
+    @Published private(set) var nap = Nap(raw: UserDefaults.standard.object(forKey: Nap.key).map { "\($0)" })
     private var childMode: ChildMode?, childTalk: Conversation?, running: Task<Void, Never>?
     private let recognizer = DictationRecognizer(), audio = AudioIO(), files = FileManager.default
     private let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
@@ -55,12 +59,15 @@ final class VoiceLoop: ObservableObject {
         let speech = await recognizer.prepare(), voice = SystemVoice(identifier: registry.voice, rate: Float(rate))
         let microphone = await AudioIO.microphoneAllowed()
         screen.lines += [speech.line, voice.note, "микрофон: " + (microphone ? "да" : "нет — разреши в Настройках")]
+        let (silero, listening) = SileroActivity.choose(hearing, models: models)  // D7.2: no Silero — energy
+        screen.lines.append(listening.line)
         let personaHash = SHA256.hash(data: Data(persona.utf8)).map { String(format: "%02x", $0) }.joined()
         versions = ["ios": UIDevice.current.systemVersion, "llama": settings.runtime.build, "persona": personaHash,
-                    "voice": voice.voice?.identifier ?? "", "weights": "\(registry.model.file):\(registry.model.bytes)"]
+                    "voice": voice.voice?.identifier ?? "", "weights": "\(registry.model.file):\(registry.model.bytes)",
+                    "vad": silero == nil ? "energy" : "silero:\(hearing.vad?.bytes ?? 0)"]
         (self.registry, self.model, self.voice) = (registry, model, voice)
         screen.ready = speech.ready && microphone && voice.voice != nil
-        if screen.ready { converse(model, hearing, voice) }
+        if screen.ready { converse(model, hearing, voice, silero) }
     }
 
     /// A tap on the sleeping friend: she greets and then talks without buttons until the session sleeps. The session of
@@ -89,10 +96,11 @@ final class VoiceLoop: ObservableObject {
 
     /// The session (D2.2): the router before the model, the parent's limit key (`-session_limit_minutes 2` at launch),
     /// a wordless record a turn with the listening's stages into `Caches/turns.jsonl`; heard and said go to the screen.
-    private func converse(_ model: LlamaModel, _ hearing: Hearing, _ voice: SystemVoice) {
+    private func converse(_ model: LlamaModel, _ hearing: Hearing, _ voice: SystemVoice, _ silero: SileroActivity?) {
         let heard: @Sendable (String) -> Void = { text in Task { @MainActor in self.screen.heard = text } }
         let ear = PhoneListener(recognizer: recognizer, audio: audio, hearing: hearing,
-                                resetSound: { voice.resetFirstSound() }, firstSound: { voice.firstSound }, heard: heard)
+                                resetSound: { voice.resetFirstSound() }, firstSound: { voice.firstSound }, heard: heard,
+                                activity: silero)
         let echo = EchoVoice(voice) { sentence in Task { @MainActor in self.screen.said += sentence + " " } }
         let settings = SessionSettings(limitMinutes: UserDefaults.standard.object(forKey: SessionSettings.key)
             .map { "\($0)" })
@@ -115,6 +123,7 @@ final class VoiceLoop: ObservableObject {
         (self.conversation, self.childTalk) = (conversation, childTalk)
         Task { for await state in childTalk.updates where child { show(state) } }
         screen.lines.append(settings.note ?? "лимит: \(Int(settings.limit / 60)) мин")
+        if let note = nap.note { screen.lines.append(note) }
         if !RouterRouting.healthy { screen.lines.append("маршрутизатор: самопроверка не прошла") }
         Task { for await state in conversation.updates where !child { talk = state } }
     }
@@ -137,13 +146,17 @@ final class VoiceLoop: ObservableObject {
     }
 
     /// A tap on the circle of the child screen: while Elly listens — «я всё» (D7); else she wakes, but past the
-    /// exception's term she does not and the console returns.
+    /// exception's term she does not and the console returns, and during the break after the limit she only stirs.
     func childWake() {
         if talk.pose == .listens { return done() }
         refreshAccess()
         guard access.open else { return leaveChild() }
+        guard !nap.holds(at: Date()) else { return }
         wake()
     }
+
+    /// The console's line of the break while it holds: «перерыв до 18:40».
+    var napLine: String? { nap.line(at: Date(), zone: .current) }
 
     /// The stop sign on the child screen: silence at once, no phrase, and the console — one action.
     func childStop() {
@@ -162,6 +175,7 @@ final class VoiceLoop: ObservableObject {
     private func show(_ state: TalkState) {
         talk = state
         guard state.phase == .asleep, state.ended != nil else { return }
+        nap.ended(state, at: Date())
         refreshAccess()
         if !access.open { leaveChild() }
     }
