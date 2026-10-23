@@ -1,5 +1,13 @@
 # Knowledge Bundle Update Log
 
+## 2026-10-23 — обработка голоса после синтеза (голос V4a)
+
+* **Creation**: `engineering/voice-fx` (Design): своё TD-PSOLA и эквалайзер RBJ по цепочке стенда третьего круга, свой
+  трекер основного тона по методу Boersma 1993 вместо YIN прототипа (замер дребезга), пресет «Совсем малышка» — данные
+  строки конфига; `implementation:` — C-ядро и обёртка `AllyVoiceFX`. `engineering/index`, `references/repo-map` —
+  новый пакет.
+* **Источник**: поставка `voice-fx` (V4a серии голоса; примеры Z27–Z31 подписаны родителем 2026-10-23).
+
 ## 2026-10-23 — движок голоса Supertonic за протоколом (голос V1b)
 
 * **Creation**: `engineering/voice-engine` (Design): `SpeechEngine`, фраза за вызов, скорость синтеза не ниже 0,85, веса в

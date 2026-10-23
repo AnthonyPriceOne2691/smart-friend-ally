@@ -35,6 +35,9 @@ implementation:
   пропускаются видимо. Снимков экрана телефона нет никогда (L46).
 - **Текст для синтеза** — `Packages/AllySpeechText` (ударения, закреплённый словарь, правила чтения; данные —
   `Resources/speech-text.json`): `swift test --disable-keychain --package-path Packages/AllySpeechText`.
+- **Обработка голоса после синтеза** — `Packages/AllyVoiceFX` (C-ядро: трекер основного тона, PSOLA, эквалайзер;
+  обёртка `VoiceFX`, `PitchTrack`): `swift test --disable-keychain --package-path Packages/AllyVoiceFX`; звук против
+  одобренного образца — стенд `local/spike/voice-fx/scripts/port_vs_py.py` на Mac (Z30).
 - **Контур:** `python3 scripts/delivery_check.py` — фазы поставки;
   `.venv/bin/pre-commit run --all-files --verbose` — гейты;
   `python3 scripts/lint/contour_doctor.py` — судят ли гейты;
