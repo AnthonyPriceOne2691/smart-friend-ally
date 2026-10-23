@@ -33,11 +33,12 @@ public struct SpeechTextTable: Sendable {
     let endings: [Ending]
     let parts: [(String, String)]
 
-    /// Ключи — слова строчными; формы `stress` и `names` — с «+» перед ударной гласной.
+    /// Ключи — слова строчными; формы `stress` и `names` — с «+» перед ударной гласной. Ключ `stress` — без различия
+    /// «е/ё»: расстановщик может поставить «ё» ошибочно («лётом» вместо «ле́том»).
     public init(stress: [String: String] = [:], names: [String: String] = [:], words: [String: String] = [:],
                 endings: [Ending] = [], parts: [String: String] = [:]) throws {
-        let pinned = stress.mapValues(SpokenWord.init(plus:))
-        if let bad = pinned.first(where: { $0.value.letters.lowercased() != $0.key || $0.value.stress == nil }) {
+        let pinned = Dictionary(stress.map { (Self.plain($0.key), SpokenWord(plus: $0.value)) }) { first, _ in first }
+        if let bad = pinned.first(where: { Self.plain($0.value.letters) != $0.key || $0.value.stress == nil }) {
             throw SpeechTextError.stress(bad.key)
         }
         let pairs = (words.map { ($0.key, $0.value) } + parts.map { ($0.key, $0.value) })
@@ -68,6 +69,9 @@ public struct SpeechTextTable: Sendable {
     }
 
     private static func vowels(_ text: String) -> Int { SpokenWord(letters: text, stress: nil).vowelCount }
+
+    /// Слово строчными и без различия «е/ё» — ключ закреплённого словаря.
+    static func plain(_ text: String) -> String { text.lowercased().replacingOccurrences(of: "ё", with: "е") }
 
     private static func longerFirst(_ lhs: String, _ rhs: String) -> Bool {
         lhs.count == rhs.count ? lhs < rhs : lhs.count > rhs.count
