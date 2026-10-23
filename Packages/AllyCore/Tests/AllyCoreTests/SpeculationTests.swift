@@ -127,11 +127,17 @@ final class SpeculationTests: XCTestCase {
         XCTAssertEqual(talk.sink.records.last?.end, "parent")
     }
 
+    /// The session learns of the finished answer on its own task; her speech comes back 0.3 s of real time later, so
+    /// the drop sees the answer finished even on a loaded machine (one red run in four without the wait).
     func testAnAnswerFinishedBeforeSheWentOnIsCountedStale() async {  // U12
+        let finished = Locked<Date?>(nil)
         let talk = SpecTalk(plans: [.held(first: "Ура!", full: "Ура!"), held("Ура два")]) { model in
             [.init(text: "Ура ура", at: 13.5, pauses: [
                 .init(at: 10.3, event: .tentative("Ура"), until: { model.calls.count == 1 }),
-                .init(at: 10.9, action: { model.finish(0) }),
+                .init(at: 10.9, action: {
+                    model.finish(0)
+                    finished { $0 = Date() }
+                }, until: { finished { $0 }.map { Date().timeIntervalSince($0) > 0.3 } ?? false }),
                 .init(at: 11.2, event: .resumed),
                 .init(at: 12.0, event: .tentative("Ура ура"), until: { model.calls.count == 2 }),
                 .init(at: 12.5, action: { model.first(1) })

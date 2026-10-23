@@ -11,6 +11,14 @@
   `engineering/safety-below-model` — экран путь реплики не меняет. `references/repo-map` — `AllyShell` в приложении.
 * **Источник**: поставка `child-shell-app` (оболочка Ш3; Ш3 и Ш2б подписаны родителем 2026-10-23 «Подписываю
   (Рекомендую)», перерыв — ответ «Без перерыва»).
+## 2026-10-23 — слух: Silero VAD на sherpa-onnx и общем ORT, активность голоса за протоколом
+
+* **Update**: `engineering/turn-detector` — активность голоса за протоколом (энергия или Silero), тишина от речи за
+  флагом, параметры Silero в `vad` реестра слуха, выбор и строки консоли, запасной путь — энергия; `implementation:` —
+  `VoiceActivity.swift`, `SileroVAD.swift`, `SileroActivity.swift`. `engineering/onnx-runtime` — sherpa-onnx 1.13.8 в
+  `AllyOnnx`, `AllySherpa`, пин пары в страже, фикстура `add.onnx` в git. `engineering/voice-loop` — копирование
+  Silero на телефон, строка консоли, сравнение с энергией без файла. `references/repo-map` — пакет `AllyHearing`.
+* **Источник**: поставка `silero-vad` (D7.2 серии «слух»; примеры U16–U21 подписаны родителем 2026-10-23).
 
 ## 2026-10-23 — память: запрет на любом пути записи (memory-guard)
 
@@ -18,6 +26,11 @@
   отчётом по id правил, заражение по её репликам сессии, SQL-функция `forbidden` в триггерах `fact` и `seen`;
   `implementation:` — `Forbidden.swift`, `forbidden.json`. `engineering/index` — строка концепта.
 * **Источник**: поставка `memory-guard` (M29 спеки серии, подписанной родителем 2026-10-23; разбиение — ведущий).
+## 2026-10-23 — расстановщик ударений: токенизаторы RUAccent на Swift
+
+* **Creation**: `engineering/accent-placer` (Design) — пакет `AllyAccent`, `Encoding` и три токенизатора RUAccent с
+  паритетом HF; `implementation:` — исходники пакета. **Update**: `engineering/index`, `references/repo-map`.
+* **Источник**: поставка `accent-tokenizers` (V3a серии голоса; часть Z14, подпись родителя 2026-10-23).
 ## 2026-10-23 — слух: спекуляция — ответ модели начинается в её паузе
 
 * **Update**: `engineering/session` — `Speculation` (общий план реплики, этапы `spec_*`, `spec_stale` до D5);

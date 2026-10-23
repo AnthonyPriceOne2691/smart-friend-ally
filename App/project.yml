@@ -12,6 +12,8 @@ packages:
     path: ../Packages/AllyLlama
   AllyShell:
     path: ../Packages/AllyShell
+  AllyHearing:  # Silero VAD through sherpa on the one ONNX Runtime of the app (D7.2)
+    path: ../Packages/AllyHearing
 settings:
   base:
     CODE_SIGN_STYLE: Automatic
@@ -38,6 +40,7 @@ targets:
         product: ShellUI
       - package: AllyShell
         product: ShellCore
+      - package: AllyHearing
     info:  # generated with the project, not in git; merged with the build's own keys (GENERATE_INFOPLIST_FILE)
       path: Info.plist
       properties:
