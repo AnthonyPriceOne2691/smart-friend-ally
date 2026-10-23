@@ -3,8 +3,8 @@
 **Date:** 2026-10-23
 **Verifier:** process:ci
 **asserts_reviewed_by:** n/a (все утверждения ведут к примерам — дайджест ниже, asserts_without_example: 0; X1–X7 подписаны родителем 2026-10-23 в спеке серии «живой разговор», U8 — пример D7.1, подписан там же 2026-10-23)
-**CI run:** https://github.com/AnthonyPriceOne2691/smart-friend-ally/actions/runs/40015897856 (Linux: delivery, gates, swift — зелёные на 8b0eab6); macOS-джоба `app` по метке `macos` — https://github.com/AnthonyPriceOne2691/smart-friend-ally/actions/runs/40015972860, на момент сдачи в очереди без раннера; её шаги прогнаны на Mac (ниже)
-**Commit:** 4c05062 (код — 6b96a45 и d74a7da, дайджест — 0bcdd96; документы — b7ef7b0, подпись — e5c86ac; слияния main — 03792bb и 4c05062; эта сдача — следующим коммитом, PR #60)
+**CI run:** https://github.com/AnthonyPriceOne2691/smart-friend-ally/actions/runs/40017841603 (Linux: delivery, gates, swift — зелёные на 5819b16; первая попытка джобы `swift` упала падением самого SwiftPM — `Segmentation fault` процесса `swift-package` в прогоне покрытия AllySQLite, пакета вне диффа, — перезапуск зелёный); https://github.com/AnthonyPriceOne2691/smart-friend-ally/actions/runs/40018186417 (macOS, джоба `app` по метке `macos` — зелёная на 5819b16; прошлый её прогон 40015972860 на f317b81 упал на AllyOnnx: в main тогда не было фикстуры `add.onnx`, L80, её внёс silero-vad)
+**Commit:** 5819b16 (код — 6b96a45 и d74a7da, дайджест — 0bcdd96; документы — b7ef7b0, подпись — e5c86ac; слияния main — 03792bb, 4c05062, 9fbf853, c540aa4; сдача — f2d00cd; этот отчёт — следующим коммитом, PR #60)
 
 ## Shape oracles
 - [x] PASS — pre-commit и pre-push на коммитах поставки: `file-length`, jscpd, секреты, данные ребёнка, SwiftLint 0 находок
@@ -16,8 +16,9 @@
   prefill той же переписки, без ожидаемого текста)
 
 ## Behavior oracles
-- [x] PASS — `swift test` AllyCore на Mac: 83 теста из 83, и после слияния main 4c05062 — тоже (5 новых — X2–X5; U12 D7.1
-  заменён на X4, утверждение памяти U8 — в терминах D5). CI, джоба `swift`: AllyCore — 23 файла `Sources/`, 1289 из 1337 строк, 96%
+- [x] PASS — `swift test` AllyCore на Mac: 83 теста из 83, после слияния silero-vad — 86 из 86 (5 новых — X2–X5; U12
+  D7.1 заменён на X4, утверждение памяти U8 — в терминах D5). CI, джоба `swift`: AllyCore — 24 файла `Sources/`, 1327 из
+  1382 строк, 96%
 - [x] PASS — AllyLlama на Mac с весами: X1, X6, X7 зелёные; A23 — токены 37, ответы 37 из 37 при n_ctx 4096 и 37 при 8192
 - [x] PASS — мутации ядра (П30), каждая краснит свои примеры, файлы восстановлены: «commit выключен» — X2, X3, X4;
   «оборванное в счёт» — X2; «нет retract» — оба X4; «обёртка теряет commit» — X2, X4; «обёртка теряет remember» — X5;
@@ -26,8 +27,8 @@
 - [x] PASS — устойчивость X4: 12 прогонов подряд и 30 прогонов под нагрузкой (6 параллельно × 5) — зелёные; прежний U12
   на коде main падал 3 раза из 12 (7 из 12 под нагрузкой)
 - [x] PASS — сборка приложения для устройства без подписи (бандл ресурсов `AllyLlama` внутри `.app`) и оракул артефакта
-  `check_app_artifact.sh` — зелёные на Mac (те же команды, что у macOS-джобы `app`; слияния main приложение и пакет
-  модели не трогали)
+  `check_app_artifact.sh` — зелёные на Mac и на слитом с silero-vad дереве (бинарей 6); macOS-джоба `app` 40018186417 —
+  те же шаги плюс тесты AllyLlama, AllyOnnx, AllyHearing, AllyVoice, AllyShell — зелёная
 
 ## Product oracles
 - [x] PASS — `human_ok_spec: yes` (спека серии b7ef7b0 и подпись e5c86ac раньше кода 6b96a45 и d74a7da, L33)
@@ -85,12 +86,12 @@
 | Metric | Value |
 |---|---|
 | files_touched / loc_diff | 14 code (+ process docs, knowledge) / +384/−59 (net +325) из 800 |
-| commits | 12 до сдачи (спека, план, подпись, память модели, три слияния main, ядро, дайджест, eval-smoke, уроки); сдача — следующим |
+| commits | 16 (спека, план, подпись, память модели, пять слияний main, ядро, дайджест, eval-smoke, уроки, сдача, урок L80); отчёт — следующим |
 | time_to_accepted_spec | 0h — примеры подписаны в спеке серии |
 | rework_after_done | 0 |
 | harness_hardened | yes — `ModelMemoryTests.swift` (X2–X5), память D5 у двойников (`ModelMemory`, `RemembersTurns`), U12 без гонки |
 | implement_retries | 2 — гонка X4 (ожидание `begunAnswerFinished`), длина строки SwiftLint |
-| verify_fails_before_green | 0 — прогон CI 40015897856 зелёный во всех трёх джобах Linux |
+| verify_fails_before_green | 1 — первая попытка `swift` в 40017841603: падение SwiftPM вне диффа, перезапуск зелёный; macOS 40015972860 — фикстура main (L80) |
 | est_token_or_cost | n/a |
 
 ## Assertion digest (ревью ожиданий, не кода)
