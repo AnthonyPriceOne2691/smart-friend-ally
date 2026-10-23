@@ -6,7 +6,7 @@
 - **kind:** feature
 - **repro_test:** n/a reason=не bugfix
 - **diagnosis:** n/a reason=не bugfix
-- **phase:** specify
+- **phase:** implement
 - **builder:** agent:claude-code
 - **verifier:** process:ci
 - **human_ok_spec:** yes (родитель 2026-10-23 «Подписываю (Рекомендую)», by=human:anthony — серия голоса, спека 68202f0, примеры Z19–Z26; подпись V4a того же дня покрыла правки Z19–Z22 и Z26; ответ родителя «Резать: эквалайзер — в следующую часть» перенёс сюда Z29 и полный Z30)
