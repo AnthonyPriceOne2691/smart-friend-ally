@@ -13,6 +13,8 @@ local/
 *.opus
 *.sqlite
 *.sqlite3
+*.sqlite-*
+*.db-*
 *.db
 *.realm
 *.allybox

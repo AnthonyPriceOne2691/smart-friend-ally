@@ -43,3 +43,4 @@
 - `release-gate`
 - `voice-onnx`
 - `turn-speculation`
+- `memory-core`
