@@ -3,13 +3,16 @@
 **Date:** 2026-10-23
 **Verifier:** process:ci
 **asserts_reviewed_by:** n/a (все утверждения ведут к одобренным примерам — дайджест ниже, asserts_without_example: 0; Z1 — таблица этой поставки, Z2, Z5, Z7 — примеры V1b, которые слой C API держит снизу; спека подписана родителем 2026-10-23)
-**CI run:** будет в PR (джобы quality: gates, swift, delivery)
+**CI run:** https://github.com/AnthonyPriceOne2691/smart-friend-ally/actions/runs/40002478570 (PR #45 на fe2db1e: delivery, gates, swift — зелёные; первый прогон 40001564397 — gates красный, доктор: C-файл вне маски гейта длины, исправлено fe2db1e)
 **Commit:** код — b7399c0, тесты помечены примерами — ebff369; спека — 68202f0, план — bbcd6b3, подпись — e25244f, разрез V1 и документы V1a — 3a316c9
 
 ## Shape oracles
 - [x] PASS — pre-commit на коммитах поставки: `file-length` по маске `*.swift *.py`, jscpd (рост 0), SwiftLint 0.65.0 —
   0 находок в `Packages/AllyOnnx`, секреты (строка checksum помечена `pragma: allowlist secret`), данные ребёнка,
   `gate-coverage` — `check_single_ort.sh` подключён в джобе `swift`
+- [x] PASS — доктор контура в CI: DEAD 0 после fe2db1e (маска гейта длины `*.swift *.py *.c *.h` в хуке и джобе gates,
+  адаптация записана в `adapted.json`); канарейки у `check_single_ort.sh` нет (SKIP) — его исполнение держит
+  отрицательный контроль в джобе `swift`
 - [x] PASS — `okf_validate.py`: 0 ошибок, 0 предупреждений (44 файла); `okf_sync_gate.py --base origin/main`: 8
   концептов с `implementation:`, новый `engineering/onnx-runtime` сверен
 - [x] PASS — `delivery_check --diff-base origin/main`: 0 ошибок; предохранитель — 6 файлов кода, net 300 из 800, без
@@ -72,7 +75,7 @@
 | rework_after_done | 0 (handoff not declared yet) |
 | harness_hardened | yes — .github/workflows/ios.yml, .github/workflows/quality.yml, Packages/AllyOnnx/Tests/AllyOnnxTests/OnnxSessionTests.swift (новый оракул), scripts/lint/check_single_ort.sh |
 | implement_retries | 2 — переименование VoiceSpec (конфликт с SpeechSynthesis macOS) и находки SwiftLint, до коммита |
-| verify_fails_before_green | 0 до PR |
+| verify_fails_before_green | 1 — первый прогон PR: доктор DEAD (C-файл вне маски гейта длины), исправлено fe2db1e |
 | est_token_or_cost | n/a |
 
 MANUAL-поля заполняет агент/человек на handoff. Если `verify_fails_before_green >= 2` при `harness_hardened: no` — по §9.2 добавь oracle/breaker/hook в этой же поставке.
