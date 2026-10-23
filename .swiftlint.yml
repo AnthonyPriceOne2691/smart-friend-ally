@@ -18,6 +18,7 @@ excluded:
   - Packages/AllySpeechText/.build
   - Packages/AllySQLite/.build
   - Packages/AllyMemory/.build
+  - Packages/AllyAccent/.build
   - Packages/AllyVoiceFX/.build
   - App/build
   - Packages/AllyDiscipline/Tests/DisciplineTests/Fixtures

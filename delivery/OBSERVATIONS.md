@@ -47,3 +47,4 @@
 - `voice-engine`
 - `voice-fx`
 - `memory-guard`
+- `accent-tokenizers`
