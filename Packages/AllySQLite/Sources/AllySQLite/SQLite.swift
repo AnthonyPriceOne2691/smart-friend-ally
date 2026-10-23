@@ -94,6 +94,18 @@ public final class SQLiteConnection {
         }
     }
 
+    /// A pure SQL function of one value for this connection — a schema's trigger may call it; NULL answers false.
+    public func function(_ name: String, _ body: @escaping (String) -> Bool) throws {
+        let flags = SQLITE_UTF8 | SQLITE_DETERMINISTIC | SQLITE_INNOCUOUS
+        let box = Unmanaged.passRetained(Predicate(body)).toOpaque()
+        let code = sqlite3_create_function_v2(handle, name, 1, flags, box, { context, _, values in
+            let predicate = Unmanaged<Predicate>.fromOpaque(UnsafeRawPointer(sqlite3_user_data(context)))
+            let text = sqlite3_value_text(values?[0]).map { String(cString: $0) }
+            sqlite3_result_int(context, text.map(predicate.takeUnretainedValue().body) == true ? 1 : 0)
+        }, nil, nil, { box in box.map { Unmanaged<Predicate>.fromOpaque($0).release() } })
+        guard code == SQLITE_OK else { throw failure(code) }
+    }
+
     private func bind(_ values: [SQLiteValue], to statement: OpaquePointer?) throws {
         for (offset, value) in values.enumerated() {
             let index = Int32(offset + 1)
@@ -120,4 +132,10 @@ public final class SQLiteConnection {
         let message = handle.map { String(cString: sqlite3_errmsg($0)) } ?? String(cString: sqlite3_errstr(code))
         return SQLiteError(code: code, message: message)
     }
+}
+
+/// The closure behind a SQL function; SQLite keeps it retained and releases it when the connection lets it go.
+private final class Predicate {
+    let body: (String) -> Bool
+    init(_ body: @escaping (String) -> Bool) { self.body = body }
 }
