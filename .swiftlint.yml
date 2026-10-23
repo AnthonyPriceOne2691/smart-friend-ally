@@ -12,8 +12,12 @@ excluded:
   - Packages/AllyDiscipline/.build
   - Packages/AllyCore/.build
   - Packages/AllyLlama/.build
+  - Packages/AllyOnnx/.build
+  - Packages/AllyVoice/.build
   - Packages/AllyShell/.build
   - Packages/AllySpeechText/.build
+  - Packages/AllySQLite/.build
+  - Packages/AllyMemory/.build
   - App/build
   - Packages/AllyDiscipline/Tests/DisciplineTests/Fixtures
 
