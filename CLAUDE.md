@@ -106,7 +106,7 @@ Ally держится в полной синхронизации с каноно
   в архив тем же коммитом (`2026-10-17-archived-handoff-signature`), закрыта судьёй в `delivery@2.04`: строгий
   `delivery_check` с `--diff-base` судит такую поставку сам, обход L24 больше не нужен.
 - **Обязательства наблюдения:** до **2026-11-30** — `persona-session-blackbox` (сдвинуто: сигнал наступит со спайком),
-  `na-expiry-stopper`, `sync-cqg-2.55`, `state-refresh`, `spike-memory-limit`, `look-and-feel`, `look-and-feel-research`, `snout-instead-of-trunk`, `flower-crown`, `crown-centered`, `character-axolotl`, `spike-model-bakeoff`, `visual-approved`, `sync-cqg-2.63`, `spike-phone-llm`, `incident-archived-handoff`, `persona-v2`, `swift-contour`, `turn-contract`, `sync-cqg-2.70`, `closing-question`, `router-core`, `router-people`, `voice-core`, `sync-cqg-2.74`, `session-core`, `app-session`, `router-events`, `app-voice-loop`, `black-box`, `child-shell`, `voice-text`. Остальные закрыты `observed.md` 17.10. Недельный
+  `na-expiry-stopper`, `sync-cqg-2.55`, `state-refresh`, `spike-memory-limit`, `look-and-feel`, `look-and-feel-research`, `snout-instead-of-trunk`, `flower-crown`, `crown-centered`, `character-axolotl`, `spike-model-bakeoff`, `visual-approved`, `sync-cqg-2.63`, `spike-phone-llm`, `incident-archived-handoff`, `persona-v2`, `swift-contour`, `turn-contract`, `sync-cqg-2.70`, `closing-question`, `router-core`, `router-people`, `voice-core`, `sync-cqg-2.74`, `session-core`, `app-session`, `router-events`, `app-voice-loop`, `black-box`, `child-shell`, `child-lock`, `voice-text`. Остальные закрыты `observed.md` 17.10. Недельный
   `canon-freshness` гоняет `delivery_check` (Delivery §13.1): просрочку видно и без поставок.
 - **Спайк на телефоне** (`KNOWLEDGE.md` §12): шаг 1 сделан — лимит памяти приложения ≈3,3 ГБ без entitlement и
   ≈6,0 ГБ с `increased-memory-limit`, бесплатная Personal Team его выдаёт (`knowledge/engineering/memory-limit.md`).
@@ -138,7 +138,10 @@ Ally держится в полной синхронизации с каноно
 - **Сессия в приложении** (D2.2 `app-session`, 22.10): тап «Разбудить», слух по состоянию сессии (`Conversation`),
   маршрутизатор на каждой реплике, след `TurnTrace` в `Caches/turns.jsonl`, переустановка одной командой
   `bash scripts/reinstall_app.sh <UDID>` (E4). Телефонные W8–W11 отложены родителем до первой сессии теста вместе с
-  A10–A12. Дальше — R `child-lock` (замок «при родителе», спека подписана в D2.2), затем R2 (пороги без присмотра).
+  A10–A12. **Замок «при родителе»** (R `child-lock`, 23.10): детский экран — только по подписанному исключению родителя
+  до 7 дней на эту сборку (`bash scripts/child_mode.sh <UDID> --until <дата>`, подпись — касанием в Secretive, проверяет
+  телефон); без присмотра закрыт до целей — пороги и `release-gate.json` в R2. Ключ родителя в `.github/allowed_signers`
+  и G8, G10, G11 на телефоне — сессия теста.
 - **Исследования 18.10** (поставка `research-reports`, наблюдение до 2026-11-30) — справки в `knowledge/references/research/`:
   ударения синтеза (знак U+0301 у Supertonic 3 работает: 55 из 60 против 33 из 60), распознавание речи пятилетки (GigaAM-v3
   точнее диктовки; правило шага 3 «≥10 п.п.» и протокол записи), память-портрет (приёмка M1–M14), энциклопедия «почему»

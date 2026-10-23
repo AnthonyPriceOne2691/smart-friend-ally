@@ -19,8 +19,9 @@ implementation:
 # Входные точки
 
 - **Приложение** — `App/` (XcodeGen: `cd App && xcodegen generate`, проект в git не лежит); сборка, веса на телефон,
-  переустановка одной командой (`bash scripts/reinstall_app.sh <UDID>`), запуск и след хода — runbook
-  [Voice loop](/engineering/voice-loop.md). Модель — пакет `Packages/AllyLlama` (llama.cpp
+  переустановка одной командой (`bash scripts/reinstall_app.sh <UDID>`), исключение «при родителе»
+  (`bash scripts/child_mode.sh <UDID> --until <дата>`, ключ родителя — `.github/allowed_signers`), запуск и след хода —
+  runbook [Voice loop](/engineering/voice-loop.md). Модель — пакет `Packages/AllyLlama` (llama.cpp
   b10809; паритет со стендом: `swift test --disable-keychain --package-path Packages/AllyLlama`, веса в `~/models`).
 - **Дисциплина ответа** — пакет `Packages/AllyDiscipline` (ремонт текста, контракт хода, маршрутизатор до модели):
   `swift test --package-path Packages/AllyDiscipline`.
@@ -48,7 +49,7 @@ implementation:
 | `KNOWLEDGE.md` | база исследования и принципы П1–П37 — читать до решения о продукте |
 | `knowledge/` | канон домена (OKF v0.2) |
 | `delivery/` | поставки: `active/` — текущая, `archive/` — завершённые с уроками |
-| `scripts/`, `scripts/lint/` | механика контура; канонные файлы правятся только перевендориванием; продуктовый — `scripts/reinstall_app.sh` (E4) |
+| `scripts/`, `scripts/lint/` | механика контура; канонные файлы правятся только перевендориванием; продуктовые — `scripts/reinstall_app.sh` (E4), `scripts/child_mode.sh` (R) |
 | `docs/canon/` | снимок канонов с самопроверкой (вариант C) |
 | `App/` | приложение iOS: `project.yml`, `Sources/` (консоль, цикл, звук, распознавание), `Resources/` (персона, реестр) |
 | `Packages/` | Swift-пакеты: `AllyDiscipline` (дисциплина ответа), `AllyCore` (ядро хода), `AllyLlama` (модель), `AllyShell` (детский экран), `AllySpeechText` (текст для синтеза) |
