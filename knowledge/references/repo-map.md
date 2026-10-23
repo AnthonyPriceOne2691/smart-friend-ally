@@ -26,8 +26,10 @@ implementation:
   `swift test --package-path Packages/AllyDiscipline`.
 - **Ядро голосового цикла** — `Packages/AllyCore` (ход через контракт, конец реплики, журнал хода без слов, реестр
   модели, сессия с мягким лимитом и крючком маршрутизатора, драйвер сессии со слухом `Conversation`, маршрутизатор на
-  живом ходе `RouterRouting`, след хода и его файл `TraceFile`; тексты сессии — `Resources/session.json`):
-  `swift test --package-path Packages/AllyCore` (тулчейн Xcode: `DEVELOPER_DIR`).
+  живом ходе `RouterRouting`, след хода и его файл `TraceFile`; тексты сессии — `Resources/session.json`; энциклопедия
+  «почему» `Encyclopedia` — основы Snowball, SQLite FTS5 через `AllySQLite`, списки — `Resources/encyclopedia.json`):
+  `swift test --package-path Packages/AllyCore` (тулчейн Xcode: `DEVELOPER_DIR`). Паритет энциклопедии со стендом —
+  `swift run -c release --package-path Packages/AllyCore encyclopedia-replay <база.jsonl> [конфиг.json] < вопросы.jsonl`.
 - **Контур:** `python3 scripts/delivery_check.py` — фазы поставки;
   `.venv/bin/pre-commit run --all-files --verbose` — гейты;
   `python3 scripts/lint/contour_doctor.py` — судят ли гейты;
