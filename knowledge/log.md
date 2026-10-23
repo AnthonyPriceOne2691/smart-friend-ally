@@ -1,5 +1,25 @@
 # Knowledge Bundle Update Log
 
+## 2026-10-23 — слух: Silero VAD на sherpa-onnx и общем ORT, активность голоса за протоколом
+
+* **Update**: `engineering/turn-detector` — активность голоса за протоколом (энергия или Silero), тишина от речи за
+  флагом, параметры Silero в `vad` реестра слуха, выбор и строки консоли, запасной путь — энергия; `implementation:` —
+  `VoiceActivity.swift`, `SileroVAD.swift`, `SileroActivity.swift`. `engineering/onnx-runtime` — sherpa-onnx 1.13.8 в
+  `AllyOnnx`, `AllySherpa`, пин пары в страже, фикстура `add.onnx` в git. `engineering/voice-loop` — копирование
+  Silero на телефон, строка консоли, сравнение с энергией без файла. `references/repo-map` — пакет `AllyHearing`.
+* **Источник**: поставка `silero-vad` (D7.2 серии «слух»; примеры U16–U21 подписаны родителем 2026-10-23).
+
+## 2026-10-23 — память: запрет на любом пути записи (memory-guard)
+
+* **Update**: `engineering/memory` — «не хранится никогда» исполняется: правила `forbidden.json`, проверка записи с
+  отчётом по id правил, заражение по её репликам сессии, SQL-функция `forbidden` в триггерах `fact` и `seen`;
+  `implementation:` — `Forbidden.swift`, `forbidden.json`. `engineering/index` — строка концепта.
+* **Источник**: поставка `memory-guard` (M29 спеки серии, подписанной родителем 2026-10-23; разбиение — ведущий).
+## 2026-10-23 — расстановщик ударений: токенизаторы RUAccent на Swift
+
+* **Creation**: `engineering/accent-placer` (Design) — пакет `AllyAccent`, `Encoding` и три токенизатора RUAccent с
+  паритетом HF; `implementation:` — исходники пакета. **Update**: `engineering/index`, `references/repo-map`.
+* **Источник**: поставка `accent-tokenizers` (V3a серии голоса; часть Z14, подпись родителя 2026-10-23).
 ## 2026-10-23 — слух: спекуляция — ответ модели начинается в её паузе
 
 * **Update**: `engineering/session` — `Speculation` (общий план реплики, этапы `spec_*`, `spec_stale` до D5);
@@ -7,6 +27,15 @@
   `engineering/voice-loop` — текст диктовки на «возможно, конец». `engineering/safety-below-model` — спекуляция не
   обходит план реплики.
 * **Источник**: поставка `turn-speculation` (D7.1 серии «слух»; примеры U7–U15 подписаны родителем 2026-10-23).
+## 2026-10-23 — память о ребёнке: база фактов и блок для промпта (memory-core)
+
+* **Creation**: `engineering/memory` (Design) — что хранится, опора на её ход и уверенность кодом, замена
+  однозначного по дате, узнавание сущностей, блок ≤ 300 токенов с ядром, «стереть всё» удалением файлов, общий SQLite
+  `AllySQLite`; что из серии ещё не подключено (L50); `implementation:` — исходники `Packages/AllyMemory`.
+* **Update**: `ops/child-data` — спутники базы (`-wal`, `-shm`, `-journal`) в игноре и в гейте, смоук S7.
+  `engineering/index`, `references/repo-map` — пакеты `AllySQLite` и `AllyMemory`. `KNOWLEDGE.md` §9 — ссылка на
+  концепт (OKF §6).
+* **Источник**: поставка `memory-core` (спека и план серии подписаны родителем 2026-10-23 «Подписываю (Рекомендую)»).
 ## 2026-10-23 — движок голоса Supertonic за протоколом (голос V1b)
 
 * **Creation**: `engineering/voice-engine` (Design): `SpeechEngine`, фраза за вызов, скорость синтеза не ниже 0,85, веса в

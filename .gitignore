@@ -13,6 +13,8 @@ local/
 *.opus
 *.sqlite
 *.sqlite3
+*.sqlite-*
+*.db-*
 *.db
 *.realm
 *.allybox
@@ -22,6 +24,7 @@ models/
 *.gguf
 *.safetensors
 *.onnx
+!Packages/AllyOnnx/Tests/AllyOnnxTests/add.onnx
 *.tflite
 *.litertlm
 *.mlpackage/

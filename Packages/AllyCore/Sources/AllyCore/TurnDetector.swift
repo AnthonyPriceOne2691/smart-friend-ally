@@ -49,39 +49,37 @@ public final class TurnEnding: Sendable {
     func ended(_ reason: Reason) { state { $0.reason = reason } }
 }
 
-/// End of speech by energy, the probe's thresholds: the floor of the first 8 frames clamped to [−75; −35] dB, the
-/// threshold max(floor + 12, −48), speech after 3 loud frames. A tentative end lets a later delivery start recognition
+/// End of speech by voice activity — energy (the probe's thresholds) or a model's flag (D7.2) — speech after 3 loud
+/// frames, silence counted from the speech behind the flag. A tentative end lets a later delivery start recognition
 /// silently; `preRoll` seconds before the start go with it; `maxTurn` ends a turn noise would never let end; her «я
 /// всё» (`ending`) ends it on the next frame, as the tail would.
 public struct TurnDetector {
     public private(set) var preRoll: [[Float]] = []
-    private var ringTimes: [Double] = [], calibration: [Float] = [], floorDb: Float = -50, loud = 0
+    private var ringTimes: [Double] = [], loud = 0, activity: VoiceActivity
     private var start: Double?, lastVoiced: Double?, tentativeSent = false
     private let tail: Double, timing: TurnTiming, ending: TurnEnding?
 
-    public init(kind: TurnKind, timing: TurnTiming, ending: TurnEnding? = nil) {
+    /// - Parameter activity: what tells speech from silence; nil — energy (D7.2).
+    public init(kind: TurnKind, timing: TurnTiming, ending: TurnEnding? = nil, activity: VoiceActivity? = nil) {
         (tail, self.timing, self.ending) = (timing.tail(kind), timing, ending)
+        self.activity = activity ?? EnergyActivity()
+        self.activity.reset()
     }
 
     /// One frame of samples heard at `time` seconds; at most one event.
     public mutating func process(_ samples: [Float], at time: Double) -> TurnEvent? {
         guard !samples.isEmpty else { return nil }
         if ending?.take() == true { return end(.done, at: time) }
-        let db = 10 * log10(max(samples.reduce(0) { $0 + $1 * $1 } / Float(samples.count), 1e-10))
         if start == nil { remember(samples, at: time) }
-        guard calibration.count >= 8 else {
-            calibration.append(db)
-            floorDb = min(max(calibration.min() ?? -50, -75), -35)
-            return nil
-        }
+        guard let loudNow = activity.loud(samples) else { return nil }
         if let begun = start, time - begun >= timing.maxTurn { return end(.limit, at: time) }
-        return db > max(floorDb + 12, -48) ? loudFrame(at: time) : quietFrame(at: time)
+        return loudNow ? loudFrame(at: time) : quietFrame(at: time)
     }
 
     private mutating func loudFrame(at time: Double) -> TurnEvent? {
         loud += 1
         guard loud >= 3 else { return nil }
-        lastVoiced = time
+        lastVoiced = time - activity.lag
         if start == nil {
             start = time
             ending?.saw(.started(at: time))
