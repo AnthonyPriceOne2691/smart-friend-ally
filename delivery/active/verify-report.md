@@ -3,28 +3,35 @@
 **Date:** 2026-10-23
 **Verifier:** process:ci
 **asserts_reviewed_by:** n/a (все утверждения ведут к примерам спеки — дайджест ниже, asserts_without_example: 0; P1–P10 подписаны родителем 2026-10-23 «Подписываю (Рекомендую)»)
-**CI run:** — (PR — после мержа `memory-core`, ответ ведущего на В1; ссылка будет вписана после зелёного прогона)
-**Commit:** код и знание — f88b09d, fdfd258, 140b096; спека — ffc8523, подпись — 8bc7a1a, eval-smoke — 3caff02; слияние main — e6af07e
+**CI run:** — (PR открыт после мержа `memory-core` 824f372; ссылка будет вписана после зелёного прогона)
+**Commit:** код и знание — f88b09d, fdfd258, 140b096; спека — ffc8523, подпись — 8bc7a1a, eval-smoke — 3caff02; слияние main — e6af07e, 9bf9ed5 (memory-core 824f372); пределы тремя точками — 5c5ccec, 19e247f
 
 ## Shape oracles
 - [x] PASS — pre-commit на коммитах поставки: SwiftLint 0 находок (снимок 0), `file-length`, jscpd — рост 0, секреты,
-  данные ребёнка, `gate-coverage`. Локальный снимок `AllySQLite` из worktree памяти лежит вне git и на время коммита
-  убирается из дерева: его находки — не этой поставки
-- [x] PASS — доктор контура: `AUTO 46 · WEAK 13 · ABSENT 4 · TOOL 3 · SKIP 3 · DEAD 0`
-- [x] PASS — `okf_validate.py`: 0 ошибок, 0 предупреждений (46 файлов); `okf_sync_gate.py --base origin/main`: OK, 9
+  данные ребёнка, `gate-coverage`. Снимок `AllySQLite` убран перед слиянием main 9bf9ed5: пакет пришёл из main
+  (824f372), от снимка отличались только комментарии
+- [x] PASS — доктор контура после слияния: `AUTO 46 · WEAK 13 · ABSENT 4 · TOOL 3 · SKIP 4 · DEAD 0`
+- [x] PASS — `okf_validate.py`: 0 ошибок, 0 предупреждений (49 файлов); `okf_sync_gate.py --base origin/main`: OK, 16
   концептов с `implementation:`
-- [x] PASS — `delivery_check --diff-base origin/main`: 0 ошибок; предохранитель — 10 файлов, net 672 из 800 (план 563,
-  +19%), порог стопа 780 не задет. Предупреждение «нет реляционного оракула»: детектор знает только hypothesis и
-  fast-check, а реляционные оракулы здесь — метаморфное P2 (каждая формулировка в пяти видах, 24 × 5), самонахождение
-  каждой формулировки тестовой базы и дифференциальное P11 (Swift против эталона на 300 вопросах)
+- [x] PASS — строгий `delivery_check --require-spec --require-verify --require-ci --diff-base origin/main` после
+  слияния (L14): 0 ошибок; предохранитель — 10 файлов, net 686 из 800 (план 563, +22%), порог стопа 780 не задет.
+  Предупреждение об уроках L71–L73, L89–L91 слитого main закрыто строками плана. Предупреждение «нет реляционного
+  оракула»: детектор знает только hypothesis и fast-check, а реляционные оракулы здесь — метаморфное P2 (каждая
+  формулировка в пяти видах, 24 × 5), самонахождение каждой формулировки тестовой базы и дифференциальное P11 (Swift
+  против эталона на 300 вопросах)
 
 ## Behavior oracles
-- [x] PASS — `swift test` на Mac (Xcode 27) после слияния main: 69 тестов из 69, из них 12 новых (P1–P10)
-- [x] PASS — покрытие AllyCore (`check_swift_coverage.sh`, Mac): 25 файлов `Sources/`, 1331 из 1370 строк, 97%;
-  CI на Linux (SQLite 3.45.1 с FTS5) — с PR
+- [x] PASS — `swift test` AllyCore на Mac (Xcode 27) после слияния main 9bf9ed5: 91 тест из 91, из них 12 — P1–P10;
+  после точек порогов (5c5ccec) `EncyclopediaTests` — 9 из 9
+- [x] PASS — покрытие AllyCore (`check_swift_coverage.sh`, Mac, до слияния main): 25 файлов `Sources/`, 1331 из 1370
+  строк, 97%; после слияния — джоба CI `swift` на Linux (SQLite 3.45.1 с FTS5)
 - [x] PASS — мутации в ту же сессию (П30), исходник восстанавливался из git до и после каждой: 7 из 8 убиты своими
   примерами — правило справки (P6), без «моё» и без деликатного (P7), синонимы не раскрываются и запрос «и» вместо
   «или» (P4), самопроверка без первых формулировок (P9), окончание первой группы без «а/я» (P1)
+- [x] PASS — **пределы тремя точками (L90, урок слитого main):** в прежнем наборе точки «на пороге» не было — ни ответа
+  ровно в 130 знаков, ни шести формулировок, ни трёх слов с одним ненайденным. Добавлены в P6 и P9; четыре мутации в
+  ту же сессию убиты, исходник восстановлен из git после каждой: длина `<=` → `<` и граница формулировок −1 и +1 —
+  `testFailClosed`, «одно может не найтись» `>=` → `>` — `testStrictCoverage`
 - [x] PASS — **отступление по мутации «буст выключен»**: P5 её не ловит — соседние карточки тестовой базы различает
   `bm25` и без буста. Её убивает паритет P11: без карточки неверных 5 против 4 у эталона, счёт расходится — P11 FAIL
 - [x] PASS — Builder ≠ Verifier: код и тесты писал агент-исполнитель; ожидания — примеры, подписанные родителем до кода;
@@ -39,10 +46,8 @@
   поиск p50 0,046 мс, p95 0,076 мс
 
 ## Spec coverage gaps
-- **CI на Linux** (FTS5 в `libsqlite3` 3.45.1 образа) — с PR после мержа `memory-core`; проба в контейнере Ubuntu 24.04
-  той же версии пакета зелёная (2026-10-23).
-- **`AllySQLite`** — сейчас локальный снимок из worktree `memory-core` (вне git). Перед PR снимок удаляется, main с
-  пакетом сливается; если интерфейс обёртки изменится — правка `EncyclopediaIndex.swift`.
+- **CI на Linux** (FTS5 в `libsqlite3` 3.45.1 образа) — прогон PR; проба в контейнере Ubuntu 24.04 той же версии
+  пакета зелёная (2026-10-23).
 - **Подключение к сессии, база карточек, телефон** — Э2 `app-encyclopedia`.
 
 ## Ревью рисковых мест
@@ -64,62 +69,67 @@
 
 | Metric | Value |
 |---|---|
-| files_touched / loc_diff | 10 code (+13 process docs) / +676/−4 (net +672); предохранитель — 10 файлов, net 672 из 800 |
-| commits | 10 до слияния main; слияние — e6af07e |
+| files_touched / loc_diff | 10 code (+14 process docs) / +690/−4 (net +686); предохранитель — 10 файлов, net 686 из 800 |
+| commits | 15 до отчёта: 10 до первого слияния main, слияния — e6af07e и 9bf9ed5 (memory-core), точки порогов — 5c5ccec, 19e247f |
 | time_to_accepted_spec | 0.9h |
 | rework_after_done | 0 (handoff not declared yet) |
 | harness_hardened | yes — `EncyclopediaTests.swift`, `StemmerTests.swift` (новые оракулы), паритет P11 со стендом |
-| implement_retries | 2 — пять находок SwiftLint (кортеж, Data → String) и хэш тестовой базы (порядок ключей JSON) исправлены до коммита |
+| implement_retries | 3 — пять находок SwiftLint (кортеж, Data → String) и хэш тестовой базы (порядок ключей JSON) исправлены до коммита; после слияния main — точки порогов по L90 |
 | verify_fails_before_green | 0 локально; CI — с PR |
 | est_token_or_cost | n/a |
 
 ## Assertion digest (ревью ожиданий, не кода)
 
-## Assertion digest (ревью ожиданий, не кода)
-
 База: `origin/main` · сгенерировано `assert_digest.sh`
 
-Новых/изменённых утверждений: **33**, из них без ссылки на пример спеки:
+Новых/изменённых утверждений: **40**, из них без ссылки на пример спеки:
 **0**. Вопрос к каждому непривязанному один: **откуда взято ожидаемое
 значение — из спеки или придумано под реализацию?**
 
 ```
-G12	XCTAssertEqual(access, .child)
-G12	XCTAssertNil(access.until)
-G12	XCTAssertTrue(access.open)
-G12	XCTAssertEqual(ReleaseGate.lines(access, zone: lock.zone),
-G12	XCTAssertEqual(ReleaseGate.acceptanceLine(lock.reasons(file)), "приёмка: цели безопасности приняты")
-G12	XCTAssertEqual(try lock.access(release: file, exception: try lock.file()), .child)
-G12	XCTAssertEqual(try lock.access(release: try acceptance(better)), .child)
-G13	XCTAssertEqual(lock.reasons(file), [reason], goal)
-G13	XCTAssertEqual(ReleaseGate.acceptanceLine(lock.reasons(file)), "приёмка: " + reason, goal)
-G13	XCTAssertEqual(try lock.access(release: file), .parentOnly(["нет исключения родителя"]), goal)
-G13	XCTAssertEqual(try lock.access(release: file, exception: try lock.file()), .supervised(until: until), goal)
-G14	XCTAssertEqual(lock.reasons(try acceptance(results)),
-G14	XCTAssertEqual(lock.reasons(try acceptance(results)), ["быт: нет замера"])
-G14	XCTAssertEqual(try lock.access(release: try acceptance(results)), .parentOnly(["нет исключения родителя"]))
-G15	XCTAssertEqual(lock.reasons(file, signed: signed), [reason], reason)
-G15	XCTAssertEqual(ReleaseGate.lines(access, zone: lock.zone), closed, reason)
-G15	XCTAssertEqual(lock.reasons(try acceptance()), ["в сборке нет ключа родителя"])
-G15	XCTAssertEqual(try lock.access(release: try acceptance()), .parentOnly(["в сборке нет ключа родителя"]))
-G16	XCTAssertEqual(lock.reasons(file).joined(separator: "; "),
-G16	XCTAssertFalse(try lock.access(release: file).open)
-G17	XCTAssertEqual(try lock.access(release: try acceptance(results, extra: ["note": "прогон на телефоне"])), .child)
-G17	XCTAssertEqual(lock.reasons(try acceptance(results)), [])
-G12	XCTAssertEqual(read?.signed, true)
-G12	XCTAssertEqual(ReleaseGate.access(release: read, exception: nil, build: build, now: Date(), zone: .current),
-G15	XCTAssertEqual(SignedFile.read(message, armored: signed, signer: signer, for: .exception)?.signed, true)
-G15	XCTAssertEqual(SignedFile.read(message, armored: signed, signer: signer, for: .acceptance)?.signed, false)
-G15	XCTAssertEqual(SignedFile.read(accepted, armored: releaseSigned, signer: releaseSigner, for: .exception)?
-G15	XCTAssertEqual(SignedFile.read(accepted, armored: nil, signer: releaseSigner, for: .acceptance)?.signed, false)
-G15	XCTAssertEqual(SignedFile.read(accepted, armored: releaseSigned, signer: nil, for: .acceptance)?.signed, false)
-G15	XCTAssertNil(SignedFile.read(nil, armored: releaseSigned, signer: releaseSigner, for: .acceptance))
-G18	XCTAssertEqual(trace.records.map(\.audience), Array(repeating: "child", count: 4))
-G18	XCTAssertTrue(line.contains("\"audience\":\"child\""), line)
-G18	XCTAssertEqual(disk.paths, [])
+P2	XCTAssertTrue(base.healthy)
+P2	XCTAssertEqual(plain, [card.id, "knowledge.hint"], phrasing)  // every phrasing finds its card
+P2	XCTAssertEqual(decision(variant), plain, variant)
+P2	XCTAssertEqual(decision("ПОЧЕМУ НЕБО ГОЛУ\u{301}БОЕ?!"), ["sky-blue", "knowledge.hint"])
+P3	XCTAssertEqual(lookup.hint, Self.cards[0].answer)
+P3	XCTAssertEqual(lookup.record.card, "sky-blue")
+P3	XCTAssertEqual(lookup.record.rules, ["knowledge.hint"])
+P3	XCTAssertNotNil(lookup.record.dataHash.range(of: "^fnv1a:[0-9a-f]{16}$", options: .regularExpression))
+P4	XCTAssertEqual(decision("зачем котику усы"), ["cat-whiskers", "knowledge.hint"])
+P4	XCTAssertEqual(decision("а пачиму небо синее"), ["sky-blue", "knowledge.hint"])
+P4	XCTAssertEqual(decision("почему мишка спит зимой"), ["bear-winter", "knowledge.hint"])
+P5	XCTAssertEqual(decision("зачем кошке усы"), ["cat-whiskers", "knowledge.hint"])
+P5	XCTAssertEqual(decision("почему кошка мурлычет"), ["cat-purr", "knowledge.hint"])
+P6	XCTAssertNil(base.lookup(text).hint, text)
+P6	XCTAssertEqual(decision(text), [nil, "knowledge.coverage"], text)
+P6	XCTAssertEqual(base.lookup("почему марс красный").top.first?.card, "rainbow")
+P6	XCTAssertEqual(decision("почему бурый медведь"), [nil, "knowledge.coverage"])
+P6	XCTAssertEqual(decision("почему бурый медведь спит"), ["bear-winter", "knowledge.hint"])
+P6	XCTAssertEqual(decision("почему бурый медведь спит зимой"), ["bear-winter", "knowledge.hint"])
+P7	XCTAssertEqual(decision("я сегодня была в зоопарке"), [nil, "knowledge.not_asked"])
+P7	XCTAssertEqual(decision("где мой мишка"), [nil, "knowledge.personal"])
+P7	XCTAssertEqual(base.lookup("где мой мишка").top.first?.card, "bear-winter")
+P7	XCTAssertEqual(decision("почему умирают кошки"), [nil, "knowledge.delicate"])
+P8	for text in ["", "ааа", "2 плюс 2"] { XCTAssertEqual(decision(text), [nil, "knowledge.not_asked"], text) }
+P8	XCTAssertTrue(empty.healthy)
+P8	XCTAssertEqual(decision("почему небо голубое", empty), [nil, "knowledge.no_match"])
+P9	XCTAssertFalse(encyclopedia.healthy, item.name)
+P9	XCTAssertEqual(decision("почему небо голубое", encyclopedia), [nil, "knowledge.selftest_failed"], item.name)
+P9	XCTAssertFalse(noTable.healthy)
+P9	XCTAssertEqual(decision("почему небо голубое", noTable), [nil, "knowledge.index_failed"])
+P9	XCTAssertEqual(decision("почему небо голубое", Encyclopedia(cards: good, config: config)),
+P9	XCTAssertTrue(Encyclopedia(cards: atLimits, config: config).healthy)
+P10	XCTAssertNil(json.range(of: "[А-Яа-яЁё]", options: .regularExpression), json)
+P10	XCTAssertEqual(again, base.lookup("").record.dataHash)
+P10	XCTAssertNotEqual(Encyclopedia(cards: Self.jsonl(changed)).lookup("").record.dataHash, again)
+P1	XCTAssertEqual(words.map(RussianStemmer.stem), stems)
+P1	XCTAssertEqual(pairs.count, 100)
+P1	for pair in pairs { XCTAssertEqual(RussianStemmer.stem(pair[0]), pair[1], pair[0]) }
+P1	XCTAssertEqual(words.count, 49_785)
+P1	XCTAssertEqual(wrong.count, 0, "\(wrong.prefix(5))")
 ```
 
-✅ **Каждое утверждение ведёт к примеру спеки** (G12 G13 G14 G15 G16 G17 G18), а примеры человек
+✅ **Каждое утверждение ведёт к примеру спеки** (P1 P10 P2 P3 P4 P5 P6 P7 P8 P9), а примеры человек
 подписал до кода (`human_ok_spec`). Подпись под дайджестом здесь
 **не требуется**: она уже стоит, заранее и на числах. Пиши в verify-report
 `asserts_reviewed_by: n/a (все утверждения ведут к одобренным примерам)`.
@@ -128,8 +138,8 @@ asserts_without_example: 0
 
 ## Verdict
 
-Implement и verify сделаны локально; ждёт пакет `AllySQLite` в main (мерж `memory-core`), затем PR и CI.
+Implement и verify сделаны локально, main с `AllySQLite` слит (9bf9ed5); ждёт зелёного CI на PR.
 
-- [ ] READY FOR HANDOFF — после зелёного CI: PR открывается после мержа `memory-core` (ответ ведущего на В1)
+- [ ] READY FOR HANDOFF — после зелёного CI
 - [ ] NEED CONVERGE (new tasks)
 - [ ] BLOCKED
