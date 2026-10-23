@@ -13,9 +13,10 @@
 - [x] PASS — `okf_validate.py`: 0 ошибок (45 файлов); `okf_sync_gate.py --base origin/main`: 12 концептов сверены —
   `engineering/character-rendering` (`Frame`, `Motion`, `FrameRate`, `LiveScene`, `ShellScene`) и `product/look-and-feel`
   (`Pose`) правлены в том же диффе
-- [x] PASS — строгий `delivery_check --diff-base origin/main`: 0 ошибок; предохранитель — 10 файлов, net 492 из 800, без
-  исключений. Предупреждение «нет реляционного оракула»: детектор знает только hypothesis и fast-check, а реляционный
-  оракул здесь — свойство V12 (на 100 случайных сценариях с зерном ничего не прыгает между кадрами, ожидаемых чисел нет)
+- [x] PASS — строгий `delivery_check --diff-base origin/main`: 0 ошибок; предохранитель — 11 файлов (10 кода и строка
+  обязательства в `CLAUDE.md`), net 492 из 800, без исключений. Предупреждение «нет реляционного оракула»: детектор
+  знает только hypothesis и fast-check, а реляционный оракул здесь — свойство V12 (на 100 случайных сценариях с зерном
+  ничего не прыгает между кадрами, ожидаемых чисел нет)
 
 ## Behavior oracles
 - [x] PASS — `swift test` на Mac (Xcode 27.1, Swift 6.4, macOS 27, под `nice -n 10`): `ShellCoreTests` 15 из 15 (V1–V7,
@@ -62,7 +63,7 @@
 
 | Metric | Value |
 |---|---|
-| files_touched / loc_diff | 10 code (+9 process docs) / +542/-50 (net +492); предохранитель — 10 файлов, net 492 из 800 |
+| files_touched / loc_diff | 10 code + `CLAUDE.md` (+9 process docs) / +543/-51 (net +492); предохранитель — 11 файлов, net 492 из 800 |
 | commits | 7 до сдачи (спека, подпись, eval-smoke, код, слияние main, уроки в плане); сдача — следующим |
 | time_to_accepted_spec | 0.5h |
 | rework_after_done | 0 |
