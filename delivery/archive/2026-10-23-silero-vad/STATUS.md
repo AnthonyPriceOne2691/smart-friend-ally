@@ -6,7 +6,7 @@
 - **kind:** feature
 - **repro_test:** n/a reason=не bugfix
 - **diagnosis:** n/a reason=не bugfix
-- **phase:** implement
+- **phase:** handoff
 - **builder:** agent:claude-code
 - **verifier:** process:ci
 - **human_ok_spec:** yes (by=human:anthony, at=2026-10-23; «Подписываю (Рекомендую)» через ведущего — примеры U16–U21 в спеке серии «слух», подпись 3b68733, спека 74ada91)
@@ -22,7 +22,7 @@
        серия голоса (AllyOnnx); слияние main — сложением, после мержа D7.1 -->
 - **hooks:** not-deployed
 - **blockers:** none
-- **waivers:** none
+- **waivers:** acceptance=U20,U21 reason=ответ 8 родителя в подписи серии «слух» 2026-10-23 на вопрос ведущего («… Проверки на телефоне — дважды: после части 2 и после части 4. Подписываешь?» — «Подписываю (Рекомендую)»): Silero и GigaAM (U20, U21, U28) — после D7.3, в сессии теста; постоянное решение родителя 2026-10-23 — все проверки на телефоне в общую сессию теста, сливаем по зелёным Mac и GitHub («Да, всё в общую сессию (Рекомендую)»); код, тесты U16–U19 на Mac и Linux, 9 мутаций, сборка без подписи и оракул артефакта — зелёные; без модели Silero на телефоне слух — энергия со строкой в консоли by=human:anthony at=2026-10-23
 - **new_dependency:** Packages/AllyHearing/Package.swift reason=новый манифест SwiftPM без внешних пакетов: AllyHearing — Silero VAD через C API sherpa-onnx (библиотека AllySherpa из ../AllyOnnx) и активность для определителя ../AllyCore; AVFoundation — из SDK; сторонних библиотек не берём by=agent:claude-code
 - **new_dependency:** sherpa-onnx-1.13.8 reason=Silero VAD на телефоне (решение ведущего 2026-10-23, снятие риска local/spike/speech-in-ort: флаги спайка 1434 из 1434 на официальном ORT 1.28.0); статические xcframework релиза k2-fsa iOS и macOS по url и checksum (6b8e769c…, 93f7a064…), ORT внутри нет — линкуется рантайм AllyOnnx; лицензия Apache-2.0 (gh api repos/k2-fsa/sherpa-onnx/license, 2026-10-23, L36), релиз v1.13.8 от 2026-09-10; строка дублирует путь манифеста, потому что гейт new-dependency .binaryTarget не разбирает by=agent:claude-code
 - **runtime_paths:** Packages/AllyHearing/

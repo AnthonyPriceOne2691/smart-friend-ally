@@ -21,5 +21,5 @@ L57 — гейт данных ребёнка не меняется, данные
 - [x] T7: знание — `turn-detector.md`, `onnx-runtime.md`, `voice-loop.md`, `safety-below-model.md`, `repo-map.md`, log;
   места «конец речи меряет энергия» — поиском по «Silero», «энерги», «по энергии» (L7, L16, L70): нашлись
   `KNOWLEDGE.md` §5 и строка Smart Turn в `turn-detector.md`
-- [ ] T8: verify-report, строгий `delivery_check`, L43, архив, урок L80 (строка INDEX), slug в `delivery/OBSERVATIONS.md`;
-  слияние main после D7.1; доклад «готово к мержу»
+- [x] T8: verify-report, строгий `delivery_check`, L43, архив, урок L80 (строка INDEX), slug в `delivery/OBSERVATIONS.md`;
+  слияние main после D7.1; доклад «готово к мержу» — сдача
