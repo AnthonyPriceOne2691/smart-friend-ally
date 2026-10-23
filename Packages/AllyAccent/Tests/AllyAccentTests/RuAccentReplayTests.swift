@@ -107,6 +107,16 @@ final class RuAccentReplayTests: XCTestCase {
         XCTAssertEqual(text.mismatches, [])
     }
 
+    func testYoLabelsByWordsOfPython() throws {
+        // Z14, проба причуды «ё»: «вес» и «##ла» — одно слово, метка — первый максимум среднего вероятностей (YO;
+        // среднее логитов дало бы NO_YO); слово из 101 буквы — [UNK], своё слово, хоть строка токена и короче;
+        // метка YO у «ее» без записи в `yo_homographs` оставляет «ее» — и словарь ударений даёт «е+е»
+        let yo = try probe("yo")
+        let long = String(repeating: "а", count: 101)
+        XCTAssertEqual(yo.python, "Вёсла е+е \(long) е+е.")
+        XCTAssertEqual(yo.mismatches, [])
+    }
+
     func testLogicCallsV3aTokenizers() throws {
         // Z14: адаптер отдаёт логике выход токенизаторов V3a как есть (игрушечные токенизаторы, обученные HF)
         let fixtures = try XCTUnwrap(Bundle.module.url(forResource: "Fixtures", withExtension: nil))
