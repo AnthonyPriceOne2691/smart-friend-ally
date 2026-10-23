@@ -18,14 +18,14 @@ public enum SessionEvent: Sendable {
 /// watcher of the states (the app opens the microphone by them).
 public struct SessionParts: Sendable {
     public let model: LanguageModel, voice: VoiceOutput, sink: TraceSink, clock: TurnClock, router: TurnRouting
-    public let stamp: @Sendable () -> TraceStamp, onState: @Sendable (SessionState) -> Void
+    public let audience: Audience, stamp: @Sendable () -> TraceStamp, onState: @Sendable (SessionState) -> Void
 
     public init(model: LanguageModel, voice: VoiceOutput, sink: TraceSink, clock: TurnClock = SystemClock(),
-                router: TurnRouting = PassThroughRouting(),
+                router: TurnRouting = PassThroughRouting(), audience: Audience = .parent,
                 stamp: @escaping @Sendable () -> TraceStamp = { TraceStamp() },
                 onState: @escaping @Sendable (SessionState) -> Void = { _ in }) {
         (self.model, self.voice, self.sink, self.clock, self.router) = (model, voice, sink, clock, router)
-        (self.stamp, self.onState) = (stamp, onState)
+        (self.audience, self.stamp, self.onState) = (audience, stamp, onState)
     }
 }
 
@@ -169,7 +169,7 @@ public actor Session {
     private func head(_ source: String?, mode: TurnMode, route: Route?) -> TraceHead {
         count += 1
         return TraceHead(session: id, turn: count, phase: state, mode: mode, source: source, route: route,
-                         elapsed: parts.clock.now() - start, limit: settings.limit)
+                         elapsed: parts.clock.now() - start, limit: settings.limit, audience: parts.audience)
     }
 
     private func write(_ head: TraceHead, _ outcome: TurnOutcome?, cancelled: Bool = false, error: String? = nil,
