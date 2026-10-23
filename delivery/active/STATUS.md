@@ -6,7 +6,7 @@
 - **kind:** feature
 - **repro_test:** n/a reason=не bugfix
 - **diagnosis:** n/a reason=не bugfix
-- **phase:** implement
+- **phase:** verify
 - **builder:** agent:claude-code
 - **verifier:** process:ci
 - **human_ok_spec:** yes (by=human:anthony at=2026-10-23 «Подписываю (Рекомендую)» через ведущего — серия D5 → D6.1 → D6.2, примеры X1–X17, решения 1–5 по рекомендациям; вариант «перебивать только тапом» не выбран)
@@ -26,7 +26,7 @@
        родителя. D5 — после D7.1 turn-speculation (ветка feat/turn-detector), D6.1 — после V4 voice-app -->
 - **hooks:** not-deployed
 - **blockers:** none
-- **waivers:** none
+- **waivers:** acceptance=X8 reason=постоянное решение родителя (через ведущего 2026-10-23): телефонные проверки серии — в общую сессию теста; код, тесты X1–X7, мутации, сборка без подписи и оракул артефакта — зелёные by=human:anthony at=2026-10-23
 - **new_dependency:** none
 - **runtime_paths:** Packages/AllyLlama/
   <!-- §12.6, один рисковый путь на поставку (E1): память модели — seq_rm и дописывание сказанного в LlamaModel -->
