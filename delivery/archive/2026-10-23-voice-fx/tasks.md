@@ -13,7 +13,7 @@
   `LINT_SWIFT_PACKAGES`, jscpd
 - [x] T5a: предохранитель — net 824 > 800 (план 640): `escalation.md`; родитель — «Резать: эквалайзер — в следующую
   часть»: эквалайзер и Z29 уехали в V4b, Z30 здесь — без эквалайзера
-- [ ] T6: verify-report, OKF (`engineering/voice-engine` — стадия обработки), PR, сдача с уроком L55, строки
+- [x] T6: verify-report, OKF (`engineering/voice-engine` — стадия обработки), PR, сдача с уроком L55, строки
   `voice-engine` и `voice-fx` в `delivery/OBSERVATIONS.md`
 
 ## V4b `voice-app` — своя ветка после V4a

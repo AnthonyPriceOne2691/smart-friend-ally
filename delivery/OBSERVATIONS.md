@@ -44,3 +44,5 @@
 - `voice-onnx`
 - `turn-speculation`
 - `memory-core`
+- `voice-engine`
+- `voice-fx`
