@@ -46,3 +46,4 @@
 - `memory-core`
 - `memory-guard`
 - `kv-spoken`
+- `accent-tokenizers`
