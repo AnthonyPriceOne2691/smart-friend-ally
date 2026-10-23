@@ -270,6 +270,25 @@ jobs:
             exit 1
           fi
           echo "отрицательный контроль: гейт покраснел, как и должен"
+      # Один ONNX Runtime на приложение (серия голоса, пример Z1): только binaryTarget в Packages/AllyOnnx.
+      - name: One ONNX Runtime (check_single_ort.sh, Z1)
+        run: bash scripts/lint/check_single_ort.sh
+      # Отрицательный контроль (CQG §6): копия манифестов с пакетом, несущим свой ORT, обязана покраснеть, а статический
+      # xcframework sherpa как binaryTarget с условием платформы (так в Package.swift k2-fsa 1.13.8) — пройти.
+      - name: ORT guard is not blind (второй ORT — красный, binaryTarget sherpa — зелёный)
+        run: |
+          copy() { tmp=$(mktemp -d); git ls-files -z -- '*Package.swift' 'App/project.yml' | xargs -0 -I{} cp --parents {} "$tmp/"; }
+          for package in 'microsoft/onnxruntime-swift-package-manager.git", exact: "1.24.2' 'k2-fsa/sherpa-onnx", from: "1.13.8'; do
+            copy
+            sed -i "s#\.package(path: \"../AllyOnnx\")#.package(path: \"../AllyOnnx\"), .package(url: \"https://github.com/${package}\")#" \
+              "$tmp/Packages/AllyVoice/Package.swift"
+            if bash scripts/lint/check_single_ort.sh "$tmp"; then echo "::error::страж ORT пропустил ${package%%\"*}"; exit 1; fi
+          done
+          copy
+          sed -i 's#targets: \[#targets: [.binaryTarget(name: "sherpa_onnx", url: "https://github.com/k2-fsa/sherpa-onnx/releases/download/xcframework/sherpa-onnx-v1.13.8-ios-static.xcframework.zip", checksum: "0"),#' \
+            "$tmp/Packages/AllyOnnx/Package.swift"
+          bash scripts/lint/check_single_ort.sh "$tmp" || { echo "::error::страж ORT не пропустил binaryTarget sherpa"; exit 1; }
+          echo "отрицательный контроль: пакеты со своим ORT — красный, binaryTarget sherpa — зелёный"
 
   delivery:
     runs-on: ubuntu-latest
