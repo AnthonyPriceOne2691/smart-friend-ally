@@ -1,4 +1,7 @@
 {
   "turn": {"tails": {"open": 1.8, "closed": 1.2, "counting": 2.5}, "tentative": 0.3, "pre_roll": 1.5, "max_turn": 30},
-  "listen_timeout": 8
+  "listen_timeout": 8,
+  "asr": {"engine": "dictation", "gigaam": [{"file": "model.int8.onnx", "bytes": 2939169},
+                                         {"file": "model.int8.onnx.data", "bytes": 221818368},
+                                         {"file": "tokens.txt", "bytes": 196}]}
 }

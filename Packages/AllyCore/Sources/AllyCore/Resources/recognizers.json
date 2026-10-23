@@ -1,0 +1,7 @@
+{
+  "_about": "The console line when the hearing registry asks for GigaAM and the app listens with dictation instead (D7.3): {reason} — why.",
+  "fallback": "GigaAM нет: {reason} — диктовка",
+  "missing": "нет файла {file}",
+  "size": "{file} — {found} байт вместо {bytes}",
+  "pair": "ONNX Runtime без API 28"
+}
