@@ -76,7 +76,7 @@ def check_data():
 def check_contract():
     """contract.json is the one copy of the contract's data: limits by mode, patterns and texts of the reference."""
     keys = ("plea_safety", "hazard", "encourage", "danger_safe", "pointer", "safety", "prohibition", "connective",
-            "action", "filler", "filler_q")
+            "action", "filler", "filler_q", "tail_link", "qword", "verb")
     want = {k: getattr(of, k.upper() + "_RE").pattern for k in keys}
     want.update(modes={m: {**lim, "canned": of.MODE_CANNED[m]} for m, lim in of.MODES.items()}, attachment=of.ATTACH,
                 negatable=sorted(of.NEGATABLE), negation=list(of.NEGATION), clause_splits=of.CLAUSE_SPLITS,
