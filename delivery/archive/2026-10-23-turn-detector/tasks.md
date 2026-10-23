@@ -47,11 +47,11 @@ L36, L37, L42, L43 (`CLAUDE.md`), L25 (`App/Resources/model.json` — повер
   репозитория, `engineering/index.md`, `knowledge/log.md`; `okf_validate` и `okf_sync_gate` зелёные
 
 ### Slice 6 — сдача
-- [ ] T11: verify-report — `swift test`, покрытие AllyCore ≥ 70%, сводка утверждений Swift (новые тест-файлы в ней, L26),
+- [x] T11: verify-report — `swift test`, покрытие AllyCore ≥ 70%, сводка утверждений Swift (новые тест-файлы в ней, L26),
   мутации, блок «Изменение поверхности модели» (`model.json`, A23), `mergeable` и ссылка на зелёный CI (L35); строгий
   `delivery_check --require-ci --diff-base origin/main`; `STRICT=1 BASE=origin/main python3
   scripts/lint/check_digest_report.py` до пуша (L43)
-- [ ] T12: сдача — `delivery/archive/<дата>-turn-detector` в том же PR, `.gitkeep`, строка INDEX с уроком L71,
+- [x] T12: сдача — `delivery/archive/<дата>-turn-detector` в том же PR, `.gitkeep`, строка INDEX с уроком L71,
   `turn-detector` в обязательствах CLAUDE.md, `observe_until` 2026-11-30; доклад ведущему «готово к мержу»; мерж — ведущий
 
 ## D7.1 `turn-speculation` — следующая ветка, после мержа D7
