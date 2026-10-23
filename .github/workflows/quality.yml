@@ -253,9 +253,10 @@ jobs:
     # Swift-пакеты: тесты и покрытие строк ≥ 70% (check_swift_coverage.sh). Swift — с образа раннера, версия в логе
     # (macOS-раннер ×10, §8.7: пакет — только Foundation и собирается на Linux). 15 мин — сборка с нуля и два прогона.
     timeout-minutes: 15
-    # Пакеты под покрытием: AllyCore зависит от AllyDiscipline локальным путём (поставка voice-core).
+    # Пакеты под покрытием: AllyCore зависит от AllyDiscipline локальным путём (поставка voice-core); AllyShell —
+    # оболочка (child-shell): на Linux в отчёт идёт ShellCore, рисунок SwiftUI судят снимки на Mac.
     env:
-      LINT_SWIFT_PACKAGES: "Packages/AllyDiscipline Packages/AllyCore"
+      LINT_SWIFT_PACKAGES: "Packages/AllyDiscipline Packages/AllyCore Packages/AllyShell"
     steps:
       - uses: actions/checkout@v7
       - name: Swift toolchain
