@@ -91,6 +91,10 @@ final class EncyclopediaTests: XCTestCase {
             XCTAssertEqual(decision(text), [nil, "knowledge.coverage"], text)
         }
         XCTAssertEqual(base.lookup("почему марс красный").top.first?.card, "rainbow")
+        // «one may be missing» at three points (L90): two words — none, three and four words — one
+        XCTAssertEqual(decision("почему бурый медведь"), [nil, "knowledge.coverage"])
+        XCTAssertEqual(decision("почему бурый медведь спит"), ["bear-winter", "knowledge.hint"])
+        XCTAssertEqual(decision("почему бурый медведь спит зимой"), ["bear-winter", "knowledge.hint"])
     }
 
     func testNoHintRules() { // P7
@@ -124,6 +128,8 @@ final class EncyclopediaTests: XCTestCase {
                    cards: cards { $0[3].answer = String(repeating: "мурлычет ", count: 15) + "громко." },
                    config: config),
             Broken(name: "две формулировки", cards: cards { $0[4].questions.removeLast() }, config: config),
+            Broken(name: "семь формулировок", cards: cards { $0[7].questions += Self.moreEcho + ["где прячется эхо"] },
+                   config: config),
             Broken(name: "одна первая", cards: cards { $0[1].questions[0] = "почему небо голубое" },
                    config: config),
             Broken(name: "без весов", cards: good, config: try edited(config, "field_weights", [Double]()))
@@ -138,7 +144,15 @@ final class EncyclopediaTests: XCTestCase {
         XCTAssertEqual(decision("почему небо голубое", noTable), [nil, "knowledge.index_failed"])
         XCTAssertEqual(decision("почему небо голубое", Encyclopedia(cards: good, config: config)),
                        ["sky-blue", "knowledge.hint"])
+        // the limits at three points (L90): 130 characters and six phrasings load, 142 and seven do not
+        let atLimits = cards {
+            $0[3].answer = String(repeating: "мурлычет ", count: 14) + "мур."
+            $0[7].questions += Self.moreEcho
+        }
+        XCTAssertTrue(Encyclopedia(cards: atLimits, config: config).healthy)
     }
+
+    static let moreEcho = ["откуда берётся эхо", "как получается эхо", "почему эхо отвечает"]
 
     func testRecordWithoutWords() throws { // P10
         let encoder = JSONEncoder()
