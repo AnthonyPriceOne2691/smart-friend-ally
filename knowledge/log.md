@@ -11,6 +11,15 @@
 * **Creation**: `engineering/accent-placer` (Design) — пакет `AllyAccent`, `Encoding` и три токенизатора RUAccent с
   паритетом HF; `implementation:` — исходники пакета. **Update**: `engineering/index`, `references/repo-map`.
 * **Источник**: поставка `accent-tokenizers` (V3a серии голоса; часть Z14, подпись родителя 2026-10-23).
+## 2026-10-23 — слух: Silero VAD на sherpa-onnx и общем ORT, активность голоса за протоколом
+
+* **Update**: `engineering/turn-detector` — активность голоса за протоколом (энергия или Silero), тишина от речи за
+  флагом, параметры Silero в `vad` реестра слуха, выбор и строки консоли, запасной путь — энергия; `implementation:` —
+  `VoiceActivity.swift`, `SileroVAD.swift`, `SileroActivity.swift`. `engineering/onnx-runtime` — sherpa-onnx 1.13.8 в
+  `AllyOnnx`, `AllySherpa`, пин пары в страже, фикстура `add.onnx` в git. `engineering/voice-loop` — копирование
+  Silero на телефон, строка консоли, сравнение с энергией без файла. `references/repo-map` — пакет `AllyHearing`.
+* **Источник**: поставка `silero-vad` (D7.2 серии «слух»; примеры U16–U21 подписаны родителем 2026-10-23).
+
 ## 2026-10-23 — память: запрет на любом пути записи (memory-guard)
 
 * **Update**: `engineering/memory` — «не хранится никогда» исполняется: правила `forbidden.json`, проверка записи с
