@@ -72,7 +72,7 @@ public final class TurnContract {
         if violation?.rule == .humanClaim { return pass.canned(pass.fallback(violation), after: head?.spoken) }
         let kept = pass.pointed(pass.select(clean), violation, reply)
         guard kept.contains(where: Rules.shared.cyrillicLetter.found(in:)) else {
-            return pass.canned(pass.fallback(violation))
+            return pass.cannedFallback(violation)
         }
         return pass.turn(kept, source: .model)
     }
