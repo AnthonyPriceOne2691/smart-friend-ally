@@ -32,8 +32,8 @@
 
 ## Tasks
 - [x] T1: STATUS, mini-spec и decisions — первым коммитом ветки `feat/voice-text-table`, до кода (L33)
-- [ ] T2: `speech-text.json` — строки таблицы, исключения у «ого» и «его», имя, «ле́том», `notes`; ключ закреплённого
+- [x] T2: `speech-text.json` — строки таблицы, исключения у «ого» и «его», имя, «ле́том», `notes`; ключ закреплённого
   без различия «е/ё» (`SpeechTextTable`, `Respelling`); тест на каждую строку (Z9, Z10); мутации «исключение не
   сработало», «ключ с различием е/ё»
-- [ ] T3: concept `knowledge/engineering/speech-text.md` (строки второго круга), `knowledge/log.md`
-- [ ] T4: verify-report, PR, CI, сдача — `delivery/archive/2026-10-23-voice-text-table`, строка INDEX; мерж — ведущий
+- [x] T3: concept `knowledge/engineering/speech-text.md` (строки второго круга), `knowledge/log.md`
+- [x] T4: verify-report, PR, CI, сдача — `delivery/archive/2026-10-23-voice-text-table`, строка INDEX; мерж — ведущий
