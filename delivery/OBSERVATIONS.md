@@ -39,3 +39,6 @@
 - `contract-fixes`
 - `turn-detector`
 - `voice-text-table`
+- `child-shell-motion`
+- `release-gate`
+- `voice-onnx`
