@@ -22,9 +22,10 @@ public struct LlamaSettings: Decodable, Sendable {
     }
 }
 
-/// What failed in llama.cpp; `stopped` is a cancelled reply, which ends quietly.
+/// What failed in llama.cpp; `stopped` is a cancelled reply, which ends quietly; `swaFullOff` — `swa_full: false` in
+/// the registry: the memory of what sounded (D5) cuts tails longer than the sliding window exactly only with it.
 public enum LlamaError: Error, Equatable {
-    case load(String), context, tokenize, decode(Int32), stopped
+    case load(String), context, tokenize, decode(Int32), stopped, swaFullOff
 }
 
 /// One reply's stop: `cancel` and the end of the stream raise it; the token loop and llama.cpp's abort hook read it.
