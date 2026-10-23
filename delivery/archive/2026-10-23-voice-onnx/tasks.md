@@ -24,8 +24,8 @@
 
 ### Slice 2 — проверка и передача V1a
 - [x] T8: разрез V1 по готовым коммитам (вариант A ведущего): спека — таблица Z1, Z2–Z7 списком для V1b
-- [ ] T9: `verify-report.md`, PR, CI зелёный; OKF — concept `engineering/onnx-runtime`, `index.md`, `log.md`
-- [ ] T10: handoff — архив поставки, строка `INDEX.md` с уроком L53; мерж — ведущий (`merge_guard.sh`)
+- [x] T9: `verify-report.md`, OKF — concept `engineering/onnx-runtime`, `index.md`, `log.md`; PR и CI — ссылка в отчёте
+- [x] T10: handoff — архив поставки, строка `INDEX.md` с уроком L53; мерж — ведущий (`merge_guard.sh`)
 
 ## V1b `voice-engine` — ветка `feat/voice-supertonic` после мержа V1a
 
