@@ -1,5 +1,13 @@
 # Knowledge Bundle Update Log
 
+## 2026-10-23 — детский экран: облик Элли в коде (оболочка Ш1)
+
+* **Update**: `product/look-and-feel` — позы состояний, раскладка и палитра в коде (`implementation:` — `Pose.swift`,
+  `Layout.swift`, `Palette.swift`), правило «без надписей» — SwiftLint `child_screen_text`. `engineering/character-rendering`
+  — как сделано в Ш1: `Frame` и рисунок одним `Canvas`, снимки на Mac с пробами (`implementation:` — `Frame.swift` и
+  `ShellUI`). `references/repo-map` — пакет `AllyShell`, снимки в `local/shell-snapshots/`.
+* **Источник**: поставка `child-shell` (оболочка Ш1; спека подписана родителем 2026-10-22 «Подписываю (Рекомендую)»).
+
 ## 2026-10-22 — чёрный ящик: обе стороны разговора текстом и звуком (ядро)
 
 * **Update**: `ops/black-box` — переписан по поставке: пишутся только сессии `audience: supervised`; на ход — её
@@ -21,6 +29,17 @@
   тапу, переустановка одной командой, лимит аргументом запуска, поля следа `TurnTrace`. `references/repo-map`,
   `engineering/index` — новые входные точки.
 * **Источник**: поставка `app-session` (D2.2; спека и план подписаны родителем 2026-10-22 «Подписываю (Рекомендую)»).
+
+## 2026-10-22 — облик персонажа: первая версия в 2D
+
+* **Update**: `engineering/character-rendering` (ADR, `stable`) — первая версия — 2D-вектор в SwiftUI `Canvas` по
+  прототипу v3, серия «оболочка» Ш1–Ш3; бюджет первой версии (память +10 МБ, рывки, скорость модели ≥ 95%, нагрев) — с
+  тестом родителя после Ш3; Rive «2.5D», RealityKit и клипы — следующий шаг, база зонда — 2D; отклонены `WKWebView` с
+  прототипом и SpriteKit.
+* **Update**: `product/look-and-feel` — персонаж в первой версии в 2D, открытый вопрос «2.5D или 3D» — после её теста;
+  `engineering/index`. `KNOWLEDGE.md` §12 п.6 и `CLAUDE.md` — с первым кодом Ш1 (на фазе спеки гейт считает их кодом).
+* **Источник**: решение родителя 2026-10-22 (через ведущего); спека оболочки Ш1 `child-shell` (ветка `feat/child-shell`)
+  и зонд облика на Mac (`local/spike/shell/`, вне git); проба на macOS 27: `ImageRenderer` рисует и вид AppKit.
 
 ## 2026-10-22 — приложение: голосовой цикл на телефоне через контракт хода
 
