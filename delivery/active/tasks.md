@@ -23,6 +23,6 @@
 - [x] T9: `ops/black-box`, `engineering/voice-loop` (команды выгрузки и стирания), `ops/child-data`, `knowledge/log.md`
 
 ## Slice 4 — проверка и сдача
-- [ ] T10: verify-report, PR, CI; строгий `delivery_check`, `check_digest_report.py` до пуша (L43)
+- [x] T10: verify-report, PR, CI; строгий `delivery_check`, `check_digest_report.py` до пуша (L43)
 - [ ] T11: телефон — B13–B19 при родителе после мержа R (шаг владельца); подпись поверхности стирания пальцем родителя
 - [ ] T12: сдача — архив, строка INDEX (уроки L83, L84, L85), CLAUDE.md; мерж — ведущий
