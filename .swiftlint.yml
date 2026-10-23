@@ -12,6 +12,7 @@ excluded:
   - Packages/AllyDiscipline/.build
   - Packages/AllyCore/.build
   - Packages/AllyLlama/.build
+  - Packages/AllyShell/.build
   - App/build
   - Packages/AllyDiscipline/Tests/DisciplineTests/Fixtures
 
@@ -75,6 +76,12 @@ custom_rules:
     regex: '"[^"\n]*[А-Яа-яЁё][^"\n]{40,}"'
     excluded: ".*/Tests/.*"
     message: "Тексты и правила речи — в ресурсах (repair.json и др.), не литералом в коде"
+    severity: error
+  child_screen_text:     # правило экрана 1 (look-and-feel): ребёнку ни одной надписи; метка взрослого (Ш3) — своим файлом
+    name: "Надпись в детском экране"
+    regex: '\b(Text|Label|TextField|SecureField|TextEditor|ProgressView|Toggle)\s*\('
+    included: ".*/Packages/AllyShell/Sources/ShellUI/.*"
+    message: "Ребёнку ни одной надписи (правило экрана 1): состояние показывает тело Элли, текст — только в зоне взрослых"
     severity: error
   no_network:            # граница CONSTITUTION «продукт не ходит в сеть»; артефакт судит check_app_artifact.sh
     name: "Сеть в продукте"

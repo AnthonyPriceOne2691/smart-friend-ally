@@ -7,7 +7,13 @@ struct AllyApp: App {
     @StateObject private var loop = VoiceLoop()
 
     var body: some Scene {
-        WindowGroup { Console(loop: loop) }
+        WindowGroup {
+            if loop.child {
+                ChildScreen(talk: loop.talk, until: loop.access.until, onWake: loop.childWake, onStop: loop.childStop)
+            } else {
+                Console(loop: loop)
+            }
+        }
     }
 }
 
@@ -30,6 +36,8 @@ struct Console: View {
             Text(loop.screen.heard).foregroundStyle(.secondary)
             Text(loop.screen.said).bold()
             Text("Элли: " + Self.word(loop.talk.phase)).accessibilityIdentifier("console.phase")
+            ForEach(ReleaseGate.lines(loop.access, zone: .current), id: \.self) { Text($0).font(.caption) }
+                .accessibilityIdentifier("console.lock")
             HStack {
                 Button("Разбудить", action: loop.wake).buttonStyle(.borderedProminent)
                     .disabled(!loop.screen.ready || loop.talk.phase != .asleep).accessibilityIdentifier("console.wake")
@@ -38,10 +46,20 @@ struct Console: View {
                 Button("Стоп", action: loop.stop).buttonStyle(.bordered)
                     .disabled(loop.talk.phase == .asleep).accessibilityIdentifier("console.stop")
             }
+            HStack {
+                Button("Дочке, при мне", action: loop.handOver).buttonStyle(.bordered)
+                    .disabled(loop.access.until == nil || loop.talk.phase != .asleep)
+                    .accessibilityIdentifier("console.handOver")
+                Button("Закрыть детский режим", action: loop.closeChildMode).buttonStyle(.bordered)
+                    .disabled(!loop.exception).accessibilityIdentifier("console.closeChildMode")
+            }
         }
         .padding()
         .task { await loop.start() }
-        .onAppear { UIApplication.shared.isIdleTimerDisabled = true }  // a locked phone stops the GPU work
+        .onAppear {
+            UIApplication.shared.isIdleTimerDisabled = true  // a locked phone stops the GPU work
+            loop.refreshAccess()  // an exception copied while the app runs shows up when the console does
+        }
     }
 
     private static func word(_ phase: SessionState) -> String {
