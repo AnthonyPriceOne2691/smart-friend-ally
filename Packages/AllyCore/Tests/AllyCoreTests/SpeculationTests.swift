@@ -128,17 +128,15 @@ final class SpeculationTests: XCTestCase {
     }
 
     func testAnAnswerFinishedBeforeSheWentOnIsCountedStale() async {  // U12
-        let session = Locked<Session?>(nil)
         let talk = SpecTalk(plans: [.held(first: "Ура!", full: "Ура!"), held("Ура два")]) { model in
             [.init(text: "Ура ура", at: 13.5, pauses: [
                 .init(at: 10.3, event: .tentative("Ура"), until: { model.calls.count == 1 }),
-                .init(at: 10.9, action: { model.finish(0) }, until: { session { $0 }?.begunAnswerFinished == true }),
+                .init(at: 10.9, action: { model.finish(0) }),
                 .init(at: 11.2, event: .resumed),
                 .init(at: 12.0, event: .tentative("Ура ура"), until: { model.calls.count == 2 }),
                 .init(at: 12.5, action: { model.first(1) })
             ]), .init(text: nil)]
         }
-        session { $0 = talk.conversation.session }
         await talk.conversation.wake()
         XCTAssertEqual(talk.modelTurns.first?.stages["spec_stale"], 1)
         XCTAssertEqual(talk.model.memory, ["Ура", "Ура ура"])

@@ -39,8 +39,7 @@ public protocol Listener: Sendable {
 public actor Conversation {
     /// The screen's states in order: the first is the state at start, the last 8 are kept.
     public nonisolated let updates: AsyncStream<TalkState>
-    nonisolated let session: Session
-    private let listener: Listener, board: Board
+    private let session: Session, listener: Listener, board: Board
     private var loop: Task<Void, Never>?, running = false, starting = false
 
     public init(_ parts: SessionParts, settings: SessionSettings = SessionSettings(), listener: Listener) {
