@@ -5,9 +5,10 @@
 # .metadata.size; copy from; copy to --remove-existing-content true; FAKE_LOCKED — «device is locked»), фальшивый mdls —
 # признак iCloud. Настоящий xcrun не зовётся: без фальшивого первым на PATH — стоп. Всё — во временных каталогах с
 # пробелами в путях; синтетика — WAV PCM16 16 кГц, m4a с заголовком ftyp, записи с bytes и FNV-1a.
-# Случаи: 1 — две сверяемые сессии (1b — имена в листинге без каталога сессии); 2 — испорчен байт WAV; 3 — .gitignore
-# без local/; 4 — iCloud по mdls (4b — путь под Mobile Documents); 5 — телефон заперт (5b — заперли посреди
-# копирования); 6 — erase после 2 (6b — devicectl не стёр); 7 — повторный pull (7b — сессия выросла после выгрузки).
+# Случаи: 1 — две сверяемые сессии (1b — имена в листинге без каталога сессии); 2 — испорчен байт WAV (2b — чужой
+# заголовок записи и звук другого размера); 3 — .gitignore без local/; 4 — iCloud по mdls (4b — путь под Mobile
+# Documents); 5 — телефон заперт (5b — заперли посреди копирования); 6 — erase после 2 (6b — devicectl ответил 0 и не
+# стёр); 7 — повторный pull (7b — сессия выросла после выгрузки). 7 и 7b идут за 1, 6 — за 2: им нужно их состояние.
 set -uo pipefail
 TOOL="${BLACKBOX_TOOL:-}"  # черновик вне клона — путь к команде; иначе scripts/blackbox.py репозитория
 if [ -z "$TOOL" ]; then ROOT="$(git rev-parse --show-toplevel)" || exit 1; TOOL="$ROOT/scripts/blackbox.py"; fi
@@ -98,8 +99,8 @@ assert fnv1a(b"") == "fnv1a:cbf29ce484222325" and fnv1a(b"a") == "fnv1a:af63dc4c
 
 def wav(samples):
     pcm = struct.pack(f"<{len(samples)}h", *samples)
-    head = b"RIFF" + struct.pack("<I", 36 + len(pcm)) + b"WAVEfmt " + struct.pack("<IHHIIHH", 16, 1, 1, 16000, 32000, 2, 16)
-    return head + b"data" + struct.pack("<I", len(pcm)) + pcm
+    fmt = struct.pack("<IHHIIHH", 16, 1, 1, 16000, 32000, 2, 16)  # PCM16 моно 16 кГц: 44 байта заголовка
+    return b"RIFF" + struct.pack("<I", 36 + len(pcm)) + b"WAVEfmt " + fmt + b"data" + struct.pack("<I", len(pcm)) + pcm
 
 
 def sound(path, data, kind):
@@ -124,7 +125,8 @@ PY
 phone() { rm -rf "$PHONE" && gen "$PHONE/$BOX/$S1" 3 && gen "$PHONE/$BOX/$S2" 2; }
 repo() { rm -rf "$1" && mkdir -p "$1" && git -C "$1" init -q && printf 'local/\n' > "$1/.gitignore"; }
 corrupt() {  # $1 — файл: байт посреди отсчётов другой, размер тот же
-  "$PY" -c 'import sys; p = sys.argv[1]; d = bytearray(open(p, "rb").read()); d[50] ^= 0xFF; open(p, "wb").write(d)' "$1"
+  "$PY" -c 'import sys, pathlib; f = pathlib.Path(sys.argv[1]); d = bytearray(f.read_bytes()); d[50] ^= 255
+f.write_bytes(d)' "$1"
 }
 run() {  # $1 — репозиторий, дальше — аргументы blackbox.py; печать — в $out, код — в $code
   local dir="$1"; shift
@@ -136,7 +138,7 @@ fail() { echo "FAIL ($name): $1"; printf '%s\n' "$out" | sed 's/^/    | /'; rc=1
 expect() {  # $1 — код выхода, дальше — строки, которые команда обязана напечатать
   local want="$1" line; shift
   [ "$code" = "$want" ] || fail "код $code, ждали $want"
-  for line in "$@"; do grep -qF -- "$line" <<<"$out" || fail "нет «$line»"; done
+  for line in "$@"; do grep -qF -- "$line" <<<"$out" || fail "нет «${line}»"; done
 }
 none() { [ ! -e "$1" ] || fail "есть ${1#"$tmp"/} — ждали, что на диске ничего"; }
 untouched() { [ ! -s "$FAKE_LOG" ] || fail "до отказа звали devicectl: $(tr '\n' ',' < "$FAKE_LOG")"; }
@@ -170,6 +172,14 @@ FAKE_LISTING=flat run "$R" pull --date "$DAY"
 expect 0 "выгружено: 2 сессий" "сверено 2 из 2"
 same "$S1" "$R/local/blackbox/$DAY/$S1" && same "$S2" "$R/local/blackbox/$DAY/$S2"
 [ "$(grep -c 'info files' "$FAKE_LOG")" = 3 ] || fail "ждали 3 листинга: ящик и две сессии"
+
+step "2b: чужой заголовок записи, звук другого размера"
+repo "$R" && phone
+printf 'ALLY-BLACKBOX/2\n{}\n' > "$PHONE/$BOX/$S1/0002.allybox" && printf 'x' >> "$PHONE/$BOX/$S2/0002-child.wav"
+run "$R" pull --date "$DAY"
+expect 1 "не сверена: $S1 — 0002.allybox: первая строка не ALLY-BLACKBOX/1" "сверено 0 из 2" \
+  "не сверена: $S2 — 0002.allybox, child_audio: 0002-child.wav: 77 байт, в записи 76"
+none "$R/local"
 
 step "2: испорчен байт WAV"
 repo "$R" && phone && corrupt "$PHONE/$BOX/$S2/0001-child.wav"
@@ -223,7 +233,7 @@ grep -q "copy from" "$FAKE_LOG" || fail "копирование не начин�
 none "$R/local"
 
 if [ "$rc" -eq 0 ]; then
-  echo "blackbox-pull: $cases случаев из $cases — выгрузка, сверка FNV-1a, сторожа git и iCloud, замок, стирание (B15, B16)"
+  echo "blackbox-pull: $cases случаев из $cases — выгрузка, сверка, сторожа git и iCloud, замок, стирание (B15, B16)"
 else
   echo "blackbox-pull: есть провалы"
 fi

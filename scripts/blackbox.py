@@ -75,10 +75,9 @@ def listed(udid: str, sub: str) -> list[tuple[list[str], object]]:
 def sort_into(files: Files, unknown: dict[str, list[str]], found: list, hint: str | None) -> set[str]:
     """Раскладывает листинг по сессиям, возвращает их каталоги; имя без каталога сессии относится к `hint`."""
     dirs: set[str] = set()
-    for parts, size in found:
+    for raw, size in found:
+        parts = raw if any(SESSION.fullmatch(part) for part in raw) or not hint else [hint, *raw]
         at = next((i for i, part in enumerate(parts) if SESSION.fullmatch(part)), None)
-        if at is None and hint and parts:
-            parts, at = [hint, *parts], 0
         if at is None:
             continue
         session, rest = parts[at], "/".join(parts[at + 1:])
@@ -105,13 +104,15 @@ def list_box(udid: str) -> tuple[Files, dict[str, list[str]]]:
 def destination(root: Path, day: str) -> Path:
     """Каталог выгрузки после сторожей: игнорируется git и не синхронизируется с iCloud; на диск — ничего."""
     dest = root / "local" / "blackbox" / day
-    if subprocess.run(["git", "check-ignore", "-q", str(dest / "check-ignore-probe")], cwd=root).returncode != 0:
+    probe = ["git", "check-ignore", "-q", str(dest / "check-ignore-probe")]
+    if subprocess.run(probe, cwd=root, check=False).returncode != 0:
         raise Stop(f"путь {dest.relative_to(root)} не игнорируется git — выгрузка отменена")
     synced = "/Library/Mobile Documents/" in f"{dest}/"
     mdls = shutil.which("mdls")  # нет (не macOS) — проверяется только путь
     if not synced and mdls:
         near = next(path for path in (dest, *dest.parents) if path.exists())
-        done = subprocess.run([mdls, "-raw", "-name", "kMDItemIsUbiquitous", str(near)], capture_output=True, text=True)
+        done = subprocess.run([mdls, "-raw", "-name", "kMDItemIsUbiquitous", str(near)],
+                              capture_output=True, text=True, check=False)
         if done.returncode != 0:
             raise Stop(f"признак iCloud не читается (mdls, код {done.returncode}) — выгрузка отменена")
         synced = done.stdout.strip() == "1"
