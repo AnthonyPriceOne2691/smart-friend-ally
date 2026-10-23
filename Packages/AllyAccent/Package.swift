@@ -8,6 +8,7 @@ let package = Package(
     platforms: [.iOS(.v17), .macOS(.v14)],
     products: [.library(name: "AllyAccent", targets: ["AllyAccent"])],
     targets: [
-        .target(name: "AllyAccent")
+        .target(name: "AllyAccent"),
+        .testTarget(name: "AllyAccentTests", dependencies: ["AllyAccent"], resources: [.copy("Fixtures")])
     ]
 )
