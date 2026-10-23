@@ -1,7 +1,11 @@
 # Tasks
 
-Уроки по путям: L33, L34, L47, L50, L51, L52, L61, L63 — как применены, сказано в `plan.md`.
+Уроки по путям: L26, L33, L34, L43, L47, L51, L52, L61, L63, L93, L94 — как применены, сказано в `plan.md`.
 
-- [x] T1: спека (Z14–Z18 дословно, коммит 68202f0), STATUS с подписью, план с оценкой, escalation — первым коммитом, до кода
-- [ ] T2: решение ведущего по `escalation.md` (A — три поставки, B — исключение предохранителя); дальше — план и задачи
-  выбранной поставки
+- [x] T1: спека, STATUS, план, задачи, решения, eval-smoke — первым коммитом до кода (L33); оценка V3 целиком и
+  escalation — коммит d92e8c7, решение ведущего — вариант A
+- [ ] T2: стык для V3b — `Encoding` и черновик протокола моделей ведущему
+- [ ] T3: фикстуры: игрушечные токенизаторы HF и их выходы (Linux), записанный паритет на 163 позициях (Mac, `~/models`)
+- [ ] T4: `Encoding`, `CharTokenizer`, `WordPieceTokenizer`, `ByteLevelBPETokenizer`; `TokenizerParityTests` (Z14)
+- [ ] T5: CI — `LINT_SWIFT_PACKAGES`, jscpd, `.swiftlint.yml`, `adapted.json`, карта ролей; знание — concept
+- [ ] T6: verify-report, PR, CI, сдача — архив, строка INDEX с уроком L101, slug в `delivery/OBSERVATIONS.md`
