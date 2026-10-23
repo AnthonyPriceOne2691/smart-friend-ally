@@ -8,9 +8,10 @@
 ### Slice 0 — документы и подпись
 - [x] T1: `spec.md` (серия V1–V4, примеры Z1–Z26: таблица V1, списки V2–V4) и `STATUS.md` первым коммитом ветки
   `feat/voice-supertonic`, до кода (L33) — коммит 68202f0
-- [x] T2: `plan.md`, `tasks.md`, `decisions.md`, `eval-smoke.md` — вторым коммитом, до кода
-- [ ] T3: подпись родителя под спекой и планом и ответы на вопросы 1–5 спеки — отдельным коммитом до кода;
-  `human_ok_spec`, `human_ok_plan` → `yes`, `phase: implement`
+- [x] T2: `plan.md`, `tasks.md`, `decisions.md`, `eval-smoke.md` — вторым коммитом, до кода — коммит bbcd6b3
+- [x] T3: подпись родителя под спекой и планом — отдельным коммитом до кода; `human_ok_spec`, `human_ok_plan` → `yes`,
+  `phase: implement` (родитель 2026-10-23 «Подписываю (Рекомендую)»: вопросы 3–5 по рекомендациям, 1–2 ждут второй круг;
+  ведущий: строки V1 — вариант (а))
 
 ### Slice 1 — `Packages/AllyOnnx`
 - [ ] T4: `Package.swift` — `binaryTarget` ORT 1.28.0 (URL и checksum), `COnnxRuntime`, `AllyOnnx`, `linkerSettings`
