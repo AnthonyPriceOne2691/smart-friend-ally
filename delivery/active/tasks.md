@@ -13,7 +13,7 @@ L57 (`scripts/lint/check_child_data.py`, `.gitignore`, `delivery/evals/smoke/`),
 - [x] T2: подпись родителя под спекой и планом, ответы на вопросы 1–9 — отдельным коммитом до кода; `human_ok_spec`,
   `human_ok_plan` → `yes` (by=human:anthony, at=2026-10-23, «Подписываю (Рекомендую)»: 1–9 по рекомендациям, разбиение
   принято; вопрос ведущего — дословно в decisions.md)
-- [ ] T3: `eval-smoke.md` — строки M15–M25 с оракулом и ожиданием, до кода; `phase: implement`
+- [x] T3: `eval-smoke.md` — строки M15–M25 с оракулом и ожиданием, до кода; `phase: implement`
 
 ### Slice 1 — пакет и база (Linux)
 - [ ] T4: общий пакет `Packages/AllySQLite` (решение ведущего 2026-10-23) — `CSQLite`, `SQLite.swift` без логики памяти,

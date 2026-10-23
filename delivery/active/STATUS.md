@@ -6,13 +6,13 @@
 - **kind:** feature
 - **repro_test:** n/a reason=не bugfix
 - **diagnosis:** n/a reason=не bugfix
-- **phase:** tasks
+- **phase:** implement
 - **builder:** agent:claude-code
 - **verifier:** process:ci
 - **human_ok_spec:** yes (by=human:anthony, at=2026-10-23, «Подписываю (Рекомендую)»: примеры M15–M25, ожидания M26–M42, ответы 1–9 по рекомендациям; вопрос ведущего — дословно в decisions.md)
   <!-- спека — коммиты 21d556c и 4a94261 (общий пакет SQLite по решению ведущего), подпись — этим отдельным коммитом до
        кода (L33), eval-smoke — следующим; второй вариант ответа «…но друзей и игрушки сразу» родитель не выбрал -->
-- **human_ok_plan:** yes (by=human:anthony, at=2026-10-23, подписан вместе со спекой: четыре поставки, бюджет memory-core ≈ 605 строк в 17 файлах, стоп 780; исключение max_runtime_paths=2 — только для memory-app, вопрос 9, записать словами в её STATUS)
+- **human_ok_plan:** yes (by=human:anthony, at=2026-10-23, подписан вместе со спекой: четыре поставки, бюджет memory-core ≈ 605 строк в 17 файлах, стоп 780; исключение на два рисковых пути — только для memory-app (вопрос 9), его строка waiver живёт в её STATUS, не здесь)
 - **shape-oracles:** cqg-deployed
 - **behavior-oracles:** tests-present
   <!-- M15–M21, M23, M24 — тесты пакета Packages/AllyMemory, M22 — тесты общего пакета Packages/AllySQLite, оба на Linux
