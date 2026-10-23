@@ -14,7 +14,7 @@ final class ModelMemoryTests: XCTestCase {
         _ = try? await task.value
         XCTAssertEqual(voice.sentences, ["Слоны большие.", "Они едят траву."])
         XCTAssertEqual(model.memory.turns, [.init(heard: "Расскажи про слонов", said: "Слоны большие.")])
-        // The parent's stop through the session: the wrapper of the answer begun in her pause passes `commit` on (L58).
+        // The parent's stop through the session: the wrapper of the answer begun in her pause passes `commit` on.
         let rig = Rig(replies: ["Привет! Как дела?"], hold: true)
         await rig.session.handle(.wake)
         let turn = Task { await rig.hear("Привет") }

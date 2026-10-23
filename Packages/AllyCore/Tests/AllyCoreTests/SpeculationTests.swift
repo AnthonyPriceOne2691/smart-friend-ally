@@ -70,7 +70,7 @@ final class SpeculationTests: XCTestCase {
         await talk.conversation.wake()
         XCTAssertEqual(talk.model.calls.map(\.utterance), ["Я была", "Я была в зоопарке"])
         XCTAssertEqual(talk.model.calls.first?.cancelled, true)
-        XCTAssertEqual(talk.model.memory.turns.map(\.heard), ["Я была в зоопарке"])
+        XCTAssertEqual(talk.model.memory.turns.map(\.heard), ["Я была в зоопарке"])  // U8: память D5 — ходы с репликой
         XCTAssertEqual(talk.replies.first?.0, "Ответ про зоопарк!")
         XCTAssertEqual(talk.replies.first?.1 ?? -1, 13.8, accuracy: 1e-9)
         XCTAssertEqual(talk.modelTurns.count, 1)
