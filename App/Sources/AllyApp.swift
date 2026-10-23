@@ -36,7 +36,8 @@ struct Console: View {
             Text(loop.screen.heard).foregroundStyle(.secondary)
             Text(loop.screen.said).bold()
             Text("Элли: " + Self.word(loop.talk.phase)).accessibilityIdentifier("console.phase")
-            ForEach(ReleaseGate.lines(loop.access, zone: .current) + [loop.acceptance], id: \.self) {
+            ForEach(ReleaseGate.lines(loop.access, zone: .current) + [loop.acceptance, loop.napLine].compactMap { $0 },
+                    id: \.self) {
                 Text($0).font(.caption)
             }
             .accessibilityIdentifier("console.lock")

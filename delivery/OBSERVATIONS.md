@@ -49,4 +49,5 @@
 - `voice-engine`
 - `voice-fx`
 - `memory-guard`
+- `child-shell-app`
 - `accent-tokenizers`

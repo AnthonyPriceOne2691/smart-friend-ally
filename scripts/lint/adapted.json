@@ -20,7 +20,7 @@
   },
   "scripts/lint/check_app_artifact.sh": {
     "reason": "сборка — не оракул (П24, Delivery §12.6): сеть, ключи Info и права судятся по собранному .app",
-    "changed": "свой гейт: Info.plist (ключей сети нет, ключи микрофона и распознавания по-русски), nm -u и otool -L бинаря, dylib корня и фреймворков, права подписанной сборки — ровно increased-memory-limit сверх подписи; нет .app — честный пропуск; шаг ручной джобы ios.yml; канарейка — ключ ATS в бандле (canaries.json)"
+    "changed": "свой гейт: Info.plist (ключей сети нет, ключи микрофона и распознавания по-русски), nm -u и otool -L бинаря, dylib корня и фреймворков, ключ CADisableMinimumFrameDurationOnPhone = true (120 Гц детского экрана, оболочка Ш3); права подписанной сборки — ровно increased-memory-limit сверх подписи; нет .app — честный пропуск; шаг ручной джобы ios.yml; канарейка — ключ ATS в бандле (canaries.json)"
   },
   "scripts/lint/dependency_manifests.py": {
     "reason": "names_swift не извлекает .binaryTarget: бинарь, добавленный в существующий манифест SwiftPM, проходит check_new_dependency.py молча (delivery/incidents/2026-10-22-binary-target-invisible.md)",
