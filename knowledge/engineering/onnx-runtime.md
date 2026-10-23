@@ -10,6 +10,7 @@ generated:
 implementation:
   - Packages/AllyOnnx/Package.swift
   - Packages/AllyOnnx/Sources/AllyOnnx/Onnx.swift
+  - Packages/AllyOnnx/Sources/AllySherpa/Sherpa.swift
   - scripts/lint/check_single_ort.sh
 ---
 
@@ -28,11 +29,17 @@ implementation:
   текстом ORT.
 - **Линковка:** статическому ORT нужны `libc++` и CoreML в `linkerSettings` — без них SwiftPM падает на символах `std::`.
 - **sherpa-onnx** 1.13.8 (статический xcframework) ORT не несёт: `nm -u` — только `_OrtGetApiBase` и
-  `_OrtSessionOptionsAppendExecutionProvider_CoreML`, заголовки собраны с API 28. Его `binaryTarget` и проверку пары
-  версий добавляет поставка слуха в тот же пакет.
+  `_OrtSessionOptionsAppendExecutionProvider_CoreML`, заголовки собраны с API 28. С D7.2 он в том же пакете: два
+  `binaryTarget` релиза k2-fsa (iOS и macOS, url и checksum как в его `Package.swift` 1.13.8) и библиотека `AllySherpa`
+  (`Sherpa.version`, `Sherpa.api = 28`); `OnnxRuntime.serves(api:)` проверяет пару на рантайме (ORT 1.28.0 отдаёт 28 и
+  не отдаёт 29), а слух без неё слушает энергией.
 - **Страж** `scripts/lint/check_single_ort.sh` (Linux-джоба `swift`, с отрицательным контролем): красный на втором
   `binaryTarget` с ORT и на пакетах `onnxruntime-swift-package-manager`, `onnxruntime-libs`, `k2-fsa/sherpa-onnx`
-  (последний прикрепляет `onnxruntime-libs`); зелёный на `binaryTarget` sherpa из releases.
+  (последний прикрепляет `onnxruntime-libs`); зелёный на `binaryTarget` sherpa из releases. Пару пинует он же (D7.2):
+  sherpa 1.13.8 (iOS `6b8e769c…`, macOS `93f7a064…`) только с ORT 1.28.0 (`b503cf59…`); копия с 1.13.9 или 1.24.2 —
+  красный с названием файла (отрицательный контроль в джобе `swift`).
+- **Фикстура тестов** `add.onnx` (c = a + b, float32 [n, 3]) лежит в git исключением из маски `*.onnx`: без неё тесты
+  `AllyOnnx` не собираются — V1a слита без неё, ручная джоба `ios.yml` не запускалась (найдено в D7.2).
 
 # Rejected
 

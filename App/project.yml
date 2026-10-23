@@ -10,6 +10,8 @@ packages:
     path: ../Packages/AllyCore
   AllyLlama:
     path: ../Packages/AllyLlama
+  AllyHearing:  # Silero VAD through sherpa on the one ONNX Runtime of the app (D7.2)
+    path: ../Packages/AllyHearing
 settings:
   base:
     CODE_SIGN_STYLE: Automatic
@@ -32,6 +34,7 @@ targets:
     dependencies:
       - package: AllyCore
       - package: AllyLlama
+      - package: AllyHearing
     entitlements:
       path: Ally.entitlements
       properties:

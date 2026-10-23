@@ -31,6 +31,10 @@ jobs:
         run: swift test --disable-keychain --package-path Packages/AllyLlama
       - name: AllyOnnx tests (один ORT 1.28.0, слой C API)
         run: swift test --disable-keychain --package-path Packages/AllyOnnx
+      # Слух (D7.2): пара sherpa 1.13.8 / ORT 1.28.0 на настоящем рантайме (U16); паритет флагов Silero (U17) — только с
+      # моделью и набором спайка в local/, на раннере — видимый пропуск (П34).
+      - name: AllyHearing tests (U16, U17)
+        run: swift test --disable-keychain --package-path Packages/AllyHearing
       - name: AllyVoice tests (Z2–Z7; без весов и эталонов в ~/models — пропуск)
         run: swift test --disable-keychain --package-path Packages/AllyVoice
       - name: AllyCore tests on macOS (G7 — подпись родителя на CryptoKit; на Linux пропуск)

@@ -256,9 +256,11 @@ jobs:
     # Пакеты под покрытием: AllyCore зависит от AllyDiscipline локальным путём (поставка voice-core); AllyShell —
     # оболочка (child-shell): на Linux в отчёт идёт ShellCore, рисунок SwiftUI судят снимки на Mac; AllySpeechText —
     # текст для синтеза, без зависимостей (поставка voice-text); AllySQLite — общий SQLite приложения (libsqlite3-dev —
-    # на образе раннера), AllyMemory стоит на нём (поставка memory-core).
+    # на образе раннера), AllyMemory стоит на нём (поставка memory-core); AllyAccent — RUAccent на Swift
+    # (accent-tokenizers); AllyVoiceFX — обработка голоса после синтеза, C-ядро и Swift-обёртка, только Foundation
+    # (поставка voice-fx): покрытие считает и C-файлы Sources/.
     env:
-      LINT_SWIFT_PACKAGES: "Packages/AllyDiscipline Packages/AllyCore Packages/AllyShell Packages/AllySpeechText Packages/AllySQLite Packages/AllyMemory"
+      LINT_SWIFT_PACKAGES: "Packages/AllyDiscipline Packages/AllyCore Packages/AllyShell Packages/AllySpeechText Packages/AllySQLite Packages/AllyMemory Packages/AllyAccent Packages/AllyVoiceFX"
     steps:
       - uses: actions/checkout@v7
       - name: Swift toolchain
@@ -296,7 +298,14 @@ jobs:
           sed -i 's#\.target(name: "COnnxRuntime"#.binaryTarget(name: "sherpa_onnx", url: "https://github.com/k2-fsa/sherpa-onnx/releases/download/xcframework/sherpa-onnx-v1.13.8-ios-static.xcframework.zip", checksum: "0"),\n        .target(name: "COnnxRuntime"#' \
             "$tmp/Packages/AllyOnnx/Package.swift"
           bash scripts/lint/check_single_ort.sh "$tmp" || { echo "::error::страж ORT не пропустил binaryTarget sherpa"; exit 1; }
-          echo "отрицательный контроль: пакеты со своим ORT — красный, binaryTarget sherpa — зелёный"
+          # Пара (слух D7.2, U16): копия с sherpa 1.13.9 или ORT 1.24.2 — красный с названием файла.
+          for swap in 's/sherpa-onnx-v1.13.8-ios/sherpa-onnx-v1.13.9-ios/' 's/onnxruntime-c-1.28.0/onnxruntime-c-1.24.2/'; do
+            copy
+            sed -i "$swap" "$tmp/Packages/AllyOnnx/Package.swift"
+            if out=$(bash scripts/lint/check_single_ort.sh "$tmp" 2>&1); then echo "::error::страж пары пропустил $swap"; exit 1; fi
+            grep -q 'Packages/AllyOnnx/Package.swift' <<<"$out" || { echo "::error::страж пары не назвал файл ($swap)"; exit 1; }
+          done
+          echo "отрицательный контроль: пакеты со своим ORT — красный, binaryTarget sherpa — зелёный, чужая пара — красный"
 
   delivery:
     runs-on: ubuntu-latest

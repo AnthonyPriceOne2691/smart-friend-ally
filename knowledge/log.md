@@ -7,12 +7,42 @@
   `implementation:` — `Extract.swift`, `ExtractPrompt.swift`, `ModelAnswer.swift`, `Anchors.swift`, ресурсы.
   `engineering/safety-below-model` — реестр правил промпта разбора. `engineering/index`, `references/repo-map` — строки.
 * **Источник**: поставка `memory-extract` (M26–M28 спеки серии, подписанной родителем 2026-10-23; разрез — ведущий).
+## 2026-10-23 — слух: Silero VAD на sherpa-onnx и общем ORT, активность голоса за протоколом
+
+* **Update**: `engineering/turn-detector` — активность голоса за протоколом (энергия или Silero), тишина от речи за
+  флагом, параметры Silero в `vad` реестра слуха, выбор и строки консоли, запасной путь — энергия; `implementation:` —
+  `VoiceActivity.swift`, `SileroVAD.swift`, `SileroActivity.swift`. `engineering/onnx-runtime` — sherpa-onnx 1.13.8 в
+  `AllyOnnx`, `AllySherpa`, пин пары в страже, фикстура `add.onnx` в git. `engineering/voice-loop` — копирование
+  Silero на телефон, строка консоли, сравнение с энергией без файла. `references/repo-map` — пакет `AllyHearing`.
+* **Источник**: поставка `silero-vad` (D7.2 серии «слух»; примеры U16–U21 подписаны родителем 2026-10-23).
+## 2026-10-23 — энциклопедия «почему»: движок, подсказка только когда поиск уверен
+
+* **Creation**: `engineering/encyclopedia` (Design) — порядок решения и правила `knowledge.*`, строгое покрытие по
+  формулировкам с замером 2026-10-23, основы Snowball, SQLite FTS5 в памяти через `AllySQLite`, отказ закрытый, запись без
+  слов, схема карточки и серия Э1–Э2; `implementation:` — исходники движка и `encyclopedia.json`.
+* **Update**: `product/persona` — поиск по основам слов, ссылка на движок; `references/research/kids-encyclopedia` —
+  строка о замере 2026-10-23 и перенумерации приёмки; `references/research/index`, `engineering/index`,
+  `references/repo-map` — новые входные точки; `KNOWLEDGE.md` §12 п. 5 и §13 — решение 2026-10-23.
+* **Источник**: поставка `encyclopedia-core` (Э1; спека и план подписаны родителем 2026-10-23).
+## 2026-10-23 — обработка голоса после синтеза (голос V4a)
+
+* **Creation**: `engineering/voice-fx` (Design): своё TD-PSOLA по цепочке стенда третьего круга (эквалайзер — V4b,
+  разрез родителя), свой трекер основного тона по методу Boersma 1993 вместо YIN прототипа (замер дребезга), пресет
+  «Совсем малышка» — данные строки конфига; `implementation:` — C-ядро и обёртка `AllyVoiceFX`. `engineering/index`, `references/repo-map` —
+  новый пакет.
+* **Источник**: поставка `voice-fx` (V4a серии голоса; примеры Z27–Z31 подписаны родителем 2026-10-23).
+
 ## 2026-10-23 — память: запрет на любом пути записи (memory-guard)
 
 * **Update**: `engineering/memory` — «не хранится никогда» исполняется: правила `forbidden.json`, проверка записи с
   отчётом по id правил, заражение по её репликам сессии, SQL-функция `forbidden` в триггерах `fact` и `seen`;
   `implementation:` — `Forbidden.swift`, `forbidden.json`. `engineering/index` — строка концепта.
 * **Источник**: поставка `memory-guard` (M29 спеки серии, подписанной родителем 2026-10-23; разбиение — ведущий).
+## 2026-10-23 — расстановщик ударений: токенизаторы RUAccent на Swift
+
+* **Creation**: `engineering/accent-placer` (Design) — пакет `AllyAccent`, `Encoding` и три токенизатора RUAccent с
+  паритетом HF; `implementation:` — исходники пакета. **Update**: `engineering/index`, `references/repo-map`.
+* **Источник**: поставка `accent-tokenizers` (V3a серии голоса; часть Z14, подпись родителя 2026-10-23).
 ## 2026-10-23 — слух: спекуляция — ответ модели начинается в её паузе
 
 * **Update**: `engineering/session` — `Speculation` (общий план реплики, этапы `spec_*`, `spec_stale` до D5);
