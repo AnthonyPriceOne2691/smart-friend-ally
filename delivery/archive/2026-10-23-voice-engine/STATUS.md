@@ -33,7 +33,7 @@
   <!-- подпись — отдельным коммитом до кода (L33); спека 68202f0, план bbcd6b3 -->
 - **waivers:** none
 - **new_dependency:** Packages/AllyVoice/Package.swift reason=новый манифест SwiftPM: движок синтеза за протоколом SpeechEngine, зависимость — локальный путь ../AllyOnnx (один ORT, V1a); веса Supertonic не в git (~/models на Mac, папка голоса на телефоне — V4); модель Supertonic 3 — OpenRAIL-M (карточка HF, 2026-10-23), код supertonic-py, по которому сверен разбор текста, — MIT by=agent:claude-code
-- **runtime_paths:** none
+- **runtime_paths:** none reason=движок — логика над AllyOnnx; рантайм, потоки, spin и отображение весов — рисковый путь V1a (Packages/AllyOnnx/), приложение V1b не правит
   <!-- §12.6: V1b — логика движка над AllyOnnx (рантайм, потоки, spin и отображение весов — рисковый путь V1a). Приложение
        и рисковые пути D1.2 V1b не правит; движок войдёт в приложение с V4 — до того у него нет вызывающего (L50) -->
 - **irreversible_surfaces:** none reason=продукт офлайн; V1b не трогает приложение и телефон; веса — копии файлов на Mac вне git; отправки наружу, трат, выкатки и публикации нет
