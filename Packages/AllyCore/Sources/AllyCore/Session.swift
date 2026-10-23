@@ -42,6 +42,9 @@ public actor Session {
     private var cancel: (@Sendable () -> Void)?
     private let speculation: Speculation
 
+    /// The answer begun in her pause has been written to its end (a test waits for it before her speech comes back).
+    nonisolated var begunAnswerFinished: Bool { speculation.finished }
+
     public init(_ parts: SessionParts, settings: SessionSettings = SessionSettings()) {
         (self.parts, self.settings) = (parts, settings)
         speculation = Speculation(parts.model, clock: parts.clock)
@@ -117,12 +120,15 @@ public actor Session {
 
     /// A script (or, for a forgotten utterance, nothing — the contract's canned reply) sounds without the model; else
     /// the model answers with the decision (an unknown script key — as a guard without a topic). Her utterance and the
-    /// decision reach the contract either way.
+    /// decision reach the contract either way. What a script said goes into the model's memory with her line, so the
+    /// model knows what Elly has already told her; a forgotten utterance never gets there (D5).
     private func respond(_ text: String, route: Route, line: String?, head: TraceHead) async -> TurnOutcome? {
         if let line {
             let turn = TurnContract(mode: head.mode, heard: text, decision: route.decision).finish(line)
+            let sounded = Sounded()
+            defer { if !route.forget { speculation.remember(heard: text, spoken: sounded.text) } }
             move(to: .speaking)
-            guard await say(turn.sentences, head) else { return nil }
+            guard await say(turn.sentences, head, into: sounded) else { return nil }
             return TurnOutcome(turn: turn, times: TurnTimes(), modelTimeout: false)
         }
         let decision = route.key == nil ? route.decision : .guard(topic: nil), mode = head.mode
@@ -182,12 +188,12 @@ public actor Session {
         expecting { $0 = next }
     }
 
-    private func say(_ sentences: [String], _ head: TraceHead) async -> Bool {
+    private func say(_ sentences: [String], _ head: TraceHead, into sounded: Sounded = Sounded()) async -> Bool {
         let voice = parts.voice
         let speak: @Sendable () async throws -> Void = {
             for sentence in sentences {
                 try Task.checkCancellation()
-                try await voice.speak(sentence)
+                try await sounded.say(sentence, voice)
             }
         }
         return await perform(head) { try await withTaskCancellationHandler(operation: speak) { voice.stop() } } != nil
