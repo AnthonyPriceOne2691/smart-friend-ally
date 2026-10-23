@@ -17,3 +17,4 @@
 * [ONNX Runtime](onnx-runtime.md) - решение: один ORT на приложение — официальный 1.28.0 в Packages/AllyOnnx, слой над C API, страж «один ORT»; sherpa — своим xcframework без ORT
 * [Voice engine](voice-engine.md) - движок голоса: Supertonic 3 за протоколом SpeechEngine, фраза за вызов, скорость ≥ 0,85, веса в external data, паритет с Python бит в бит
 * [Accent placer](accent-placer.md) - RUAccent на Swift: токенизаторы с паритетом HF (V3a), логика и модели — следом
+* [Voice FX](voice-fx.md) - обработка после синтеза: своё TD-PSOLA (+9 / +5, «Совсем малышка»), свой трекер основного тона по методу Boersma без кода Praat, эквалайзер RBJ — с V4b; по замерам дребезга равно цепочке стенда

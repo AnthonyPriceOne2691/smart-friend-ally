@@ -39,6 +39,9 @@ implementation:
   `~/models/tts/ruaccent` и `~/models/tts/ruaccent-parity`): `swift test --disable-keychain --package-path Packages/AllyAccent`.
 - **Текст для синтеза** — `Packages/AllySpeechText` (ударения, закреплённый словарь, правила чтения; данные —
   `Resources/speech-text.json`): `swift test --disable-keychain --package-path Packages/AllySpeechText`.
+- **Обработка голоса после синтеза** — `Packages/AllyVoiceFX` (C-ядро: трекер основного тона, PSOLA; эквалайзер — V4b;
+  обёртка `VoiceFX`, `PitchTrack`): `swift test --disable-keychain --package-path Packages/AllyVoiceFX`; звук против
+  цепочки стенда — `local/spike/voice-fx/scripts/port_vs_py.py` на Mac (Z30).
 - **Память о ребёнке** — `Packages/AllyMemory` (факты с опорой на ход, замена по дате, блок для промпта, «стереть всё»,
   запрет на любом пути; слова блока — `Resources/memory.json`, правила запрета — `Resources/forbidden.json`) поверх общего SQLite приложения `Packages/AllySQLite` (системный модуль
   `CSQLite` и тонкая обёртка): `swift test --disable-keychain --package-path Packages/AllyMemory`;
