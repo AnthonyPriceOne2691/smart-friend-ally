@@ -4,7 +4,7 @@ import Foundation
 /// microphone's opening; it decodes from `preRoll` s before her speech began — not before the opening — and the text of
 /// her tentative end is the text at the tail unless her speech came back (one decoding a turn).
 public final class BatchPhrase: @unchecked Sendable {
-    private struct State { var samples: [Int16] = [], started: Double?, tentative: String?, decodes = 0 }
+    private struct State { var samples: [Int16] = [], started: Int?, tentative: String?, decodes = 0 }
     private let rate: Double, preRoll: Double, decode: @Sendable ([Int16]) -> String, state = Locked(State())
 
     public init(rate: Double = 16_000, preRoll: Double, decode: @escaping @Sendable ([Int16]) -> String) {
@@ -13,15 +13,15 @@ public final class BatchPhrase: @unchecked Sendable {
 
     public func feed(_ samples: [Int16]) { state { $0.samples += samples } }
 
-    /// Her speech began `seconds` after the microphone opened.
-    public func started(at seconds: Double) { state { $0.started = $0.started ?? seconds } }
+    /// The flag of her speech rose: it marks the samples heard so far — the flag comes after the speech, the pre-roll
+    /// covers that.
+    public func started() { state { $0.started = $0.started ?? $0.samples.count } }
 
     /// What the recognizer gets: from the pre-roll before her start (the opening at the earliest) to now.
     public var heard: [Int16] {
         state { (now: inout State) -> [Int16] in
             guard let started = now.started else { return now.samples }
-            let first = max(0, Int(((started - preRoll) * rate).rounded()))
-            return first < now.samples.count ? Array(now.samples[first...]) : []
+            return Array(now.samples[max(0, started - Int((preRoll * rate).rounded()))...])
         }
     }
 
