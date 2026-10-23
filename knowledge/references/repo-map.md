@@ -45,7 +45,7 @@ implementation:
 | `scripts/`, `scripts/lint/` | механика контура; канонные файлы правятся только перевендориванием; продуктовый — `scripts/reinstall_app.sh` (E4) |
 | `docs/canon/` | снимок канонов с самопроверкой (вариант C) |
 | `App/` | приложение iOS: `project.yml`, `Sources/` (консоль, цикл, звук, распознавание), `Resources/` (персона, реестр) |
-| `Packages/` | Swift-пакеты: `AllyDiscipline` (дисциплина ответа), `AllyCore` (ядро хода), `AllyLlama` (модель) |
+| `Packages/` | Swift-пакеты: `AllyDiscipline` (дисциплина ответа), `AllyCore` (ядро хода), `AllyLlama` (модель), `AllyOnnx` (один ONNX Runtime приложения) |
 | `local/` | данные ребёнка и прочее локальное — игнорируется, гейт не пускает в git |
 
 # Грабли

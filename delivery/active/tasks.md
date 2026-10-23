@@ -13,25 +13,25 @@
   `phase: implement` (родитель 2026-10-23 «Подписываю (Рекомендую)»: вопросы 3–5 по рекомендациям, 1–2 ждут второй круг;
   ведущий: строки V1 — вариант (а))
 
-### Slice 1 — `Packages/AllyOnnx`
-- [ ] T4: `Package.swift` — `binaryTarget` ORT 1.28.0 (URL и checksum), `COnnxRuntime`, `AllyOnnx`, `linkerSettings`
-  (c++, CoreML)
-- [ ] T5: `Onnx.swift` — окружение, опции, сессия, тензоры, запуск, ошибка; `AllyOnnxTests` (версия и API, нет файла,
-  `add.onnx`)
-- [ ] T6: `scripts/lint/check_single_ort.sh` и отрицательный контроль в `quality.yml` (Z1)
+### Slice 1 — `Packages/AllyOnnx` (V1a, эта поставка)
+- [x] T4: `Package.swift` — `binaryTarget` ORT 1.28.0 (URL и checksum), `COnnxRuntime`, `AllyOnnx`, `linkerSettings`
+  (c++, CoreML) — коммит b7399c0
+- [x] T5: `Onnx.swift` — окружение, опции, сессия, тензоры, запуск, ошибка; `AllyOnnxTests` (версия и API, нет файла,
+  `add.onnx`) — 7 из 7 на Mac
+- [x] T6: `scripts/lint/check_single_ort.sh` и отрицательный контроль в джобе `swift` (Z1): пакеты со своим ORT —
+  красный, binaryTarget sherpa из releases с условием платформы — зелёный (стык слуха, 2026-10-23)
+- [x] T7: шаг тестов AllyOnnx в ручной джобе `ios`
 
-### Slice 2 — `Packages/AllyVoice`
-- [ ] T7: `SpeechEngine.swift`, `VoiceStyle.swift`, `Noise.swift`; Z7 с двойником
-- [ ] T8: `SupertonicText.swift` — индексы фраз паритета равны индексам Python (из эталона)
-- [ ] T9: `SupertonicEngine.swift`; Z2–Z6; мутация «пол скорости убран» краснит Z4
-- [ ] T10: шаги `ios.yml`; прогон меткой `macos` один раз, когда Slice 2 зелёный локально
+### Slice 2 — проверка и передача V1a
+- [x] T8: разрез V1 по готовым коммитам (вариант A ведущего): спека — таблица Z1, Z2–Z7 списком для V1b
+- [ ] T9: `verify-report.md`, PR, CI зелёный; OKF — concept `engineering/onnx-runtime`, `index.md`, `log.md`
+- [ ] T10: handoff — архив поставки, строка `INDEX.md` с уроком L53; мерж — ведущий (`merge_guard.sh`)
 
-### Slice 3 — проверка и передача
-- [ ] T11: `verify-report.md` — факты Z1–Z7 с числами (SNR, отпечаток, время), диф по строкам против плана
-- [ ] T12: OKF — concept `knowledge/engineering/voice-synthesis.md` (`implementation`: `Packages/AllyOnnx/`,
-  `Packages/AllyVoice/`), `index.md` и `log.md`; `KNOWLEDGE.md` §6 — выжимка
-- [ ] T13: PR, CI зелёный, мерж — ведущий (`merge_guard.sh`); архив и строка `INDEX.md` с уроками L53–L55
+## V1b `voice-engine` — ветка `feat/voice-supertonic` после мержа V1a
 
-## V2–V4 — свои ветки после мержа V1 (V2 можно параллельно)
+Код и тесты готовы (коммит dbd34be): Z2–Z5, Z7 зелёные на Mac, Z6 — в тихое окно Mac, которое устроит ведущий. Свои
+документы, перенос Z2–Z7 таблицей со ссылкой на 68202f0.
+
+## V2–V4 — свои ветки (V2 — отдельный исполнитель, `feat/voice-text`)
 
 Задачи — в их `tasks.md`; примеры — Z8–Z26 этой спеки.
