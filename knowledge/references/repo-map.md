@@ -19,8 +19,9 @@ implementation:
 # Входные точки
 
 - **Приложение** — `App/` (XcodeGen: `cd App && xcodegen generate`, проект в git не лежит); сборка, веса на телефон,
-  переустановка одной командой (`bash scripts/reinstall_app.sh <UDID>`), запуск и след хода — runbook
-  [Voice loop](/engineering/voice-loop.md). Модель — пакет `Packages/AllyLlama` (llama.cpp
+  переустановка одной командой (`bash scripts/reinstall_app.sh <UDID>`), исключение «при родителе»
+  (`bash scripts/child_mode.sh <UDID> --until <дата>`, ключ родителя — `.github/allowed_signers`), запуск и след хода —
+  runbook [Voice loop](/engineering/voice-loop.md). Модель — пакет `Packages/AllyLlama` (llama.cpp
   b10809; паритет со стендом: `swift test --disable-keychain --package-path Packages/AllyLlama`, веса в `~/models`).
 - **Дисциплина ответа** — пакет `Packages/AllyDiscipline` (ремонт текста, контракт хода, маршрутизатор до модели):
   `swift test --package-path Packages/AllyDiscipline`.
@@ -28,6 +29,12 @@ implementation:
   модели, сессия с мягким лимитом и крючком маршрутизатора, драйвер сессии со слухом `Conversation`, маршрутизатор на
   живом ходе `RouterRouting`, след хода и его файл `TraceFile`; тексты сессии — `Resources/session.json`):
   `swift test --package-path Packages/AllyCore` (тулчейн Xcode: `DEVELOPER_DIR`).
+- **Детский экран (оболочка)** — `Packages/AllyShell`: `ShellCore` (позы фаз, кадры, раскладка, палитра — Linux) и
+  `ShellUI` (Элли, пузырь и небо в SwiftUI под `#if canImport(SwiftUI)`). Снимки семи фаз и лист `sheet.png` пишет
+  `swift test --disable-keychain --package-path Packages/AllyShell` на Mac в `local/shell-snapshots/`; на Linux снимки
+  пропускаются видимо. Снимков экрана телефона нет никогда (L46).
+- **Текст для синтеза** — `Packages/AllySpeechText` (ударения, закреплённый словарь, правила чтения; данные —
+  `Resources/speech-text.json`): `swift test --disable-keychain --package-path Packages/AllySpeechText`.
 - **Контур:** `python3 scripts/delivery_check.py` — фазы поставки;
   `.venv/bin/pre-commit run --all-files --verbose` — гейты;
   `python3 scripts/lint/contour_doctor.py` — судят ли гейты;
@@ -42,10 +49,10 @@ implementation:
 | `KNOWLEDGE.md` | база исследования и принципы П1–П37 — читать до решения о продукте |
 | `knowledge/` | канон домена (OKF v0.2) |
 | `delivery/` | поставки: `active/` — текущая, `archive/` — завершённые с уроками |
-| `scripts/`, `scripts/lint/` | механика контура; канонные файлы правятся только перевендориванием; продуктовый — `scripts/reinstall_app.sh` (E4) |
+| `scripts/`, `scripts/lint/` | механика контура; канонные файлы правятся только перевендориванием; продуктовые — `scripts/reinstall_app.sh` (E4), `scripts/child_mode.sh` (R) |
 | `docs/canon/` | снимок канонов с самопроверкой (вариант C) |
 | `App/` | приложение iOS: `project.yml`, `Sources/` (консоль, цикл, звук, распознавание), `Resources/` (персона, реестр) |
-| `Packages/` | Swift-пакеты: `AllyDiscipline` (дисциплина ответа), `AllyCore` (ядро хода), `AllyLlama` (модель), `AllyOnnx` (один ONNX Runtime приложения) |
+| `Packages/` | Swift-пакеты: `AllyDiscipline` (дисциплина ответа), `AllyCore` (ядро хода), `AllyLlama` (модель), `AllyShell` (детский экран), `AllySpeechText` (текст для синтеза), `AllyOnnx` (один ONNX Runtime приложения) |
 | `local/` | данные ребёнка и прочее локальное — игнорируется, гейт не пускает в git |
 
 # Грабли
