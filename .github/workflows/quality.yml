@@ -254,9 +254,10 @@ jobs:
     # (macOS-раннер ×10, §8.7: пакет — только Foundation и собирается на Linux). 15 мин — сборка с нуля и два прогона.
     timeout-minutes: 15
     # Пакеты под покрытием: AllyCore зависит от AllyDiscipline локальным путём (поставка voice-core); AllyShell —
-    # оболочка (child-shell): на Linux в отчёт идёт ShellCore, рисунок SwiftUI судят снимки на Mac.
+    # оболочка (child-shell): на Linux в отчёт идёт ShellCore, рисунок SwiftUI судят снимки на Mac; AllySpeechText —
+    # текст для синтеза, без зависимостей (поставка voice-text).
     env:
-      LINT_SWIFT_PACKAGES: "Packages/AllyDiscipline Packages/AllyCore Packages/AllyShell"
+      LINT_SWIFT_PACKAGES: "Packages/AllyDiscipline Packages/AllyCore Packages/AllyShell Packages/AllySpeechText"
     steps:
       - uses: actions/checkout@v7
       - name: Swift toolchain
