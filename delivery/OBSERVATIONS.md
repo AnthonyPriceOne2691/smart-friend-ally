@@ -45,3 +45,4 @@
 - `turn-speculation`
 - `memory-core`
 - `encyclopedia-core`
+- `memory-guard`
