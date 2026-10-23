@@ -91,7 +91,7 @@ final class EncyclopediaTests: XCTestCase {
             XCTAssertEqual(decision(text), [nil, "knowledge.coverage"], text)
         }
         XCTAssertEqual(base.lookup("почему марс красный").top.first?.card, "rainbow")
-        // «one may be missing» at three points (L90): two words — none, three and four words — one
+        // P6 at three points (L90): «one may be missing» — none of two words, one of three and of four
         XCTAssertEqual(decision("почему бурый медведь"), [nil, "knowledge.coverage"])
         XCTAssertEqual(decision("почему бурый медведь спит"), ["bear-winter", "knowledge.hint"])
         XCTAssertEqual(decision("почему бурый медведь спит зимой"), ["bear-winter", "knowledge.hint"])
@@ -144,7 +144,7 @@ final class EncyclopediaTests: XCTestCase {
         XCTAssertEqual(decision("почему небо голубое", noTable), [nil, "knowledge.index_failed"])
         XCTAssertEqual(decision("почему небо голубое", Encyclopedia(cards: good, config: config)),
                        ["sky-blue", "knowledge.hint"])
-        // the limits at three points (L90): 130 characters and six phrasings load, 142 and seven do not
+        // P9 at three points (L90): 130 characters and six phrasings load, 142 and seven do not
         let atLimits = cards {
             $0[3].answer = String(repeating: "мурлычет ", count: 14) + "мур."
             $0[7].questions += Self.moreEcho
