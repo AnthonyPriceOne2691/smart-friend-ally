@@ -108,3 +108,8 @@ Z5	XCTAssertEqual(OnnxOptions(intraOpThreads: 4, allowSpinning: true).descriptio
 `asserts_reviewed_by: n/a (все утверждения ведут к одобренным примерам)`.
 
 asserts_without_example: 0
+
+## Verdict
+- [x] READY FOR HANDOFF (Z1 зелёный; вызывающий AllyOnnx — V1b, L50)
+- [ ] NEED CONVERGE (new tasks)
+- [ ] BLOCKED
