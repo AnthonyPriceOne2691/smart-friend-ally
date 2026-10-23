@@ -46,3 +46,4 @@
 - `memory-core`
 - `voice-engine`
 - `voice-fx`
+- `memory-guard`
