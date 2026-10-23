@@ -15,8 +15,8 @@
 - **human_ok_plan:** pending (подписывается вместе со спекой: в плане — порядок серии, бюджет Э1 и правило выбора формата подсказки Э3)
 - **shape-oracles:** cqg-deployed
 - **behavior-oracles:** tests-present
-  <!-- P1–P10 — тесты AllyCore на Linux (основы слов, поиск, решение, отказ закрытый, запись без слов); P11–P12 — прогон
-       encyclopedia-replay против эталона на Python на открытых наборах стенда, локально на Mac -->
+  <!-- P1–P10 — тесты AllyCore на Linux (основы слов, поиск FTS5 на системном SQLite 3.45.1, решение, отказ закрытый,
+       запись без слов); P11–P12 — прогон encyclopedia-replay против эталона на Python на открытых наборах стенда, на Mac -->
 - **artifact_oracle:** n/a reason=Э1 не собирает приложение: движок энциклопедии в пакете SwiftPM проверяют его тесты в CI на Linux, сборка не оракул (§6.5a); приложение собирает Э3, там — scripts/lint/check_app_artifact.sh
 - **ci-oracles:** tooling
 - **worktree:** ../Smart frend Ally-wt-encyclopedia
@@ -26,13 +26,15 @@
        AllyCore (цель encyclopedia-replay), knowledge и CLAUDE.md — конфликты решаются сложением, перед PR — слияние main -->
 - **hooks:** not-deployed
 - **blockers:** none
-  <!-- зависимость, а не остановка: implement — после подписи родителя; Э2 (карточки) — после мержа Э1, писать карточки
-       агенты могут параллельно с Э1 по подписанной схеме; Э3 (проводка в приложение) — после мержа Э2 -->
+  <!-- зависимость, а не остановка: implement — после подписи родителя и когда в main есть общий пакет Packages/AllySQLite
+       (вводит memory-core; если Э1 готова раньше — поставка sqlite-core по решению ведущего, вопрос В1). Э2 (карточки) —
+       после мержа Э1, писать карточки агенты могут параллельно с Э1 по подписанной схеме; Э3 — после мержа Э2 -->
 - **waivers:** none
 - **new_dependency:** none
-  <!-- основы слов — свой перенос алгоритма Snowball (BSD-3, сверено gh api 2026-10-23), поиск — свой код; SQLite и
-       NaturalLanguage не берутся (decisions.md) -->
-- **runtime_paths:** none reason=Э1 — чистые функции над байтами карточек и текстом реплики в AllyCore, тесты на Linux; телефон, загрузка базы из бандла и формат подсказки в промпте — Э3
+  <!-- основы слов — свой перенос алгоритма Snowball (BSD-3, сверено gh api 2026-10-23); SQLite — системный, через общий
+       пакет проекта Packages/AllySQLite (.package(path:), гейт new-dependency считает только name:/url:); NaturalLanguage
+       не берётся (decisions.md) -->
+- **runtime_paths:** none reason=Э1 — функции над байтами карточек и текстом реплики в AllyCore и таблица FTS5 в памяти процесса, тесты на Linux и Mac; телефон (FTS5 системного SQLite iOS), загрузка базы из бандла и формат подсказки в промпте — Э3
 - **irreversible_surfaces:** none reason=продукт офлайн; движок только читает данные: отправки наружу, трат, стирания и публикации нет
 - **model_surface:** App/Resources/persona.v2.4.ru.md,App/Resources/model.json,Packages/AllyLlama/
   <!-- §14.1: поверхность модели проекта объявила D1.2; Э1 её не трогает — движок не зовёт ни сессия, ни приложение,
