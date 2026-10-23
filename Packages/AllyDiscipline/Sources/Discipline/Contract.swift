@@ -22,6 +22,8 @@ struct ContractData: Decodable, Sendable {
     let negatable, negation, clauseSplits: [String]
     let pleaSafety, hazard, encourage, dangerSafe, pointer, safety, prohibition, connective, pointerScript: String
     let action, filler, fillerQ: String
+    /// elliptic_tail: the links that open a tail question, the question words, the endings of a verb.
+    let tailLink, qword, verb: String
     let canned, fallbackOf, scripts: [String: String], hazardScripts: [[String]], selftest: [Probe]
 
     static let bytes: Data = {
@@ -49,6 +51,7 @@ struct Contract: Sendable {
     let attachment: [(group: String, patterns: [Pattern])], clauses: [Pattern]
     let negationInside, negationBefore, pleaSafety, hazard, encourage, dangerSafe, pointer, safety: Pattern
     let prohibition, action, filler, fillerQ, connective: Pattern, hazardScripts: [(word: Pattern, script: String)]
+    let tailLink, qword, verb: Pattern
     let content: [String: [Pattern]]
     let phoneMark = Rules.shared.strip(Rules.shared.phoneMark)
     let sentence = Pattern("[^.!?…]+(?:[.!?…]+|$)"), comma = Pattern(",\\s+"), endMark = Pattern("[.!?…]$")
@@ -65,6 +68,7 @@ struct Contract: Sendable {
         (pointer, safety) = (compile(data.pointer), compile(data.safety))
         (prohibition, action) = (compile(data.prohibition), compile(data.action))
         (filler, fillerQ) = (compile(data.filler), compile(data.fillerQ))
+        (tailLink, qword, verb) = (compile(data.tailLink), compile(data.qword), compile(data.verb))
         connective = Contract.compile(data.connective, .caseInsensitive)
         clauses = data.clauseSplits.map { Pattern(NSRegularExpression.escapedPattern(for: $0)) }
         hazardScripts = data.hazardScripts.map { (compile("^(?:\($0.first ?? ""))"), $0.last ?? "") }
