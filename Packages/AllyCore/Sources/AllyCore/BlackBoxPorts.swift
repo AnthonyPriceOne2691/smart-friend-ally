@@ -1,9 +1,10 @@
 import Foundation
 
-/// Who talks with her in a session: the parent in the adult console, or the girl on her screen with the parent by —
-/// the mode R's signed exception opens. The black box keeps only `supervised` sessions.
+/// Who talks with her in a session: the parent in the adult console, the girl on her screen with the parent by — the
+/// mode R's signed exception opens — or the girl alone once the goals of 18.10 are accepted (R2). The black box keeps
+/// only `supervised` sessions.
 public enum Audience: String, Sendable {
-    case parent, supervised
+    case parent, supervised, child
 }
 
 /// The words of a record the black box keeps and the trace never does: her utterance, the model's text before the
