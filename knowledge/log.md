@@ -9,6 +9,12 @@
   `engineering/index`, `references/repo-map` — пакеты `AllySQLite` и `AllyMemory`. `KNOWLEDGE.md` §9 — ссылка на
   концепт (OKF §6).
 * **Источник**: поставка `memory-core` (спека и план серии подписаны родителем 2026-10-23 «Подписываю (Рекомендую)»).
+## 2026-10-23 — один ONNX Runtime на приложение (голос V1a)
+
+* **Creation**: `engineering/onnx-runtime` (Decision): ORT только в `Packages/AllyOnnx` — официальный pod 1.28.0, слой над
+  C API, страж `check_single_ort.sh`; sherpa-onnx 1.13.8 подключается своим xcframework без ORT; `implementation:` —
+  `Package.swift`, `Onnx.swift`, страж. `references/repo-map`, `engineering/index` — новая входная точка.
+* **Источник**: поставка `voice-onnx` (V1a серии голоса; спека подписана родителем 2026-10-23 «Подписываю (Рекомендую)»).
 
 ## 2026-10-23 — слух: тип хода по реплике Элли, хвосты из реестра слуха, «я всё»
 
