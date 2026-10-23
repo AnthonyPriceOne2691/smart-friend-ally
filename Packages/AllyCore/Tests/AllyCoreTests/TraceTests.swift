@@ -92,5 +92,13 @@ final class TraceTests: XCTestCase {
                 XCTAssertNil(line.range(of: "[А-Яа-яЁё]", options: .regularExpression), line)
             }
         }
+        // The app's path (L58): the child screen's own `Conversation` keeps the audience through its wrappers.
+        let sink = RecordingSink(), clock = TestClock(), voice = RecordingVoice()
+        let ear = ScriptedEar([], clock: clock, voice: voice), model = ReplyQueue([])
+        let parts = SessionParts(model: model, voice: voice, sink: sink, clock: clock, audience: .supervised)
+        let child = Conversation(parts, listener: ear)
+        ear.watch(child)
+        await child.wake()
+        XCTAssertEqual(sink.records.map(\.audience), ["supervised", "supervised", "supervised"])
     }
 }

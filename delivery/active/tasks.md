@@ -2,7 +2,7 @@
 
 Уроки по путям диффа (§2.2a): L40, L41, L50, L51, L52, L59, L60, L61 (`Packages/AllyCore/`), L44, L45, L46 (`App/`), L10
 (`scripts/`), L25, L33, L34, L35, L38, L47, L48, L49 (`knowledge/engineering/safety-below-model.md`), L7, L16
-(`knowledge/product/`) — как применены, сказано в `plan.md`.
+(`knowledge/product/`), L56, L57, L58 (`Packages/AllyCore/`, D3) — как применены, сказано в `plan.md`.
 
 ## Slice 0 — документы
 - [x] T1: документы R первым коммитом ветки `feat/child-lock`, до кода (L33): STATUS, spec (G1–G11 таблицей дословно,

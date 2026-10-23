@@ -59,46 +59,34 @@ public enum ReleaseGate {
     public static func access(exception: SignedFile?, build: Build, now: Date, zone: TimeZone) -> ChildAccess {
         let texts = ReleaseTexts.shared
         let broken = [(build.router, texts.parts.router), (build.contract, texts.parts.contract)]
-            .filter { !$0.0 }.map { texts.selftest.replacingOccurrences(of: "{part}", with: $0.1) }
+            .filter { !$0.0 }.map { fill(texts.selftest, "part", $0.1) }
         guard broken.isEmpty else { return .parentOnly(broken) }
-        switch read(exception, key: build.key) {
-        case .failure(let refusal): return .parentOnly([refusal.reason])
-        case .success(let file): return judge(file, surface: build.surface, now: now, zone: zone)
-        }
+        guard build.key else { return .parentOnly([texts.noKey]) }
+        guard let exception else { return .parentOnly([texts.none]) }
+        guard let file = Exception.decode(exception.bytes) else { return .parentOnly([texts.unreadable]) }
+        guard exception.signed else { return .parentOnly([texts.unsigned]) }
+        return judge(file, surface: build.surface, now: now, zone: zone)
     }
 
     /// The console's lines of the lock: with the parent — open until the date or why not; without him — closed.
     public static func lines(_ access: ChildAccess, zone: TimeZone) -> [String] {
         let texts = ReleaseTexts.shared
         let line = switch access {
-        case .supervised(let until): texts.supervised.replacingOccurrences(of: "{when}", with: when(until, zone: zone))
-        case .parentOnly(let reasons):
-            texts.parentOnly.replacingOccurrences(of: "{reason}", with: reasons.joined(separator: "; "))
+        case .supervised(let until): fill(texts.supervised, "when", when(until, zone: zone))
+        case .parentOnly(let reasons): fill(texts.parentOnly, "reason", reasons.joined(separator: "; "))
         }
         return [line, texts.unsupervised]
     }
 
     /// «29.10 в 21:00» in the phone's time zone.
     public static func when(_ date: Date, zone: TimeZone) -> String {
-        let format = { (pattern: String) -> String in
-            let formatter = DateFormatter()
-            (formatter.locale, formatter.timeZone, formatter.dateFormat) = (Locale(identifier: "en_US_POSIX"), zone,
-                                                                             pattern)
+        let formatter = DateFormatter()
+        (formatter.locale, formatter.timeZone) = (Locale(identifier: "en_US_POSIX"), zone)
+        let part = { (pattern: String) -> String in
+            formatter.dateFormat = pattern
             return formatter.string(from: date)
         }
-        return ReleaseTexts.shared.when.replacingOccurrences(of: "{day}", with: format("dd.MM"))
-            .replacingOccurrences(of: "{time}", with: format("HH:mm"))
-    }
-
-    struct Refusal: Error { let reason: String }
-
-    /// The key, the file and its signature: a readable signed exception, or why not.
-    static func read(_ exception: SignedFile?, key: Bool) -> Result<Exception, Refusal> {
-        let texts = ReleaseTexts.shared
-        guard key else { return .failure(Refusal(reason: texts.noKey)) }
-        guard let exception else { return .failure(Refusal(reason: texts.none)) }
-        guard let file = Exception.decode(exception.bytes) else { return .failure(Refusal(reason: texts.unreadable)) }
-        return exception.signed ? .success(file) : .failure(Refusal(reason: texts.unsigned))
+        return fill(fill(ReleaseTexts.shared.when, "day", part("dd.MM")), "time", part("HH:mm"))
     }
 
     /// The term and the surface of a signed exception: at most 7 days, from `from` up to but not including `until`,
@@ -106,37 +94,31 @@ public enum ReleaseGate {
     static func judge(_ file: Exception, surface: ReleaseSurface, now: Date, zone: TimeZone) -> ChildAccess {
         let texts = ReleaseTexts.shared
         guard file.until.timeIntervalSince(file.from) <= longest else {
-            return .parentOnly([texts.tooLong.replacingOccurrences(of: "{days}", with: "\(Int(longest / 86_400))")])
+            return .parentOnly([fill(texts.tooLong, "days", "\(Int(longest / 86_400))")])
         }
-        guard now >= file.from else {
-            return .parentOnly([texts.notYet.replacingOccurrences(of: "{when}", with: when(file.from, zone: zone))])
-        }
-        guard now < file.until else {
-            return .parentOnly([texts.expired.replacingOccurrences(of: "{when}", with: when(file.until, zone: zone))])
-        }
+        guard now >= file.from else { return .parentOnly([fill(texts.notYet, "when", when(file.from, zone: zone))]) }
+        guard now < file.until else { return .parentOnly([fill(texts.expired, "when", when(file.until, zone: zone))]) }
         let other = [(\ReleaseSurface.contract, texts.parts.contract), (\.router, texts.parts.router),
                      (\.persona, texts.parts.persona), (\.model, texts.parts.model)]
             .filter { file.surface[keyPath: $0.0] != surface[keyPath: $0.0] }.map(\.1)
-        guard other.isEmpty else {
-            let parts = other.joined(separator: ", ")
-            return .parentOnly([texts.otherBuild.replacingOccurrences(of: "{parts}", with: parts)])
-        }
-        return .supervised(until: file.until)
+        return other.isEmpty ? .supervised(until: file.until)
+            : .parentOnly([fill(texts.otherBuild, "parts", other.joined(separator: ", "))])
+    }
+
+    static func fill(_ template: String, _ key: String, _ value: String) -> String {
+        template.replacingOccurrences(of: "{\(key)}", with: value)
     }
 }
 
 /// The exception's file: one JSON object signed by the parent's key — its term (ISO 8601 with an offset), its surface
 /// and a note.
-struct Exception: Sendable {
+struct Exception: Decodable, Sendable {
     let from, until: Date, surface: ReleaseSurface
 
-    private struct File: Decodable { let from, until: String, surface: ReleaseSurface }
-
     static func decode(_ bytes: Data) -> Exception? {
-        let dates = ISO8601DateFormatter()
-        guard let file = try? JSONDecoder().decode(File.self, from: bytes), let from = dates.date(from: file.from),
-              let until = dates.date(from: file.until) else { return nil }
-        return Exception(from: from, until: until, surface: file.surface)
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        return try? decoder.decode(Exception.self, from: bytes)
     }
 }
 
