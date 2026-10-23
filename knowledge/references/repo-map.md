@@ -33,6 +33,8 @@ implementation:
   `ShellUI` (Элли, пузырь и небо в SwiftUI под `#if canImport(SwiftUI)`). Снимки семи фаз и лист `sheet.png` пишет
   `swift test --disable-keychain --package-path Packages/AllyShell` на Mac в `local/shell-snapshots/`; на Linux снимки
   пропускаются видимо. Снимков экрана телефона нет никогда (L46).
+- **Расстановщик ударений** — `Packages/AllyAccent` (RUAccent на Swift: токенизаторы; паритет на Mac — файлы в
+  `~/models/tts/ruaccent` и `~/models/tts/ruaccent-parity`): `swift test --disable-keychain --package-path Packages/AllyAccent`.
 - **Текст для синтеза** — `Packages/AllySpeechText` (ударения, закреплённый словарь, правила чтения; данные —
   `Resources/speech-text.json`): `swift test --disable-keychain --package-path Packages/AllySpeechText`.
 - **Контур:** `python3 scripts/delivery_check.py` — фазы поставки;

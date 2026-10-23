@@ -1,5 +1,11 @@
 # Knowledge Bundle Update Log
 
+## 2026-10-23 — расстановщик ударений: токенизаторы RUAccent на Swift
+
+* **Creation**: `engineering/accent-placer` (Design) — пакет `AllyAccent`, `Encoding` и три токенизатора RUAccent с
+  паритетом HF; `implementation:` — исходники пакета. **Update**: `engineering/index`, `references/repo-map`.
+* **Источник**: поставка `accent-tokenizers` (V3a серии голоса; часть Z14, подпись родителя 2026-10-23).
+
 ## 2026-10-23 — один ONNX Runtime на приложение (голос V1a)
 
 * **Creation**: `engineering/onnx-runtime` (Decision): ORT только в `Packages/AllyOnnx` — официальный pod 1.28.0, слой над
