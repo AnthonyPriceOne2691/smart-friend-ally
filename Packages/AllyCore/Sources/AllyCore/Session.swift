@@ -42,6 +42,9 @@ public actor Session {
     private var cancel: (@Sendable () -> Void)?
     private let speculation: Speculation
 
+    /// The answer begun in her pause has been written to its end (a test waits for it before her speech comes back).
+    nonisolated var begunAnswerFinished: Bool { speculation.finished }
+
     public init(_ parts: SessionParts, settings: SessionSettings = SessionSettings()) {
         (self.parts, self.settings) = (parts, settings)
         speculation = Speculation(parts.model, clock: parts.clock)

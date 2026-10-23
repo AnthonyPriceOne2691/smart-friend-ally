@@ -82,6 +82,9 @@ final class Speculation: LanguageModel, @unchecked Sendable {
         takers.forEach { $0.finish() }
     }
 
+    /// The begun answer has come to its end; it is not taken yet.
+    var finished: Bool { state { $0.pending?.finished ?? false } }
+
     /// The counts since the last record, for its stages: only when an answer was begun in a pause.
     func takeStages() -> [String: Double] {
         state { (now: inout State) -> [String: Double] in
