@@ -22,9 +22,11 @@ public struct TalkState: Equatable, Sendable {
 }
 
 /// The ear of a session, one utterance a call: her text, `""` when she spoke but no words came, nil when nobody spoke
-/// before the timeout.
+/// before the timeout; it waits for silence as long as the kind of her turn asks (D7).
 public protocol Listener: Sendable {
-    func listen() async throws -> String?
+    func listen(_ kind: TurnKind) async throws -> String?
+    /// Her «я всё»: the listening in flight ends now, as if the silence had lasted; nothing when none is.
+    func endTurn()
 }
 
 /// A session with an ear: `wake` greets, then listens only while the session listens — never while she speaks — and
@@ -65,6 +67,13 @@ public actor Conversation {
         await task.value
     }
 
+    /// Her «я всё» — a tap on Elly while she listens, the console's button: the utterance ends now; nothing unless the
+    /// session listens.
+    public func done() {
+        guard session.state.listens else { return }
+        listener.endTurn()
+    }
+
     /// The parent's stop: silence now, no phrase; a listening in flight ends on its own and its result is not taken.
     public func stop() async {
         running = false
@@ -75,7 +84,7 @@ public actor Conversation {
         defer { running = false }
         await session.handle(.wake)
         while session.state.listens {
-            let heard = await Task { [listener] in try await listener.listen() }.result
+            let heard = await Task { [listener, session] in try await listener.listen(session.expect) }.result
             if case .success(let text?) = heard {
                 await session.handle(.heard(text))
             } else {

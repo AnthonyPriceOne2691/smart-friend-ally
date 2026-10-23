@@ -9,6 +9,15 @@
 * **Источник**: поставка `child-shell-motion` (оболочка Ш2а; примеры V11–V18 подписаны родителем 2026-10-23
   «Подписываю (Рекомендую)»).
 
+## 2026-10-23 — слух: тип хода по реплике Элли, хвосты из реестра слуха, «я всё»
+
+* **Update**: `engineering/turn-detector` — тип хода кодом, хвосты 1,8 / 1,2 / 2,5 с и предел 30 с в
+  `App/Resources/hearing.json`, «я всё»; `implementation:` — `TurnKinds.swift`, `Hearing.swift`. `engineering/session` —
+  тип хода, `turn_kind`, `done()`. `engineering/voice-loop` — слушание по типу хода, «Я всё», предел 30 с.
+  `engineering/safety-below-model` — тип хода путь реплики не меняет. `engineering/app-architecture` — реестр слуха.
+  `engineering/index` — описание.
+* **Источник**: поставка `turn-detector` (D7 серии «слух»; спека подписана родителем 2026-10-23).
+
 ## 2026-10-23 — правки контракта: запрет не вытесняется, заготовка опасности старше страха, вопрос-обрывок уступает
 
 * **Update**: `engineering/safety-below-model`:
