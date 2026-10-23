@@ -37,7 +37,6 @@ final class CoreTests: XCTestCase {
         try Data(count: 12).write(to: weights)
         XCTAssertEqual(ModelCheck.check(registry: registry, in: folder), .ready(weights))
         XCTAssertNil(ModelCheck.check(registry: registry, in: folder).message)
-        XCTAssertEqual(try ModelRegistry.decode(registry).turn.tail(.counting), 2.5)
     }
 
     func testProfileDaysLeft() throws {  // A16

@@ -25,6 +25,7 @@ final class VoiceLoop: ObservableObject {
     private func warmUp() async throws {
         let bundle = Bundle.main.bundleURL, data = try Data(contentsOf: bundle.appendingPathComponent("model.json"))
         let registry = try ModelRegistry.decode(data), settings = try LlamaSettings.decode(data)
+        let hearing = try Hearing.decode(Data(contentsOf: bundle.appendingPathComponent("hearing.json")))
         let profile = Bundle.main.url(forResource: "embedded", withExtension: "mobileprovision")
         let days = ProfileExpiry.daysLeft(profile.flatMap { try? Data(contentsOf: $0) }, now: Date())
         let available = os_proc_available_memory() >> 20
@@ -51,7 +52,7 @@ final class VoiceLoop: ObservableObject {
                     "voice": voice.voice?.identifier ?? "", "weights": "\(registry.model.file):\(registry.model.bytes)"]
         (self.registry, self.model, self.voice) = (registry, model, voice)
         screen.ready = speech.ready && microphone && voice.voice != nil
-        if screen.ready { converse(model, registry, voice) }
+        if screen.ready { converse(model, hearing, voice) }
     }
 
     /// A tap on the sleeping friend: she greets and then talks without buttons until the session sleeps.
@@ -59,6 +60,12 @@ final class VoiceLoop: ObservableObject {
         guard let conversation, talk.phase == .asleep else { return }
         (screen.heard, screen.said) = ("", "")
         Task { await conversation.wake() }
+    }
+
+    /// Her «я всё» — the console's button, a tap on Elly while she listens: the utterance ends now.
+    func done() {
+        guard let conversation else { return }
+        Task { await conversation.done() }
     }
 
     /// The parent's stop: silence now, no phrase.
@@ -69,9 +76,9 @@ final class VoiceLoop: ObservableObject {
 
     /// The session (D2.2): the router before the model, the parent's limit key (`-session_limit_minutes 2` at launch),
     /// a wordless record a turn with the listening's stages into `Caches/turns.jsonl`; heard and said go to the screen.
-    private func converse(_ model: LlamaModel, _ registry: ModelRegistry, _ voice: SystemVoice) {
+    private func converse(_ model: LlamaModel, _ hearing: Hearing, _ voice: SystemVoice) {
         let heard: @Sendable (String) -> Void = { text in Task { @MainActor in self.screen.heard = text } }
-        let ear = PhoneListener(recognizer: recognizer, audio: audio, registry: registry,
+        let ear = PhoneListener(recognizer: recognizer, audio: audio, hearing: hearing,
                                 resetSound: { voice.resetFirstSound() }, firstSound: { voice.firstSound }, heard: heard)
         let echo = EchoVoice(voice) { sentence in Task { @MainActor in self.screen.said += sentence + " " } }
         let settings = SessionSettings(limitMinutes: UserDefaults.standard.object(forKey: SessionSettings.key)

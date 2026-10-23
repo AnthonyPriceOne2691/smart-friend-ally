@@ -12,7 +12,8 @@ generated:
 # быт и улица, нож, «больно» (router-events);
 # реплика и решение в контракте хода, прощание кодом — сессия (session-core, концепт engineering/session);
 # цикл приложения, который зовёт контракт на каждом ответе (app-voice-loop);
-# маршрутизатор на живом ходе приложения и реплика с forget вне модели (app-session).
+# маршрутизатор на живом ходе приложения и реплика с forget вне модели (app-session);
+# тип хода и «я всё» (turn-detector) меняют только то, сколько слух ждёт тишины, а не путь реплики.
 implementation:
   - Packages/AllyDiscipline/Sources/Discipline/Repair.swift
   - Packages/AllyCore/Sources/AllyCore/TurnRunner.swift

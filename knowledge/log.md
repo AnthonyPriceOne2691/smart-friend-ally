@@ -1,5 +1,13 @@
 # Knowledge Bundle Update Log
 
+## 2026-10-23 — слух: тип хода по реплике Элли, хвосты из реестра слуха, «я всё»
+
+* **Update**: `engineering/turn-detector` — тип хода кодом, хвосты 1,8 / 1,2 / 2,5 с и предел 30 с в
+  `App/Resources/hearing.json`, «я всё»; `implementation:` — `TurnKinds.swift`, `Hearing.swift`. `engineering/session` —
+  тип хода, `turn_kind`, `done()`. `engineering/voice-loop` — слушание по типу хода, «Я всё», предел 30 с.
+  `engineering/safety-below-model` — тип хода путь реплики не меняет. `engineering/index` — описание.
+* **Источник**: поставка `turn-detector` (D7 серии «слух»; спека подписана родителем 2026-10-23).
+
 ## 2026-10-22 — чёрный ящик: обе стороны разговора текстом и звуком (ядро)
 
 * **Update**: `ops/black-box` — переписан по поставке: пишутся только сессии `audience: supervised`; на ход — её
