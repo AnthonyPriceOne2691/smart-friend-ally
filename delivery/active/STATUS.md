@@ -22,9 +22,9 @@
 - **parallel_sessions:** merge-guard,manual-deploy
   <!-- §5.1a: интеграция в main только через scripts/merge_guard.sh; на телефон приложение ставится отдельным решением -->
 - **hooks:** not-deployed
-- **blockers:** предохранитель max_loc_diff пробит — net 946 из 800 (план 621); решение — escalation.md: подпись исключения (A, рекомендую) или разрез до 780 (B)
-  <!-- Ш3 — после мержа R child-lock; D2.2 app-session уже в main (bf6e80e) -->
-- **waivers:** none
+- **blockers:** none
+  <!-- предохранитель решён 2026-10-23: родитель выбрал вариант A escalation.md — исключение только для Ш1; Ш3 — после мержа R child-lock -->
+- **waivers:** max_loc_diff=1000 reason=рисунок Элли и его пробы целиком в Ш1 — факт net 946 при плане 621, вариант A escalation.md; только для Ш1, на серию не распространяется by=human:anthony (2026-10-23 «Исключение для Ш1 до 1000 (Рекомендую)», через ведущего)
 - **new_dependency:** Packages/AllyShell/Package.swift reason=новый манифест SwiftPM без внешних зависимостей: ShellCore — Foundation и локальный ../AllyCore (фазы сессии SessionState), ShellUI — SwiftUI из SDK Apple под #if canImport(SwiftUI), тесты — XCTest из тулчейна; Rive, Lottie и другие библиотеки не берём (решение родителя 2026-10-22: 2D в SwiftUI) by=agent:claude-code
 - **runtime_paths:** none reason=Ш1 — пакет SwiftPM: позы, раскладка и палитра проверяются тестами на Linux, рисунок — снимками вида на Mac; экран в приложении на телефоне (App/) появится в Ш3 и будет объявлен там
 - **irreversible_surfaces:** none reason=продукт офлайн; поставка не добавляет ни отправки, ни трат, ни выкатки, ни публикации
