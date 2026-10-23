@@ -1,5 +1,13 @@
 # Knowledge Bundle Update Log
 
+## 2026-10-23 — живой разговор: в памяти модели только сказанное (kv-spoken)
+
+* **Update**: `engineering/session` — после хода модели `commit(spoken:)` с доигранными предложениями, скрипт —
+  `remember(heard:spoken:)`, `forget` — ничего; брошенный ответ спекуляции — `retract`, этап `spec_retracted` вместо
+  `spec_stale`. `engineering/voice-loop` — KV держит только прозвучавшее, `swa_full: false` — отказ загрузки и строка
+  консоли из `lines.json`; `implementation:` — `LlamaSettings.swift`, `lines.json`. `engineering/safety-below-model` —
+  срезанное контрактом в память модели не попадает. `engineering/index` — строка сессии.
+* **Источник**: поставка `kv-spoken` (D5 серии «живой разговор»; примеры X1–X8 подписаны родителем 2026-10-23).
 ## 2026-10-23 — слух: спекуляция — ответ модели начинается в её паузе
 
 * **Update**: `engineering/session` — `Speculation` (общий план реплики, этапы `spec_*`, `spec_stale` до D5);

@@ -70,7 +70,7 @@ final class SpeculationTests: XCTestCase {
         await talk.conversation.wake()
         XCTAssertEqual(talk.model.calls.map(\.utterance), ["Я была", "Я была в зоопарке"])
         XCTAssertEqual(talk.model.calls.first?.cancelled, true)
-        XCTAssertEqual(talk.model.memory, ["Я была в зоопарке"])
+        XCTAssertEqual(talk.model.memory.turns.map(\.heard), ["Я была в зоопарке"])
         XCTAssertEqual(talk.replies.first?.0, "Ответ про зоопарк!")
         XCTAssertEqual(talk.replies.first?.1 ?? -1, 13.8, accuracy: 1e-9)
         XCTAssertEqual(talk.modelTurns.count, 1)
@@ -125,21 +125,6 @@ final class SpeculationTests: XCTestCase {
         XCTAssertEqual(talk.conversation.state.phase, .asleep)
         XCTAssertEqual(talk.sink.records.map(\.source), ["session:greeting", "session:stop"])
         XCTAssertEqual(talk.sink.records.last?.end, "parent")
-    }
-
-    func testAnAnswerFinishedBeforeSheWentOnIsCountedStale() async {  // U12
-        let talk = SpecTalk(plans: [.held(first: "Ура!", full: "Ура!"), held("Ура два")]) { model in
-            [.init(text: "Ура ура", at: 13.5, pauses: [
-                .init(at: 10.3, event: .tentative("Ура"), until: { model.calls.count == 1 }),
-                .init(at: 10.9, action: { model.finish(0) }),
-                .init(at: 11.2, event: .resumed),
-                .init(at: 12.0, event: .tentative("Ура ура"), until: { model.calls.count == 2 }),
-                .init(at: 12.5, action: { model.first(1) })
-            ]), .init(text: nil)]
-        }
-        await talk.conversation.wake()
-        XCTAssertEqual(talk.modelTurns.first?.stages["spec_stale"], 1)
-        XCTAssertEqual(talk.model.memory, ["Ура", "Ура ура"])
     }
 
     /// On 200 random tapes (seeds fixed) the voice never sounds before the tail of its turn, each model turn answers

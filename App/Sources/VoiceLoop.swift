@@ -27,7 +27,7 @@ final class VoiceLoop: ObservableObject {
 
     func start() async {
         guard registry == nil else { return }
-        do { try await warmUp() } catch { screen.lines.append("ошибка: \(error)") }
+        do { try await warmUp() } catch { screen.lines.append((error as? LlamaError)?.line ?? "ошибка: \(error)") }
     }
 
     private func warmUp() async throws {

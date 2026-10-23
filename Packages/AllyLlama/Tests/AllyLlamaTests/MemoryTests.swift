@@ -18,6 +18,8 @@ final class MemoryTests: XCTestCase {
         } catch {
             XCTAssertEqual(error as? LlamaError, .swaFullOff)
         }
+        XCTAssertEqual(LlamaError.swaFullOff.line, "swa_full выключен — память модели не держит только сказанное")
+        XCTAssertNil(LlamaError.context.line)
     }
 
     /// The reply sounded only up to its first sentence (a stop, the contract's cut): after `commit` the next reply is
