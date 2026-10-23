@@ -6,7 +6,7 @@
 - **kind:** feature
 - **repro_test:** n/a reason=не bugfix
 - **diagnosis:** n/a reason=не bugfix
-- **phase:** specify
+- **phase:** plan
 - **builder:** agent:claude-code
 - **verifier:** process:ci
 - **human_ok_spec:** deferred (reason=спека серии D5 → D6.1 → D6.2 и примеры X1–X17 у ведущего на подпись родителю 2026-10-23; до подписи — стоп)
