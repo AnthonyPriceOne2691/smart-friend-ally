@@ -27,8 +27,8 @@
        проверку пары версий своей поставкой), D3 black-box (порт VoiceTape — D3.3 возьмёт порт проигранного звука V4),
        R child-lock, оболочка, правки контракта, второй круг образцов голоса (local/spike/voice-samples-2) -->
 - **hooks:** not-deployed
-- **blockers:** none
-  <!-- подпись — отдельным коммитом до кода (L33); спека 68202f0, план bbcd6b3 -->
+- **blockers:** max_loc_diff 903 > 800 — escalation.md (варианты A и B), решение ведущего
+  <!-- подпись — отдельным коммитом до кода (L33); спека 68202f0, план bbcd6b3; код b7399c0, dbd34be -->
 - **waivers:** none
 - **new_dependency:** Packages/AllyOnnx/Package.swift reason=новый манифест SwiftPM: binaryTarget onnxruntime — официальный pod Microsoft onnxruntime-c 1.28.0 (download.onnxruntime.ai/pod-archive-onnxruntime-c-1.28.0.zip, sha256 b503cf59…a327; статический xcframework iOS, симулятор, macOS; ORT_API_VERSION 28 — как заголовки sherpa-onnx 1.13.8; бинаря в git нет); один ORT на приложение — решение ведущего 2026-10-23 by=agent:claude-code
 - **new_dependency:** onnxruntime-1.28.0 reason=рантайм синтеза Supertonic и RUAccent на телефоне (стенд local/spike/tts-swift: паритет с Python −82,6 дБ на 1.24.2, RTF 0,21 на 2 потоках); лицензия MIT (gh api repos/microsoft/onnxruntime/license, 2026-10-23, L36), релиз v1.28.0 от 2026-07-25; строка дублирует путь манифеста, потому что гейт new-dependency .binaryTarget не разбирает by=agent:claude-code
