@@ -14,6 +14,12 @@ packages:
     path: ../Packages/AllyShell
   AllyHearing:  # Silero VAD through sherpa on the one ONNX Runtime of the app (D7.2)
     path: ../Packages/AllyHearing
+  AllyVoice:  # her voice: Supertonic on the same ONNX Runtime (voice series V1b, V4b2)
+    path: ../Packages/AllyVoice
+  AllyVoiceFX:  # PSOLA and the EQ after the synthesis (V4a, V4b1)
+    path: ../Packages/AllyVoiceFX
+  AllySpeechText:  # the engine's text: stresses, names, reading rules (V2)
+    path: ../Packages/AllySpeechText
 settings:
   base:
     CODE_SIGN_STYLE: Automatic
@@ -41,6 +47,9 @@ targets:
       - package: AllyShell
         product: ShellCore
       - package: AllyHearing
+      - package: AllyVoice
+      - package: AllyVoiceFX
+      - package: AllySpeechText
     info:  # generated with the project, not in git; merged with the build's own keys (GENERATE_INFOPLIST_FILE)
       path: Info.plist
       properties:
