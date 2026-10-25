@@ -60,3 +60,4 @@
 - `voice-out`
 - `memory-sense`
 - `asr-step3`
+- `voice-app`
