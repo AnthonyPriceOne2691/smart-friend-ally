@@ -42,6 +42,40 @@ final class OverlapTests: XCTestCase {
         XCTAssertEqual(silero.take(), 1)
     }
 
+    /// The voice's sound comes from the player: a sentence of 1 s from 0.05 s, then one from 2.05 s cut by a stop at
+    /// 2.5 s. Her 300 ms of speech while it sounds counts, 0.5 s after its end counts, 1.0 s after does not; the cut
+    /// one's end is the stop's moment, and a player that returns late still ends the voice at its last sample.
+    func testTheVoicesWindowComesFromThePlayersSound() async throws {  // X18
+        let clock = TestClock(), overlap = try XCTUnwrap(try shipped().overlap)
+        let counter = Locked(OverlapCounter(overlap)), ends = Locked([Double]())
+        let sounding = { (player: SoundPlayer) in
+            SoundingPlayer(player, clock: clock, began: { counter { $0.voiceStarted() } },
+                           ended: { end in counter { $0.voiceEnded(at: end) }; ends { $0.append(end) } })
+        }
+        let player = sounding(ClockPlayer(clock: clock))
+        let first = Task { await player.play([Float](repeating: 0.1, count: 1000), rate: 1000) }
+        await eventually { clock.sleeping == 1 }
+        counter { (counter: inout OverlapCounter) in speak(&counter, from: 0.5, for: 0.3) }
+        XCTAssertEqual(counter { $0.take() }, 1)
+        clock.advance(by: 1.05)
+        _ = await first.value
+        XCTAssertEqual(ends { $0 }.first ?? -1, 1.05, accuracy: 1e-9)
+        counter { (counter: inout OverlapCounter) in speak(&counter, from: 1.55, for: 0.3) }
+        XCTAssertEqual(counter { $0.take() }, 1)
+        counter { (counter: inout OverlapCounter) in speak(&counter, from: 2.05, for: 0.3) }
+        XCTAssertEqual(counter { $0.take() }, 0)
+        clock.advance(to: 2.0)
+        let second = Task { await player.play([Float](repeating: 0.1, count: 1000), rate: 1000) }
+        await eventually { clock.sleeping == 1 }
+        clock.advance(by: 0.5)
+        player.stop()
+        let cut = await second.value
+        XCTAssertTrue(cut.cut)
+        XCTAssertEqual(ends { $0 }.last ?? -1, 2.5, accuracy: 0.002)  // whole frames played: within one at 1 kHz
+        _ = await sounding(LatePlayer(clock: clock, sound: 1.0, returnsAfter: 1.25)).play([0.1], rate: 1000)
+        XCTAssertEqual(ends { $0 }.last ?? -1, 2.5 + 1.0, accuracy: 1e-9)
+    }
+
     /// 20 ms frames of a quiet remainder of Elly's voice, then her speech; `flag` — when the activity flags it.
     private func filledRing(speechFrom speech: Double?, flagFrom flag: Double?, until end: Double) throws
         -> (ring: VoiceRing<[Float]>, timing: TurnTiming) {
@@ -80,4 +114,22 @@ final class OverlapTests: XCTestCase {
         loud.clear()
         XCTAssertTrue(loud.handOver().isEmpty)
     }
+}
+
+/// A player double whose sound lasts `sound` seconds from now but whose `play` returns `returnsAfter` seconds later —
+/// as a real buffer's completion comes after its last sample.
+final class LatePlayer: SoundPlayer, @unchecked Sendable {
+    private let clock: TestClock, sound: Double, returnsAfter: Double
+
+    init(clock: TestClock, sound: Double, returnsAfter: Double) {
+        (self.clock, self.sound, self.returnsAfter) = (clock, sound, returnsAfter)
+    }
+
+    func play(_ samples: [Float], rate: Int) async -> Played {
+        let started = clock.now()
+        clock.advance(by: returnsAfter)
+        return Played(started: started, frames: Int(sound * Double(rate)), cut: false)
+    }
+
+    func stop() {}
 }

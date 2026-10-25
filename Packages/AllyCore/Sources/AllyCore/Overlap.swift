@@ -43,6 +43,31 @@ public struct OverlapCounter: Sendable {
     }
 }
 
+/// The voice's player as the duplex microphone sees it (D6.1): `play` begun — the voice sounds; returned — it went
+/// silent at its first sound plus the frames played (`Played` of V4b2a), a stop's cut included; nothing sounded — now.
+/// The voice itself knows nothing of the duplex.
+public final class SoundingPlayer: SoundPlayer, @unchecked Sendable {
+    private let player: SoundPlayer, clock: TurnClock
+    private let began: @Sendable () -> Void, ended: @Sendable (Double) -> Void
+
+    /// - Parameters:
+    ///   - began: the voice started to sound (the counter's `voiceStarted`);
+    ///   - ended: host seconds of its last sample (the counter's `voiceEnded(at:)`).
+    public init(_ player: SoundPlayer, clock: TurnClock = SystemClock(), began: @escaping @Sendable () -> Void,
+                ended: @escaping @Sendable (Double) -> Void) {
+        (self.player, self.clock, self.began, self.ended) = (player, clock, began, ended)
+    }
+
+    public func play(_ samples: [Float], rate: Int) async -> Played {
+        began()
+        let played = await player.play(samples, rate: rate)
+        ended(played.started.map { $0 + Double(played.frames) / Double(rate) } ?? clock.now())
+        return played
+    }
+
+    public func stop() { player.stop() }
+}
+
 /// The microphone while the session does not listen (D6.1): the last `seconds` of what came, each piece with its time
 /// and whether the activity flagged her speech. A listening opened after Elly's voice starts with the ring from her
 /// first speech piece minus `lead`, or with nothing when she did not speak: what is left of Elly's voice after echo

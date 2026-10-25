@@ -1,5 +1,11 @@
 # Knowledge Bundle Update Log
 
+## 2026-10-25 — живой разговор: окно голоса от проигрывателя (duplex-audio)
+
+* **Update**: `engineering/turn-detector` — `SoundingPlayer`: голос звучит с начала `play` до последнего отсчёта
+  (`started + frames / rate` V4b2a), конец буфера окно не сдвигает.
+* **Источник**: поставка `duplex-audio` (D6.1), сверка плана с V4b2a `voice-out` (T1).
+
 ## 2026-10-25 — живой разговор: речь поверх голоса Элли — ядро (duplex-audio)
 
 * **Update**: `engineering/turn-detector` — кольцо микрофона через голос (`VoiceRing`: с её первого флага речи минус
