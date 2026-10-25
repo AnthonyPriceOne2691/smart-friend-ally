@@ -40,8 +40,21 @@ public final class MemoryStore {
                     try apply(candidate, session, &report)
                 }
             }
+            for value in session.unlike { report.withdrawn += try withdraw(value, session) }
         }
         return report
+    }
+
+    /// «Больше не люблю X»: her active likes that X covers go to the history, unless confirmed after this session
+    /// began.
+    private func withdraw(_ value: String, _ session: MemorySession) throws -> Int {
+        let likes = try db.rows("SELECT f.id, f.value, f.last_seen FROM fact f JOIN entity e ON e.id = f.entity_id "
+                                + "WHERE e.kind = 'child' AND f.trait = 'likes' AND f.status = 'active'")
+        let gone = likes.filter { row in
+            (row[2].real ?? 0) <= session.started.timeIntervalSince1970 && Reading.covers(value, row[1].text ?? "")
+        }
+        for row in gone { try db.run("UPDATE fact SET status = 'superseded' WHERE id = ?", [row[0]]) }
+        return gone.count
     }
 
     /// «Стереть всё»: the files go and an empty database starts with the wipe epoch.

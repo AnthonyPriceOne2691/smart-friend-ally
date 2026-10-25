@@ -6,7 +6,7 @@ status: draft
 tags: [engineering, memory, privacy, child]
 generated:
   by: claude_code/opus-5.5
-  at: 2026-10-23T23:30:00+03:00
+  at: 2026-10-25T20:00:00+03:00
 implementation:
   - Packages/AllyMemory/Sources/Memory/MemoryStore.swift
   - Packages/AllyMemory/Sources/Memory/Schema.swift
@@ -23,6 +23,8 @@ implementation:
   - Packages/AllyMemory/Sources/Memory/Resources/extract.json
   - Packages/AllyMemory/Sources/Memory/Resources/extract.system.ru.md
   - Packages/AllyMemory/Sources/Memory/Resources/extract.user.ru.md
+  - Packages/AllyMemory/Sources/Memory/Sense.swift
+  - Packages/AllyMemory/Sources/Memory/Resources/sense.json
 ---
 
 # Purpose
@@ -63,6 +65,15 @@ implementation:
   служебных, сходство — общее начало ≥ max(3, длина − 2), числа — по значению. Возраст вне 1–20 и «кто» не из списка
   отбрасываются до записи; отброшенное — поле и причина, без значений. Разобранное пишется одной сессией вместе с её
   репликами (`heard`, заражение).
+- **Не правда о ней** (`Sense.swift`, слова — `sense.json`, их читает код, не модель): **окно вымысла** — её реплика с
+  «понарошку», «приснилось», «сказка», «загадка», «в слова» или реплика Элли перед ней с «понарошку», «жила-была»,
+  «сочиним», «загадка» открывает окно на эту и ещё три её реплики, «а у меня», «на самом деле», «сегодня», «вчера» его
+  закрывают; факт с опорой в окне не пишется, кроме придуманного. **Хозяин питомца** — ближайшее «у кого» перед словом
+  питомца: бабушка, дедушка, мама, папа, брат, сестра — подробность близкого «у бабушки собака Бим»; подружка, друг,
+  соседи, тётя, дядя — ничего; прочие факты чужого питомца не пишутся. **Отрицание** — слово значения в двух словах
+  после «не», «нет», «нету» или перед «нет», «нету». **Любимое** — только при «любим…», «самый», «больше всего» в её
+  реплике или в реплике Элли перед ней, иначе «любит». **«Больше не люблю X»** («уже не люблю», «больше не нравится»,
+  «разлюбила») уводит её активное «любит X» в историю, если сессия не старше его подтверждения (`withdrawn`).
 - **Замена и подтверждение:** однозначное (имя, возраст, день рождения, вид, окрас, любимое в слоте) заменяется значением
   из сессии не старше активного, прежнее уходит в историю; более старая сессия новое не перетирает. Многозначное
   копится. Сессия считается для факта один раз (`seen`): повтор записи ничего не меняет, и порядок записи сессий не
@@ -83,8 +94,9 @@ implementation:
 # Что ещё не подключено (L50)
 
 Пока нет `memory-app`, у базы, блока и разбора нет вызывающего: Элли в приложении ещё ничего не помнит, а модель
-разбор зовёт только в тестах — двойником; E4B подключат `memory-quality` (Mac) и `memory-app` (телефон). Вымысел,
-чужих питомцев, отрицание и маркеры любимого пока держит только промпт разбора (advisory) — код придёт в `memory-sense`.
+разбор зовёт только в тестах — двойником; E4B подключат `memory-quality` (Mac) и `memory-app` (телефон). Окно
+вымысла, хозяин, отрицание и маркеры любимого исполняются кодом, но их словари проверены только на вымышленных
+примерах — полноту и ловушки на E4B меряет `memory-quality` (M32).
 Разбор E4B после прощания, отбор реплик (только `pass` без `forget`, только детские сессии при родителе), очередь,
 блок в префиксе персоны, файлы на телефоне (`Application Support/Memory`, вне бэкапа, `NSFileProtectionComplete`) и
 кнопка «Стереть память» в консоли — следующие поставки серии; забыть один факт и счётчики брата и имени — `memory-forget`.
@@ -97,8 +109,9 @@ implementation:
 | Блок для промпта | `Packages/AllyMemory/Sources/Memory/MemoryBlock.swift`, `BlockLines.swift`, `Resources/memory.json` |
 | Запрет на любом пути | `Packages/AllyMemory/Sources/Memory/Forbidden.swift`, `Resources/forbidden.json`, триггеры в `Schema.swift` |
 | Разбор разговора | `Packages/AllyMemory/Sources/Memory/Extract.swift`, `ExtractPrompt.swift`, `ModelAnswer.swift`, `Anchors.swift`, `Resources/extract.*` |
+| Не правда о ней, любимое, «больше не люблю» | `Packages/AllyMemory/Sources/Memory/Sense.swift`, `Resources/sense.json`, `Anchors.swift`, снятие в `MemoryStore.swift` |
 | Общий SQLite | `Packages/AllySQLite` (функция для триггера — `SQLiteConnection.function`) |
-| Примеры M15–M29 | `Packages/AllyMemory/Tests/MemoryTests/`, `Packages/AllySQLite/Tests/`, смоук S7 |
+| Примеры M15–M31 | `Packages/AllyMemory/Tests/MemoryTests/`, `Packages/AllySQLite/Tests/`, смоук S7 |
 
 # Related
 
@@ -111,4 +124,5 @@ implementation:
 - Поставка `memory-core` (спека и план подписаны родителем 2026-10-23 «Подписываю (Рекомендую)»).
 - Поставка `memory-guard` (M29 из той же спеки серии).
 - Поставка `memory-extract` (M26–M28 из той же спеки серии).
+- Поставка `memory-sense` (M30, M31 из той же спеки серии).
 - [Memory portrait](/references/research/memory-portrait.md) — замеры варианта B, приёмка M1–M14.
