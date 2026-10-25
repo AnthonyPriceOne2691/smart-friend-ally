@@ -3,6 +3,7 @@ import AllyHearing
 import AllyLlama
 import CryptoKit
 import os
+import ShellCore
 import SwiftUI
 
 /// The voice loop behind the adult console: warm-up by stages, then a session (D2.2) — a tap wakes her, she listens by
@@ -21,6 +22,8 @@ final class VoiceLoop: ObservableObject {
     @Published private(set) var child = false
     @Published private(set) var exception = false
     @Published private(set) var acceptance = ""
+    // The break after a goodbye by the limit (Ш3): the parent's key, none by default («Без перерыва», 2026-10-23).
+    @Published private(set) var nap = Nap(raw: UserDefaults.standard.object(forKey: Nap.key).map { "\($0)" })
     private var childMode: ChildMode?, childTalk: Conversation?, running: Task<Void, Never>?
     private let recognizer = DictationRecognizer(), audio = AudioIO(), files = FileManager.default
     private let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
@@ -122,6 +125,7 @@ final class VoiceLoop: ObservableObject {
         (self.conversation, self.childTalk) = (conversation, childTalk)
         Task { for await state in childTalk.updates where child { show(state) } }
         screen.lines.append(settings.note ?? "лимит: \(Int(settings.limit / 60)) мин")
+        if let note = nap.note { screen.lines.append(note) }
         if !RouterRouting.healthy { screen.lines.append("маршрутизатор: самопроверка не прошла") }
         Task { for await state in conversation.updates where !child { talk = state } }
     }
@@ -144,13 +148,17 @@ final class VoiceLoop: ObservableObject {
     }
 
     /// A tap on the circle of the child screen: while Elly listens — «я всё» (D7); else she wakes, but past the
-    /// exception's term she does not and the console returns.
+    /// exception's term she does not and the console returns, and during the break after the limit she only stirs.
     func childWake() {
         if talk.pose == .listens { return done() }
         refreshAccess()
         guard access.open else { return leaveChild() }
+        guard !nap.holds(at: Date()) else { return }
         wake()
     }
+
+    /// The console's line of the break while it holds: «перерыв до 18:40».
+    var napLine: String? { nap.line(at: Date(), zone: .current) }
 
     /// The stop sign on the child screen: silence at once, no phrase, and the console — one action.
     func childStop() {
@@ -169,6 +177,7 @@ final class VoiceLoop: ObservableObject {
     private func show(_ state: TalkState) {
         talk = state
         guard state.phase == .asleep, state.ended != nil else { return }
+        nap.ended(state, at: Date())
         refreshAccess()
         if !access.open { leaveChild() }
     }

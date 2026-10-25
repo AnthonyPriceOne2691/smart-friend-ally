@@ -10,6 +10,8 @@ packages:
     path: ../Packages/AllyCore
   AllyLlama:
     path: ../Packages/AllyLlama
+  AllyShell:
+    path: ../Packages/AllyShell
   AllyHearing:  # Silero VAD through sherpa on the one ONNX Runtime of the app (D7.2)
     path: ../Packages/AllyHearing
 settings:
@@ -34,7 +36,17 @@ targets:
     dependencies:
       - package: AllyCore
       - package: AllyLlama
+      - package: AllyShell  # the child screen (Ш3): Ellie in her bubble, the break after the limit
+        product: ShellUI
+      - package: AllyShell
+        product: ShellCore
       - package: AllyHearing
+    info:  # generated with the project, not in git; merged with the build's own keys (GENERATE_INFOPLIST_FILE)
+      path: Info.plist
+      properties:
+        CADisableMinimumFrameDurationOnPhone: true  # ProMotion: listening may run at 120 Hz (the parent's answer 5)
+        CFBundleShortVersionString: $(MARKETING_VERSION)  # the file's keys win over the generated ones
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
     entitlements:
       path: Ally.entitlements
       properties:
