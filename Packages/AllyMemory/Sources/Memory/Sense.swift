@@ -6,8 +6,8 @@ import Foundation
 struct SenseWords: Decodable {
     struct Fiction: Decodable { let her, elly, real: [String], window: Int }
     struct Owners: Decodable { let family: [String: String], others, mine, skip: [String] }
-    struct Negation: Decodable { let after, before: [String], width: Int }
-    let fiction: Fiction, owners: Owners, negation: Negation, favorite, unlike: [String]
+    struct Negation: Decodable { let after, before, filler, verbs: [String] }
+    let fiction: Fiction, owners: Owners, negation: Negation, favorite, unlike, pets, making, past: [String]
 
     static let shared: SenseWords = {
         guard let url = Bundle.module.url(forResource: "sense", withExtension: "json"),
@@ -54,16 +54,24 @@ struct SenseWords: Decodable {
         return owners.others.contains(where: who.hasPrefix) ? (nil, who) : nil
     }
 
-    /// The words of the value right after «не», «нет», «нету» or just before «нет», «нету» in her line.
+    /// The value's word is the first word (past «у меня», «уже» and the like) after «не», «нет», «нету» — after «не
+    /// люблю» the one after it — or the first before «нет», «нету»: «нет хомячка», «не люблю кашу», «собаки у меня
+    /// нет»; not «мурка не собачка мурка».
     func negated(_ wanted: [String], in line: String) -> Bool {
-        let words = Forbidden.tokens(line), width = negation.width
-        let near = words.indices.flatMap { index in
-            let after = Array(words[(index + 1)..<min(words.count, index + 1 + width)])
-            let before = Array(words[max(0, index - width)..<index])
-            return (negation.after.contains(words[index]) ? after : [])
-                + (negation.before.contains(words[index]) ? before : [])
+        let words = Forbidden.tokens(line)
+        let near = words.indices.flatMap { index -> [String] in
+            let after = words[(index + 1)...].filter { !negation.filler.contains($0) }
+            let before = words[..<index].reversed().filter { !negation.filler.contains($0) }
+            return (negation.after.contains(words[index])
+                    ? Array(after.prefix(negation.verbs.contains(after.first ?? "") ? 2 : 1)) : [])
+                + (negation.before.contains(words[index]) ? Array(before.prefix(1)) : [])
         }
         return wanted.contains { want in near.contains { Taint.alike($0, want, least: 3) } }
+    }
+
+    /// A pet she can have at home: a cat, a dog, a hamster, a fish… — not a unicorn from her birthday wish.
+    func homely(_ words: [String]) -> Bool {
+        words.contains { word in pets.contains { Taint.alike(word, $0, least: 3) } }
     }
 
     /// What she no longer likes: the words after «больше не люблю» and the like in her lines.
