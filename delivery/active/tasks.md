@@ -8,5 +8,5 @@
 - [x] T3: правки кода по находкам справки с тестом `// M32`; повтор справки
 - [x] T4: итог — справка × 3 seed; коммит-замок; свежий набор × 3 seed, один счёт
 - [x] T5: знание — `engineering/memory`, `knowledge/log.md`; `okf_validate`, `okf_sync_gate`
-- [ ] T6: слить main, PR, CI, verify-report, сдача: архив, строка INDEX с уроками L119, L120, `memory-quality` в
+- [x] T6: слить main, PR, CI, verify-report, сдача: архив, строка INDEX с уроками L119, L120, `memory-quality` в
   `delivery/OBSERVATIONS.md`
