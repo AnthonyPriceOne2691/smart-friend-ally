@@ -1,5 +1,13 @@
 # Knowledge Bundle Update Log
 
+## 2026-10-25 — детский экран: свет и пузырьки (оболочка Ш2б)
+
+* **Update**: `engineering/character-rendering` — как сделано в Ш2б (`Light`: ночь, оттенок, свечение и жемчужинки,
+  покачивание; `Bubbles`: небо, вода, «думает», «Z»); `implementation:` += `Light.swift`, `Bubbles.swift`, `Night.swift`,
+  `Glow.swift`, `BubbleArt.swift`. `product/look-and-feel` — строка «в коде (Ш2б)», непрозрачная плашка.
+* **Источник**: поставка `child-shell-light` (оболочка Ш2б; примеры подписаны родителем 2026-10-23 одной подписью с
+  Ш3, ритм рта — в Ш2в; исключение предохранителя до 850 — решение родителя 2026-10-25).
+
 ## 2026-10-23 — детский экран в приложении: венок, тап, стоп, метка, перерыв (оболочка Ш3)
 
 * **Update**: `engineering/character-rendering` — как сделано в Ш3 (венок `Crown` и `CrownArt`, экран `ChildShell`,

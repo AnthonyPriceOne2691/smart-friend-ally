@@ -20,6 +20,11 @@ implementation:
   - Packages/AllyShell/Sources/ShellCore/Crown.swift
   - Packages/AllyShell/Sources/ShellUI/CrownArt.swift
   - Packages/AllyShell/Sources/ShellUI/ChildShell.swift
+  - Packages/AllyShell/Sources/ShellCore/Light.swift
+  - Packages/AllyShell/Sources/ShellCore/Bubbles.swift
+  - Packages/AllyShell/Sources/ShellUI/Night.swift
+  - Packages/AllyShell/Sources/ShellUI/Glow.swift
+  - Packages/AllyShell/Sources/ShellUI/BubbleArt.swift
 ---
 
 # Context
@@ -89,6 +94,19 @@ WWDC25 soft-deprecated), Unity as a Library (на iOS только полный 
 (`Tap`), сонное шевеление на тап по спящей (`Motion.poke`: пружина ω 11, ζ 0,36), зона взрослых `AdultZone`, системные
 полоски скрыты. Ключ Info `CADisableMinimumFrameDurationOnPhone` открывает 120 Гц, оракул артефакта проверяет его в
 собранном `.app`. Цена кадра с венком и частота рядом с моделью — общая сессия теста.
+
+**Как сделано в Ш2б:** `Light` (`ShellCore`) — свет кадра:
+- ночь следует весу сна со скоростью 1,6/с: при запуске она сразу, на приветствии светает, после прощания приходит,
+  когда кончился зевок;
+- оттенок «думает» — 0,9 × вес;
+- свечение и 28 жемчужинок «слушает» идут по мягкому пульсу 0,35–0,60 с периодом 2,4 с, пока микрофон не отдаёт
+  уровень;
+- покачивание пузыря — ± 3,5 pt, звёзды и звёздочки неба мерцают.
+
+`Bubbles` — 8 пузырьков неба в долях экрана телефона родителя, 9 пузырьков воды, 12 постоянных слотов для «думает» и
+«Z» (рождаются по часам прототипа, «Z» — и на тап по спящей), всё на генераторе с зерном. Кадр несёт `light` и
+`bubbles`; неподвижный кадр фазы получает её свет. Рисунок по слоям прототипа: вуаль ночи — за пузырём и зоной
+взрослых, оттенки — внутри воды. Плашка взрослых — непрозрачная. Ритм рта по слогам — Ш2в.
 
 **Следующий шаг — после теста первой версии:** Rive «2.5D» основным кандидатом, RealityKit + VRMKit запасным, клипы
 HEVC резервом. Решает зонд ниже, где база для сравнения — 2D первой версии, и слепой выбор родителя (V1) с реакцией
