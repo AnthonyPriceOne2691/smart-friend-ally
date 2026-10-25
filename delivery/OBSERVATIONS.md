@@ -57,5 +57,7 @@
 - `voice-config`
 - `test-session`
 - `memory-extract`
+- `voice-out`
 - `memory-sense`
 - `child-shell-light`
+- `asr-step3`
