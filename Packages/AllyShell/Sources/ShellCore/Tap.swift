@@ -11,7 +11,7 @@ public enum Tap: Equatable, Sendable {
         switch phase {
         case .asleep: .wake
         case .listening, .windingDown: .done
-        case .thinking, .greeting, .speaking, .goodbye: .ignore
+        case .thinking, .greeting, .speaking, .goodbye, .paused: .ignore
         }
     }
 

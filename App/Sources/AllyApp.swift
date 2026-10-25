@@ -74,6 +74,7 @@ struct Console: View {
         case .speaking: "говорит"
         case .windingDown: "дослушивает"
         case .goodbye: "прощается"
+        case .paused: "пауза"
         }
     }
 }
