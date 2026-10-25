@@ -8,7 +8,7 @@ S7 — тот же гейт на спутниках базы памяти.
 |---|---|---|---|
 | S1 | `python3 scripts/delivery_check.py` | exit 0 | 30s |
 | S2 | `bash scripts/lint/check_gate_coverage.sh` | exit 0 | 30s |
-| S3 | `python3 docs/canon/stack_selftest.py docs/canon` | exit 0 | 60s |
+| S3 | `python3 docs/canon/stack_selftest.py docs/canon` | exit 0 при локальном снимке; без снимка (вариант D с 2026-10-25: CI, чистый checkout, новый ворктри) — названный пропуск, если в `delivery/STACK-ACCEPTANCE.md` стоит `stack-selftest: external`; без снимка и без объявления — exit 1 | 60s |
 | S4 | `bash delivery/evals/smoke/idle_overdue.sh` | exit 0: в простое просрочка наблюдения красная, CI зовёт гейт | 30s |
 | S5 | `bash scripts/lint/check_swift_coverage.sh` | exit 0: `swift test` пакета `AllyDiscipline` зелёный, покрытие строк Sources ≥ 70% | 300s |
 | S6 | `bash delivery/evals/smoke/child_data_blackbox.sh` | exit 0: во временном репозитории гейт данных ребёнка краснеет на записи чёрного ящика под чужим именем, в `local/` через `add -f`, на переименованном WAV и `.allybox`; заголовок посреди текста — не находка (B11) | 30s |
