@@ -1,8 +1,8 @@
 import Foundation
 
 /// The hearing's registry (П10), `hearing.json` of the app: the silence tail by turn kind, the tentative end, the
-/// pre-roll, the longest turn, how long the microphone waits for speech and which activity tells speech from silence
-/// (D7.2); the model's registry keeps the model.
+/// pre-roll, the longest turn, how long the microphone waits for speech, which activity tells speech from silence
+/// (D7.2), her voice over Elly's and the system's voice processing (D6.1); the model's registry keeps the model.
 public struct Hearing: Decodable, Equatable, Sendable {
     /// The activity the registry asks for: energy, or Silero from the models folder — its file, its size and its
     /// parameters (threshold, the shortest speech and silence, how long its flag trails the speech).
@@ -13,10 +13,28 @@ public struct Hearing: Decodable, Equatable, Sendable {
         public let threshold: Double, minSpeech: Double, minSilence: Double, lag: Double
     }
 
-    public let turn: TurnTiming, listenTimeout: Double, vad: VAD?
+    /// Her voice over Elly's (D6.1): the shortest speech that is an overlap, how long after the voice it still is, how
+    /// far before her first speech the ring goes to the listening opened after the voice.
+    public struct Overlap: Decodable, Equatable, Sendable {
+        public let minSpeech: Double, afterVoice: Double, lead: Double
 
-    public init(turn: TurnTiming, listenTimeout: Double, vad: VAD? = nil) {
+        public init(minSpeech: Double, afterVoice: Double, lead: Double) {
+            (self.minSpeech, self.afterVoice, self.lead) = (minSpeech, afterVoice, lead)
+        }
+    }
+
+    /// The system's voice processing on the engine the microphone and the voice share (D6.1): automatic gain on or
+    /// off — measured both ways in the test session.
+    public struct VoiceProcessing: Decodable, Equatable, Sendable {
+        public let agc: Bool
+    }
+
+    public let turn: TurnTiming, listenTimeout: Double, vad: VAD?, overlap: Overlap?, voiceProcessing: VoiceProcessing?
+
+    public init(turn: TurnTiming, listenTimeout: Double, vad: VAD? = nil, overlap: Overlap? = nil,
+                voiceProcessing: VoiceProcessing? = nil) {
         (self.turn, self.listenTimeout, self.vad) = (turn, listenTimeout, vad)
+        (self.overlap, self.voiceProcessing) = (overlap, voiceProcessing)
     }
 
     public static func decode(_ data: Data) throws -> Hearing {
