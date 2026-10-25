@@ -62,3 +62,4 @@
 - `canon-variant-d`
 - `asr-step3`
 - `router-guard-load`
+- `voice-app`

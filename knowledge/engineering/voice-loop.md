@@ -20,6 +20,8 @@ implementation:
   - App/Resources/voice.json
   - App/Sources/Audio/AudioIO.swift
   - App/Sources/Audio/SystemVoice.swift
+  - App/Sources/Audio/SupertonicVoice.swift
+  - App/Sources/Audio/EnginePlayer.swift
   - App/Sources/Speech/DictationRecognizer.swift
   - App/Sources/Hearing/RecognitionPhrase.swift
   - Packages/AllyLlama/Sources/AllyLlama/LlamaModel.swift
@@ -68,10 +70,22 @@ implementation:
 - **Кадр определителя — 20 мс, как в его тестах.** iOS отдаёт буфер микрофона ≈ 100 мс даже при запросе 1024 кадров:
   на телефоне 2026-10-22 хвост срабатывал на 0,90 с вместо 0,8, и ещё ≈ 0,1 с уходило на конец буфера. Поэтому сессия
   просит буфер 20 мс, а буфер тапа режется на кадры по 20 мс; фактическая длина буфера — `tap_buffer` в журнале.
-- **Голос** — системная Milena по идентификатору из реестра; нет enhanced — compact с видимой пометкой в консоли (П23);
-  темп 0,42 из реестра (`voice_rate`; родитель: на 0,5 «торопится, глотает слова») ставится в каждом вызове (П17).
-  Значение реестра читается как Double: `NSNumber` 0,42 не приводится к Float, и чтение `as? Float` молча давало 0,5.
-  Milena — временный голос: ударения и тон не те (родитель на слух 2026-10-22), голос с ударениями — следующая поставка.
+- **Голос — Supertonic «Совсем малышка»** (V4b2b `voice-app`).
+  - Голос собирает приложение: `SpokenVoice(renderer:player:)` из `SupertonicRenderer` и `EnginePlayer` на движке
+    сессии. `SupertonicVoice` поверх него добавляет строку консоли и версию.
+  - Рендер: текст `speech-text.json` — «Э́льли», «сево́дня»; расстановщик — заглушка до V3c. Дальше Supertonic по строке
+    пресета `voice.json` — шаги первой фразы `first_steps` — и PSOLA с эквалайзером.
+  - Стык D6.1 — один `AVAudioEngine` на сессию: D6.1 даёт движок и оборачивает проигрыватель (`SoundingPlayer`); до D6.1
+    приложение даёт свой движок.
+  - До первой фразы приложение ставит аудиосессию `.playAndRecord` со звуком в динамик: `soloAmbient` молчит при
+    переключателе «без звука».
+  - Консоль пишет «голос: Supertonic F2 · 9/5 · ORT 1.28.0». Версия `voice` в журнале — движок, пресет, ORT; этапы
+    `voice_text`, `voice_synth`, `voice_fx`, `voice_start` идут в запись хода вместе с этапами слуха.
+- **Milena — запасной голос.** Нет файла или размер не тот («голоса нет: скопируй с Mac», «голос не тот: N байт вместо
+  M»), голос не загрузился — звучит Milena по идентификатору из реестра, и консоль пишет причину.
+  - Нет enhanced — compact с видимой пометкой (П23).
+  - Темп 0,42 из реестра (`voice_rate`; родитель: на 0,5 «торопится, глотает слова») ставится в каждом вызове (П17).
+    Значение читается как Double: `NSNumber` 0,42 не приводится к Float, и чтение `as? Float` молча давало 0,5.
 - **Сети нет:** правило SwiftLint `no_network` на исходниках и `scripts/lint/check_app_artifact.sh` на собранном `.app`.
   Нет русской диктовки — строка «нет русской модели диктовки», загрузки нет.
 - **Данные:** веса — `Library/Application Support/Models` (каталог помечен «не в бэкап»), след хода —
