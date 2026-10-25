@@ -58,4 +58,6 @@
 - `test-session`
 - `memory-extract`
 - `accent-onnx`
+- `voice-out`
 - `memory-sense`
+- `asr-step3`
