@@ -31,7 +31,7 @@ final class VoiceLoop: ObservableObject {
 
     func start() async {
         guard registry == nil else { return }
-        do { try await warmUp() } catch { screen.lines.append("ошибка: \(error)") }
+        do { try await warmUp() } catch { screen.lines.append((error as? LlamaError)?.line ?? "ошибка: \(error)") }
     }
 
     private func warmUp() async throws {
@@ -60,14 +60,15 @@ final class VoiceLoop: ObservableObject {
         let microphone = await AudioIO.microphoneAllowed()
         screen.lines += [speech.line, voice.note, "микрофон: " + (microphone ? "да" : "нет — разреши в Настройках")]
         let (silero, listening) = SileroActivity.choose(hearing, models: models)  // D7.2: no Silero — energy
-        screen.lines.append(listening.line)
+        let asr = GigaAMRecognizer.choose(hearing, models: models)  // D7.3: dictation unless GigaAM is asked and there
+        screen.lines += [listening.line] + [asr.line].compactMap { $0 }
         let personaHash = SHA256.hash(data: Data(persona.utf8)).map { String(format: "%02x", $0) }.joined()
         versions = ["ios": UIDevice.current.systemVersion, "llama": settings.runtime.build, "persona": personaHash,
                     "voice": voice.voice?.identifier ?? "", "weights": "\(registry.model.file):\(registry.model.bytes)",
-                    "vad": silero == nil ? "energy" : "silero:\(hearing.vad?.bytes ?? 0)"]
+                    "vad": silero == nil ? "energy" : "silero:\(hearing.vad?.bytes ?? 0)", "asr": asr.label]
         (self.registry, self.model, self.voice) = (registry, model, voice)
         screen.ready = speech.ready && microphone && voice.voice != nil
-        if screen.ready { converse(model, hearing, voice, silero) }
+        if screen.ready { converse(model, hearing, voice, silero, asr.decode) }
     }
 
     /// A tap on the sleeping friend: she greets and then talks without buttons until the session sleeps. The session of
@@ -96,11 +97,12 @@ final class VoiceLoop: ObservableObject {
 
     /// The session (D2.2): the router before the model, the parent's limit key (`-session_limit_minutes 2` at launch),
     /// a wordless record a turn with the listening's stages into `Caches/turns.jsonl`; heard and said go to the screen.
-    private func converse(_ model: LlamaModel, _ hearing: Hearing, _ voice: SystemVoice, _ silero: SileroActivity?) {
+    private func converse(_ model: LlamaModel, _ hearing: Hearing, _ voice: SystemVoice, _ silero: SileroActivity?,
+                          _ decode: (@Sendable ([Float]) -> String)?) {
         let heard: @Sendable (String) -> Void = { text in Task { @MainActor in self.screen.heard = text } }
         let ear = PhoneListener(recognizer: recognizer, audio: audio, hearing: hearing,
                                 resetSound: { voice.resetFirstSound() }, firstSound: { voice.firstSound }, heard: heard,
-                                activity: silero)
+                                activity: silero, decode: decode)
         let echo = EchoVoice(voice) { sentence in Task { @MainActor in self.screen.said += sentence + " " } }
         let settings = SessionSettings(limitMinutes: UserDefaults.standard.object(forKey: SessionSettings.key)
             .map { "\($0)" })

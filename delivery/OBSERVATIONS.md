@@ -49,6 +49,12 @@
 - `voice-engine`
 - `voice-fx`
 - `memory-guard`
+- `kv-spoken`
 - `child-shell-app`
 - `accent-tokenizers`
 - `accent-logic`
+- `gigaam-asr`
+- `voice-config`
+- `test-session`
+- `memory-extract`
+- `memory-sense`

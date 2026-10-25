@@ -8,6 +8,53 @@
 * **Источник**: поставка `child-shell-light` (оболочка Ш2б; примеры подписаны родителем 2026-10-23 одной подписью с
   Ш3, ритм рта — в Ш2в; исключение предохранителя до 850 — решение родителя 2026-10-25).
 
+## 2026-10-23 — слух: GigaAM-v3 за протоколом распознавателя, выбор в реестре слуха
+
+* **Update**: `engineering/turn-detector` — распознаватель за протоколом фразы: `asr` реестра слуха (диктовка по
+  умолчанию до правила шага 3; GigaAM при файлах своего размера и паре ORT; строка отказа), веса external data, звук
+  GigaAM — 16 кГц Int16 ящика с предзаписью 1,5 с, одна расшифровка на «возможно, конец»; `implementation:` —
+  `BatchPhrase.swift`, `recognizers.json`, `GigaAMRecognizer.swift`. `engineering/voice-loop` — перепаковка и
+  копирование весов GigaAM, включение `engine: gigaam`, `versions.asr`; `implementation:` — `RecognitionPhrase.swift`.
+  `engineering/safety-below-model` — распознаватель не меняет путь реплики. `engineering/index` — строка концепта.
+* **Источник**: поставка `gigaam-asr` (D7.3 серии «слух»; примеры U22–U26, U28 подписаны родителем 2026-10-23; U27 —
+  D7.4).
+
+## 2026-10-25 — память: чужое, выдуманное, любимое и отрицание в разборе (memory-sense)
+
+* **Update**: `engineering/memory` — окно вымысла, хозяин питомца, отрицание, маркеры любимого, «больше не люблю»
+  снимает «любит»; `implementation:` — `Sense.swift`, `sense.json`. `engineering/safety-below-model` — правила 3–7
+  промпта разбора исполняются.
+* **Источник**: поставка `memory-sense` (M30, M31 спеки серии, подписанной родителем 2026-10-23; разрез — ведущий).
+## 2026-10-23 — живой разговор: в памяти модели только сказанное (kv-spoken)
+
+* **Update**: `engineering/session` — после хода модели `commit(spoken:)` с доигранными предложениями, скрипт —
+  `remember(heard:spoken:)`, `forget` — ничего; брошенный ответ спекуляции — `retract`, этап `spec_retracted` вместо
+  `spec_stale`. `engineering/voice-loop` — KV держит только прозвучавшее, `swa_full: false` — отказ загрузки и строка
+  консоли из `lines.json`; `implementation:` — `LlamaSettings.swift`, `lines.json`. `engineering/safety-below-model` —
+  срезанное контрактом в память модели не попадает. `engineering/index` — строка сессии.
+* **Источник**: поставка `kv-spoken` (D5 серии «живой разговор»; примеры X1–X8 подписаны родителем 2026-10-23).
+## 2026-10-25 — эквалайзер, строка пресета, файлы голоса (голос V4b1)
+
+* **Update**: `engineering/voice-fx` — эквалайзер RBJ вернулся в цепочку (`eq.c`, `VoiceEQ`), полный Z30 против p9f5.
+  `engineering/voice-engine` — строка пресета в `voice.json` и `VoiceSettings`. `engineering/voice-loop` — команда
+  копирования файлов голоса `scripts/copy_voice.py`. `engineering/index`, `references/repo-map`.
+* **Источник**: поставка `voice-config` (V4b1 серии голоса; примеры подписаны родителем 2026-10-23).
+## 2026-10-23 — сессия теста с родителем: один runbook на все телефонные проверки
+
+* **Creation**: `ops/test-session` (Runbook) — решение родителя 2026-10-23 «всё в общую сессию»: подготовка на Mac
+  (переустановка, веса E4B, Silero, позже GigaAM, Supertonic и RUAccent — с sha256 и командами), шаг владельца (ключ
+  Secretive, подпись детского режима), отложенные проверки подписанных спек по порядку без лишних переустановок (A10–A12,
+  W8–W11, G8, G10, G11, U6, U14–U15, U20–U21, U28, Z22, Z26, B13–B19, B21, B22, X8, X10–X17, V29, M37, P20), итоги в
+  `observed.md`. **Update**: `engineering/voice-loop` — сравнение с энергией через путь U19; `ops/index`.
+* **Источник**: поставка `test-session` (класс S, документ; waiver'ы и списки ожиданий серий в архивах и ветках).
+
+## 2026-10-23 — память: разбор разговора в кандидаты с опорой на её слова (memory-extract)
+
+* **Update**: `engineering/memory` — разбор: запрос из ресурсов `extract.*`, модель за протоколом, повтор при мусоре,
+  опора «сама / код / согласилась / без опоры»; серия с разрезом на `memory-sense` и `memory-quality`;
+  `implementation:` — `Extract.swift`, `ExtractPrompt.swift`, `ModelAnswer.swift`, `Anchors.swift`, ресурсы.
+  `engineering/safety-below-model` — реестр правил промпта разбора. `engineering/index`, `references/repo-map` — строки.
+* **Источник**: поставка `memory-extract` (M26–M28 спеки серии, подписанной родителем 2026-10-23; разрез — ведущий).
 ## 2026-10-23 — детский экран в приложении: венок, тап, стоп, метка, перерыв (оболочка Ш3)
 
 * **Update**: `engineering/character-rendering` — как сделано в Ш3 (венок `Crown` и `CrownArt`, экран `ChildShell`,
