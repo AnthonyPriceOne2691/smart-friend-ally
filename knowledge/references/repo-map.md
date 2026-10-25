@@ -84,6 +84,9 @@ implementation:
   хотя ассет llama.cpp публичный. Симулятора нет: в xcframework llama.cpp b10809 только срезы iOS-устройства и macOS.
 - **Роли «до кода приложения» решены** (`app-voice-loop`): `cpu-in-async` и `unbounded-list` держат правила SwiftLint
   `blocking_wait` и `unbounded_stream`; объявлений с `until` в `scripts/lint/not-applicable.json` больше нет.
+- **Сторож скорости маршрутизатора на общем Mac** (`RouterTests.testDecisionIsFast`, отладочная сборка, p95 < 50 мс):
+  вне CI при загрузке за минуту выше числа производительных ядер (`hw.perflevel0.physicalcpu`) — пропуск с причиной в
+  логе, на CI судит всегда; R12 (p95 5 мс) меряет release-реплей `discipline-replay` (поставка `router-guard-load`).
 - **`raw.githubusercontent.com` из песочницы агента недоступен** (таймаут);
   содержимое GitHub — через `gh api`.
 - **Синхронизация с каноном — по содержимому, не по SHA:** HEAD Prepare двигают правки

@@ -1,5 +1,11 @@
 # Knowledge Bundle Update Log
 
+## 2026-10-25 — сторож скорости маршрутизатора на занятом Mac
+
+* **Update**: `references/repo-map` — грабли: сторож `testDecisionIsFast` вне CI пропускается при загрузке выше
+  числа производительных ядер, на CI судит всегда; R12 — release-реплей.
+* **Источник**: поставка `router-guard-load` (класс S, поручение ведущего 2026-10-25).
+
 ## 2026-10-25 — голос хода в ядре (голос V4b2a)
 
 * **Update**: `engineering/voice-engine` — `SpokenVoice` и порты голоса, `first_steps`. `engineering/session` —
