@@ -6,7 +6,7 @@
 - [x] T3: слить main после мержа D7.3 (`GigaAMRecognizer`)
 - [x] T4: `StepThree` в AllyCore и `step3.json`; `StepThreeTests` (Linux)
 - [x] T5: `StepThreeRun` и исполняемый `asr-step3` в AllyHearing; `StepThreeRunTests` (Mac)
-- [ ] T6: знание, verify, PR, CI; сдача — архив, INDEX (L104), строка `asr-step3` в `delivery/OBSERVATIONS.md`
+- [x] T6: знание, verify, PR, CI; сдача — архив, INDEX (L104), строка `asr-step3` в `delivery/OBSERVATIONS.md`
 
 Уроки по путям диффа, найденные гейтом на verify: **L7, L16, L70** — место шага 3 искал поиском по смыслу («шаг 3»,
 «step3», «D7.4»): кроме `turn-detector` и `ops/black-box` нашлась справка `asr-child-speech` со скриптами исследования —

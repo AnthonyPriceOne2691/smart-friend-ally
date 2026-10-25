@@ -58,3 +58,4 @@
 - `test-session`
 - `memory-extract`
 - `memory-sense`
+- `asr-step3`
