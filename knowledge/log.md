@@ -1,5 +1,12 @@
 # Knowledge Bundle Update Log
 
+## 2026-10-25 — голос Элли в приложении (голос V4b2b)
+
+* **Update**: `engineering/voice-loop` — Supertonic «Совсем малышка» вместо Milena, `SupertonicVoice(engine:)` (стык D6.1),
+  аудиосессия до первой фразы, Milena — запасной голос со строкой консоли. `engineering/safety-below-model` — голос
+  приложения говорит только фразы хода. `references/repo-map` — пакеты приложения.
+* **Источник**: поставка `voice-app` (V4b2b серии голоса; телефонные Z20–Z26 — в сессии теста 26.10).
+
 ## 2026-10-25 — голос хода в ядре (голос V4b2a)
 
 * **Update**: `engineering/voice-engine` — `SpokenVoice` и порты голоса, `first_steps`. `engineering/session` —
