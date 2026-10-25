@@ -5,7 +5,7 @@ import Foundation
 /// weights of her poses (ω = 11: about 0.43 s to 95%, screen rule 10), oscillation phases that accumulate their tempo,
 /// blinks on a seeded schedule and, after a goodbye, the yawn and sleep of `poseBye`. Speaking has two groups — talking
 /// and waving (greeting, goodbye) — and sleep two — plain and after a goodbye (dozing) — so every switch is a spring
-/// between groups whose own poses run on without a break.
+/// between groups whose own poses run on without a break. The light and the bubbles of the screen step with her (Ш2б).
 public final class Motion {
     public static let stiffness = 11.0
     /// The squash of a tap on the sleeping Ellie (prototype v3, `giggle` asleep): a soft spring that wobbles back.
@@ -22,8 +22,9 @@ public final class Motion {
     private var speeds = [0.0, 0, 0, 0, 0, 0], phases = Phases(), random: Random
     private var phase = SessionState.asleep, group = Group.sleeps, dozingSince = 0.0
     private var blinkAt = 2.2, doubleBlink = false, squash = 0.0, squashSpeed = 0.0
+    private var glow = Glow(), bubbles: Bubbles, sleepingSince = 0.0, rise = 0.0
 
-    public init(seed: UInt64 = 1) { random = Random(seed: seed) }
+    public init(seed: UInt64 = 1) { (random, bubbles) = (Random(seed: seed), Bubbles(seed: seed)) }
 
     public func weight(of group: Group) -> Double { weights[group.rawValue] }
 
@@ -36,11 +37,20 @@ public final class Motion {
         let pose = blended(voice: voice, mic: mic, calm: calm)
         phases.advance(dt, pose, calm: calm)
         wobble(dt)
-        return Frame(pose, phases: phases, blink: blink(), swing: calm ? Pose.calmSwing : 1, squash: squash)
+        var frame = Frame(pose, phases: phases, blink: blink(), swing: calm ? Pose.calmSwing : 1, squash: squash)
+        rise = frame.rise
+        let clocks = Clocks(time: phases.time, weights: weights, sleeping: phases.time - sleepingSince,
+                            dozing: phases.time - dozingSince, rise: rise, calm: calm)
+        (frame.light, frame.bubbles) = (glow.step(dt, clocks), bubbles.step(dt, clocks))
+        return frame
     }
 
-    /// A tap on the sleeping Ellie: a kick to the squash spring — 1, with Reduce Motion 0.5 (prototype v3, `giggle`).
-    public func poke(calm: Bool = false) { squashSpeed -= calm ? 0.5 : 1 }
+    /// A tap on the sleeping Ellie: a kick to the squash spring — 1, with Reduce Motion 0.5 (prototype v3, `giggle`) —
+    /// and one «Z» over her (Ш2б, the parent's answer 6).
+    public func poke(calm: Bool = false) {
+        squashSpeed -= calm ? 0.5 : 1
+        bubbles.poke(rise: rise)
+    }
 
     /// The squash springs back to 0 — semi-implicit Euler in substeps of ≤ 8 ms, like the poses.
     private func wobble(_ dt: Double) {
@@ -58,6 +68,7 @@ public final class Motion {
         guard next != phase else { return }
         group = Motion.group(of: next, after: phase)
         if group == .dozes, weight(of: .dozes) < 0.01 { dozingSince = phases.time }
+        if group == .sleeps, weight(of: .sleeps) < 0.01 { sleepingSince = phases.time }
         if phase == .asleep { (blinkAt, doubleBlink) = (phases.time + 2.2, false) }
         phase = next
     }

@@ -21,7 +21,7 @@
 - **parallel_sessions:** merge-guard,manual-deploy
   <!-- §5.1a: интеграция в main только через scripts/merge_guard.sh (мержит ведущий); на телефон — в общую сессию теста -->
 - **hooks:** not-deployed
-- **blockers:** none
+- **blockers:** предохранитель — net 803 при пределе 800 (`escalation.md`): ждём решения родителя через ведущего
 - **waivers:** none
 - **new_dependency:** none
 - **runtime_paths:** none reason=Ш2б — пакет SwiftPM: свет и пузырьки — значения кадра и генераторы с тестами на Linux, кадры — снимки на Mac; приложение не тронуто, экран на телефоне — общая сессия теста
