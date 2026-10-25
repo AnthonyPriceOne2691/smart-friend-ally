@@ -1,0 +1,16 @@
+{
+  "_about": "Step 3 of the recognizer choice (D7.4): numbers 0-100 as words for the normalization, and the console lines — sums only, never a word of hers.",
+  "units": ["ноль", "один", "два", "три", "четыре", "пять", "шесть", "семь", "восемь", "девять", "десять", "одиннадцать",
+            "двенадцать", "тринадцать", "четырнадцать", "пятнадцать", "шестнадцать", "семнадцать", "восемнадцать",
+            "девятнадцать"],
+  "tens": ["", "", "двадцать", "тридцать", "сорок", "пятьдесят", "шестьдесят", "семьдесят", "восемьдесят", "девяносто",
+           "сто"],
+  "count": "шаг 3: реплик {n}; пропущено — без эталона {no_ref}, без звука {no_audio}, с живым GigaAM {live}",
+  "wer": "WER: диктовка {dictation}%, GigaAM {gigaam}%; разница {gain} п.п. (95% бутстрэпа: {low} … {high})",
+  "one_word": "однословных {k}: точно — диктовка {dictation}, GigaAM {gigaam}; разница {gain} п.п.",
+  "empty": "пустых ответов: диктовка {dictation}, GigaAM {gigaam}",
+  "models": "модели: {models}",
+  "verdict": "вердикт: {verdict} (≥ 10 п.п. по WER или по однословным)",
+  "gigaam": "GigaAM основным",
+  "dictation": "диктовка"
+}
