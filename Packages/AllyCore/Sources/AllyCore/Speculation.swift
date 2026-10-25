@@ -1,16 +1,16 @@
 import Foundation
 
 /// The model's answer begun in her pause (D7.1): `start` asks the model on the text of her tentative end and keeps the
-/// newest text; the turn at the tail takes it when her words are the same (letters only), else it is dropped — a
-/// cancelled turn leaves the model's memory (`LlamaModel`). An answer the model finished before it was dropped stays in
-/// that memory until D5 and is counted (`spec_stale`).
+/// newest text; the turn at the tail takes it when her words are the same (letters only), else it is dropped. A dropped
+/// answer leaves the model's memory entirely, her words with it (`retract`, D5); one the model had already finished is
+/// counted (`spec_retracted`). The memory calls of the turn go through to the model.
 final class Speculation: LanguageModel, @unchecked Sendable {
     private struct Pending {
         let id: Int, words: String, start: Double
         var latest: String?, finished = false, failure: Error?
         var takers: [AsyncThrowingStream<String, Error>.Continuation] = []
     }
-    private struct Counts { var started = false, reused = false, lead = 0.0, cancels = 0, stale = 0 }
+    private struct Counts { var started = false, reused = false, lead = 0.0, cancels = 0, retracted = 0 }
     private struct State { var pending: Pending?, task: Task<Void, Never>?, next = 0, counts = Counts() }
 
     private let model: LanguageModel, clock: TurnClock, state = Locked(State())
@@ -40,15 +40,17 @@ final class Speculation: LanguageModel, @unchecked Sendable {
 
     /// The begun answer is not needed: she went on, said nothing, said something else, or the parent stopped her.
     func drop() {
-        let (task, running) = state { (now: inout State) -> (Task<Void, Never>?, Bool) in
-            guard let pending = now.pending else { return (nil, false) }
+        let (task, running) = state { (now: inout State) -> (Task<Void, Never>?, Bool?) in
+            guard let pending = now.pending else { return (nil, nil) }
             defer { (now.pending, now.task) = (nil, nil) }
             now.counts.cancels += 1
-            now.counts.stale += pending.finished ? 1 : 0
+            now.counts.retracted += pending.finished ? 1 : 0
             return (now.task, !pending.finished)
         }
+        guard let running else { return }
         if running { model.cancel() }
         task?.cancel()
+        model.retract()
     }
 
     func reply(to utterance: String) -> AsyncThrowingStream<String, Error> {
@@ -82,6 +84,15 @@ final class Speculation: LanguageModel, @unchecked Sendable {
         takers.forEach { $0.finish() }
     }
 
+    /// The begun answer has come to its end; it is not taken yet.
+    var finished: Bool { state { $0.pending?.finished ?? false } }
+
+    func commit(spoken: String) { model.commit(spoken: spoken) }
+
+    func retract() { model.retract() }
+
+    func remember(heard: String, spoken: String) { model.remember(heard: heard, spoken: spoken) }
+
     /// The counts since the last record, for its stages: only when an answer was begun in a pause.
     func takeStages() -> [String: Double] {
         state { (now: inout State) -> [String: Double] in
@@ -90,7 +101,7 @@ final class Speculation: LanguageModel, @unchecked Sendable {
             guard counts.started else { return [:] }
             var stages = ["spec_reused": counts.reused ? 1 : 0, "spec_cancels": Double(counts.cancels)]
             if counts.reused { stages["spec_lead"] = counts.lead }
-            if counts.stale > 0 { stages["spec_stale"] = Double(counts.stale) }
+            if counts.retracted > 0 { stages["spec_retracted"] = Double(counts.retracted) }
             return stages
         }
     }

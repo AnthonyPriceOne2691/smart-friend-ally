@@ -45,8 +45,10 @@ implementation:
   обёртка `VoiceFX`, `PitchTrack`): `swift test --disable-keychain --package-path Packages/AllyVoiceFX`; звук против
   цепочки стенда — `local/spike/voice-fx/scripts/port_vs_py.py` на Mac (Z30).
 - **Память о ребёнке** — `Packages/AllyMemory` (факты с опорой на ход, замена по дате, блок для промпта, «стереть всё»,
-  запрет на любом пути; слова блока — `Resources/memory.json`, правила запрета — `Resources/forbidden.json`) поверх общего SQLite приложения `Packages/AllySQLite` (системный модуль
-  `CSQLite` и тонкая обёртка): `swift test --disable-keychain --package-path Packages/AllyMemory`;
+  запрет на любом пути, разбор разговора; слова блока — `Resources/memory.json`, правила запрета —
+  `Resources/forbidden.json`, промпт разбора — `Resources/extract.*`) поверх общего SQLite приложения
+  `Packages/AllySQLite` (системный модуль `CSQLite` и тонкая обёртка):
+  `swift test --disable-keychain --package-path Packages/AllyMemory`;
   [Memory](/engineering/memory.md).
 - **Контур:** `python3 scripts/delivery_check.py` — фазы поставки;
   `.venv/bin/pre-commit run --all-files --verbose` — гейты;
