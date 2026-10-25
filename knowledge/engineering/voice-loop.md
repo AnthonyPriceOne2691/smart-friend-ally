@@ -6,7 +6,7 @@ status: draft
 tags: [engineering, app, voice, runbook]
 generated:
   by: claude_code/opus-5.5
-  at: 2026-10-22T19:30:00+03:00
+  at: 2026-10-23T23:30:00+03:00
 stale_after: 2027-01-31T00:00:00+03:00
 implementation:
   - App/project.yml
@@ -16,10 +16,15 @@ implementation:
   - App/Sources/PhoneListener.swift
   - App/Sources/AllyApp.swift
   - scripts/reinstall_app.sh
+  - scripts/copy_voice.py
+  - App/Resources/voice.json
   - App/Sources/Audio/AudioIO.swift
   - App/Sources/Audio/SystemVoice.swift
   - App/Sources/Speech/DictationRecognizer.swift
+  - App/Sources/Hearing/RecognitionPhrase.swift
   - Packages/AllyLlama/Sources/AllyLlama/LlamaModel.swift
+  - Packages/AllyLlama/Sources/AllyLlama/LlamaSettings.swift
+  - Packages/AllyLlama/Sources/AllyLlama/Resources/lines.json
 ---
 
 # Purpose
@@ -40,16 +45,26 @@ implementation:
   концу слушания (≤ 8 с: у `AudioIO` нет отмены, правка — D6), а новая сессия ждёт его конца.
 - **Слушание:** микрофон (`.playAndRecord`, `.default`, `.defaultToSpeaker`, буфер 20 мс) → кадры по 20 мс в
   определитель конца речи ядра (хвост по типу хода из `hearing.json`: открытый 1,8 с, закрытый 1,2, счёт 2,5 — D7) и
-  буферы — в распознаватель; на «возможно, конец» — текст диктовки `finalize(through: nil)` без конца ввода, по нему
-  модель молча начинает ответ (D7.1) → конец речи или «Я всё» → микрофон закрыт → `DictationTranscriber`
-  ru-RU дописывает текст. 8 с без речи — тишина (сессия скажет «не расслышала», на второй раз — отдых); 30 с речи —
+  буферы — в распознаватель (`asr` реестра слуха, D7.3: диктовка или GigaAM за одним протоколом фразы); на «возможно,
+  конец» — текст без конца ввода (диктовка — `finalize(through: nil)`, GigaAM — расшифровка копии 16 кГц Int16 с
+  предзаписью 1,5 с), по нему модель молча начинает ответ (D7.1) → конец речи или «Я всё» → микрофон закрыт →
+  `DictationTranscriber` ru-RU дописывает текст, GigaAM отдаёт ту же расшифровку, если речь не вернулась, иначе
+  расшифровывает заново. 8 с без речи — тишина (сессия скажет «не расслышала», на второй раз — отдых); 30 с речи —
   предел реплики. Этапы `turn_limit` и `turn_done` в следе — ход кончил предел или «Я всё».
 - **Модель** — `LlamaModel` (llama.cpp b10809): веса через mmap с ленивым чтением, все слои на GPU, n_ctx 8192, четыре
   последовательности с общим KV и полным окном SWA (KV 448 МиБ — сверено по журналу llama.cpp на Mac). Системный ход
   персоны (1764 токена) живёт в последовательности 0, разговор — её копия в 1 и остаётся в KV: ход дописывает только
-  себя. Отменённый или упавший ход из KV удаляется. Префикс пишется файлом состояния ≈ 49,9 МБ в `Caches/` с ключом из
-  персоны, имени и размера весов и параметров рантайма; на Mac чтение 0,015–0,018 с против сборки 1,9–3,1 с, а файл с
-  чужим ключом не читается — префикс собирается заново.
+  себя. В KV — только прозвучавшее (D5, [Session](/engineering/session.md)):
+  - `commit` срезает ответ хода с первого сгенерированного токена (`seq_rm`) и дописывает прозвучавшее;
+  - `retract` убирает ход целиком, `remember` дописывает ход без модели;
+  - стоп оставляет её реплику, упавший ход уходит целиком.
+  Срез точен только с полным окном SWA (стенд 19.10: при `swa_full=false` хвост 600 токенов расходится). Поэтому с
+  `swa_full: false` в `model.json` модель не грузится, а консоль пишет «swa_full выключен — память модели не держит
+  только сказанное» (строка — ресурс пакета модели `lines.json`). Пустой ход модели (стоп до конца первой фразы)
+  Gemma 4 не сбивает: на Mac следующий ответ — обычная реплика по-русски.
+  Префикс пишется файлом состояния ≈ 49,9 МБ в `Caches/` с ключом из персоны, имени и размера весов и параметров
+  рантайма; на Mac чтение 0,015–0,018 с против сборки 1,9–3,1 с, а файл с чужим ключом не читается — префикс
+  собирается заново.
 - **Кадр определителя — 20 мс, как в его тестах.** iOS отдаёт буфер микрофона ≈ 100 мс даже при запросе 1024 кадров:
   на телефоне 2026-10-22 хвост срабатывал на 0,90 с вместо 0,8, и ещё ≈ 0,1 с уходило на конец буфера. Поэтому сессия
   просит буфер 20 мс, а буфер тапа режется на кадры по 20 мс; фактическая длина буфера — `tap_buffer` в журнале.
@@ -155,11 +170,47 @@ shasum -a 256 ~/models/silero_vad.onnx              # 1a153a22…8788e3, 2 327 5
 xcrun devicectl device copy to --device <UDID> --domain-type appDataContainer \
   --domain-identifier com.anthonypriceone.ally --source ~/models/silero_vad.onnx \
   --destination "Library/Application Support/Models/silero_vad.onnx"
+# GigaAM-v3 CTC (D7.3, MIT): веса перепаковываются в external data (footprint 0,4 ГБ вместо 0,65) — onnx 1.23.2 даёт
+# те же байты, что в hearing.json; слушает только с "engine": "gigaam" в App/Resources/hearing.json (по умолчанию —
+# диктовка до правила шага 3) и после переустановки
+curl -fL -o ~/models/asr/giga-ctc.tar.bz2 \
+  https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-ctc-giga-am-v3-russian-2025-12-16.tar.bz2
+tar -xjf ~/models/asr/giga-ctc.tar.bz2 -C ~/models/asr    # model.int8.onnx f86ebfa0…66437ec, 224 721 476 байт
+python3 -m venv ~/models/asr/.venv && ~/models/asr/.venv/bin/pip install onnx==1.23.2
+G=~/models/asr/sherpa-onnx-nemo-ctc-giga-am-v3-russian-2025-12-16 && mkdir -p ~/models/asr/gigaam-extdata
+~/models/asr/.venv/bin/python -I -c 'import onnx, sys; onnx.save_model(onnx.load(sys.argv[1]), sys.argv[2],
+  save_as_external_data=True, all_tensors_to_one_file=True, location="model.int8.onnx.data", size_threshold=1024,
+  convert_attribute=False)' "$G/model.int8.onnx" ~/models/asr/gigaam-extdata/model.int8.onnx
+cp "$G/tokens.txt" ~/models/asr/gigaam-extdata/
+shasum -a 256 ~/models/asr/gigaam-extdata/*   # 02a443f4… 2 939 169 · fa9a4816… 221 818 368 · 17cc5144… 196 байт
+for f in model.int8.onnx model.int8.onnx.data tokens.txt; do
+  xcrun devicectl device copy to --device <UDID> --domain-type appDataContainer \
+    --domain-identifier com.anthonypriceone.ally --source ~/models/asr/gigaam-extdata/$f \
+    --destination "Library/Application Support/Models/$f"
+done
 ```
 
 Консоль при запуске пишет, кто слушает: «слух: Silero · sherpa 1.13.8 · ORT 1.28.0» или причину энергии; след —
 `versions.vad`, время окон Silero — журнал (`devicectl … --console`, категория `hearing`). Те же фразы с энергией (U21) —
-без файла Silero на телефоне: удалить его из `Library/Application Support/Models` и перезапустить.
+пустой файл того же имени поверх модели (путь U19: размер не тот), затем настоящий обратно; команды — в
+[Test session](/ops/test-session.md).
+С `"engine": "gigaam"` консоль пишет отказ, если GigaAM не слушает («GigaAM нет: нет файла model.int8.onnx.data —
+диктовка» и так далее), след — `versions.asr` (`gigaam-v3-ctc:224757733` или `dictation`), время расшифровки — этап
+`recognize`. Откат — `"engine": "dictation"` и переустановка; файлы GigaAM можно не удалять.
+
+**Файлы голоса** (V4b1 `voice-config`) — одной командой. Манифест — `App/Resources/voice.json`: пресет «Совсем малышка» и
+21 файл с байтами и sha256.
+- Группа `voice` — Supertonic, ≈ 400 МБ. Её проверяет приложение: «голоса нет: скопируй с Mac» или «голос не тот: N байт
+  вместо M».
+- Группа `accent` — словари и модель омографов RUAccent, ≈ 100 МБ. Её проверит расстановщик, когда придёт.
+
+Источники лежат в `~/models/tts`. Словари `.gz` команда распаковывает на Mac и сверяет sha256 у распакованного. Всё
+сверяется до первой копии, на расхождении — стоп с именем файла. Ничего не удаляет; повтор пропускает неизменённое.
+
+```bash
+python3 scripts/copy_voice.py --check     # сверка на Mac, без телефона
+python3 scripts/copy_voice.py <UDID>      # сверка, копирование в Library/Application Support/Voice, список с телефона
+```
 
 Первый запуск новой подписи — доверие сертификату на телефоне: Настройки → Основные → VPN и управление устройством (L15).
 Бесплатная подпись живёт 7 дней: консоль пишет «подпись: осталось N дн.», при N ≤ 1 — «переустанови с Mac».
@@ -184,7 +235,7 @@ xcrun devicectl device info files --device <UDID> --domain-type systemCrashLogs
 `end` (у последней записи сессии: `limit`, `goodbye_word`, `rest`, `parent`, `error`), `stages` (`tail`, `recognize`,
 `speech_end_to_sound`, `tap_buffer` — этапы слушания приложения; `first_text`, `first_sentence`, `first_sound`,
 `reply_end` — этапы хода; секунды), `versions` (iOS, сборка llama.cpp, sha256 персоны, голос, вес по ключу
-«файл:байты»), `memory` (`footprint_mb`, `footprint_peak_mb`, `available_mb`, `context_tokens`), `thermal`. Строки
+«файл:байты», `vad`, `asr`), `memory` (`footprint_mb`, `footprint_peak_mb`, `available_mb`, `context_tokens`), `thermal`. Строки
 журнала D1.2 в том же файле остаются от прошлых прогонов.
 
 # Замер на телефоне 2026-10-22 (сборка до правки кадров)

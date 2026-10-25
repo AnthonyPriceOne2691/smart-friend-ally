@@ -16,6 +16,7 @@ public struct TurnOutcome: Sendable {
 /// One turn through the contract: sentence 1 sounds once its boundary is safe and `first` lets it out, the rest goes
 /// through `finish`. A refused sentence 1 cancels the model and its canned reply sounds; no sentence in the timeout —
 /// the mode's canned reply and `modelTimeout`; cancelling the turn stops the voice and the model and rethrows (П28).
+/// However the turn ends, the model's memory of it becomes what sounded (`commit`, D5).
 public final class TurnRunner {
     private let model: LanguageModel, voice: VoiceOutput, clock: TurnClock, mode: TurnMode, firstSentenceTimeout: Double
 
@@ -31,15 +32,18 @@ public final class TurnRunner {
     ///   - prompt: what the model gets when it is not her words alone — with the encyclopedia's hint (Э2).
     public func run(_ utterance: String, decision: RouterDecision = .pass, prompt: String? = nil) async throws
         -> TurnOutcome {
-        let watchdog = Watchdog()
+        let watchdog = Watchdog(), sounded = Sounded()
         let timer = Task { [clock, model, firstSentenceTimeout] in
             try await clock.sleep(seconds: firstSentenceTimeout)
             if watchdog.move(to: .fired) { model.cancel() }
         }
-        defer { timer.cancel() }
+        defer {
+            timer.cancel()
+            model.commit(spoken: sounded.text)  // after any cancel of the turn: the model's queue keeps the order
+        }
         return try await withTaskCancellationHandler {
             let contract = TurnContract(mode: mode, heard: utterance, decision: decision)
-            var state = TurnState(contract: contract, start: clock.now())
+            var state = TurnState(contract: contract, start: clock.now(), sounded: sounded)
             try await stream(prompt ?? utterance, into: &state, watchdog: watchdog)
             try Task.checkCancellation()
             return try await finish(&state, timedOut: watchdog.state == .fired)
@@ -80,17 +84,29 @@ public final class TurnRunner {
 
     private func say(_ sentence: String, _ state: inout TurnState) async throws {
         if state.times.firstSound == nil { state.times.firstSound = elapsed(state) }
-        try await voice.speak(sentence)
+        try await state.sounded.say(sentence, voice)
     }
 
     private func elapsed(_ state: TurnState) -> Double { clock.now() - state.start }
 }
 
-/// One turn in flight: its contract, the reply so far, what became of sentence 1, the stage times.
+/// One turn in flight: its contract, the reply so far, what became of sentence 1, the stage times, what sounded.
 struct TurnState {
     enum Head { case pending, refused, spoken }
-    let contract: TurnContract, start: Double
+    let contract: TurnContract, start: Double, sounded: Sounded
     var text = "", head = Head.pending, times = TurnTimes()
+}
+
+/// What sounded of a turn (D5): the sentences whose `speak` returned before the turn was cancelled — one cut by a stop
+/// does not count.
+final class Sounded: Sendable {
+    private let sentences = Locked([String]())
+    var text: String { sentences { $0.joined(separator: " ") } }
+
+    func say(_ sentence: String, _ voice: VoiceOutput) async throws {
+        try await voice.speak(sentence)
+        if !Task.isCancelled { sentences { $0.append(sentence) } }
+    }
 }
 
 /// The first-sentence timeout: whichever of firing and disarming comes first wins.

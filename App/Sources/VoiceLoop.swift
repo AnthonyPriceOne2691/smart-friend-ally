@@ -28,10 +28,11 @@ final class VoiceLoop: ObservableObject {
     private let recognizer = DictationRecognizer(), audio = AudioIO(), files = FileManager.default
     private let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
     private var model: LlamaModel?, registry: ModelRegistry?, voice: SystemVoice?, versions: [String: String] = [:]
+    private var encyclopedia: Encyclopedia?  // Э2: loaded at warm-up, both sessions get it
 
     func start() async {
         guard registry == nil else { return }
-        do { try await warmUp() } catch { screen.lines.append("ошибка: \(error)") }
+        do { try await warmUp() } catch { screen.lines.append((error as? LlamaError)?.line ?? "ошибка: \(error)") }
     }
 
     private func warmUp() async throws {
@@ -60,16 +61,17 @@ final class VoiceLoop: ObservableObject {
         let microphone = await AudioIO.microphoneAllowed()
         screen.lines += [speech.line, voice.note, "микрофон: " + (microphone ? "да" : "нет — разреши в Настройках")]
         let (silero, listening) = SileroActivity.choose(hearing, models: models)  // D7.2: no Silero — energy
-        screen.lines.append(listening.line)
+        let asr = GigaAMRecognizer.choose(hearing, models: models)  // D7.3: dictation unless GigaAM is asked and there
+        screen.lines += [listening.line] + [asr.line].compactMap { $0 }
         let encyclopedia = Encyclopedia.bundled()  // Э2: the base and FTS5 on the phone — the self-test says if not
         screen.lines.append(encyclopedia.line(searchP95: encyclopedia.searchP95()))
         let personaHash = SHA256.hash(data: Data(persona.utf8)).map { String(format: "%02x", $0) }.joined()
         versions = ["ios": UIDevice.current.systemVersion, "llama": settings.runtime.build, "persona": personaHash,
                     "voice": voice.voice?.identifier ?? "", "weights": "\(registry.model.file):\(registry.model.bytes)",
-                    "vad": silero == nil ? "energy" : "silero:\(hearing.vad?.bytes ?? 0)"]
-        (self.registry, self.model, self.voice) = (registry, model, voice)
+                    "vad": silero == nil ? "energy" : "silero:\(hearing.vad?.bytes ?? 0)", "asr": asr.label]
+        (self.registry, self.model, self.voice, self.encyclopedia) = (registry, model, voice, encyclopedia)
         screen.ready = speech.ready && microphone && voice.voice != nil
-        if screen.ready { converse(model, hearing, voice, silero, encyclopedia) }
+        if screen.ready { converse(model, hearing, voice, silero, asr.decode) }
     }
 
     /// A tap on the sleeping friend: she greets and then talks without buttons until the session sleeps. The session of
@@ -100,15 +102,16 @@ final class VoiceLoop: ObservableObject {
     /// limit key (`-session_limit_minutes 2` at launch), a wordless record a turn with the listening's stages into
     /// `Caches/turns.jsonl`; heard and said go to the screen.
     private func converse(_ model: LlamaModel, _ hearing: Hearing, _ voice: SystemVoice, _ silero: SileroActivity?,
-                          _ encyclopedia: Encyclopedia) {
+                          _ decode: (@Sendable ([Float]) -> String)?) {
         let heard: @Sendable (String) -> Void = { text in Task { @MainActor in self.screen.heard = text } }
         let ear = PhoneListener(recognizer: recognizer, audio: audio, hearing: hearing,
                                 resetSound: { voice.resetFirstSound() }, firstSound: { voice.firstSound }, heard: heard,
-                                activity: silero)
+                                activity: silero, decode: decode)
         let echo = EchoVoice(voice) { sentence in Task { @MainActor in self.screen.said += sentence + " " } }
         let settings = SessionSettings(limitMinutes: UserDefaults.standard.object(forKey: SessionSettings.key)
             .map { "\($0)" })
         let versions = versions, sink = TraceFile(url: caches.appendingPathComponent("turns.jsonl"))
+        let encyclopedia = encyclopedia
         let stamp: @Sendable () -> TraceStamp = {
             let thermal = ["nominal", "fair", "serious", "critical"][ProcessInfo.processInfo.thermalState.rawValue]
             return TraceStamp(versions: versions, memory: Self.memory(model), thermal: thermal,
