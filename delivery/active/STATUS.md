@@ -6,7 +6,7 @@
 - **kind:** feature
 - **repro_test:** n/a reason=не bugfix
 - **diagnosis:** n/a reason=не bugfix
-- **phase:** specify
+- **phase:** implement
 - **builder:** agent:claude-code
 - **verifier:** process:ci
 - **human_ok_spec:** yes (by=human:anthony, at=2026-10-23, «Подписываю (Рекомендую)» под спекой серии «энциклопедия почему»: Э1–Э2, ожидания P12–P20 — дословно в колонке ожидания spec.md; 100 карточек)
