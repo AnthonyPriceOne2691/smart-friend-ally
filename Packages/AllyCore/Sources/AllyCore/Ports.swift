@@ -1,9 +1,16 @@
 import Foundation
 
-/// The model of a turn: the reply's accumulated text as it grows; `cancel` stops it at the next token and ends it.
+/// The model of a turn: the reply's accumulated text as it grows; `cancel` stops it at the next token and ends it. Its
+/// memory keeps only what sounded (D5): the three calls go after the turn's own work, in order, and never block.
 public protocol LanguageModel: AnyObject, Sendable {
     func reply(to utterance: String) -> AsyncThrowingStream<String, Error>
     func cancel()
+    /// The last turn's model part becomes `spoken` — the sentences played to the end; her line stays.
+    func commit(spoken: String)
+    /// The last turn leaves the memory entirely, her line with it.
+    func retract()
+    /// A turn the model did not write — a router's script — goes into the memory: her line and what sounded.
+    func remember(heard: String, spoken: String)
 }
 
 /// The voice: `speak` returns when the sentence has sounded or was stopped; `stop` silences it at once.

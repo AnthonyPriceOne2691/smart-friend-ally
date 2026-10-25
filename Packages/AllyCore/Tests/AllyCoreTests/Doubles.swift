@@ -38,10 +38,33 @@ final class TestClock: TurnClock, @unchecked Sendable {
     }
 }
 
+/// The memory of a model double as D5 keeps it: asking the model opens a turn with her line, `commit` writes what
+/// sounded into the last turn, `retract` takes the last turn away, `remember` adds a whole turn without the model.
+final class ModelMemory: @unchecked Sendable {
+    struct Turn: Equatable { var heard: String, said: String? }
+    private let state = Locked([Turn]())
+    var turns: [Turn] { state { $0 } }
+
+    func asked(_ heard: String) { state { $0.append(Turn(heard: heard, said: nil)) } }
+    func commit(_ spoken: String) { state { if let last = $0.indices.last { $0[last].said = spoken } } }
+    func retract() { state { _ = $0.popLast() } }
+    func remember(_ heard: String, _ spoken: String) { state { $0.append(Turn(heard: heard, said: spoken)) } }
+}
+
+/// A model double with that memory: the three calls of D5 go to it.
+protocol RemembersTurns: LanguageModel { var memory: ModelMemory { get } }
+
+extension RemembersTurns {
+    func commit(spoken: String) { memory.commit(spoken) }
+    func retract() { memory.retract() }
+    func remember(heard: String, spoken: String) { memory.remember(heard, spoken) }
+}
+
 /// A model double: plays a script — a virtual wait, text appended, a hang — as accumulated text; `cancel` ends it.
-final class ScriptedModel: LanguageModel, @unchecked Sendable {
+final class ScriptedModel: RemembersTurns, @unchecked Sendable {
     enum Step { case wait(Double), say(String), hang }
 
+    let memory = ModelMemory()
     private let steps: [Step], clock: TurnClock, state = Locked<(cancelled: Bool, ending: () -> Void)>((false, {}))
     var cancelled: Bool { state { $0.cancelled } }
     init(_ steps: [Step], clock: TurnClock) { (self.steps, self.clock) = (steps, clock) }
@@ -53,6 +76,7 @@ final class ScriptedModel: LanguageModel, @unchecked Sendable {
 
     func reply(to utterance: String) -> AsyncThrowingStream<String, Error> {
         let (stream, output) = AsyncThrowingStream<String, Error>.makeStream(bufferingPolicy: .bufferingOldest(10_000))
+        memory.asked(utterance)
         let producer = Task { [steps, clock] in
             var text = ""
             for step in steps where !Task.isCancelled {
@@ -116,8 +140,9 @@ func eventually(_ condition: () -> Bool) async {
 
 /// A model double for sessions: each call answers the next reply at once (the last one again when they run out);
 /// `fails` ends every reply with an error that is not a cancellation.
-final class ReplyQueue: LanguageModel, @unchecked Sendable {
+final class ReplyQueue: RemembersTurns, @unchecked Sendable {
     private struct State { var replies: [String], calls = 0, cancelled = false, ending: () -> Void = {} }
+    let memory = ModelMemory()
     private let state: Locked<State>, fails: Bool
     var calls: Int { state { $0.calls } }
     var cancelled: Bool { state { $0.cancelled } }
@@ -125,6 +150,7 @@ final class ReplyQueue: LanguageModel, @unchecked Sendable {
 
     func reply(to utterance: String) -> AsyncThrowingStream<String, Error> {
         let (stream, output) = AsyncThrowingStream<String, Error>.makeStream(bufferingPolicy: .bufferingOldest(10))
+        memory.asked(utterance)
         let text = state { (s: inout State) -> String in
             s.calls += 1
             s.ending = { output.finish() }
@@ -328,7 +354,8 @@ final class QueueTape: VoiceTape, @unchecked Sendable {
 }
 
 /// A model double that thinks `delay` of virtual time, then answers the whole reply at once.
-final class TimedReply: LanguageModel, @unchecked Sendable {
+final class TimedReply: RemembersTurns, @unchecked Sendable {
+    let memory = ModelMemory()
     private let text: String, delay: Double, clock: TestClock
     init(_ text: String, after delay: Double, clock: TestClock) {
         (self.text, self.delay, self.clock) = (text, delay, clock)
@@ -349,22 +376,22 @@ final class TimedReply: LanguageModel, @unchecked Sendable {
 /// test (`first` lets its first sentence out, `finish` the whole answer), `timed` moves the clock and answers at once.
 /// It notes when each call came and with what, cancelled and finished calls, and the most answers at once; `cancel`
 /// stops the newest live call, as `LlamaModel` stops its current turn.
-final class SpecModel: LanguageModel, @unchecked Sendable {
+final class SpecModel: RemembersTurns, @unchecked Sendable {
     enum Plan { case held(first: String, full: String), timed(String, after: Double) }
     struct Call { let utterance: String, at: Double; var cancelled = false, finished = false }
     private struct Live { let output: AsyncThrowingStream<String, Error>.Continuation, plan: Plan }
     private struct State { var plans: [Plan], calls: [Call] = [], live: [Int: Live] = [:], inFlight = 0, most = 0 }
+    let memory = ModelMemory()
     private let state: Locked<State>, clock: TestClock
 
     init(_ plans: [Plan], clock: TestClock) { (state, self.clock) = (Locked(State(plans: plans)), clock) }
 
     var calls: [Call] { state { $0.calls } }
     var most: Int { state { $0.most } }
-    /// What stays in the model's memory: finished, not cancelled.
-    var memory: [String] { calls.filter { $0.finished && !$0.cancelled }.map(\.utterance) }
 
     func reply(to utterance: String) -> AsyncThrowingStream<String, Error> {
         let (stream, output) = AsyncThrowingStream<String, Error>.makeStream(bufferingPolicy: .bufferingNewest(1))
+        memory.asked(utterance)
         let (index, plan) = state { (s: inout State) -> (Int, Plan) in
             let plan = s.plans.isEmpty ? Plan.timed("Ага.", after: 0) : s.plans.removeFirst()
             s.calls.append(Call(utterance: utterance, at: clock.now()))
