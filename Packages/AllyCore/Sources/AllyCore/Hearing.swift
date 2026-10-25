@@ -2,7 +2,8 @@ import Foundation
 
 /// The hearing's registry (П10), `hearing.json` of the app: the silence tail by turn kind, the tentative end, the
 /// pre-roll, the longest turn, how long the microphone waits for speech, which activity tells speech from silence
-/// (D7.2), her voice over Elly's and the system's voice processing (D6.1); the model's registry keeps the model.
+/// (D7.2), which recognizer listens (D7.3), her voice over Elly's and the system's voice processing (D6.1); the model's
+/// registry keeps the model.
 public struct Hearing: Decodable, Equatable, Sendable {
     /// The activity the registry asks for: energy, or Silero from the models folder — its file, its size and its
     /// parameters (threshold, the shortest speech and silence, how long its flag trails the speech).
@@ -29,11 +30,12 @@ public struct Hearing: Decodable, Equatable, Sendable {
         public let agc: Bool
     }
 
-    public let turn: TurnTiming, listenTimeout: Double, vad: VAD?, overlap: Overlap?, voiceProcessing: VoiceProcessing?
+    public let turn: TurnTiming, listenTimeout: Double, vad: VAD?, asr: Recognition?
+    public let overlap: Overlap?, voiceProcessing: VoiceProcessing?
 
-    public init(turn: TurnTiming, listenTimeout: Double, vad: VAD? = nil, overlap: Overlap? = nil,
-                voiceProcessing: VoiceProcessing? = nil) {
-        (self.turn, self.listenTimeout, self.vad) = (turn, listenTimeout, vad)
+    public init(turn: TurnTiming, listenTimeout: Double, vad: VAD? = nil, asr: Recognition? = nil,
+                overlap: Overlap? = nil, voiceProcessing: VoiceProcessing? = nil) {
+        (self.turn, self.listenTimeout, self.vad, self.asr) = (turn, listenTimeout, vad, asr)
         (self.overlap, self.voiceProcessing) = (overlap, voiceProcessing)
     }
 
@@ -94,5 +96,60 @@ struct ListeningTexts: Decodable, Sendable {
         } catch {
             fatalError("AllyCore: listening.json does not decode: \(error)")
         }
+    }()
+}
+
+/// Which recognizer listens (D7.3): `dictation` until step 3 decides; `gigaam` with its files (name and bytes) in the
+/// models folder — external data next to the graph.
+public struct Recognition: Decodable, Equatable, Sendable {
+    public struct File: Decodable, Equatable, Sendable {
+        public let file: String, bytes: Int64
+        public init(file: String, bytes: Int64) { (self.file, self.bytes) = (file, bytes) }
+    }
+    public let engine: String, gigaam: [File]
+
+    public init(engine: String, gigaam: [File]) { (self.engine, self.gigaam) = (engine, gigaam) }
+
+    /// GigaAM when it is asked, every file is there with its size and the ONNX pair serves; else dictation and the
+    /// console line that says why — nothing is downloaded.
+    public func choose(sizes: [String: Int64], pairServes: Bool) -> (engine: String, line: String?) {
+        guard engine == "gigaam" else { return ("dictation", nil) }
+        let texts = RecognizerTexts.shared
+        let reason = gigaam.lazy.compactMap { file -> String? in
+            guard let found = sizes[file.file] else {
+                return texts.missing.replacingOccurrences(of: "{file}", with: file.file)
+            }
+            guard found == file.bytes else {
+                return texts.size.replacingOccurrences(of: "{file}", with: file.file)
+                    .replacingOccurrences(of: "{found}", with: "\(found)")
+                    .replacingOccurrences(of: "{bytes}", with: "\(file.bytes)")
+            }
+            return nil
+        }.first ?? (pairServes ? nil : texts.pair)
+        guard let reason else { return ("gigaam", nil) }
+        return ("dictation", texts.fallback.replacingOccurrences(of: "{reason}", with: reason))
+    }
+
+    /// The console line when the files were there but sherpa did not open the model: dictation listens.
+    public var unopened: String {
+        RecognizerTexts.shared.fallback.replacingOccurrences(of: "{reason}", with: RecognizerTexts.shared.load)
+    }
+
+    /// The record's `versions.asr`: `dictation`, or GigaAM by its files' bytes.
+    public func label(_ engine: String) -> String {
+        engine == "gigaam" ? "gigaam-v3-ctc:\(gigaam.reduce(0) { $0 + $1.bytes })" : "dictation"
+    }
+}
+
+/// `recognizers.json`: the console's words when GigaAM is asked and dictation listens.
+struct RecognizerTexts: Decodable, Sendable {
+    let fallback, missing, size, pair, load: String
+
+    static let shared: RecognizerTexts = {
+        guard let url = Bundle.module.url(forResource: "recognizers", withExtension: "json"),
+              let bytes = try? Data(contentsOf: url),
+              let texts = try? JSONDecoder().decode(RecognizerTexts.self, from: bytes)
+        else { fatalError("AllyCore: recognizers.json is unreadable") }
+        return texts
     }()
 }

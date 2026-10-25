@@ -7,6 +7,23 @@
   после, только счёт); ключи реестра слуха `overlap` и `voice_processing`; `implementation:` — `Overlap.swift`.
   `engineering/voice-loop` — ключи лежат в реестре, приложение пока слушает полудуплексом.
 * **Источник**: поставка `duplex-audio` (D6.1 серии «живой разговор»; X18, X19 и план подписаны родителем 2026-10-25).
+## 2026-10-23 — слух: GigaAM-v3 за протоколом распознавателя, выбор в реестре слуха
+
+* **Update**: `engineering/turn-detector` — распознаватель за протоколом фразы: `asr` реестра слуха (диктовка по
+  умолчанию до правила шага 3; GigaAM при файлах своего размера и паре ORT; строка отказа), веса external data, звук
+  GigaAM — 16 кГц Int16 ящика с предзаписью 1,5 с, одна расшифровка на «возможно, конец»; `implementation:` —
+  `BatchPhrase.swift`, `recognizers.json`, `GigaAMRecognizer.swift`. `engineering/voice-loop` — перепаковка и
+  копирование весов GigaAM, включение `engine: gigaam`, `versions.asr`; `implementation:` — `RecognitionPhrase.swift`.
+  `engineering/safety-below-model` — распознаватель не меняет путь реплики. `engineering/index` — строка концепта.
+* **Источник**: поставка `gigaam-asr` (D7.3 серии «слух»; примеры U22–U26, U28 подписаны родителем 2026-10-23; U27 —
+  D7.4).
+
+## 2026-10-25 — память: чужое, выдуманное, любимое и отрицание в разборе (memory-sense)
+
+* **Update**: `engineering/memory` — окно вымысла, хозяин питомца, отрицание, маркеры любимого, «больше не люблю»
+  снимает «любит»; `implementation:` — `Sense.swift`, `sense.json`. `engineering/safety-below-model` — правила 3–7
+  промпта разбора исполняются.
+* **Источник**: поставка `memory-sense` (M30, M31 спеки серии, подписанной родителем 2026-10-23; разрез — ведущий).
 ## 2026-10-23 — живой разговор: в памяти модели только сказанное (kv-spoken)
 
 * **Update**: `engineering/session` — после хода модели `commit(spoken:)` с доигранными предложениями, скрипт —
@@ -15,6 +32,12 @@
   консоли из `lines.json`; `implementation:` — `LlamaSettings.swift`, `lines.json`. `engineering/safety-below-model` —
   срезанное контрактом в память модели не попадает. `engineering/index` — строка сессии.
 * **Источник**: поставка `kv-spoken` (D5 серии «живой разговор»; примеры X1–X8 подписаны родителем 2026-10-23).
+## 2026-10-25 — эквалайзер, строка пресета, файлы голоса (голос V4b1)
+
+* **Update**: `engineering/voice-fx` — эквалайзер RBJ вернулся в цепочку (`eq.c`, `VoiceEQ`), полный Z30 против p9f5.
+  `engineering/voice-engine` — строка пресета в `voice.json` и `VoiceSettings`. `engineering/voice-loop` — команда
+  копирования файлов голоса `scripts/copy_voice.py`. `engineering/index`, `references/repo-map`.
+* **Источник**: поставка `voice-config` (V4b1 серии голоса; примеры подписаны родителем 2026-10-23).
 ## 2026-10-23 — сессия теста с родителем: один runbook на все телефонные проверки
 
 * **Creation**: `ops/test-session` (Runbook) — решение родителя 2026-10-23 «всё в общую сессию»: подготовка на Mac

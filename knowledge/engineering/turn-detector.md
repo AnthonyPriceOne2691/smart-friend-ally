@@ -1,12 +1,12 @@
 ---
 type: Design
 title: Конец реплики — тип хода по реплике Элли, хвост по типу, «я всё», «возможно, конец» и предзапись
-description: Определитель конца речи ядра над активностью голоса — Silero VAD на телефоне (D7.2), энергия зонда, если модели нет; тип хода кодом по последней реплике Элли; хвост тишины по типу (1,8 / 1,2 / 2,5 с) из реестра слуха, считается от речи за флагом; «я всё» на следующем кадре; «возможно, конец» через 0,3 с, предзапись ≥ 1,5 с и предел хода 30 с.
+description: Определитель конца речи ядра над активностью голоса — Silero VAD на телефоне (D7.2), энергия зонда, если модели нет; тип хода кодом по последней реплике Элли; хвост тишины по типу (1,8 / 1,2 / 2,5 с) из реестра слуха, считается от речи за флагом; «я всё» на следующем кадре; «возможно, конец» через 0,3 с, предзапись ≥ 1,5 с и предел хода 30 с; распознаватель за протоколом фразы — диктовка или GigaAM-v3 по `asr` реестра слуха (D7.3).
 status: draft
 tags: [engineering, speech, turn, vad]
 generated:
   by: claude_code/opus-5.5
-  at: 2026-10-23T23:00:00+03:00
+  at: 2026-10-23T23:30:00+03:00
 implementation:
   - Packages/AllyCore/Sources/AllyCore/TurnDetector.swift
   - Packages/AllyCore/Sources/AllyCore/TurnKinds.swift
@@ -14,6 +14,9 @@ implementation:
   - Packages/AllyCore/Sources/AllyCore/VoiceActivity.swift
   - Packages/AllyHearing/Sources/AllyHearing/SileroVAD.swift
   - Packages/AllyHearing/Sources/AllyHearing/SileroActivity.swift
+  - Packages/AllyCore/Sources/AllyCore/BatchPhrase.swift
+  - Packages/AllyCore/Sources/AllyCore/Resources/recognizers.json
+  - Packages/AllyHearing/Sources/AllyHearing/GigaAMRecognizer.swift
   - Packages/AllyCore/Sources/AllyCore/Overlap.swift
 ---
 
@@ -55,6 +58,21 @@ implementation:
   speech-in: при хвосте 1,8 с первый звук ≈ 1,9 с вместо ≈ 3,2 с.
 - **Предзапись ≥ 1,5 с** отдаётся вместе с «началом»: флаг речи поднимается позже её начала (Silero: 0,20 с медиана,
   0,71 с p95), и кольцо 1,0 с теряло начало у 5% ходов.
+- **Распознаватель — за протоколом фразы, выбор в реестре слуха** (`asr`, D7.3): `dictation` по умолчанию — до правила
+  шага 3 (GigaAM основным, только если на её записях чёрного ящика он лучше на ≥ 10 п.п.; инструмент сравнения — D7.4).
+  `gigaam` слушает, если `model.int8.onnx`, `model.int8.onnx.data` и `tokens.txt` лежат в `Models` своего размера и
+  пара ORT служит; иначе — диктовка и строка «GigaAM нет: <причина> — диктовка» (нет файла, не тот размер, ONNX Runtime
+  без API 28, модель не открылась). След — `versions.asr`: `dictation` или `gigaam-v3-ctc:<сумма байт файлов>`.
+  GigaAM-v3 CTC int8 — офлайн-распознаватель sherpa на общем ORT, 2 потока, жадный поиск; гипотезы на Mac совпали со
+  спайком в 300 из 300 (Common Voice) и 88 из 88 (суррогат детского голоса с шумом).
+- **Веса GigaAM — external data:** граф 2,9 МБ и веса 222 МБ отдельным файлом, который ORT отображает в память (mmap):
+  footprint после загрузки 398 МБ против 649, пик за 300 клипов 441 против 684 (тест держит ≤ 450 и ≤ 500). Остаток
+  ≈ 0,4 ГБ — перепакованные веса `MatMulInteger`; без перепаковки — 27 МБ, но опцию сессии `disable_prepacking` C API
+  sherpa не пропускает — только прямой ORT, когда памяти станет мало.
+- **Звук GigaAM — тот, что пишет чёрный ящик** (`BatchPhrase`): 16 кГц Int16 с открытия микрофона, Float = Int16 / 32768,
+  с 1,5 с до флага речи, но не раньше открытия (начало речи фраза узнаёт от определителя — `started`): правило шага 3
+  судит тот звук, на котором посчитан живой текст. Расшифровка — одна на «возможно, конец»; речь не вернулась — на
+  хвосте берётся она же, вернулась — новая на следующем «возможно, конец».
 - **Речь поверх голоса Элли** (D6.1 `duplex-audio`). Пока это ядро; приложение возьмёт его, когда микрофон и голос
   станут одним движком с эхоподавлением (после V4b2), а до тех пор слушает полудуплексом.
   - `VoiceRing` держит кадры, пока сессия не слушает, — последние `pre_roll` (1,5 с). Слушание после голоса начинается
@@ -74,6 +92,7 @@ implementation:
 
 - [Model on phone](/engineering/model-on-phone.md) — голосовая петля зонда: хвост 0,8 с и время до первого звука.
 - [Safety below the model](/engineering/safety-below-model.md) — ход через контракт в том же ядре.
+- [Voice loop](/engineering/voice-loop.md) — веса Silero и GigaAM на телефон, включение GigaAM.
 
 # Sources
 
@@ -85,3 +104,6 @@ implementation:
 - Поставка D7.2 `silero-vad` (примеры U16–U21 той же подписи); снятие риска `local/spike/speech-in-ort/` (вне git):
   sherpa 1.13.8 на официальном ORT 1.28.0, флаги Silero 1434 из 1434. Лицензии: Silero VAD — MIT, sherpa-onnx —
   Apache-2.0 (`gh api`, 2026-10-23).
+- Поставка D7.3 `gigaam-asr` (примеры U22–U26, U28 той же подписи; U27 — D7.4); снятие риска там же: GigaAM на sherpa
+  1.13.8 и ORT 1.28.0 — гипотезы спайка 300 из 300 и 88 из 88, external data 398 МБ против 649 (`ortmem` — 27 МБ без
+  перепаковки). Лицензия GigaAM-v3 — MIT (`gh api`, 2026-10-23).

@@ -53,5 +53,8 @@
 - `child-shell-app`
 - `accent-tokenizers`
 - `accent-logic`
+- `gigaam-asr`
+- `voice-config`
 - `test-session`
 - `memory-extract`
+- `memory-sense`
