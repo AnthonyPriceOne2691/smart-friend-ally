@@ -57,3 +57,4 @@
 - `voice-config`
 - `test-session`
 - `memory-extract`
+- `voice-out`
