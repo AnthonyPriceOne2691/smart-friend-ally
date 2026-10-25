@@ -59,6 +59,9 @@ final class HintedVoice: VoiceOutput, VoiceLookahead, @unchecked Sendable {
     func upcoming(_ sentences: [String]) { log { $0.append(sentences) } }
 }
 
+/// A test whose work neither ended nor slept: a hang made a failure.
+struct Hung: Error {}
+
 /// The port double: what came, in order.
 final class SoundLog: PlayedSound, @unchecked Sendable {
     private let log = Locked([String]())
@@ -71,7 +74,7 @@ final class SpokenVoiceTests: XCTestCase {
     private let clock = TestClock()
 
     /// Runs `work` while moving the test clock from deadline to deadline until it ends; work that neither ends nor
-    /// sleeps is hung — cancelled, and the test fails instead of hanging (L72).
+    /// sleeps is hung — cancelled, and the test fails instead of hanging.
     private func drive(_ work: @escaping @Sendable () async throws -> Void) async throws {
         let task = Task { try await work() }, done = Locked(false)
         Task { _ = try? await task.value; done { $0 = true } }
@@ -82,14 +85,14 @@ final class SpokenVoiceTests: XCTestCase {
         try await settle(task)
     }
 
-    /// Waits (real time, up to 10 s) for the task; a hung one is cancelled and fails the test (L72).
-    private func settle(_ task: Task<Void, Error>, line: UInt = #line) async throws {
+    /// Waits (real time, up to 10 s) for the task; a hung one is cancelled and the test fails with `Hung`.
+    private func settle(_ task: Task<Void, Error>) async throws {
         let done = Locked(false)
         Task { _ = try? await task.value; done { $0 = true } }
         await eventually { done { $0 } }
         guard done({ $0 }) else {
             task.cancel()
-            return XCTFail("повисло", line: line)
+            throw Hung()
         }
         try await task.value
     }
