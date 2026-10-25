@@ -44,6 +44,9 @@ final class VoiceSettingsTests: XCTestCase {
         let slow = try settings(preset: line.replacingOccurrences(of: #""speed": 0.9"#, with: #""speed": 0.8"#))
         XCTAssertEqual(slow.note, "скорость 0,80 ниже 0,85 — взято 0,85")
         XCTAssertEqual(slow.preset.speed, 0.85)
+        let floor = try settings(preset: line.replacingOccurrences(of: #""speed": 0.9"#, with: #""speed": 0.85"#))
+        XCTAssertNil(floor.note)
+        XCTAssertEqual(floor.preset.speed, 0.85)
     }
 
     func testAnUnknownBandIsRefused() throws {
