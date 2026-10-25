@@ -1,0 +1,27 @@
+{
+  "preset": {"style": "F2", "speed": 0.9, "steps": 8, "pitch": 9, "formant": 5, "eq": [["lowshelf", 250, -3, 0.7], ["peak", 4000, 2.5, 0.9]]},
+  "folder": "Voice",
+  "files": [
+    {"to": "supertonic/onnx/tts.json", "bytes": 8253, "group": "voice", "from": "supertonic-3-ext/onnx/tts.json", "sha256": "42078d3aef1cd43ab43021f3c54f47d2d75ceb4e75f627f118890128b06a0d09", "note": "// pragma: allowlist secret"},
+    {"to": "supertonic/onnx/unicode_indexer.json", "bytes": 277676, "group": "voice", "from": "supertonic-3-ext/onnx/unicode_indexer.json", "sha256": "9bf7346e43883a81f8645c81224f786d43c5b57f3641f6e7671a7d6c493cb24f", "note": "// pragma: allowlist secret"},
+    {"to": "supertonic/onnx/duration_predictor.onnx", "bytes": 258194, "group": "voice", "from": "supertonic-3-ext/onnx/duration_predictor.onnx", "sha256": "1ab6df26482fd936a52947e23e490e2b915463f8f04e1b346e27b8f969b2bfce", "note": "// pragma: allowlist secret"},
+    {"to": "supertonic/onnx/duration_predictor.weights", "bytes": 3445248, "group": "voice", "from": "supertonic-3-ext/onnx/duration_predictor.weights", "sha256": "c22f91c83394a155ce0606700199019cf8df7fd0c186d4d61673317e5adf027e", "note": "// pragma: allowlist secret"},
+    {"to": "supertonic/onnx/text_encoder.onnx", "bytes": 422378, "group": "voice", "from": "supertonic-3-ext/onnx/text_encoder.onnx", "sha256": "986f6b430a98421fc1dc908d35e9f2bbfa4b5f68f64ab1ccb590c21a1b68c432", "note": "// pragma: allowlist secret"},
+    {"to": "supertonic/onnx/text_encoder.weights", "bytes": 36003840, "group": "voice", "from": "supertonic-3-ext/onnx/text_encoder.weights", "sha256": "21202bd3555d319700a839175efea7397f42916f17862592a94e467c2fd15a61", "note": "// pragma: allowlist secret"},
+    {"to": "supertonic/onnx/vector_estimator.onnx", "bytes": 499157, "group": "voice", "from": "supertonic-3-ext/onnx/vector_estimator.onnx", "sha256": "49b63118764c1d24408ec34aca3a93e4826bb1bfc1962b7512f6537f75bff377", "note": "// pragma: allowlist secret"},
+    {"to": "supertonic/onnx/vector_estimator.weights", "bytes": 256061248, "group": "voice", "from": "supertonic-3-ext/onnx/vector_estimator.weights", "sha256": "aea02b4545de328ba216f95fc05bbc0b8c2c7ff629743e1b67fded94237aa961", "note": "// pragma: allowlist secret"},
+    {"to": "supertonic/onnx/vocoder.onnx", "bytes": 76918, "group": "voice", "from": "supertonic-3-ext/onnx/vocoder.onnx", "sha256": "6bcdd5f14c64accfb3da61b85ad3379695f1241e78c6138bad45aa296929feaa", "note": "// pragma: allowlist secret"},
+    {"to": "supertonic/onnx/vocoder.weights", "bytes": 101353472, "group": "voice", "from": "supertonic-3-ext/onnx/vocoder.weights", "sha256": "1849007f3b3fc4596aba222885d1e87ea09901d954f4e67f3e0b83eefa63b2c2", "note": "// pragma: allowlist secret"},
+    {"to": "supertonic/voice_styles/F1.json", "bytes": 292046, "group": "voice", "from": "supertonic-3/voice_styles/F1.json", "sha256": "bbdec6ee00231c2c742ad05483df5334cab3b52fda3ba38e6a07059c4563dbc2", "note": "// pragma: allowlist secret"},
+    {"to": "supertonic/voice_styles/F2.json", "bytes": 292423, "group": "voice", "from": "supertonic-3/voice_styles/F2.json", "sha256": "7c722c6a72707b1a77f035d67f0d1351ba187738e06f7683e8c72b1df3477fc6", "note": "// pragma: allowlist secret"},
+    {"to": "supertonic/voice_styles/F3.json", "bytes": 290794, "group": "voice", "from": "supertonic-3/voice_styles/F3.json", "sha256": "12f6ef2573baa2defa1128069cb59f203e3ab67c92af77b42df8a0e3a2f7c6ab", "note": "// pragma: allowlist secret"},
+    {"to": "supertonic/voice_styles/F4.json", "bytes": 291808, "group": "voice", "from": "supertonic-3/voice_styles/F4.json", "sha256": "c2fa764c1225a76dfc3e2c73e8aa4f70d9ee48793860eb34c295fff01c2e032b", "note": "// pragma: allowlist secret"},
+    {"to": "supertonic/voice_styles/F5.json", "bytes": 291479, "group": "voice", "from": "supertonic-3/voice_styles/F5.json", "sha256": "45966e73316415626cf41a7d1c6f3b4c70dbc1ba2bee5c1978ef0ce33244fc8d", "note": "// pragma: allowlist secret"},
+    {"to": "ruaccent/dictionary/accents_nn.json", "bytes": 4888209, "group": "accent", "from": "ruaccent/dictionary/accents_nn.json.gz", "sha256": "2b2af6ccbfc38dcd8b120c18d9a99a3b28cd646556da3b483de993a06f8f124e", "note": "// pragma: allowlist secret"},
+    {"to": "ruaccent/dictionary/omographs.json", "bytes": 1473951, "group": "accent", "from": "ruaccent/dictionary/omographs.json.gz", "sha256": "f97f38396280a374defd156d36c75f8e00623973897d374bf40087ad3cf195e7", "note": "// pragma: allowlist secret"},
+    {"to": "ruaccent/dictionary/yo_words.json", "bytes": 4585826, "group": "accent", "from": "ruaccent/dictionary/yo_words.json.gz", "sha256": "5e384cdaebf2b6ea719622067c9d6ca56f70b6c47bedb36cf6c78b8eba80ed8f", "note": "// pragma: allowlist secret"},
+    {"to": "ruaccent/dictionary/yo_homographs.json", "bytes": 24951, "group": "accent", "from": "ruaccent/dictionary/yo_homographs.json.gz", "sha256": "835f7561255e5b596ae8c4891c67ded53e9a6ecf235ac7f92368ce804a6ef11f", "note": "// pragma: allowlist secret"},
+    {"to": "ruaccent/omograph/turbo31_int8.onnx", "bytes": 388994, "group": "accent", "from": "ruaccent/nn/nn_omograph/turbo3.1-int8/turbo31_int8.onnx", "sha256": "59d81fc6f83c66dac170d42f72fbad5d2b92e0c737d27d2849373df7882e6de6", "note": "// pragma: allowlist secret"},
+    {"to": "ruaccent/omograph/turbo31_int8.weights", "bytes": 89964544, "group": "accent", "from": "ruaccent/nn/nn_omograph/turbo3.1-int8/turbo31_int8.weights", "sha256": "cbd985e3dd3852bf908441cded9cddd9860985513ae7d7f487f831682078eda0", "note": "// pragma: allowlist secret"}
+  ]
+}
