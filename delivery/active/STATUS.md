@@ -6,7 +6,7 @@
 - **kind:** feature
 - **repro_test:** n/a reason=не bugfix
 - **diagnosis:** n/a reason=не bugfix
-- **phase:** plan
+- **phase:** verify
 - **builder:** agent:claude-code
 - **verifier:** process:ci
 - **human_ok_spec:** yes (by=human:anthony, at=2026-10-23; «Подписываю (Рекомендую)» через ведущего — пример U27 в спеке серии «слух», подпись 3b68733, спека 74ada91; отдельная поставка — запасной вариант подписанного плана серии)
@@ -22,7 +22,6 @@
        (GigaAMRecognizer); раскладка выгрузки — D3.2 (PR #43) -->
 - **hooks:** not-deployed
 - **blockers:** none
-  <!-- код ждёт мержа D7.3: до него ветка держит документы -->
 - **waivers:** none
 - **new_dependency:** none
 - **runtime_paths:** Packages/AllyHearing/
