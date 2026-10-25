@@ -45,5 +45,10 @@
     "reason": "рецепт хука варианта D из AGENT_STACK §7.1a (stack-map@1.53), вписанный дословно, краснит мета-гейт канона: entry «git rm --cached» с путём в угловых скобках сканер незаполненных шаблонов (gate_coverage_template.sh) читает плейсхолдером — коммит перевода на D отклонён хуком gate-coverage (delivery/incidents/2026-10-25-variant-d-hook-reads-as-template.md)",
     "changed": "не правился; в Ally сообщение хука — команда снятия без угловых скобок (.pre-commit-config.yaml)",
     "kind": "upstream-candidate"
+  },
+  "scripts/lint/doctor_versions.py": {
+    "reason": "под вариантом D (снимка docs/canon в git нет, stack-selftest: external объявлен) доктор в CI пишет четыре «ABSENT канон … файла нет — слой не развёрнут» на развёрнутом каноне — класс cqg@1.73 вернулся для B/D; SKIP провенанса ведёт на §5 шаг 11, сверка конфигов с каноном пропадает без строки; пропавший при слиянии перевода C→D локальный снимок неотличим от B — apply_update.revendor его не раскладывает (delivery/incidents/2026-10-25-doctor-variant-d-reads-as-absent.md)",
+    "changed": "не правился; DEAD 0, ABSENT и SKIP приняты как названная цена D (остаток в delivery/STACK-ACCEPTANCE.md)",
+    "kind": "upstream-candidate"
   }
 }
