@@ -26,6 +26,12 @@
   `Glow.swift`, `BubbleArt.swift`. `product/look-and-feel` — строка «в коде (Ш2б)», непрозрачная плашка.
 * **Источник**: поставка `child-shell-light` (оболочка Ш2б; примеры подписаны родителем 2026-10-23 одной подписью с
   Ш3, ритм рта — в Ш2в; исключение предохранителя до 850 — решение родителя 2026-10-25).
+## 2026-10-25 — расстановщик ударений: модели RUAccent и сборка (V3c)
+
+* **Update**: `engineering/accent-placer` — модели через `AllyOnnx` в `AllyVoice`, сборка `RUAccentVoice`, числовой
+  паритет по версии ORT (Z18 переподписан 2026-10-23), цена на Mac (Z17: порог отпечатка 170 МБ, переподписан
+  2026-10-25; сжатие словарей — на полировку); `implementation:` — `RUAccentModels.swift`, `RUAccentVoice.swift`.
+* **Источник**: поставка `accent-onnx` (V3c серии голоса; Z14–Z18, подпись родителя 2026-10-23 и 2026-10-25).
 ## 2026-10-25 — голос хода в ядре (голос V4b2a)
 
 * **Update**: `engineering/voice-engine` — `SpokenVoice` и порты голоса, `first_steps`. `engineering/session` —

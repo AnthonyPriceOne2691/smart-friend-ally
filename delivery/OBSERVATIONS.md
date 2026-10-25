@@ -57,6 +57,7 @@
 - `voice-config`
 - `test-session`
 - `memory-extract`
+- `accent-onnx`
 - `voice-out`
 - `memory-sense`
 - `canon-variant-d`

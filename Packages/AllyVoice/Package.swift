@@ -8,9 +8,10 @@ let package = Package(
     name: "AllyVoice",
     platforms: [.iOS(.v17), .macOS(.v14)],
     products: [.library(name: "AllyVoice", targets: ["AllyVoice"])],
-    dependencies: [.package(path: "../AllyOnnx")],
+    dependencies: [.package(path: "../AllyOnnx"), .package(path: "../AllyAccent")],
     targets: [
-        .target(name: "AllyVoice", dependencies: [.product(name: "AllyOnnx", package: "AllyOnnx")]),
+        .target(name: "AllyVoice", dependencies: [.product(name: "AllyOnnx", package: "AllyOnnx"),
+                                                  .product(name: "AllyAccent", package: "AllyAccent")]),
         .testTarget(name: "AllyVoiceTests", dependencies: ["AllyVoice"])
     ]
 )
