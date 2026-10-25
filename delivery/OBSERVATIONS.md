@@ -53,3 +53,4 @@
 - `accent-tokenizers`
 - `accent-logic`
 - `test-session`
+- `memory-extract`
