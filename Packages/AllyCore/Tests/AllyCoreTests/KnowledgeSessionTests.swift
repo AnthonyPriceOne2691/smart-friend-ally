@@ -34,6 +34,15 @@ final class KnowledgeSessionTests: XCTestCase {
         XCTAssertNil(personal.knowledge?.card)
     }
 
+    func testAForgottenUtteranceIsNotLookedUp() async {  // P17
+        let forgotten = Route(.pass, rules: ["test"], dataHash: "fnv1a:test", forget: true)
+        let rig = Rig(replies: [reply], routes: ["почему небо голубое": forgotten], knowledge: base)
+        await rig.session.handle(.wake)
+        await rig.hear("почему небо голубое")
+        XCTAssertNil(rig.sink.records.last?.knowledge)
+        XCTAssertEqual(rig.model.calls, 0)
+    }
+
     func testWithoutTheEncyclopediaTheTurnIsAsBefore() async throws {  // P17
         let rig = Rig(replies: [reply], router: RouterRouting())
         await rig.session.handle(.wake)
