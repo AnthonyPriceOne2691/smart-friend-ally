@@ -6,7 +6,7 @@ import Foundation
 /// - `stop` silences the player at once; a sentence still in synthesis does not sound; the next turn does (Z24).
 /// - What sounded goes to the port, with a cut sign on a stop (Z23).
 public final class SpokenVoice: VoiceOutput, VoiceLookahead, @unchecked Sendable {
-    private typealias Sound = Task<RenderedSentence, Error>
+    private typealias Sound = RenderedLater
     private struct State {
         var generation = 0, firstOfTurn = true, firstSound: Double?, stages: [String: Double] = [:], lastEnd: Double?
         var lead = 0.0  // the player's start latency last measured: the pause is counted between sounds
@@ -55,7 +55,7 @@ public final class SpokenVoice: VoiceOutput, VoiceLookahead, @unchecked Sendable
             return Order(generation: s.generation, first: first,
                          sound: s.ready.removeValue(forKey: sentence) ?? enqueue(sentence, first: first))
         }
-        let (generation, first, sound) = (order.generation, order.first, try await order.sound.value)
+        let (generation, first, sound) = (order.generation, order.first, try await order.sound.value())
         // A stop landing in the microseconds between this check and the player's start is missed — far below a tap.
         guard try await pause(generation) else { return }
         let asked = clock.now()
@@ -90,13 +90,36 @@ public final class SpokenVoice: VoiceOutput, VoiceLookahead, @unchecked Sendable
         return state { $0.generation == generation }
     }
 
-    /// The render goes to the queue — one at a time, off the cooperative pool; the task only waits for it.
+    /// The render goes to the queue now, in the order asked — one at a time, off the cooperative pool.
     private func enqueue(_ sentence: String, first: Bool) -> Sound {
-        let renderer = renderer, queue = queue
-        return Task {
-            try await withCheckedThrowingContinuation { (done: CheckedContinuation<RenderedSentence, Error>) in
-                queue.run { done.resume(with: Result { try renderer.render(sentence, first: first) }) }
+        let later = RenderedLater(), renderer = renderer
+        queue.run { later.finish(Result { try renderer.render(sentence, first: first) }) }
+        return later
+    }
+}
+
+/// A render's result that one `speak` awaits: whichever of the result and the waiter comes first.
+final class RenderedLater: @unchecked Sendable {
+    private struct State {
+        var result: Result<RenderedSentence, Error>?, waiter: CheckedContinuation<RenderedSentence, Error>?
+    }
+    private let state = Locked(State())
+
+    func finish(_ result: Result<RenderedSentence, Error>) {
+        state { (s: inout State) -> CheckedContinuation<RenderedSentence, Error>? in
+            s.result = result
+            defer { s.waiter = nil }
+            return s.waiter
+        }?.resume(with: result)
+    }
+
+    func value() async throws -> RenderedSentence {
+        try await withCheckedThrowingContinuation { (waiter: CheckedContinuation<RenderedSentence, Error>) in
+            let ready = state { (s: inout State) -> Result<RenderedSentence, Error>? in
+                if s.result == nil { s.waiter = waiter }
+                return s.result
             }
+            if let ready { waiter.resume(with: ready) }
         }
     }
 }

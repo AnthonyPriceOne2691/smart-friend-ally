@@ -70,13 +70,26 @@ final class SoundLog: PlayedSound, @unchecked Sendable {
 final class SpokenVoiceTests: XCTestCase {
     private let clock = TestClock()
 
-    /// Runs `work` while moving the test clock from deadline to deadline until it ends.
+    /// Runs `work` while moving the test clock from deadline to deadline until it ends; work that neither ends nor
+    /// sleeps is hung — cancelled, and the test fails instead of hanging (L72).
     private func drive(_ work: @escaping @Sendable () async throws -> Void) async throws {
         let task = Task { try await work() }, done = Locked(false)
         Task { _ = try? await task.value; done { $0 = true } }
         while !done({ $0 }) {
             await eventually { self.clock.sleeping > 0 || done { $0 } }
-            clock.advanceToNext()
+            guard done({ $0 }) || clock.advanceToNext() else { break }
+        }
+        try await settle(task)
+    }
+
+    /// Waits (real time, up to 10 s) for the task; a hung one is cancelled and fails the test (L72).
+    private func settle(_ task: Task<Void, Error>, line: UInt = #line) async throws {
+        let done = Locked(false)
+        Task { _ = try? await task.value; done { $0 = true } }
+        await eventually { done { $0 } }
+        guard done({ $0 }) else {
+            task.cancel()
+            return XCTFail("повисло", line: line)
         }
         try await task.value
     }
@@ -105,7 +118,7 @@ final class SpokenVoiceTests: XCTestCase {
         await eventually { player.calls.count == 3 && self.clock.sleeping > 0 }
         clock.advance(by: 0.05 + 1.0)
         voice.stop()
-        try await long.value
+        try await settle(long)
         let tail = port.events.suffix(2), part = Int(tail.first?.split(separator: "@").first ?? "") ?? 0
         XCTAssertEqual(Double(part) / 1000, 1.0, accuracy: 0.05)
         XCTAssertEqual(tail.last, "cut")
@@ -120,7 +133,7 @@ final class SpokenVoiceTests: XCTestCase {
         voice.stop()
         XCTAssertEqual(player.stops, 1)
         held.release()
-        try await first.value
+        try await settle(first)
         XCTAssertTrue(player.calls.isEmpty)
         voice.resetFirstSound()
         let next = Task { try await voice.speak("Потом.") }
@@ -128,7 +141,7 @@ final class SpokenVoiceTests: XCTestCase {
         held.release()
         await eventually { player.calls.count == 1 && self.clock.sleeping > 0 }
         clock.advanceToNext()
-        try await next.value
+        try await settle(next)
         XCTAssertEqual(player.calls.count, 1)
     }
 
