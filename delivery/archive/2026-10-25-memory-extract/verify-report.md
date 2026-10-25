@@ -4,7 +4,7 @@
 **Verifier:** process:ci
 **asserts_reviewed_by:** n/a (все утверждения ведут к примерам спеки M26–M28 — дайджест ниже, asserts_without_example: 0; M26–M28 подписаны родителем 2026-10-23 «Подписываю (Рекомендую)» в спеке серии)
 **CI run:** https://github.com/AnthonyPriceOne2691/smart-friend-ally/actions/runs/40019214593
-**Commit:** b22b75e (документы — b3e5465 до кода, код и знание — cc1bf63, слияние main — b22b75e; сдача — следующим прогоном PR #64)
+**Commit:** b22b75e (документы — b3e5465 до кода, код и знание — cc1bf63, слияние main — b22b75e и ae522e9 25.10, точка остановки — 93a9043; сдача — следующим прогоном PR #64)
 
 ## Shape oracles
 - [x] PASS — pre-commit на коммитах поставки: `file-length`, jscpd — рост 0; SwiftLint — 157 файлов, 0 находок
