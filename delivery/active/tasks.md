@@ -6,7 +6,7 @@
   дословно, правило суда), plan, tasks, decisions, eval-smoke
 - [x] T2: стенд вне git — прогонщик, счётчик, сервер на 127.0.0.1; отладочный прогон справки (seed 42)
 - [x] T3: правки кода по находкам справки с тестом `// M32`; повтор справки
-- [ ] T4: итог — справка × 3 seed; коммит-замок; свежий набор × 3 seed, один счёт
-- [ ] T5: знание — `engineering/memory`, `knowledge/log.md`; `okf_validate`, `okf_sync_gate`
+- [x] T4: итог — справка × 3 seed; коммит-замок; свежий набор × 3 seed, один счёт
+- [x] T5: знание — `engineering/memory`, `knowledge/log.md`; `okf_validate`, `okf_sync_gate`
 - [ ] T6: слить main, PR, CI, verify-report, сдача: архив, строка INDEX с уроками L119, L120, `memory-quality` в
   `delivery/OBSERVATIONS.md`

@@ -6,7 +6,7 @@
 - **kind:** feature
 - **repro_test:** n/a reason=не bugfix
 - **diagnosis:** n/a reason=не bugfix
-- **phase:** implement
+- **phase:** verify
 - **builder:** agent:claude-code
 - **verifier:** process:ci
 - **human_ok_spec:** yes (by=human:anthony, at=2026-10-23, «Подписываю (Рекомендую)» под спекой серии: ожидание M32 и его пороги — дословно в колонке ожидания spec.md)
@@ -24,7 +24,7 @@
        (docs/canon уходит из git — после слияния main каталог возвращается копией из основного клона), голос, речь,
        оболочка; конфликты в INDEX.md, OBSERVATIONS.md, knowledge — сложением -->
 - **hooks:** not-deployed
-- **blockers:** none
+- **blockers:** M32 на свежем наборе ниже порогов: точность 0,696 при ≥ 0,90, полнота 0,792 при ≥ 0,85 (ловушек и запрещённого 0, справка — все пороги взяты); решение родителя через ведущего — `escalation.md`
 - **waivers:** none
 - **new_dependency:** none
 - **runtime_paths:** none reason=замер на Mac вне продукта: прогонщик в local/ зовёт llama-server на 127.0.0.1; на телефон ничего не ставится
