@@ -78,13 +78,19 @@ public enum StepThree {
             let picks = all.map { _ in Int(random.next() % UInt64(all.count)) }
             return wer(wrongD, picks) - wer(wrongG, picks)
         }.sorted()
-        let single = refs.indices.filter { refs[$0].count == 1 }
+        let single = refs.indices.filter { refs[$0].count == 1 }, bounds = interval(gains)
         return Summary(count: pairs.count, werDictation: wer(wrongD, all), werGigaAM: wer(wrongG, all),
-                       gain: wer(wrongD, all) - wer(wrongG, all), low: gains.isEmpty ? 0 : gains[rounds * 25 / 1000],
-                       high: gains.isEmpty ? 0 : gains[max(0, rounds * 975 / 1000 - 1)], oneWord: single.count,
+                       gain: wer(wrongD, all) - wer(wrongG, all), low: bounds.low, high: bounds.high,
+                       oneWord: single.count,
                        exactDictation: single.filter { dictation[$0] == refs[$0] }.count,
                        exactGigaAM: single.filter { gigaam[$0] == refs[$0] }.count,
                        emptyDictation: dictation.filter(\.isEmpty).count, emptyGigaAM: gigaam.filter(\.isEmpty).count)
+    }
+
+    /// The 95% interval of sorted bootstrap gains: their 2.5th and 97.5th percentiles; zeros without rounds.
+    static func interval(_ sorted: [Double]) -> (low: Double, high: Double) {
+        guard !sorted.isEmpty else { return (0, 0) }
+        return (sorted[sorted.count * 25 / 1000], sorted[max(0, sorted.count * 975 / 1000 - 1)])
     }
 
     /// The console lines: counts, WER with the interval, one-word answers, empty answers, the models, the verdict.

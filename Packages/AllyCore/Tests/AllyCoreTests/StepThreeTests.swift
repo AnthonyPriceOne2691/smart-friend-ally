@@ -1,4 +1,4 @@
-import AllyCore
+@testable import AllyCore
 import XCTest
 
 /// Pairs of one-word references: dictation misses `missed` of `count`, GigaAM none.
@@ -58,6 +58,8 @@ final class StepThreeTests: XCTestCase {
         XCTAssertLessThanOrEqual(summary.low, summary.gain)
         XCTAssertGreaterThanOrEqual(summary.high, summary.gain)
         XCTAssertLessThan(summary.low, summary.high)
+        let bounds = StepThree.interval((0..<2000).map(Double.init))
+        XCTAssertEqual([bounds.low, bounds.high], [50, 1949])
         let same = StepThree.summary(oneWord(10, missed: 0))
         XCTAssertEqual([same.low, same.gain, same.high], [0, 0, 0])
     }
