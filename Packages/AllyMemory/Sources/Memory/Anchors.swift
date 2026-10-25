@@ -2,12 +2,19 @@ import Foundation
 
 /// Reads an answer into candidates anchored in her words: the value in her turn the model cited — she said it; in
 /// another turn of hers — the code found it; only in Elly's line before her «да» — she agreed; nowhere — dropped.
+/// Inside pretend play only the creations stay; a negated value, a pet of someone else and a favourite without its word
+/// are the code's to judge, not the model's.
 struct Reading {
     let turns: [MemoryTurn]
-    private let texts: ExtractTexts
+    private let texts: ExtractTexts, sense: SenseWords, fiction: Set<Int>
     private(set) var candidates: [Candidate] = [], dropped: [Extraction.Drop] = []
 
-    init(turns: [MemoryTurn], texts: ExtractTexts = .shared) { (self.turns, self.texts) = (turns, texts) }
+    init(turns: [MemoryTurn], texts: ExtractTexts = .shared, sense: SenseWords = .shared) {
+        (self.turns, self.texts, self.sense, fiction) = (turns, texts, sense, sense.fiction(turns))
+    }
+
+    /// What she no longer likes in this conversation («больше не люблю танцы» → «танцы»).
+    var unlikes: [String] { sense.unlikes(turns, stop: texts.stop) }
 
     /// Her, the family, the pets, the creations — in the template's order.
     mutating func read(_ answer: ModelAnswer) {
@@ -27,11 +34,25 @@ struct Reading {
     /// A value with the turn of hers it stands on and the kind of anchor.
     struct Hit { let value: String, turn: Int, anchor: Anchor }
 
-    /// The value of «N: …» with its turn and anchor; nil — none, and the drop is recorded.
+    /// The value of «N: …» with its turn and anchor; nil — none, inside pretend play (but a creation) or negated, and
+    /// the drop is recorded.
     mutating func take(_ item: String?, _ field: String) -> Hit? {
         guard let item else { return nil }
-        let (cited, value) = Self.split(item)
-        if let turn = turns.first(where: { $0.number == cited }), grounded(value, in: turn.her) {
+        guard let hit = anchor(Self.split(item)) else {
+            dropped.append(Extraction.Drop(field: field, reason: .ungrounded))
+            return nil
+        }
+        let reason: Extraction.Drop.Reason? = fiction.contains(hit.turn) && !field.hasPrefix("creations") ? .fiction
+            : sense.negated(words(hit.value), in: her(hit.turn)) ? .negated : nil
+        guard let reason else { return hit }
+        dropped.append(Extraction.Drop(field: field, reason: reason))
+        return nil
+    }
+
+    /// Where the value stands in her words: the cited turn, another turn of hers, her «да» after Elly's line.
+    func anchor(_ item: (cited: Int?, value: String)) -> Hit? {
+        let value = item.value
+        if let turn = turns.first(where: { $0.number == item.cited }), grounded(value, in: turn.her) {
             return Hit(value: value, turn: turn.number, anchor: .said)
         }
         if let turn = turns.first(where: { grounded(value, in: $0.her) }) {
@@ -42,17 +63,34 @@ struct Reading {
                 return Hit(value: value, turn: turn.number, anchor: .agreed)
             }
         }
-        dropped.append(Extraction.Drop(field: field, reason: .ungrounded))
         return nil
+    }
+
+    /// Her line of a turn, and Elly's line before it.
+    func her(_ turn: Int) -> String { turns.first { $0.number == turn }?.her ?? "" }
+    func ellyBefore(_ turn: Int) -> String {
+        guard let index = turns.firstIndex(where: { $0.number == turn }), index > 0 else { return "" }
+        return turns[index - 1].elly ?? ""
     }
 
     /// Her line begins with «да», «давай» and the like.
     func yes(_ line: String) -> Bool { Forbidden.tokens(line).first.map(texts.yes.contains) ?? false }
 
+    /// The value's words that count: three letters and more, not a word of the form, or a number.
+    func words(_ value: String) -> [String] { Self.words(value, stop: texts.stop) }
+
+    static func words(_ value: String, stop: Set<String>) -> [String] {
+        Forbidden.tokens(value).filter {
+            $0.count >= 3 && !stop.contains($0) || !Forbidden.shared.numbers([$0]).isEmpty
+        }
+    }
+
     /// At least half of the value's words are in the line, and at least one: numbers by value, words by their start.
-    func grounded(_ value: String, in line: String) -> Bool {
+    func grounded(_ value: String, in line: String) -> Bool { Self.covers(value, line, stop: texts.stop) }
+
+    static func covers(_ value: String, _ line: String, stop: Set<String> = ExtractTexts.shared.stop) -> Bool {
         let number = { (token: String) in Forbidden.shared.numbers([token]).first }
-        let wanted = Forbidden.tokens(value).filter { $0.count >= 3 && !texts.stop.contains($0) || number($0) != nil }
+        let wanted = words(value, stop: stop)
         let words = Forbidden.tokens(line)
         let hits = wanted.filter { want in
             number(want).map { value in words.contains { number($0) == value } }
@@ -83,12 +121,17 @@ struct Reading {
         candidates.append(Candidate(subject, .age, String(years), turn: hit.turn, anchor: hit.anchor))
     }
 
-    /// «цвет — фиолетовый»: the slot by its word, else «другое».
+    /// «цвет — фиолетовый»: the slot by its word, else «другое»; without «любимый», «самый», «больше всего» in her
+    /// line or in Elly's line before it — what she likes, not a favourite.
     private mutating func favorite(_ item: String) {
         guard let hit = take(item, "she.favorite") else { return }
         let dash = hit.value.range(of: "—") ?? hit.value.range(of: "–") ?? hit.value.range(of: " - ")
         let word = dash.map { MemoryStore.key(String(hit.value[..<$0.lowerBound])) } ?? ""
         let value = dash.map { hit.value[$0.upperBound...].trimmingCharacters(in: .whitespaces) } ?? hit.value
+        let said = SenseWords.phrase(her(hit.turn) + " " + ellyBefore(hit.turn))
+        guard sense.favorite.contains(where: { said.contains(" " + $0) }) else {
+            return candidates.append(Candidate(.child, .likes, value, turn: hit.turn, anchor: hit.anchor))
+        }
         let slot = Words.shared.slots.first { $0.last == word && !word.isEmpty }?.first.flatMap(Slot.init) ?? .other
         candidates.append(Candidate(.child, .favorite, value, slot: slot, turn: hit.turn, anchor: hit.anchor))
     }
@@ -113,11 +156,30 @@ struct Reading {
                 + (thing.details ?? []).map { _ in field + ".detail" }
             return dropped += orphans.map { Extraction.Drop(field: $0, reason: .ungrounded) }
         }
+        if field == "pets", let hit = kind ?? name,
+           let owner = sense.owner(of: words([kind?.value, name?.value].compactMap { $0 }.joined(separator: " ")),
+                                   in: her(hit.turn)) {
+            return foreign(thing, owner, kind: kind, name: name)
+        }
         let subject = make(kind?.value, name?.value)
         for (trait, hit) in [(Trait.species, kind), (.name, name)] {
             if let hit { candidates.append(Candidate(subject, trait, hit.value, turn: hit.turn, anchor: hit.anchor)) }
         }
         put(subject, .color, thing.color, field + ".color")
         for item in thing.details ?? [] { put(subject, .detail, item, field + ".detail") }
+    }
+
+    /// A pet of someone else: of the family — a detail of that relative in her words («у бабушки собака Бим»); of
+    /// anyone else — nothing; the pet's own facts are not hers either way.
+    private mutating func foreign(_ thing: ModelAnswer.Thing, _ owner: (relation: Relation?, word: String),
+                                  kind: Hit?, name: Hit?) {
+        if let relation = owner.relation, let hit = kind ?? name {
+            let detail = (["у", owner.word] + [kind?.value, name?.value].compactMap { $0 }).joined(separator: " ")
+            candidates.append(Candidate(.person(relation, name: nil), .detail, detail, turn: hit.turn,
+                                        anchor: hit.anchor))
+        }
+        let own = ["pets"] + (thing.color.map { _ in ["pets.color"] } ?? [])
+            + (thing.details ?? []).map { _ in "pets.detail" }
+        dropped += own.map { Extraction.Drop(field: $0, reason: .foreign) }
     }
 }

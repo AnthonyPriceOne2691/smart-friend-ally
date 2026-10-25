@@ -40,7 +40,7 @@ public struct Extraction: Sendable {
 
     /// A value not taken: where in the answer and why.
     public struct Drop: Equatable, Sendable {
-        public enum Reason: String, Sendable { case ungrounded, age, relation }
+        public enum Reason: String, Sendable { case ungrounded, age, relation, fiction, negated, foreign }
         public let field: String, reason: Reason
     }
 
@@ -64,7 +64,7 @@ extension MemoryStore {
                 reading.read(try ModelAnswer.parse(text))
                 let written = try write(MemorySession(id: conversation.id, started: conversation.started,
                                                       candidates: reading.candidates,
-                                                      heard: conversation.turns.map(\.her)))
+                                                      heard: conversation.turns.map(\.her), unlike: reading.unlikes))
                 return Extraction(status: .parsed, requestHash: prompt.hash, params: texts.params, attempts: attempt,
                                   candidates: reading.candidates, dropped: reading.dropped, written: written)
             } catch let garbage as Garbage {
