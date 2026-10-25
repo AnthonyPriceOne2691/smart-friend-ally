@@ -5,8 +5,8 @@
 - [x] T1: спека (Z14–Z18 дословно), STATUS, план, задачи, решения, eval-smoke — первым коммитом до кода (L33)
 - [x] T2: `RUAccentModels` в `AllyVoice` (зависимость `../AllyAccent`); Z18 — логиты против onnxruntime 1.31
 - [x] T3: после мержа V3b — `AccentModels`, сборка через `RuAccentPlacer`; Z14, Z15, Z16; Z17 — время и отпечаток
-- [ ] T4: знание — concept `engineering/accent-placer` (модели и сборка); `ios.yml`, если нужен шаг пакета
-- [ ] T5: verify-report, PR, CI, сдача — архив, строка INDEX с уроком L103, slug в `delivery/OBSERVATIONS.md`
+- [x] T4: знание — concept `engineering/accent-placer` (модели и сборка); `ios.yml`, если нужен шаг пакета
+- [x] T5: verify-report, PR, CI, сдача — архив, строка INDEX с уроком L103 (рождён этой поставкой), slug в `delivery/OBSERVATIONS.md`
 
 ## Точка остановки 23.10
 
