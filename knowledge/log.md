@@ -6,6 +6,16 @@
   следующие фразы голосу заранее (`VoiceLookahead`). `engineering/safety-below-model` — заранее готовится только
   пропущенное контрактом.
 * **Источник**: поставка `voice-out` (V4b2a серии голоса; примеры подписаны родителем 2026-10-23).
+## 2026-10-23 — слух: GigaAM-v3 за протоколом распознавателя, выбор в реестре слуха
+
+* **Update**: `engineering/turn-detector` — распознаватель за протоколом фразы: `asr` реестра слуха (диктовка по
+  умолчанию до правила шага 3; GigaAM при файлах своего размера и паре ORT; строка отказа), веса external data, звук
+  GigaAM — 16 кГц Int16 ящика с предзаписью 1,5 с, одна расшифровка на «возможно, конец»; `implementation:` —
+  `BatchPhrase.swift`, `recognizers.json`, `GigaAMRecognizer.swift`. `engineering/voice-loop` — перепаковка и
+  копирование весов GigaAM, включение `engine: gigaam`, `versions.asr`; `implementation:` — `RecognitionPhrase.swift`.
+  `engineering/safety-below-model` — распознаватель не меняет путь реплики. `engineering/index` — строка концепта.
+* **Источник**: поставка `gigaam-asr` (D7.3 серии «слух»; примеры U22–U26, U28 подписаны родителем 2026-10-23; U27 —
+  D7.4).
 
 ## 2026-10-23 — живой разговор: в памяти модели только сказанное (kv-spoken)
 
