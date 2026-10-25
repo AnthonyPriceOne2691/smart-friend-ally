@@ -7,6 +7,20 @@
   `canon-texts-stay-out`; в свежем клоне и новом ворктри снимка нет.
 * **Источник**: поставка `canon-variant-d` (класс S); решение родителя 2026-10-24 «Открыт, канон вне git (Рекомендую)».
 
+## 2026-10-23 — живой разговор: в памяти модели только сказанное (kv-spoken)
+
+* **Update**: `engineering/session` — после хода модели `commit(spoken:)` с доигранными предложениями, скрипт —
+  `remember(heard:spoken:)`, `forget` — ничего; брошенный ответ спекуляции — `retract`, этап `spec_retracted` вместо
+  `spec_stale`. `engineering/voice-loop` — KV держит только прозвучавшее, `swa_full: false` — отказ загрузки и строка
+  консоли из `lines.json`; `implementation:` — `LlamaSettings.swift`, `lines.json`. `engineering/safety-below-model` —
+  срезанное контрактом в память модели не попадает. `engineering/index` — строка сессии.
+* **Источник**: поставка `kv-spoken` (D5 серии «живой разговор»; примеры X1–X8 подписаны родителем 2026-10-23).
+## 2026-10-25 — эквалайзер, строка пресета, файлы голоса (голос V4b1)
+
+* **Update**: `engineering/voice-fx` — эквалайзер RBJ вернулся в цепочку (`eq.c`, `VoiceEQ`), полный Z30 против p9f5.
+  `engineering/voice-engine` — строка пресета в `voice.json` и `VoiceSettings`. `engineering/voice-loop` — команда
+  копирования файлов голоса `scripts/copy_voice.py`. `engineering/index`, `references/repo-map`.
+* **Источник**: поставка `voice-config` (V4b1 серии голоса; примеры подписаны родителем 2026-10-23).
 ## 2026-10-23 — сессия теста с родителем: один runbook на все телефонные проверки
 
 * **Creation**: `ops/test-session` (Runbook) — решение родителя 2026-10-23 «всё в общую сессию»: подготовка на Mac
@@ -16,6 +30,13 @@
   `observed.md`. **Update**: `engineering/voice-loop` — сравнение с энергией через путь U19; `ops/index`.
 * **Источник**: поставка `test-session` (класс S, документ; waiver'ы и списки ожиданий серий в архивах и ветках).
 
+## 2026-10-23 — память: разбор разговора в кандидаты с опорой на её слова (memory-extract)
+
+* **Update**: `engineering/memory` — разбор: запрос из ресурсов `extract.*`, модель за протоколом, повтор при мусоре,
+  опора «сама / код / согласилась / без опоры»; серия с разрезом на `memory-sense` и `memory-quality`;
+  `implementation:` — `Extract.swift`, `ExtractPrompt.swift`, `ModelAnswer.swift`, `Anchors.swift`, ресурсы.
+  `engineering/safety-below-model` — реестр правил промпта разбора. `engineering/index`, `references/repo-map` — строки.
+* **Источник**: поставка `memory-extract` (M26–M28 спеки серии, подписанной родителем 2026-10-23; разрез — ведущий).
 ## 2026-10-23 — детский экран в приложении: венок, тап, стоп, метка, перерыв (оболочка Ш3)
 
 * **Update**: `engineering/character-rendering` — как сделано в Ш3 (венок `Crown` и `CrownArt`, экран `ChildShell`,

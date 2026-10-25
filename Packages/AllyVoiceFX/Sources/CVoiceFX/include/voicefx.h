@@ -1,11 +1,24 @@
-// Voice processing after synthesis (voice series V4a): TD-PSOLA pitch and formant shift of the voice-samples-2 stand the
-// parent chose in round 3; the chain's EQ arrives with V4b. Plain C, no platform code.
+// Voice processing after synthesis (voice series V4a, V4b1): TD-PSOLA pitch and formant shift, then an RBJ biquad EQ —
+// the chain of the voice-samples-2 stand the parent chose in round 3. Plain C, no platform code.
 #ifndef ALLY_VOICEFX_H
 #define ALLY_VOICEFX_H
 
-/// Pitch and formant shift in semitones, then the stand's 0.97 peak guard. Writes n samples to out.
+enum { ALLY_EQ_LOW_SHELF = 0, ALLY_EQ_PEAK = 1, ALLY_EQ_HIGH_SHELF = 2 };
+
+typedef struct {
+    int kind;
+    double freq;
+    double gain_db;
+    double q;
+} AllyEQBand;
+
+/// Pitch and formant shift in semitones, then the EQ cascade and the stand's 0.97 peak guard. Writes n samples to out.
 /// Returns 0, or -1 when memory runs out or sr is not positive.
-int ally_fx_process(const float *x, int n, int sr, double pitch_st, double formant_st, float *out);
+int ally_fx_process(const float *x, int n, int sr, double pitch_st, double formant_st,
+                    const AllyEQBand *bands, int nbands, float *out);
+
+/// The EQ cascade in place.
+void ally_eq(float *x, int n, int sr, const AllyEQBand *bands, int nbands);
 
 /// Frames of the pitch track for n samples at sr: one per 5 ms.
 int ally_pitch_frames(int n, int sr);

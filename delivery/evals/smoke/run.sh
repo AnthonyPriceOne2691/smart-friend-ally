@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-# Постоянные smoke-оракулы репозитория (Delivery §6.1): гоняет S1–S7 из README
+# Постоянные smoke-оракулы репозитория (Delivery §6.1): гоняет S1–S8 из README
 # и падает на первом провале. S1–S4 — проверки контура, S5 — тесты пакетов
 # с покрытием, S6 — гейт данных ребёнка на записи чёрного ящика (black-box),
-# S7 — тот же гейт на спутниках базы памяти (memory-core).
+# S7 — тот же гейт на спутниках базы памяти (memory-core), S8 — сверка команды копирования голоса до первой копии
+# (voice-config).
 set -uo pipefail
 cd "$(git rev-parse --show-toplevel)" || exit 1
 PY=python3
@@ -42,6 +43,7 @@ fi
 run S4 bash delivery/evals/smoke/idle_overdue.sh
 run S6 bash delivery/evals/smoke/child_data_blackbox.sh
 run S7 bash delivery/evals/smoke/child_data_sqlite.sh
+run S8 bash delivery/evals/smoke/voice_copy_check.sh
 # S5 в CI гоняет джоба swift (тот же скрипт плюс отрицательный контроль): вторая сборка пакета в джобе delivery
 # стоила бы минуту на каждом прогоне и не проверила бы ничего нового. Локально run.sh зовёт его сам.
 if [ -n "${CI:-}" ]; then
