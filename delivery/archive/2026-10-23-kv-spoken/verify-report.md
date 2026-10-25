@@ -2,7 +2,7 @@
 
 **Date:** 2026-10-23
 **Verifier:** process:ci
-**asserts_reviewed_by:** n/a (все утверждения ведут к примерам — дайджест ниже, asserts_without_example: 0; X1–X7 подписаны родителем 2026-10-23 в спеке серии «живой разговор», U8 — пример D7.1, подписан там же 2026-10-23)
+**asserts_reviewed_by:** human:anthony at=2026-10-25 («Подписываю (Рекомендую)» — изменённое ожидание U8 из D7.1: та же реплика «Я была в зоопарке», прочитанная из новой формы памяти `memory.turns.map(\.heard)`; замена U12 из D7.1 тестом X4: ответ, законченный до того, как она продолжила, уходит из памяти — `spec_retracted` 1, `spec_stale` нет. Остальные утверждения ведут к примерам X1–X8 спеки серии «живой разговор», подписанной 2026-10-23; дайджест ниже, asserts_without_example: 0)
 **CI run:** https://github.com/AnthonyPriceOne2691/smart-friend-ally/actions/runs/40017841603 (Linux: delivery, gates, swift — зелёные на 5819b16; первая попытка джобы `swift` упала падением самого SwiftPM — `Segmentation fault` процесса `swift-package` в прогоне покрытия AllySQLite, пакета вне диффа, — перезапуск зелёный); https://github.com/AnthonyPriceOne2691/smart-friend-ally/actions/runs/40018186417 (macOS, джоба `app` по метке `macos` — зелёная на 5819b16; прошлый её прогон 40015972860 на f317b81 упал на AllyOnnx: в main тогда не было фикстуры `add.onnx`, L80, её внёс silero-vad)
 **Commit:** 5819b16 (код — 6b96a45 и d74a7da, дайджест — 0bcdd96; документы — b7ef7b0, подпись — e5c86ac; слияния main — 03792bb, 4c05062, 9fbf853, c540aa4; сдача — f2d00cd; этот отчёт — следующим коммитом, PR #60)
 
