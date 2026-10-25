@@ -16,11 +16,13 @@ merge_guard краснел на #69 и #71, локально при load 63–67
 
 Уроки по путям (`Packages/AllyDiscipline/Tests/`): **L39** — сторож под нагрузкой судил паузы планировщика, лучшее из трёх
 на строку; **L54** — `nice` уводит процесс на экономичные ядра; **L26, L43** — дайджест до пуша.
+Не применимы: L27, L28, L29, L30, L34, L35, L38, L47, L48, L49, L65, L66, L67 — о данных, правилах, судьях и контракте
+маршрутизатора; поставка меняет только сторож времени в тесте, решения маршрутизатора не трогает.
 
 ## Tasks
 - [x] T1: STATUS, mini-spec, decisions — первым коммитом до кода (L33)
-- [ ] T2: `speedGuardSkips(load:performanceCores:isCI:)`, число P-ядер, загрузка, `XCTSkip` в `testDecisionIsFast`;
+- [x] T2: `speedGuardSkips(load:performanceCores:isCI:)`, число P-ядер, загрузка, `XCTSkip` в `testDecisionIsFast`;
   прямой тест решения; мутация «пропуск и на CI» — красная
-- [ ] T3: знание — грабли в `references/repo-map.md`; `knowledge/log.md`
-- [ ] T4: verify-report с дайджестом, PR, зелёный CI, сдача — архив, строка INDEX с уроком L126, slug в
+- [x] T3: знание — грабли в `references/repo-map.md`; `knowledge/log.md`
+- [x] T4: verify-report с дайджестом, PR, зелёный CI, сдача — архив, строка INDEX с уроком L126 (рождён этой поставкой), slug в
   `delivery/OBSERVATIONS.md`; мерж — ведущий, PR первым в очереди
