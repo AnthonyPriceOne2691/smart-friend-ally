@@ -7,11 +7,14 @@ import PackageDescription
 let package = Package(
     name: "AllyHearing",
     platforms: [.iOS(.v17), .macOS(.v14)],
-    products: [.library(name: "AllyHearing", targets: ["AllyHearing"])],
+    products: [.library(name: "AllyHearing", targets: ["AllyHearing"]),
+               .executable(name: "asr-step3", targets: ["StepThreeTool"])],
     dependencies: [.package(path: "../AllyCore"), .package(path: "../AllyOnnx")],
     targets: [
         .target(name: "AllyHearing", dependencies: [.product(name: "AllyCore", package: "AllyCore"),
                                                     .product(name: "AllySherpa", package: "AllyOnnx")]),
-        .testTarget(name: "AllyHearingTests", dependencies: ["AllyHearing"])
+        // Step 3 on the Mac (D7.4): the parent's tool over the black box export; the app does not link it.
+        .executableTarget(name: "StepThreeTool", dependencies: ["AllyHearing"]),
+        .testTarget(name: "AllyHearingTests", dependencies: ["AllyHearing", "StepThreeTool"])
     ]
 )
