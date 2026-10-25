@@ -28,6 +28,18 @@ func stretch(_ x: Double, _ y: Double, around pivot: CGPoint) -> CGAffineTransfo
     CGAffineTransform(translationX: pivot.x, y: pivot.y).scaledBy(x: x, y: y).translatedBy(x: -pivot.x, y: -pivot.y)
 }
 
+/// The four-pointed star of prototype v3 (`s-spark`) with its raspberry edge: the crown's glints, the night's stars,
+/// the sky's glints.
+func sparkle(_ base: GraphicsContext, at centre: CGPoint, width: Double, fill: Color, opacity: Double) {
+    var ctx = base
+    ctx.opacity *= opacity
+    ctx.translateBy(x: centre.x, y: centre.y)
+    ctx.scaleBy(x: width / 24, y: width / 24)
+    ctx.fill(Blooms.star, with: .color(fill))
+    ctx.stroke(Blooms.star, with: .color(Color(Palette.raspberry)),
+               style: StrokeStyle(lineWidth: 1.1, lineJoin: .round))
+}
+
 /// A radial gradient from the centre outwards.
 func glow(_ stops: [Gradient.Stop], at centre: CGPoint, radius: Double) -> GraphicsContext.Shading {
     .radialGradient(Gradient(stops: stops), center: centre, startRadius: 0, endRadius: radius)

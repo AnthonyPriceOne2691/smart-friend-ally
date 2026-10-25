@@ -60,6 +60,7 @@
 - `voice-out`
 - `memory-sense`
 - `canon-variant-d`
+- `child-shell-light`
 - `asr-step3`
 - `router-guard-load`
 - `voice-app`

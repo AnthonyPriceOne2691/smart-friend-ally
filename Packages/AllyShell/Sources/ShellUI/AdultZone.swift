@@ -19,7 +19,7 @@ public struct AdultZone: View {
             if let label {
                 Text(label).font(.system(size: 12, weight: .heavy, design: .rounded)).foregroundStyle(plum)
                     .padding(.horizontal, 12).frame(height: 28)
-                    .background(Capsule().fill(Color.white.opacity(0.85)))
+                    .background(Capsule().fill(Color.white))  // opaque: at night the veil lies behind it (Ш2б)
                     .overlay(Capsule().stroke(plum.opacity(0.2), lineWidth: 1.5))
                     .allowsHitTesting(false).accessibilityIdentifier("child.until")
             }

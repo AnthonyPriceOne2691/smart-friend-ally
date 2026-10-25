@@ -50,9 +50,14 @@ public struct Frame: Equatable, Sendable {
     /// How bright each glint of the crown is (`Crown.twinkle`) and how far a tap squashed her body (`Motion.poke`): the
     /// body is 1 + squash high and 1 − 0.75 squash wide about (0; 40).
     public let glints: [Double], squash: Double
+    /// The light and the bubbles of the screen in this frame (Ш2б): `Motion` steps them, a still frame takes its
+    /// phase's.
+    public internal(set) var light = Light(), bubbles = BubbleField()
 
     public static func at(_ phase: SessionState, time t: Double, voice: Double? = nil, mic: Double? = nil) -> Frame {
-        Frame(Pose.at(phase, time: t, voice: voice, mic: mic), time: t)
+        var frame = Frame(Pose.at(phase, time: t, voice: voice, mic: mic), time: t)
+        (frame.light, frame.bubbles) = (Light.still(phase, time: t), BubbleField.still(time: t))
+        return frame
     }
 
     public init(_ pose: Pose, time t: Double) { self.init(pose, phases: Phases(time: t, pose: pose)) }

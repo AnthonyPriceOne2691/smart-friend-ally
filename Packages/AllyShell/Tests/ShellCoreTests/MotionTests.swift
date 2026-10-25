@@ -39,6 +39,25 @@ final class MotionTests: XCTestCase {
 
     /// Random scripts with a fixed seed: nothing jumps between two frames, switches included — a property.
     func testNothingJumpsAcrossPhaseSwitches() {  // V12
+        worstJumps { before, after in
+            [jump(after.angles, before.angles) / 12, jump(after.offsets, before.offsets) / 3,
+             jump(after.shares, before.shares) / 0.15, abs(after.eyeOpen - before.eyeOpen) / 0.35]
+        }
+    }
+
+    /// The same random scripts: the night, the tints and the glow, the pearls and every puff come and go softly.
+    func testTheLightAndThePuffsNeverJump() {  // V35
+        worstJumps { before, after in
+            let (old, new) = (before.light, after.light)
+            return [jump([new.night, new.think, new.aura], [old.night, old.think, old.aura]) / 0.05,
+                    jump(new.pearls + [new.pearlsShown], old.pearls + [old.pearlsShown]) / 0.15,
+                    jump(after.bubbles.puffs.map(\.opacity), before.bubbles.puffs.map(\.opacity)) / 0.15]
+        }
+    }
+
+    /// 100 scripts of 20 s with a fixed seed — phases in random order, switches every 0.2–3 s, levels 0…1; fails at the
+    /// first pair of frames where a jump, as a share of its bound, is over 1.
+    private func worstJumps(_ shares: (Frame, Frame) -> [Double]) {
         var dice = Dice(seed: 2026)
         let phases: [SessionState] = [.asleep, .greeting, .listening, .thinking, .speaking, .windingDown, .goodbye]
         for scenario in 0..<100 {
@@ -49,10 +68,7 @@ final class MotionTests: XCTestCase {
             }
             let shots = film(script, for: 20, seed: UInt64(scenario), voice: dice.next(), mic: dice.next())
             for (before, after) in zip(shots, shots.dropFirst()) {
-                let jumps = [jump(after.frame.angles, before.frame.angles) / 12,
-                             jump(after.frame.offsets, before.frame.offsets) / 3,
-                             jump(after.frame.shares, before.frame.shares) / 0.15,
-                             abs(after.frame.eyeOpen - before.frame.eyeOpen) / 0.35]
+                let jumps = shares(before.frame, after.frame)
                 if let worst = jumps.max(), worst > 1 {
                     return XCTFail("scenario \(scenario) at \(after.time): \(jumps)")
                 }
