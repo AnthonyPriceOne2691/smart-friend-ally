@@ -11,5 +11,5 @@ L48, L49, L50, L51, L52, L59, L60, L61, L65, L66, L67, L68, L69, L70, L89, L90, 
 - [x] T3: любимое по маркерам, «больше не люблю» → снятие «любит» в `MemoryStore.write` (M31); мутации плана
 - [x] T4: знание — `engineering/memory`, строки реестра `safety-below-model`, `knowledge/log.md`; `okf_validate`,
   `okf_sync_gate`
-- [ ] T5: слить main (после варианта D вернуть `docs/canon` копией, в git не класть), PR, CI, verify-report, сдача:
+- [x] T5: слить main (после варианта D вернуть `docs/canon` копией, в git не класть), PR, CI, verify-report, сдача:
   архив, строка INDEX с уроками L117, L118, `memory-sense` в `delivery/OBSERVATIONS.md`

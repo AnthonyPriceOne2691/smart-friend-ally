@@ -56,3 +56,4 @@
 - `voice-config`
 - `test-session`
 - `memory-extract`
+- `memory-sense`
