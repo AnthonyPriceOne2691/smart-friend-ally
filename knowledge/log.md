@@ -7,6 +7,28 @@
   `implementation:` — `Extract.swift`, `ExtractPrompt.swift`, `ModelAnswer.swift`, `Anchors.swift`, ресурсы.
   `engineering/safety-below-model` — реестр правил промпта разбора. `engineering/index`, `references/repo-map` — строки.
 * **Источник**: поставка `memory-extract` (M26–M28 спеки серии, подписанной родителем 2026-10-23; разрез — ведущий).
+## 2026-10-23 — детский экран в приложении: венок, тап, стоп, метка, перерыв (оболочка Ш3)
+
+* **Update**: `engineering/character-rendering` — как сделано в Ш3 (венок `Crown` и `CrownArt`, экран `ChildShell`,
+  сонное шевеление, 120 Гц), порядок серии Ш3 → Ш2б; `implementation:` += `Crown.swift`, `CrownArt.swift`,
+  `ChildShell.swift`. `product/look-and-feel` — правила 2, 3, 4, 13, 15 в коде, цвета венка прототипа;
+  `implementation:` += `Tap.swift`, `AdultZone.swift`. `product/session-limit` — перерыв после лимита по умолчанию
+  выключен («Без перерыва»), ключ 0–180; `implementation:` += `Nap.swift`. `product/child-mode`,
+  `engineering/session` — заглушка R → оболочка. `engineering/voice-loop` — детский экран, «Гид-доступ», ключ перерыва.
+  `engineering/safety-below-model` — экран путь реплики не меняет. `references/repo-map` — `AllyShell` в приложении.
+* **Источник**: поставка `child-shell-app` (оболочка Ш3; Ш3 и Ш2б подписаны родителем 2026-10-23 «Подписываю
+  (Рекомендую)», перерыв — ответ «Без перерыва»).
+## 2026-10-23 — расстановщик ударений: логика RUAccent на Swift
+
+* **Update**: `engineering/accent-placer` — логика V3b (`RuAccentPlacer`, «ё», омографы, ударения, текст, словари) с
+  причудами Python, стыки `AccentModels` и `AccentTokenizers`, оракул — повтор Python по записи; `implementation:` —
+  исходники логики. `engineering/index` — строка концепта.
+* **Источник**: поставка `accent-logic` (V3b серии голоса; доля V3b в Z14–Z16, подпись родителя 2026-10-23).
+## 2026-10-23 — расстановщик ударений: токенизаторы RUAccent на Swift
+
+* **Creation**: `engineering/accent-placer` (Design) — пакет `AllyAccent`, `Encoding` и три токенизатора RUAccent с
+  паритетом HF; `implementation:` — исходники пакета. **Update**: `engineering/index`, `references/repo-map`.
+* **Источник**: поставка `accent-tokenizers` (V3a серии голоса; часть Z14, подпись родителя 2026-10-23).
 ## 2026-10-23 — слух: Silero VAD на sherpa-onnx и общем ORT, активность голоса за протоколом
 
 * **Update**: `engineering/turn-detector` — активность голоса за протоколом (энергия или Silero), тишина от речи за

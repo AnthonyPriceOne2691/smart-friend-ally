@@ -31,10 +31,12 @@ implementation:
   «почему» `Encyclopedia` — основы Snowball, SQLite FTS5 через `AllySQLite`, списки — `Resources/encyclopedia.json`):
   `swift test --package-path Packages/AllyCore` (тулчейн Xcode: `DEVELOPER_DIR`). Паритет энциклопедии со стендом —
   `swift run -c release --package-path Packages/AllyCore encyclopedia-replay <база.jsonl> [конфиг.json] < вопросы.jsonl`.
-- **Детский экран (оболочка)** — `Packages/AllyShell`: `ShellCore` (позы фаз, кадры, раскладка, палитра — Linux) и
-  `ShellUI` (Элли, пузырь и небо в SwiftUI под `#if canImport(SwiftUI)`). Снимки семи фаз и лист `sheet.png` пишет
-  `swift test --disable-keychain --package-path Packages/AllyShell` на Mac в `local/shell-snapshots/`; на Linux снимки
-  пропускаются видимо. Снимков экрана телефона нет никогда (L46).
+- **Детский экран (оболочка)** — `Packages/AllyShell`: `ShellCore` (позы фаз, кадры, движение, раскладка, палитра,
+  венок, правило тапа `Tap`, перерыв после лимита `Nap` — Linux) и `ShellUI` (Элли с венком, пузырь и небо в SwiftUI
+  под `#if canImport(SwiftUI)`; экран дочки `ChildShell` с зоной взрослых). Приложение берёт `ShellUI` и `ShellCore`
+  через `App/project.yml`, тело `App/Sources/ChildScreen.swift` — `ChildShell`. Снимки семи фаз, лист `sheet.png`,
+  полосы движения и экран целиком (`app/`) пишет `swift test --disable-keychain --package-path Packages/AllyShell` на
+  Mac в `local/shell-snapshots/`; на Linux снимки пропускаются видимо. Снимков экрана телефона нет никогда (L46).
 - **Расстановщик ударений** — `Packages/AllyAccent` (RUAccent на Swift: токенизаторы; паритет на Mac — файлы в
   `~/models/tts/ruaccent` и `~/models/tts/ruaccent-parity`): `swift test --disable-keychain --package-path Packages/AllyAccent`.
 - **Текст для синтеза** — `Packages/AllySpeechText` (ударения, закреплённый словарь, правила чтения; данные —

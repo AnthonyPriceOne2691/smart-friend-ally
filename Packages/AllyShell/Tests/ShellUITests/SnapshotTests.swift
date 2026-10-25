@@ -67,6 +67,43 @@ final class SnapshotTests: XCTestCase {
         XCTAssertNotNil(ImageRenderer(content: LiveScene(phase: .asleep).frame(width: 440, height: 956)).cgImage)
     }
 
+    /// The whole child screen for the parent's eye: each phase at 2 s with the crown and the adult's corner; probes by
+    /// calculation before the code (L19) — leaves, the stop sign, the plate — and V8's on the same frames.
+    func testTheWholeScreenWithTheCrownAndTheAdultsCorner() throws {  // V21
+        let folder = try snapshots("app")
+        let crown = CGRect(x: 140, y: 360, width: 190, height: 130), stop = CGRect(x: 380, y: 62, width: 44, height: 44)
+        let plate = CGRect(x: 150, y: 62, width: 226, height: 44)
+        let leaf = { (rgb: [Int]) in near(rgb, 0x8FD9B6, 16) || near(rgb, 0x6FC4A2, 16) }
+        let plum = { (rgb: [Int]) in near(rgb, 0x5E1A42, 12) }, white = { (rgb: [Int]) in rgb.allSatisfy { $0 >= 251 } }
+        for phase in phases {
+            let image = try XCTUnwrap(render(screen(phase, label: "при родителе · до 29.10 в 21:00")))
+            try save(image, to: folder.appendingPathComponent("\(phase.rawValue).png"))
+            let probe = try XCTUnwrap(Pixels(image)), leaves = probe.area(in: crown, where: leaf)
+            XCTAssertGreaterThanOrEqual(leaves, 100, "\(phase)")
+            XCTAssertLessThanOrEqual(probe.area(where: leaf) - leaves, 5, "\(phase)")
+            XCTAssertGreaterThanOrEqual(probe.area(in: stop, where: plum), 500, "\(phase)")
+            XCTAssertGreaterThanOrEqual(probe.area(in: plate, where: white), 1500, "\(phase)")
+            let eyes = probe.area(in: CGRect(x: 150, y: 420, width: 140, height: 120)) { luminance($0) < 0.06 }
+            let mouth = probe.area(in: CGRect(x: 190, y: 490, width: 60, height: 70)) { near($0, 0x7A2F57, 24) }
+            XCTAssertTrue(phase == .asleep ? eyes <= 500 : eyes >= 1000, "\(phase) eyes \(eyes)")
+            let speaks = TalkState(phase: phase).pose == .speaks
+            XCTAssertTrue(speaks ? mouth >= 100 : mouth <= 85, "\(phase) mouth \(mouth)")
+        }
+        let bare = try XCTUnwrap(Pixels(try XCTUnwrap(render(screen(.asleep, label: nil)))))
+        XCTAssertLessThanOrEqual(bare.area(in: plate, where: white), 100)
+        XCTAssertGreaterThanOrEqual(bare.area(in: stop, where: plum), 500)
+        let live = ChildShell(talk: TalkState(), until: nil, onTap: {}, onStop: {})
+        XCTAssertNotNil(ImageRenderer(content: live.frame(width: phone.width, height: phone.height)).cgImage)
+    }
+
+    /// A still frame of the child screen: the scene of a phase at 2 s and the adult's corner over it.
+    private func screen(_ phase: SessionState, label: String?) -> some View {
+        ZStack {
+            ShellScene(phase: phase, time: 2, safeTop: 62, safeBottom: 34)
+            AdultZone(label: label, layout: layout, onStop: {})
+        }
+    }
+
     private func pixels(_ frame: Frame) throws -> Pixels {
         try XCTUnwrap(Pixels(try XCTUnwrap(render(ShellScene(frame: frame, safeTop: 62, safeBottom: 34)))))
     }
@@ -94,7 +131,7 @@ final class SnapshotTests: XCTestCase {
         return folder
     }
 
-    private func render(_ scene: ShellScene) -> CGImage? {
+    private func render(_ scene: some View) -> CGImage? {
         let renderer = ImageRenderer(content: scene.frame(width: phone.width, height: phone.height))
         renderer.scale = 3
         return renderer.cgImage
@@ -128,6 +165,13 @@ private struct Pixels {
         return [Int(bytes[index]), Int(bytes[index + 1]), Int(bytes[index + 2])]
     }
 
+    /// Area in pt² of the pixels of the whole frame that pass the test.
+    func area(where test: ([Int]) -> Bool) -> Double {
+        let count = stride(from: 0, to: bytes.count, by: 4).filter { test([Int(bytes[$0]), Int(bytes[$0 + 1]),
+                                                                          Int(bytes[$0 + 2])]) }.count
+        return Double(count) / 9
+    }
+
     /// Area in pt² of the pixels inside the box that pass the test.
     func area(in box: CGRect, where test: ([Int]) -> Bool) -> Double {
         var count = 0
@@ -159,6 +203,10 @@ final class SnapshotTests: XCTestCase {
 
     func testWakeAndSleepStrips() throws {  // V18
         throw XCTSkip("полосы кадров — только на Mac")
+    }
+
+    func testTheWholeScreenWithTheCrownAndTheAdultsCorner() throws {  // V21
+        throw XCTSkip("экран целиком — только на Mac")
     }
 }
 #endif
