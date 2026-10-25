@@ -24,9 +24,9 @@ L62, L35, L14, L43, L34; не применимы — L37, L106, L1, L12, L36 (п
 
 ## Slice 3 — знание и сдача
 - [x] T8: ADR `character-rendering`, `product/look-and-feel` (`implementation:` += новые файлы), `knowledge/log.md`
-- [ ] T9: слить `origin/main` (вернуть `docs/canon` копией, если пропал); строгий `delivery_check --require-ci
+- [x] T9: слить `origin/main` (вернуть `docs/canon` копией, если пропал); строгий `delivery_check --require-ci
   --diff-base origin/main`; пуш, PR, CI
-- [ ] T10: verify-report, `check_digest_report.py` до пуша сдачи (L43); архив в том же PR, строка INDEX (уроки L108,
+- [x] T10: verify-report, `check_digest_report.py` до пуша сдачи (L43); архив в том же PR, строка INDEX (уроки L108,
   L109, L110 — рождены этой поставкой), slug — строкой в конец `delivery/OBSERVATIONS.md`; доклад ведущему
 
 ## Стоп на предохранителе 25.10
