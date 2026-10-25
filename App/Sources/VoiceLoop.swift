@@ -61,13 +61,15 @@ final class VoiceLoop: ObservableObject {
         screen.lines += [speech.line, voice.note, "микрофон: " + (microphone ? "да" : "нет — разреши в Настройках")]
         let (silero, listening) = SileroActivity.choose(hearing, models: models)  // D7.2: no Silero — energy
         screen.lines.append(listening.line)
+        let encyclopedia = Encyclopedia.bundled()  // Э2: the base and FTS5 on the phone — the self-test says if not
+        screen.lines.append(encyclopedia.line(searchP95: encyclopedia.searchP95()))
         let personaHash = SHA256.hash(data: Data(persona.utf8)).map { String(format: "%02x", $0) }.joined()
         versions = ["ios": UIDevice.current.systemVersion, "llama": settings.runtime.build, "persona": personaHash,
                     "voice": voice.voice?.identifier ?? "", "weights": "\(registry.model.file):\(registry.model.bytes)",
                     "vad": silero == nil ? "energy" : "silero:\(hearing.vad?.bytes ?? 0)"]
         (self.registry, self.model, self.voice) = (registry, model, voice)
         screen.ready = speech.ready && microphone && voice.voice != nil
-        if screen.ready { converse(model, hearing, voice, silero) }
+        if screen.ready { converse(model, hearing, voice, silero, encyclopedia) }
     }
 
     /// A tap on the sleeping friend: she greets and then talks without buttons until the session sleeps. The session of
@@ -94,9 +96,11 @@ final class VoiceLoop: ObservableObject {
         Task { await talker.stop() }
     }
 
-    /// The session (D2.2): the router before the model, the parent's limit key (`-session_limit_minutes 2` at launch),
-    /// a wordless record a turn with the listening's stages into `Caches/turns.jsonl`; heard and said go to the screen.
-    private func converse(_ model: LlamaModel, _ hearing: Hearing, _ voice: SystemVoice, _ silero: SileroActivity?) {
+    /// The session (D2.2): the router before the model and the encyclopedia after it (Э2, both sessions), the parent's
+    /// limit key (`-session_limit_minutes 2` at launch), a wordless record a turn with the listening's stages into
+    /// `Caches/turns.jsonl`; heard and said go to the screen.
+    private func converse(_ model: LlamaModel, _ hearing: Hearing, _ voice: SystemVoice, _ silero: SileroActivity?,
+                          _ encyclopedia: Encyclopedia) {
         let heard: @Sendable (String) -> Void = { text in Task { @MainActor in self.screen.heard = text } }
         let ear = PhoneListener(recognizer: recognizer, audio: audio, hearing: hearing,
                                 resetSound: { voice.resetFirstSound() }, firstSound: { voice.firstSound }, heard: heard,
@@ -111,8 +115,8 @@ final class VoiceLoop: ObservableObject {
                               stages: ear.takeStages())
         }
         let parts = { (audience: Audience) in
-            SessionParts(model: model, voice: echo, sink: sink, router: RouterRouting(), audience: audience,
-                         stamp: stamp)
+            SessionParts(model: model, voice: echo, sink: sink, router: RouterRouting(), knowledge: encyclopedia,
+                         audience: audience, stamp: stamp)
         }
         childMode = ChildMode(personaSHA256: versions["persona"] ?? "", model: versions["weights"] ?? "")
         refreshAccess()

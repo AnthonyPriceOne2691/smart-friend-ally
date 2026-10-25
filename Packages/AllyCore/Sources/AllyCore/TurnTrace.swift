@@ -22,10 +22,12 @@ public protocol TraceSink: Sendable {
 }
 
 /// The session's part of a record, known before the turn's work: whose session, which turn, in what state and mode,
-/// by whose word (`nil` — the source of the turn's outcome), the router's decision and the kind the ear listened with
-/// for the utterance or silence it answers (`nil` — no listening, as for the greeting).
+/// by whose word (`nil` — the source of the turn's outcome), the router's decision, the encyclopedia's (`nil` — no
+/// lookup) and the kind the ear listened with for the utterance or silence it answers (`nil` — no listening, as for
+/// the greeting).
 struct TraceHead: Sendable {
     let session: String, turn: Int, phase: SessionState, mode: TurnMode, source: String?, route: Route?
+    let knowledge: KnowledgeRecord?
     let elapsed: Double, limit: Double, audience: Audience, turnKind: TurnKind?
 }
 
@@ -37,6 +39,8 @@ public struct TurnTrace: Encodable, Sendable {
     }
 
     public let session: String, turn: Int, phase: String, mode: String, source: String, route: Decision?
+    /// The encyclopedia's record of the turn — card id, rule ids, data hash; absent when it was not asked (Э2).
+    public let knowledge: KnowledgeRecord?
     public let rules: [String], contractHash: String?, modelTimeout: Bool, cancelled: Bool, error: String?
     public let elapsed: Double, limit: Double, stages: [String: Double], end: String?
     public let versions: [String: String], memory: [String: Int], thermal: String, audience: String
@@ -51,6 +55,7 @@ public struct TurnTrace: Encodable, Sendable {
             Decision(kind: $0.kind, topic: $0.topic, key: $0.key, rules: $0.rules, dataHash: $0.dataHash,
                      forget: $0.forget)
         }
+        knowledge = head.knowledge
         (rules, contractHash, modelTimeout) = (log?.rules ?? [], log?.contractHash, log?.modelTimeout ?? false)
         (self.cancelled, self.error, self.end) = (cancelled, error.map(TurnLog.wordless), end)
         (elapsed, limit, stages) = (head.elapsed, head.limit, log?.stages ?? [:])

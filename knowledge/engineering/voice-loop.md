@@ -34,8 +34,8 @@ implementation:
 
 - **Сессия (D2.2):** «Разбудить» → приветствие → микрофон открывается сам, только пока сессия слушает (listening,
   windingDown), и закрыт, пока Элли говорит (полудуплекс) — драйвер `Conversation` ядра со слухом `PhoneListener` →
-  `RouterRouting` до модели (скрипт — без модели; реплика с `forget` к модели не идёт) → `TurnRunner` с решением и её
-  репликой → голос → запись следа. Промахи, отдых, её «пока» и мягкий лимит (`session_limit_minutes`, по умолчанию 10)
+  `RouterRouting` до модели (скрипт — без модели; реплика с `forget` к модели не идёт) → энциклопедия на «pass» (Э2) →
+  `TurnRunner` с решением и её репликой → голос → запись следа. Промахи, отдых, её «пока» и мягкий лимит (`session_limit_minutes`, по умолчанию 10)
   решает сессия ([Session](/engineering/session.md)). «Стоп» глушит сразу, без фразы; если Элли слушала, микрофон гаснет к
   концу слушания (≤ 8 с: у `AudioIO` нет отмены, правка — D6), а новая сессия ждёт его конца.
 - **Слушание:** микрофон (`.playAndRecord`, `.default`, `.defaultToSpeaker`, буфер 20 мс) → кадры по 20 мс в
@@ -62,7 +62,11 @@ implementation:
 - **Данные:** веса — `Library/Application Support/Models` (каталог помечен «не в бэкап»), след хода —
   `Library/Caches/turns.jsonl` (вне бэкапа, без слов: кириллица пишется как `redacted`), услышанное и сказанное — только
   на экране.
-- **Чего нет:** режима `why`, перебивания и эхоподавления (D6), экрана настроек под замком (D8). Детский режим — R и
+- **Энциклопедия (Э2):** прогрев грузит базу из ресурсов AllyCore (`Encyclopedia.bundled()`) и пишет в консоль
+  «энциклопедия: карточек — N, поиск p95 … мс» или «энциклопедия: выключена (причина)» — так на телефоне видно, есть ли
+  FTS5. Энциклопедию получают обе сессии: консоли и детского экрана. Ход с подсказкой — режим `why`
+  ([Encyclopedia](/engineering/encyclopedia.md)).
+- **Чего нет:** перебивания и эхоподавления (D6), экрана настроек под замком (D8). Детский режим — R и
   R2, его экран — «оболочка» Ш3; свет и пузырьки экрана — Ш2б.
 
 # Сборка на Mac
@@ -175,7 +179,8 @@ xcrun devicectl device info files --device <UDID> --domain-type systemCrashLogs
 
 Строка следа (`TurnTrace`, с D2.2 вместо журнала `TurnLog`; одна на ход, включая фразы сессии): `session`, `turn`,
 `phase`, `mode`, `source` (`model`, `canned:…`, `script:<ключ>`, `session:<фраза>`), `route` (вид, тема, ключ, правила,
-хэш данных маршрутизатора, `forget`), `rules`, `contract_hash`, `model_timeout`, `cancelled`, `error`, `elapsed`, `limit`,
+хэш данных маршрутизатора, `forget`), `knowledge` (у хода с поиском: карточка, правило, хэш данных базы), `rules`,
+`contract_hash`, `model_timeout`, `cancelled`, `error`, `elapsed`, `limit`,
 `end` (у последней записи сессии: `limit`, `goodbye_word`, `rest`, `parent`, `error`), `stages` (`tail`, `recognize`,
 `speech_end_to_sound`, `tap_buffer` — этапы слушания приложения; `first_text`, `first_sentence`, `first_sound`,
 `reply_end` — этапы хода; секунды), `versions` (iOS, сборка llama.cpp, sha256 персоны, голос, вес по ключу

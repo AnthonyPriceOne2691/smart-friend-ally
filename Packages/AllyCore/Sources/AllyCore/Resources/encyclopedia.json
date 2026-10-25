@@ -13,5 +13,7 @@
   "questions_per_card": [3, 6],
   "answer_max_chars": 130,
   "answer_max_sentences": 2,
-  "one_missing_from": 3
+  "one_missing_from": 3,
+  "hint_frame": "Подсказка к вопросу девочки — верный ответ: ",
+  "hint_place": "before"
 }

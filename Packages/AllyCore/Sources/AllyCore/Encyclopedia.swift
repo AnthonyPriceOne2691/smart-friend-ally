@@ -24,7 +24,13 @@ public struct Lookup: Equatable, Sendable {
 /// with `knowledge.index_failed`.
 public final class Encyclopedia: @unchecked Sendable {
     public let healthy: Bool
-    private let engine: Engine?, hash: String, failure: String
+    /// The cards of a healthy base; 0 when the self-test refused it.
+    public let count: Int
+    /// Why there is no hint at all: `selftest_failed` or `index_failed`; nil for a healthy base.
+    public var failure: String? { healthy ? nil : refusal }
+    /// The hint's frame and place from the config (`Knowledge.swift`).
+    let frame: HintFrame?
+    private let engine: Engine?, hash: String, refusal: String
 
     /// The cards (JSONL, a card a line) with the bundled `encyclopedia.json`.
     public convenience init(cards: Data) { self.init(cards: cards, config: EncyclopediaConfig.bundled) }
@@ -32,7 +38,8 @@ public final class Encyclopedia: @unchecked Sendable {
     public init(cards bytes: Data, config configBytes: Data) {
         hash = FNV1a.tag(configBytes + bytes)
         var engine: Engine?, failure = "selftest_failed"
-        if let config = try? EncyclopediaConfig.decode(configBytes), let cards = try? Self.cards(bytes, config) {
+        let config = try? EncyclopediaConfig.decode(configBytes)
+        if let config, let cards = try? Self.cards(bytes, config) {
             let text = EncyclopediaText(config)
             if let index = try? EncyclopediaIndex(cards.map { Self.document($0, text) }, config: config) {
                 let built = Engine(cards, text, index)
@@ -41,11 +48,15 @@ public final class Encyclopedia: @unchecked Sendable {
                 failure = "index_failed"
             }
         }
-        (self.engine, self.failure, healthy) = (engine, failure, engine != nil)
+        (self.engine, refusal, healthy, count) = (engine, failure, engine != nil, engine?.cards.count ?? 0)
+        frame = config.map { HintFrame(text: $0.hintFrame, before: $0.hintPlace == "before") }
     }
 
+    /// Every phrasing of a healthy base, card by card — the warm-up's search timing walks them.
+    var phrasings: [String] { engine?.cards.flatMap(\.questions) ?? [] }
+
     public func lookup(_ utterance: String) -> Lookup {
-        guard let engine else { return Lookup(hint: nil, record: record(nil, failure), top: []) }
+        guard let engine else { return Lookup(hint: nil, record: record(nil, refusal), top: []) }
         let decision = engine.decide(utterance), card = decision.card.map { engine.cards[$0] }
         return Lookup(hint: card?.answer, record: record(card?.id, decision.rule), top: decision.top)
     }
@@ -90,6 +101,53 @@ public final class Encyclopedia: @unchecked Sendable {
         (0x410...0x44F).contains(scalar.value) || scalar.value == 0x401 || scalar.value == 0x451
             || " .,!:;—-«»…".unicodeScalars.contains(scalar)
     }
+}
+
+/// The base in the app (Э2): the bundled copy, the console's line at warm-up and the search time on the phone.
+extension Encyclopedia {
+    /// The bundled base `encyclopedia.ru.jsonl` with the bundled config: what the app loads at warm-up.
+    public static func bundled() -> Encyclopedia { Encyclopedia(cards: bundledCards) }
+
+    /// The bundled base's bytes; a missing resource gives an empty base — healthy, with no card and no hint.
+    static var bundledCards: Data {
+        Bundle.module.url(forResource: "encyclopedia.ru", withExtension: "jsonl")
+            .flatMap { try? Data(contentsOf: $0) } ?? Data()
+    }
+
+    /// The console's line at warm-up: the cards and the search's p95, or why it is off (`knowledge.json`).
+    public func line(searchP95 p95: Double) -> String {
+        let texts = KnowledgeTexts.shared
+        guard let failure else {
+            let cards = ReleaseGate.fill(texts.cards, "count", "\(count)")
+            return ReleaseGate.fill(cards, "p95", String(format: "%.1f", p95))
+        }
+        return ReleaseGate.fill(texts.off, "reason", failure)
+    }
+
+    /// The search at warm-up: p95 over every phrasing of the base, in milliseconds — the phone's number (P20).
+    public func searchP95(now: () -> Double = { ProcessInfo.processInfo.systemUptime }) -> Double {
+        let times = phrasings.map { phrasing -> Double in
+            let start = now()
+            _ = lookup(phrasing)
+            return now() - start
+        }.sorted()
+        guard !times.isEmpty else { return 0 }
+        return times[Int((Double(times.count) * 0.95).rounded(.up)) - 1] * 1000
+    }
+}
+
+/// `knowledge.json`: the console's lines about the encyclopedia, one copy.
+struct KnowledgeTexts: Decodable, Sendable {
+    let cards, off: String
+
+    static let shared: KnowledgeTexts = {
+        guard let url = Bundle.module.url(forResource: "knowledge", withExtension: "json"),
+              let bytes = try? Data(contentsOf: url),
+              let texts = try? JSONDecoder().decode(KnowledgeTexts.self, from: bytes) else {
+            fatalError("AllyCore: knowledge.json is unreadable")
+        }
+        return texts
+    }()
 }
 
 /// The search and the decision over a built base; the index answers one caller at a time.

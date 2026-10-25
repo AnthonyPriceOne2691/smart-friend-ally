@@ -117,9 +117,13 @@ func eventually(_ condition: () -> Bool) async {
 /// A model double for sessions: each call answers the next reply at once (the last one again when they run out);
 /// `fails` ends every reply with an error that is not a cancellation.
 final class ReplyQueue: LanguageModel, @unchecked Sendable {
-    private struct State { var replies: [String], calls = 0, cancelled = false, ending: () -> Void = {} }
+    private struct State {
+        var replies: [String], calls = 0, cancelled = false, ending: () -> Void = {}, inputs: [String] = []
+    }
     private let state: Locked<State>, fails: Bool
     var calls: Int { state { $0.calls } }
+    /// What the model got, call by call — her words, or her words with the encyclopedia's hint (Э2).
+    var inputs: [String] { state { $0.inputs } }
     var cancelled: Bool { state { $0.cancelled } }
     init(_ replies: [String], fails: Bool = false) { (state, self.fails) = (Locked(State(replies: replies)), fails) }
 
@@ -127,6 +131,7 @@ final class ReplyQueue: LanguageModel, @unchecked Sendable {
         let (stream, output) = AsyncThrowingStream<String, Error>.makeStream(bufferingPolicy: .bufferingOldest(10))
         let text = state { (s: inout State) -> String in
             s.calls += 1
+            s.inputs.append(utterance)
             s.ending = { output.finish() }
             return s.replies.count > 1 ? s.replies.removeFirst() : s.replies.first ?? ""
         }

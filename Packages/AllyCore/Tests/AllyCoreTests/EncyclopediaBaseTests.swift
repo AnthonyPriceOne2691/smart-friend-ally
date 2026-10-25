@@ -1,0 +1,91 @@
+@testable import AllyCore
+import Discipline
+import XCTest
+
+/// P12, P13 on the bundled base `encyclopedia.ru.jsonl`: the authoring rules of every card, its license and sources;
+/// every phrasing finds its own card with a hint, the router passes every phrasing and answer, no delicate stem.
+final class EncyclopediaBaseTests: XCTestCase {
+    /// A card with its authoring fields, as the base's tests read it.
+    struct Card: Decodable {
+        struct Source: Decodable { let title: String, url: String?, oldid: Int?, accessed: String, note: String }
+        let id: String, topic: String, questions: [String], answer: String, key: String, avoid: String
+        let sources: [Source], license: String
+    }
+
+    static let lines = (String(bytes: Encyclopedia.bundledCards, encoding: .utf8) ?? "").split(separator: "\n")
+    static let config = try? EncyclopediaConfig.decode(EncyclopediaConfig.bundled)
+    static let firstPerson: Set = ["я", "мне", "меня", "мной", "мой", "моя", "мое", "мою", "моего", "моей", "моему",
+                                   "моим", "моих", "мои", "моими"]
+
+    func testTheBaseKeepsItsGroupsAndTheAuthoringRules() throws {  // P12
+        XCTAssertEqual(Self.lines.count, 100)
+        let fields: Set = ["id", "topic", "questions", "answer", "key", "avoid", "sources", "license"]
+        for line in Self.lines {
+            let object = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(line.utf8)) as? [String: Any])
+            XCTAssertEqual(Set(object.keys), fields)
+        }
+        let cards = try Self.lines.map { try JSONDecoder().decode(Card.self, from: Data($0.utf8)) }
+        XCTAssertEqual(Dictionary(grouping: cards, by: \.topic).values.map(\.count), Array(repeating: 10, count: 10))
+        for card in cards {
+            XCTAssertEqual(card.license, "own", card.id)
+            XCTAssertFalse(card.sources.isEmpty, card.id)
+            card.sources.forEach { source(of: card.id, $0) }
+            card.questions.forEach { question(of: card.id, $0) }
+            answer(card)
+            try key(card)
+        }
+    }
+
+    func testEveryPhrasingFindsItsCardAndTheRouterPassesTheBase() throws {  // P13
+        let base = Encyclopedia.bundled(), router = RouterRouting(), config = try XCTUnwrap(Self.config)
+        XCTAssertTrue(base.healthy)
+        XCTAssertEqual(base.count, 100)
+        for card in try Self.lines.map({ try JSONDecoder().decode(Card.self, from: Data($0.utf8)) }) {
+            for phrasing in card.questions {
+                let record = base.lookup(phrasing).record
+                XCTAssertEqual([record.card, record.rules.first], [card.id, "knowledge.hint"], phrasing)
+            }
+            for text in card.questions + [card.answer] {
+                XCTAssertEqual(router.route(text).decision, .pass, text)
+            }
+            let words = EncyclopediaText.words(([card.answer] + card.questions).joined(separator: " "))
+            let delicate = words.filter { word in config.delicatePrefixes.contains(where: word.hasPrefix) }
+            XCTAssertEqual(delicate, [], card.id)
+        }
+    }
+
+    private func source(of id: String, _ source: Card.Source) {
+        XCTAssertFalse(source.title.isEmpty || source.note.isEmpty, id)
+        XCTAssertTrue(source.url != nil || source.oldid != nil, id)
+        XCTAssertNotNil(source.accessed.range(of: #"^\d{4}-\d{2}-\d{2}$"#, options: .regularExpression), id)
+    }
+
+    /// A question word, no digits and no Latin.
+    private func question(of id: String, _ text: String) {
+        let words = " " + EncyclopediaText.words(text).joined(separator: " ") + " "
+        XCTAssertTrue(Self.config?.questionWords.contains { words.contains(" \($0) ") } == true, text)
+        XCTAssertNil(text.range(of: "[0-9A-Za-z]", options: .regularExpression), text)
+    }
+
+    /// No «?», no first person, at most 14 words a sentence; the runtime rules are the loader's (P13: healthy).
+    private func answer(_ card: Card) {
+        XCTAssertFalse(card.answer.contains("?"), card.id)
+        XCTAssertTrue(Self.firstPerson.isDisjoint(with: EncyclopediaText.words(card.answer)), card.id)
+        let sentences = card.answer.replacingOccurrences(of: #"([.!…])\s+"#, with: "$1\n", options: .regularExpression)
+            .split(separator: "\n")
+        XCTAssertTrue(sentences.allSatisfy { EncyclopediaText.words(String($0)).count <= 14 }, card.id)
+    }
+
+    /// The judge's key: lower case without «ё», it catches its answer but not an empty text, her phrasings or `avoid`.
+    private func key(_ card: Card) throws {
+        let key = try NSRegularExpression(pattern: card.key, options: .caseInsensitive)
+        let catches = { (text: String) -> Bool in
+            let plain = text.lowercased().replacingOccurrences(of: "ё", with: "е")
+            return key.firstMatch(in: plain, range: NSRange(plain.startIndex..., in: plain)) != nil
+        }
+        XCTAssertTrue(card.key == card.key.lowercased() && !card.key.contains("ё"), card.id)
+        XCTAssertTrue(catches(card.answer), card.id)
+        XCTAssertFalse(([""] + card.questions + [card.avoid]).contains(where: catches), card.id)
+        XCTAssertFalse(card.avoid.isEmpty, card.id)
+    }
+}

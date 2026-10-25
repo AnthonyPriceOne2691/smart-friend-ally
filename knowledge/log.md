@@ -1,5 +1,15 @@
 # Knowledge Bundle Update Log
 
+## 2026-10-25 — энциклопедия «почему» в ходе: база в ресурсах, поиск после «pass», подсказка во входе модели
+
+* **Update**: `engineering/encyclopedia` — где спрашивают, формат подсказки A (рамка и место в `encyclopedia.json`),
+  режим `why`, база-ресурс и строка консоли; `implementation:` += `encyclopedia.ru.jsonl`, `Knowledge.swift`.
+  `engineering/session` — энциклопедия после маршрутизатора в общем плане реплики, поле `knowledge` следа.
+  `engineering/voice-loop` — прогрев грузит базу, строка консоли, обе сессии; режим `why` больше не в «чего нет».
+  `engineering/safety-below-model` — строка реестра о подсказке (§14.2a). `product/persona`, `engineering/index`,
+  `references/repo-map` — Э2 вместо «приложение не зовёт».
+* **Источник**: поставка `app-encyclopedia` (Э2 серии «энциклопедия почему», подпись родителя 2026-10-23).
+
 ## 2026-10-23 — детский экран в приложении: венок, тап, стоп, метка, перерыв (оболочка Ш3)
 
 * **Update**: `engineering/character-rendering` — как сделано в Ш3 (венок `Crown` и `CrownArt`, экран `ChildShell`,

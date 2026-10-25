@@ -25,9 +25,12 @@ public final class TurnRunner {
         self.firstSentenceTimeout = firstSentenceTimeout
     }
 
-    /// - Parameter decision: the router's; with her utterance it reaches the contract (her address is not echoed,
-    ///   a topic's adult pointer is kept).
-    public func run(_ utterance: String, decision: RouterDecision = .pass) async throws -> TurnOutcome {
+    /// - Parameters:
+    ///   - decision: the router's; with her utterance it reaches the contract (her address is not echoed, a topic's
+    ///     adult pointer is kept).
+    ///   - prompt: what the model gets when it is not her words alone — with the encyclopedia's hint (Э2).
+    public func run(_ utterance: String, decision: RouterDecision = .pass, prompt: String? = nil) async throws
+        -> TurnOutcome {
         let watchdog = Watchdog()
         let timer = Task { [clock, model, firstSentenceTimeout] in
             try await clock.sleep(seconds: firstSentenceTimeout)
@@ -37,7 +40,7 @@ public final class TurnRunner {
         return try await withTaskCancellationHandler {
             let contract = TurnContract(mode: mode, heard: utterance, decision: decision)
             var state = TurnState(contract: contract, start: clock.now())
-            try await stream(utterance, into: &state, watchdog: watchdog)
+            try await stream(prompt ?? utterance, into: &state, watchdog: watchdog)
             try Task.checkCancellation()
             return try await finish(&state, timedOut: watchdog.state == .fired)
         } onCancel: { [model, voice] in
@@ -46,9 +49,9 @@ public final class TurnRunner {
         }
     }
 
-    /// Reads the reply: sentence 1 goes through `first` and sounds at once; a refusal cancels the model.
-    private func stream(_ utterance: String, into state: inout TurnState, watchdog: Watchdog) async throws {
-        for try await text in model.reply(to: utterance) {
+    /// Reads the reply to the model's input: sentence 1 goes through `first` and sounds at once; a refusal cancels it.
+    private func stream(_ input: String, into state: inout TurnState, watchdog: Watchdog) async throws {
+        for try await text in model.reply(to: input) {
             state.text = text
             if state.times.firstText == nil, text.contains(where: \.isLetter) { state.times.firstText = elapsed(state) }
             guard state.head == .pending, let sentence = SentenceStream.first(in: text) else { continue }
