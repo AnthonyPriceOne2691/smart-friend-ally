@@ -49,6 +49,12 @@ public enum Palette {
     public static let lisOut = Tone(0xF9D0EC), lisIn = Tone(0xEBA7D9), lisCore = Tone(0xFFF6D6)
     public static let lisStamen = Tone(0x9CCB8F), leaf = Tone(0x8FD9B6), leafDark = Tone(0x6FC4A2)
     public static let glitter = [Tone(0xFFFFFF), Tone(0xFFE08A), Tone(0xFFD1EC)]
+    /// The light (Ш2б): night in the water, the veil's two lilacs, the moon, the lilac of thinking, the glow and the
+    /// pearls of listening, the line of a water bubble.
+    public static let nightHigh = Tone(0xB9A7F0), nightMid = Tone(0x8E7AD8), nightLow = Tone(0x6A57BC)
+    public static let veilTop = Tone(0x442C88), veilLow = Tone(0x825AB0), moon = Tone(0xFFF1B8)
+    public static let thinkTint = Tone(0xD7C6FF), aura = Tone(0xFF96C6), pearl = Tone(0xFF8FC0)
+    public static let waterLine = Tone(0x60B0D6)
 
     /// Every line the drawing puts on a fill: eyes and mouth on the skin, her outline on the water, the rim on the sky.
     public static let borders = [

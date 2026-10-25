@@ -4,18 +4,25 @@ import SwiftUI
 
 /// The water bubble that holds Ellie (prototype v3, `.orb`) — the child's only tap target from Ш3 on. Behind her:
 /// a soft floor shadow, the lifted disc, the water with its light and shade. Over her: the rainbow film, the highlights
-/// and the raspberry rim with its pale band. Night, tints and the glow of listening come with motion (Ш2).
+/// and the raspberry rim with its pale band. Night, tints and the glow of listening — `NightArt` and `GlowArt` (Ш2б).
 struct Bubble {
     let centre: CGPoint, diameter: Double
 
     private var radius: Double { diameter / 2 }
 
-    func back(_ ctx: GraphicsContext) {
+    /// The soft shadow on the «floor» — it stays when the bubble floats, shrinking as the bubble sinks (Ш2б).
+    func floor(_ base: GraphicsContext, _ light: Light) {
         let floor = CGPoint(x: centre.x, y: centre.y + diameter * 0.53)
         let pink = Color(red: 214 / 255, green: 95 / 255, blue: 152 / 255)
+        var ctx = base
+        ctx.opacity = 0.85 - light.bob * 0.02
+        ctx.concatenate(stretch(light.floor, light.floor, around: floor))
         ctx.fill(ellipse(floor.x, floor.y, diameter * 0.3, diameter * 0.0375),
                  with: glow([.init(color: pink.opacity(0.3), location: 0), .init(color: pink.opacity(0), location: 1)],
                             at: floor, radius: diameter * 0.3))
+    }
+
+    func back(_ ctx: GraphicsContext) {
         let disc = circle(centre, radius)
         var lifted = ctx
         lifted.addFilter(.shadow(color: Color(red: 200 / 255, green: 80 / 255, blue: 140 / 255, opacity: 0.18),

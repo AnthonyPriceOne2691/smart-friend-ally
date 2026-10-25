@@ -89,8 +89,8 @@ final class PhoneListener: Listener, @unchecked Sendable {
     }
 }
 
-/// Her voice as the console hears it: every sentence also goes to the screen.
-final class EchoVoice: VoiceOutput, @unchecked Sendable {
+/// Her voice as the console hears it: every sentence also goes to the screen; the next sentences reach the voice (L58).
+final class EchoVoice: VoiceOutput, VoiceLookahead, @unchecked Sendable {
     private let voice: VoiceOutput, said: @Sendable (String) -> Void
 
     init(_ voice: VoiceOutput, said: @escaping @Sendable (String) -> Void) { (self.voice, self.said) = (voice, said) }
@@ -101,4 +101,6 @@ final class EchoVoice: VoiceOutput, @unchecked Sendable {
     }
 
     func stop() { voice.stop() }
+
+    func upcoming(_ sentences: [String]) { (voice as? VoiceLookahead)?.upcoming(sentences) }
 }
