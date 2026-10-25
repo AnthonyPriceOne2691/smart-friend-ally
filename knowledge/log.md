@@ -11,6 +11,20 @@
 * **Источник**: поставка `gigaam-asr` (D7.3 серии «слух»; примеры U22–U26, U28 подписаны родителем 2026-10-23; U27 —
   D7.4).
 
+## 2026-10-23 — живой разговор: в памяти модели только сказанное (kv-spoken)
+
+* **Update**: `engineering/session` — после хода модели `commit(spoken:)` с доигранными предложениями, скрипт —
+  `remember(heard:spoken:)`, `forget` — ничего; брошенный ответ спекуляции — `retract`, этап `spec_retracted` вместо
+  `spec_stale`. `engineering/voice-loop` — KV держит только прозвучавшее, `swa_full: false` — отказ загрузки и строка
+  консоли из `lines.json`; `implementation:` — `LlamaSettings.swift`, `lines.json`. `engineering/safety-below-model` —
+  срезанное контрактом в память модели не попадает. `engineering/index` — строка сессии.
+* **Источник**: поставка `kv-spoken` (D5 серии «живой разговор»; примеры X1–X8 подписаны родителем 2026-10-23).
+## 2026-10-25 — эквалайзер, строка пресета, файлы голоса (голос V4b1)
+
+* **Update**: `engineering/voice-fx` — эквалайзер RBJ вернулся в цепочку (`eq.c`, `VoiceEQ`), полный Z30 против p9f5.
+  `engineering/voice-engine` — строка пресета в `voice.json` и `VoiceSettings`. `engineering/voice-loop` — команда
+  копирования файлов голоса `scripts/copy_voice.py`. `engineering/index`, `references/repo-map`.
+* **Источник**: поставка `voice-config` (V4b1 серии голоса; примеры подписаны родителем 2026-10-23).
 ## 2026-10-23 — сессия теста с родителем: один runbook на все телефонные проверки
 
 * **Creation**: `ops/test-session` (Runbook) — решение родителя 2026-10-23 «всё в общую сессию»: подготовка на Mac
