@@ -23,11 +23,12 @@ PY
 check() { python3 scripts/copy_voice.py --check --models "$tmp/models" --manifest "$tmp/voice.json"; }
 # Верные файлы проходят — и это же доказывает, что сверяется распакованный словарь: в манифесте его sha256.
 check >/dev/null || { echo "FAIL: сверка верных файлов не прошла"; exit 1; }
-printf 'other' >"$tmp/models/voice/a.weights"
+# Подмена того же размера: ловит только sha256, сверка одних байтов её пропустила бы.
+printf 'weightz' >"$tmp/models/voice/a.weights"
 if out=$(check 2>&1); then echo "FAIL: чужой файл прошёл сверку"; exit 1; fi
 grep -q "supertonic/a.weights" <<<"$out" || { echo "FAIL: стоп без имени файла: $out"; exit 1; }
 printf 'weights' >"$tmp/models/voice/a.weights"
-printf '{"word": "wo+rld"}' | gzip -c >"$tmp/models/dict/b.json.gz"
+printf '{"word": "w+ord"}' | gzip -c >"$tmp/models/dict/b.json.gz"
 if out=$(check 2>&1); then echo "FAIL: чужой словарь прошёл сверку"; exit 1; fi
 grep -q "ruaccent/b.json" <<<"$out" || { echo "FAIL: стоп без имени словаря: $out"; exit 1; }
 echo "S8: верные файлы проходят, чужой файл и чужой словарь — стоп с именем до первой копии"
