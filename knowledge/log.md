@@ -1,5 +1,12 @@
 # Knowledge Bundle Update Log
 
+## 2026-10-25 — расстановщик ударений: модели RUAccent и сборка (V3c)
+
+* **Update**: `engineering/accent-placer` — модели через `AllyOnnx` в `AllyVoice`, сборка `RUAccentVoice`, числовой
+  паритет по версии ORT (Z18 переподписан 2026-10-23), цена на Mac (Z17: порог отпечатка 170 МБ, переподписан
+  2026-10-25; сжатие словарей — на полировку); `implementation:` — `RUAccentModels.swift`, `RUAccentVoice.swift`.
+* **Источник**: поставка `accent-onnx` (V3c серии голоса; Z14–Z18, подпись родителя 2026-10-23 и 2026-10-25).
+
 ## 2026-10-23 — сессия теста с родителем: один runbook на все телефонные проверки
 
 * **Creation**: `ops/test-session` (Runbook) — решение родителя 2026-10-23 «всё в общую сессию»: подготовка на Mac

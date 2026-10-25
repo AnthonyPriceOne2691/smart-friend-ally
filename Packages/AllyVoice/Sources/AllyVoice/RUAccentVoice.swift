@@ -11,6 +11,9 @@ public enum RUAccentVoice {
     public static func placer(nn: URL, dictionaries: URL,
                               options: OnnxOptions = OnnxOptions()) throws -> RuAccentPlacer {
         let file = { (path: String) in nn.appendingPathComponent(path) }
+        // Словари — первыми: временная память разбора JSON переиспользуется дальше (замер: +160 МБ против +175 при
+        // словарях последними; Z17).
+        let tables = try AccentDictionaries(directory: dictionaries)
         let tokenizers = RuAccentTokenizers(
             wordPiece: try WordPieceTokenizer(tokenizerJSON: file("nn_yo_homograph_resolver/tokenizer.json")),
             bpe: try ByteLevelBPETokenizer(tokenizerJSON: file("nn_omograph/turbo3.1/tokenizer.json")),
@@ -18,7 +21,6 @@ public enum RUAccentVoice {
         let models = try RUAccentModels(omograph: file("nn_omograph/turbo3.1-int8/turbo31_int8.onnx"),
                                         yo: file("nn_yo_homograph_resolver/model.onnx"),
                                         accent: file("nn_accent/model.onnx"), options: options)
-        return RuAccentPlacer(dictionaries: try AccentDictionaries(directory: dictionaries), tokenizers: tokenizers,
-                              models: models)
+        return RuAccentPlacer(dictionaries: tables, tokenizers: tokenizers, models: models)
     }
 }

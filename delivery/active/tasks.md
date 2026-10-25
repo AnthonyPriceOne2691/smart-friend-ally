@@ -4,7 +4,7 @@
 
 - [x] T1: спека (Z14–Z18 дословно), STATUS, план, задачи, решения, eval-smoke — первым коммитом до кода (L33)
 - [x] T2: `RUAccentModels` в `AllyVoice` (зависимость `../AllyAccent`); Z18 — логиты против onnxruntime 1.31
-- [ ] T3: после мержа V3b — `AccentModels`, сборка через `RuAccentPlacer`; Z14, Z15, Z16; Z17 — время и отпечаток
+- [x] T3: после мержа V3b — `AccentModels`, сборка через `RuAccentPlacer`; Z14, Z15, Z16; Z17 — время и отпечаток
 - [ ] T4: знание — concept `engineering/accent-placer` (модели и сборка); `ios.yml`, если нужен шаг пакета
 - [ ] T5: verify-report, PR, CI, сдача — архив, строка INDEX с уроком L103, slug в `delivery/OBSERVATIONS.md`
 
@@ -25,3 +25,12 @@
 остаться зелёными). Иначе — переподписать Z17 на ≤ 170 МБ (решение родителя). Затем знание (concept `accent-placer`),
 verify-report, PR, CI, сдача с уроком L103 и slug в `delivery/OBSERVATIONS.md`. Словари для тестов на Mac распакованы в
 `~/models/tts/ruaccent/dictionary-json/`.
+
+## Продолжение 25.10
+
+- Z17 переподписан родителем 2026-10-25 («170 МБ, сжать потом (Рекомендую)»): порог отпечатка ≤ 170 МБ; main влит.
+
+## Отложено на полировку
+
+- Сжатие словарей RUAccent: плоские массивы ключей и значений над отображённым файлом JSON, двоичный поиск вместо
+  строк Swift (`AccentDictionaries`; словари 75 → ≈ 4 МБ, расстановщик ≈ 90 МБ) — решение родителя 2026-10-25 «сжать потом».

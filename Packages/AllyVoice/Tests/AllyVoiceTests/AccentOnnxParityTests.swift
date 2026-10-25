@@ -33,12 +33,19 @@ enum AccentFixtures {
     static let nn = Fixtures.home.appendingPathComponent("models/tts/ruaccent/nn")
     static let parity = Fixtures.home.appendingPathComponent("models/tts/ruaccent-parity")
 
-    static func models() throws -> RUAccentModels {
-        let omograph = nn.appendingPathComponent("nn_omograph/turbo3.1-int8/turbo31_int8.onnx")
-        guard FileManager.default.fileExists(atPath: omograph.path) else {
-            throw XCTSkip("нет моделей RUAccent в \(nn.path) — проверка не выполнена")
+    static let omograph = nn.appendingPathComponent("nn_omograph/turbo3.1-int8/turbo31_int8.onnx")
+
+    /// Пропуск с причиной, если моделей или словарей нет, — без загрузки (Z17 меряет первую загрузку).
+    static func requireFiles() throws {
+        guard FileManager.default.fileExists(atPath: omograph.path),
+              FileManager.default.fileExists(atPath: dictionaries.appendingPathComponent("accents_nn.json").path) else {
+            throw XCTSkip("нет моделей или словарей RUAccent в \(nn.path) и \(dictionaries.path) — не проверено")
         }
-        Fixtures.log("модели: \(nn.path)")
+        Fixtures.log("модели: \(nn.path), словари: \(dictionaries.path)")
+    }
+
+    static func models() throws -> RUAccentModels {
+        try requireFiles()
         return try RUAccentModels(omograph: omograph,
                                   yo: nn.appendingPathComponent("nn_yo_homograph_resolver/model.onnx"),
                                   accent: nn.appendingPathComponent("nn_accent/model.onnx"))
