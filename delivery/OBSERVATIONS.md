@@ -58,3 +58,4 @@
 - `test-session`
 - `memory-extract`
 - `voice-out`
+- `memory-sense`
