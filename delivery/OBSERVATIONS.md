@@ -59,3 +59,4 @@
 - `memory-extract`
 - `voice-out`
 - `memory-sense`
+- `asr-step3`
