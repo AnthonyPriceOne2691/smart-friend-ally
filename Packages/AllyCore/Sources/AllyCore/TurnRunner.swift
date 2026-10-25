@@ -72,7 +72,9 @@ public final class TurnRunner {
     private func finish(_ state: inout TurnState, timedOut: Bool) async throws -> TurnOutcome {
         state.times.replyEnd = elapsed(state)
         let turn = state.contract.finish(timedOut ? "" : state.text)
-        for sentence in state.head == .spoken ? Array(turn.sentences.dropFirst()) : turn.sentences {
+        let rest = state.head == .spoken ? Array(turn.sentences.dropFirst()) : turn.sentences
+        (voice as? VoiceLookahead)?.upcoming(rest)  // made ahead while the first sounds (Z25)
+        for sentence in rest {
             try Task.checkCancellation()
             try await say(sentence, &state)
         }

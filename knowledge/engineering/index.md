@@ -15,6 +15,6 @@
 * [Encyclopedia](encyclopedia.md) - детская энциклопедия «почему»: основы Snowball, SQLite FTS5 в памяти, подсказка только когда поиск уверен, отказ закрытый; приложение зовёт с Э2
 * [Speech text](speech-text.md) - текст для синтеза: ударения по исходному написанию, закреплённое и имена поверх, правила чтения с переносом ударения, U+0301 — только во входе движка; экран и журнал — фраза как есть
 * [ONNX Runtime](onnx-runtime.md) - решение: один ORT на приложение — официальный 1.28.0 в Packages/AllyOnnx, слой над C API, страж «один ORT»; sherpa — своим xcframework без ORT
-* [Voice engine](voice-engine.md) - движок голоса: Supertonic 3 за протоколом SpeechEngine, фраза за вызов, скорость ≥ 0,85, веса в external data, паритет с Python бит в бит
+* [Voice engine](voice-engine.md) - движок голоса: Supertonic 3 за протоколом SpeechEngine, фраза за вызов, скорость ≥ 0,85, веса в external data, паритет с Python бит в бит; голос хода SpokenVoice — паузы, стоп, порт звука
 * [Accent placer](accent-placer.md) - RUAccent на Swift: токенизаторы с паритетом HF (V3a), логика Python как есть с повтором по записи (V3b), модели — следом
 * [Voice FX](voice-fx.md) - обработка после синтеза: своё TD-PSOLA (+9 / +5, «Совсем малышка») и эквалайзер RBJ «light», свой трекер основного тона по методу Boersma без кода Praat; по замерам дребезга равно образцу p9f5

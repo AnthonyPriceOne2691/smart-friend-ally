@@ -1,5 +1,11 @@
 # Knowledge Bundle Update Log
 
+## 2026-10-25 — голос хода в ядре (голос V4b2a)
+
+* **Update**: `engineering/voice-engine` — `SpokenVoice` и порты голоса, `first_steps`. `engineering/session` —
+  следующие фразы голосу заранее (`VoiceLookahead`). `engineering/safety-below-model` — заранее готовится только
+  пропущенное контрактом.
+* **Источник**: поставка `voice-out` (V4b2a серии голоса; примеры подписаны родителем 2026-10-23).
 ## 2026-10-23 — слух: GigaAM-v3 за протоколом распознавателя, выбор в реестре слуха
 
 * **Update**: `engineering/turn-detector` — распознаватель за протоколом фразы: `asr` реестра слуха (диктовка по
