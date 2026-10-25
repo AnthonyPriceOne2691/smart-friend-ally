@@ -71,10 +71,11 @@ struct Taint {
         return forbidden.numbers(tokens).lazy.compactMap { numbers[$0] }.first
     }
 
-    /// One word in another form: the same, or the same start of at least max(4, the shorter length − 2) letters.
-    static func alike(_ word: String, _ marked: String) -> Bool {
+    /// One word in another form: the same, or the same start of at least max(`least`, the shorter length − 2) letters
+    /// (4 for the taint, 3 for the anchor of a value).
+    static func alike(_ word: String, _ marked: String, least: Int = 4) -> Bool {
         let common = zip(word, marked).prefix { $0 == $1 }.count
-        return word == marked || common >= max(4, min(word.count, marked.count) - 2)
+        return word == marked || common >= max(least, min(word.count, marked.count) - 2)
     }
 
     private mutating func mark(_ trigger: Forbidden.Trigger, _ index: Int, _ tokens: [String]) {
