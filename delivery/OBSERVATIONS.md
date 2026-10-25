@@ -57,4 +57,6 @@
 - `voice-config`
 - `test-session`
 - `memory-extract`
+- `voice-out`
 - `memory-sense`
+- `asr-step3`

@@ -12,6 +12,8 @@ implementation:
   - Packages/AllyVoice/Sources/AllyVoice/SupertonicEngine.swift
   - Packages/AllyVoice/Sources/AllyVoice/SupertonicText.swift
   - Packages/AllyCore/Sources/AllyCore/VoiceSettings.swift
+  - Packages/AllyCore/Sources/AllyCore/SpokenVoice.swift
+  - Packages/AllyCore/Sources/AllyCore/VoicePorts.swift
 ---
 
 # Purpose
@@ -32,6 +34,16 @@ implementation:
 - **Строка пресета** — одна строка `App/Resources/voice.json` (V4b1). В ней стиль, скорость, шаги, высота, форманты и
   полосы эквалайзера; по умолчанию «Совсем малышка». Правка строки меняет голос без кода. Скорость ниже 0,85 — строка
   консоли «скорость 0,80 ниже 0,85 — взято 0,85» и 0,85. Неизвестная полоса — ошибка строки, не тихое умолчание.
+  `first_steps` — шаги первой фразы хода: ответ 4 подписи серии (8, если p95 первого звука ≤ 2,5 с, иначе 5) решает
+  замер на телефоне, а меняется строкой.
+- **Голос хода — `SpokenVoice` в `AllyCore`** (V4b2a) поверх портов: рендер фразы (`SentenceRenderer`), проигрыватель
+  (`SoundPlayer`), порт звука для D3.3 (`PlayedSound`).
+  - Первый звук хода и этапы его первой фразы — `voice_text`, `voice_synth`, `voice_fx`, `voice_start` — идут в
+    журнал.
+  - Пауза — 0,45 / скорость между звуками, задержка старта учтена.
+  - Синтез — один за раз, на своей очереди вне кооперативного пула, в порядке постановки.
+  - Стоп глушит сразу; синтез в полёте не звучит, следующий ход звучит.
+  - В порт уходит отзвучавшее, на стопе — его часть и знак обрыва.
 - **Веса — в external data:** ORT отображает их из файла, отпечаток +33 МБ после загрузки и +64 МБ на пике фразы на Mac;
   2 потока без spin-wait. Весов в git нет.
 - **Паритет с эталоном:** разбор текста шаг в шаг с supertonic-py 1.3.1 на скалярах Unicode (U+0301 — обычный символ
