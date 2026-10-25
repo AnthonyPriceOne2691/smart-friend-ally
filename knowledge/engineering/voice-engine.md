@@ -11,6 +11,7 @@ implementation:
   - Packages/AllyVoice/Sources/AllyVoice/SpeechEngine.swift
   - Packages/AllyVoice/Sources/AllyVoice/SupertonicEngine.swift
   - Packages/AllyVoice/Sources/AllyVoice/SupertonicText.swift
+  - Packages/AllyCore/Sources/AllyCore/VoiceSettings.swift
 ---
 
 # Purpose
@@ -28,6 +29,9 @@ implementation:
 - **Скорость синтеза не ниже 0,85** (`VoicePreset.minSpeed`): при 0,8 — 3 повтора из 96 длинных предложений. Ниже —
   ошибка «скорость синтеза … ниже 0,85».
 - **Пресет** — стиль голоса («F2» или линейная смесь «F2+F5:w», как у стенда), скорость, шаги денойзинга, seed.
+- **Строка пресета** — одна строка `App/Resources/voice.json` (V4b1). В ней стиль, скорость, шаги, высота, форманты и
+  полосы эквалайзера; по умолчанию «Совсем малышка». Правка строки меняет голос без кода. Скорость ниже 0,85 — строка
+  консоли «скорость 0,80 ниже 0,85 — взято 0,85» и 0,85. Неизвестная полоса — ошибка строки, не тихое умолчание.
 - **Веса — в external data:** ORT отображает их из файла, отпечаток +33 МБ после загрузки и +64 МБ на пике фразы на Mac;
   2 потока без spin-wait. Весов в git нет.
 - **Паритет с эталоном:** разбор текста шаг в шаг с supertonic-py 1.3.1 на скалярах Unicode (U+0301 — обычный символ

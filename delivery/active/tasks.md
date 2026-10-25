@@ -9,7 +9,7 @@
 - [x] T3: эквалайзер в `AllyVoiceFX` (`eq.c`, `VoiceEQ`, `VoiceFX(pitch:formant:eq:)`), тесты Z29
 - [x] T4: `VoiceSettings`, `VoiceCheck` в `AllyCore`, `voice.json`; тесты Z19, Z20
 - [x] T5: `scripts/copy_voice.py`, smoke S8 `voice_copy_check.sh`
-- [ ] T6: полный Z30 на стенде (Mac)
+- [x] T6: полный Z30 на стенде (Mac) — PASS 2026-10-25, `results/z30_light_verdict.json`
 - [ ] T7: OKF (`voice-fx`, `voice-engine`, runbook `voice-loop`), verify-report, архив, урок, строка `voice-config` в
   `delivery/OBSERVATIONS.md`, PR
 

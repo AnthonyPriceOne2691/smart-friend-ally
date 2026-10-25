@@ -1,5 +1,12 @@
 # Knowledge Bundle Update Log
 
+## 2026-10-25 — эквалайзер, строка пресета, файлы голоса (голос V4b1)
+
+* **Update**: `engineering/voice-fx` — эквалайзер RBJ вернулся в цепочку (`eq.c`, `VoiceEQ`), полный Z30 против p9f5.
+  `engineering/voice-engine` — строка пресета в `voice.json` и `VoiceSettings`. `engineering/voice-loop` — команда
+  копирования файлов голоса `scripts/copy_voice.py`. `engineering/index`, `references/repo-map`.
+* **Источник**: поставка `voice-config` (V4b1 серии голоса; примеры подписаны родителем 2026-10-23).
+
 ## 2026-10-23 — детский экран в приложении: венок, тап, стоп, метка, перерыв (оболочка Ш3)
 
 * **Update**: `engineering/character-rendering` — как сделано в Ш3 (венок `Crown` и `CrownArt`, экран `ChildShell`,
