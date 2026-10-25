@@ -31,8 +31,9 @@
 
 ## Архитектура
 
-- **`SupertonicVoice`** (`App/Sources/Audio`) — `VoiceOutput`, `VoiceLookahead`:
-  - собирает `SpokenVoice` ядра из `SupertonicRenderer` и `EnginePlayer(engine:)`;
+- **`SupertonicVoice`** (`App/Sources/Audio`) — `VoiceOutput`, `VoiceLookahead` поверх `SpokenVoice`, который
+  собрало приложение из `SupertonicRenderer(settings:folder:)` и `EnginePlayer(engine:rate:)` (уточнение стыка D6.1 —
+  проигрыватель снаружи, чтобы его обернуть):
   - отдаёт `firstSound`, `resetFirstSound`, `takeStages`, строку консоли и версию;
   - пауза — 0,45 / скорость пресета.
 - **`SupertonicRenderer`** — `SentenceRenderer`:

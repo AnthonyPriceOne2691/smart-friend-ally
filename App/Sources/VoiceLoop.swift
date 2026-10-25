@@ -89,7 +89,11 @@ final class VoiceLoop: ObservableObject {
             let session = AVAudioSession.sharedInstance()
             try session.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker])
             try session.setActive(true)
-            return try SupertonicVoice(engine: AVAudioEngine(), settings: settings, folder: folder)
+            // The app assembles the voice: D6.1 gives its session engine and wraps the player (SoundingPlayer).
+            let renderer = try SupertonicRenderer(settings: settings, folder: folder)
+            let player = EnginePlayer(engine: AVAudioEngine(), rate: renderer.rate)
+            let spoken = SpokenVoice(renderer: renderer, player: player, gap: 0.45 / settings.preset.speed)
+            return SupertonicVoice(spoken, preset: settings.preset)
         } catch {
             screen.lines.append("голос не загрузился: " + "\(error)")
             return milena

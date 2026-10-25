@@ -3,23 +3,19 @@ import AllyOnnx
 import AllySpeechText
 import AllyVoice
 import AllyVoiceFX
-import AVFoundation
+import Foundation
 
 /// Her voice (voice series V4b2): Supertonic by the preset line, then PSOLA and the EQ — «Совсем малышка» by default —
-/// with «Э́льли» and the reading rules of speech-text.json. The engine is the session's: D6.1 holds one AVAudioEngine
-/// for the microphone and the voice, and the voice attaches its player node to the one it is given.
+/// with «Э́льли» and the reading rules of speech-text.json. The app assembles the `SpokenVoice` itself — the renderer
+/// and the player on the session's engine — so D6.1 can wrap the player (its `SoundingPlayer`) and hold one
+/// AVAudioEngine for the microphone and the voice; this class adds the console line and the version.
 final class SupertonicVoice: HerVoice, VoiceLookahead, @unchecked Sendable {
     let note: String, label: String
     let ready = true
     private let spoken: SpokenVoice
 
-    init(engine: AVAudioEngine, settings: VoiceSettings, folder: URL) throws {
-        let synth = try SupertonicEngine(folder: folder.appendingPathComponent("supertonic"))
-        let preset = settings.preset
-        let renderer = SupertonicRenderer(text: SpeechTextPipeline(placer: PlainPlacer(), table: try .bundled()),
-                                          synth: synth, preset: preset, fx: try VoiceFX(preset))
-        spoken = SpokenVoice(renderer: renderer, player: EnginePlayer(engine: engine, rate: synth.sampleRate),
-                             gap: 0.45 / preset.speed)
+    init(_ spoken: SpokenVoice, preset: VoicePresetLine) {
+        self.spoken = spoken
         let shifts = "\(Int(preset.pitch))/\(Int(preset.formant))"
         note = "голос: " + "Supertonic \(preset.style) · \(shifts) · ORT \(OnnxRuntime.version)"
         label = "supertonic-3 \(preset.style) \(preset.speed) \(preset.firstSteps)/\(preset.steps) \(shifts) "
@@ -37,6 +33,15 @@ final class SupertonicVoice: HerVoice, VoiceLookahead, @unchecked Sendable {
 /// One sentence made sound: the engine's text, the synthesis trimmed to its predicted length, the processing.
 struct SupertonicRenderer: SentenceRenderer {
     let text: SpeechTextPipeline, synth: SupertonicEngine, preset: VoicePresetLine, fx: VoiceFX
+    var rate: Int { synth.sampleRate }
+
+    /// The voice folder's Supertonic, the bundled speech-text table and the processing of the preset line.
+    init(settings: VoiceSettings, folder: URL) throws {
+        synth = try SupertonicEngine(folder: folder.appendingPathComponent("supertonic"))
+        text = SpeechTextPipeline(placer: PlainPlacer(), table: try .bundled())
+        preset = settings.preset
+        fx = try VoiceFX(settings.preset)
+    }
 
     func render(_ sentence: String, first: Bool) throws -> RenderedSentence {
         let start = uptime

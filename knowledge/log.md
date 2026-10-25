@@ -2,7 +2,7 @@
 
 ## 2026-10-25 — голос Элли в приложении (голос V4b2b)
 
-* **Update**: `engineering/voice-loop` — Supertonic «Совсем малышка» вместо Milena, `SupertonicVoice(engine:)` (стык D6.1),
+* **Update**: `engineering/voice-loop` — Supertonic «Совсем малышка» вместо Milena, голос собирает приложение — проигрыватель на движке сессии снаружи (стык D6.1),
   аудиосессия до первой фразы, Milena — запасной голос со строкой консоли. `engineering/safety-below-model` — голос
   приложения говорит только фразы хода. `references/repo-map` — пакеты приложения.
 * **Источник**: поставка `voice-app` (V4b2b серии голоса; телефонные Z20–Z26 — в сессии теста 26.10).
