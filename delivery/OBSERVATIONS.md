@@ -53,3 +53,4 @@
 - `accent-tokenizers`
 - `accent-logic`
 - `voice-config`
+- `test-session`
