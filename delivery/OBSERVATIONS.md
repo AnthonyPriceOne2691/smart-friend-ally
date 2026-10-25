@@ -53,3 +53,5 @@
 - `accent-tokenizers`
 - `accent-logic`
 - `gigaam-asr`
+- `test-session`
+- `memory-extract`

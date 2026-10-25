@@ -176,7 +176,8 @@ done
 
 Консоль при запуске пишет, кто слушает: «слух: Silero · sherpa 1.13.8 · ORT 1.28.0» или причину энергии; след —
 `versions.vad`, время окон Silero — журнал (`devicectl … --console`, категория `hearing`). Те же фразы с энергией (U21) —
-без файла Silero на телефоне: удалить его из `Library/Application Support/Models` и перезапустить.
+пустой файл того же имени поверх модели (путь U19: размер не тот), затем настоящий обратно; команды — в
+[Test session](/ops/test-session.md).
 С `"engine": "gigaam"` консоль пишет отказ, если GigaAM не слушает («GigaAM нет: нет файла model.int8.onnx.data —
 диктовка» и так далее), след — `versions.asr` (`gigaam-v3-ctc:224757733` или `dictation`), время расшифровки — этап
 `recognize`. Откат — `"engine": "dictation"` и переустановка; файлы GigaAM можно не удалять.
