@@ -8,6 +8,8 @@ import Foundation
 /// between groups whose own poses run on without a break.
 public final class Motion {
     public static let stiffness = 11.0
+    /// The squash of a tap on the sleeping Ellie (prototype v3, `giggle` asleep): a soft spring that wobbles back.
+    public static let squashStiffness = 11.0, squashDamping = 0.36
 
     /// The groups whose weights spring: the session's four poses, speaking split into talking and waving, sleep into
     /// plain and dozing off after a goodbye.
@@ -19,7 +21,7 @@ public final class Motion {
     public private(set) var weights = [1.0, 0, 0, 0, 0, 0]
     private var speeds = [0.0, 0, 0, 0, 0, 0], phases = Phases(), random: Random
     private var phase = SessionState.asleep, group = Group.sleeps, dozingSince = 0.0
-    private var blinkAt = 2.2, doubleBlink = false
+    private var blinkAt = 2.2, doubleBlink = false, squash = 0.0, squashSpeed = 0.0
 
     public init(seed: UInt64 = 1) { random = Random(seed: seed) }
 
@@ -33,7 +35,21 @@ public final class Motion {
         settle(dt)
         let pose = blended(voice: voice, mic: mic, calm: calm)
         phases.advance(dt, pose, calm: calm)
-        return Frame(pose, phases: phases, blink: blink(), swing: calm ? Pose.calmSwing : 1)
+        wobble(dt)
+        return Frame(pose, phases: phases, blink: blink(), swing: calm ? Pose.calmSwing : 1, squash: squash)
+    }
+
+    /// A tap on the sleeping Ellie: a kick to the squash spring — 1, with Reduce Motion 0.5 (prototype v3, `giggle`).
+    public func poke(calm: Bool = false) { squashSpeed -= calm ? 0.5 : 1 }
+
+    /// The squash springs back to 0 — semi-implicit Euler in substeps of ≤ 8 ms, like the poses.
+    private func wobble(_ dt: Double) {
+        let k = Motion.squashStiffness, damping = 2 * Motion.squashDamping * Motion.squashStiffness
+        let count = max(1, Int((dt / 0.008).rounded(.up))), h = dt / Double(count)
+        for _ in 0..<count {
+            squashSpeed += (-k * k * squash - damping * squashSpeed) * h
+            squash += squashSpeed * h
+        }
     }
 
     /// A new phase: asleep after a goodbye dozes off with a yawn (its clock restarts only once the dozing has faded);
