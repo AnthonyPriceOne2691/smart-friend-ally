@@ -58,3 +58,4 @@
 - `test-session`
 - `memory-extract`
 - `memory-sense`
+- `canon-variant-d`

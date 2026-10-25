@@ -6,7 +6,7 @@
 - **kind:** feature
 - **repro_test:** n/a reason=не bugfix
 - **diagnosis:** n/a reason=не bugfix
-- **phase:** implement
+- **phase:** handoff
 - **builder:** agent:claude-code
 - **verifier:** process:ci
 - **human_ok_spec:** n/a
@@ -30,6 +30,6 @@
 - **canon_drift_waiver:** no
 - **baseline_growth_waiver:** no
 - **observability:** 1
-- **observe_signal:** —
-- **observe_until:** —
+- **observe_signal:** после мержа основной клон держит локальный снимок (9 файлов `docs/canon/` восстановлены командой из PR #71, `--check-local` 0 и 0); CI на main зелёный: smoke S3 — названный пропуск, доктор `DEAD 0`; до срока ни один коммит не вернул `docs/canon/` в индекс (хук `canon-texts-stay-out`, `pre-commit run --all-files` в CI); 2026-11-01 репозиторий снова приватный — вариант канона пересматривает родитель; судья отвечает на находки `2026-10-25-variant-d-hook-reads-as-template` и `2026-10-25-doctor-variant-d-reads-as-absent`
+- **observe_until:** 2026-11-30
 - **circuit_breakers:** defaults from AGENT_DELIVERY_HARNESS.md §3.4
