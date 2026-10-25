@@ -16,6 +16,8 @@ implementation:
   - App/Sources/PhoneListener.swift
   - App/Sources/AllyApp.swift
   - scripts/reinstall_app.sh
+  - scripts/copy_voice.py
+  - App/Resources/voice.json
   - App/Sources/Audio/AudioIO.swift
   - App/Sources/Audio/SystemVoice.swift
   - App/Sources/Speech/DictationRecognizer.swift
@@ -167,6 +169,20 @@ xcrun devicectl device copy to --device <UDID> --domain-type appDataContainer \
 `versions.vad`, время окон Silero — журнал (`devicectl … --console`, категория `hearing`). Те же фразы с энергией (U21) —
 пустой файл того же имени поверх модели (путь U19: размер не тот), затем настоящий обратно; команды — в
 [Test session](/ops/test-session.md).
+
+**Файлы голоса** (V4b1 `voice-config`) — одной командой. Манифест — `App/Resources/voice.json`: пресет «Совсем малышка» и
+21 файл с байтами и sha256.
+- Группа `voice` — Supertonic, ≈ 400 МБ. Её проверяет приложение: «голоса нет: скопируй с Mac» или «голос не тот: N байт
+  вместо M».
+- Группа `accent` — словари и модель омографов RUAccent, ≈ 100 МБ. Её проверит расстановщик, когда придёт.
+
+Источники лежат в `~/models/tts`. Словари `.gz` команда распаковывает на Mac и сверяет sha256 у распакованного. Всё
+сверяется до первой копии, на расхождении — стоп с именем файла. Ничего не удаляет; повтор пропускает неизменённое.
+
+```bash
+python3 scripts/copy_voice.py --check     # сверка на Mac, без телефона
+python3 scripts/copy_voice.py <UDID>      # сверка, копирование в Library/Application Support/Voice, список с телефона
+```
 
 Первый запуск новой подписи — доверие сертификату на телефоне: Настройки → Основные → VPN и управление устройством (L15).
 Бесплатная подпись живёт 7 дней: консоль пишет «подпись: осталось N дн.», при N ≤ 1 — «переустанови с Mac».

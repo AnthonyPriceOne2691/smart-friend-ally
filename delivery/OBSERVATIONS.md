@@ -53,5 +53,6 @@
 - `child-shell-app`
 - `accent-tokenizers`
 - `accent-logic`
+- `voice-config`
 - `test-session`
 - `memory-extract`
