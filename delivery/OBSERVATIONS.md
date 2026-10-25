@@ -59,5 +59,6 @@
 - `memory-extract`
 - `voice-out`
 - `memory-sense`
+- `canon-variant-d`
 - `asr-step3`
 - `router-guard-load`

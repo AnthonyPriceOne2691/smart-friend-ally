@@ -66,7 +66,7 @@ implementation:
 | `knowledge/` | канон домена (OKF v0.2) |
 | `delivery/` | поставки: `active/` — текущая, `archive/` — завершённые с уроками |
 | `scripts/`, `scripts/lint/` | механика контура; канонные файлы правятся только перевендориванием; продуктовые — `scripts/reinstall_app.sh` (E4), `scripts/child_mode.sh` (R) |
-| `docs/canon/` | снимок канонов с самопроверкой (вариант C) |
+| `docs/canon/` | снимок канонов с самопроверкой — только локально, в git его нет (вариант D с 2026-10-25: репозиторий публичный, канон проприетарный; `.git/info/exclude` и хук `canon-texts-stay-out`); в свежем клоне и новом ворктри каталога нет — снимок раскладывается локально |
 | `App/` | приложение iOS: `project.yml`, `Sources/` (консоль, цикл, звук, распознавание), `Resources/` (персона, реестр) |
 | `Packages/` | Swift-пакеты: `AllyDiscipline` (дисциплина ответа), `AllyCore` (ядро хода), `AllyLlama` (модель), `AllyShell` (детский экран), `AllySpeechText` (текст для синтеза), `AllyOnnx` (один ONNX Runtime приложения, sherpa-onnx), `AllyVoice` (движок голоса), `AllySQLite` (общий SQLite), `AllyMemory` (память о ребёнке), `AllyHearing` (слух: Silero VAD) |
 | `local/` | данные ребёнка и прочее локальное — игнорируется, гейт не пускает в git |
