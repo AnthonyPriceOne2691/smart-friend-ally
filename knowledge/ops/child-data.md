@@ -11,6 +11,7 @@ stale_after: 2027-01-02T00:00:00Z
 implementation:
   - .gitignore
   - scripts/lint/check_child_data.py
+  - Packages/AllyMemory/Sources/Memory/MemoryQueue.swift
 ---
 
 # Purpose
@@ -52,8 +53,9 @@ implementation:
   до коммита его отделяет один `git add -A`.
 - **На телефоне:** база памяти и транскрипты помечаются
   `isExcludedFromBackup = true` — иначе они уехали бы в iCloud вместе с бэкапом
-  телефона (KNOWLEDGE.md §9). Реализуется первой поставкой с памятью; тогда путь
-  входит в `implementation:` этого concept'а.
+  телефона (KNOWLEDGE.md §9). С `memory-app` (2026-10-27): `Library/Application Support/Memory` — база памяти и её
+  очередь (её реплики с ответами Элли до разбора, затем стираются с чекпойнтом WAL); пометка читается обратно, база с
+  флагом полной защиты; не прочиталась — память не пишется (`MemoryFiles`).
 - **Продукт не ходит в сеть** — данным некуда уйти с телефона, кроме выгрузки родителем.
 - **Запись о нарушении контракта** — id правил в следе хода; текст модели до контракта и сказанное после —
   в записи чёрного ящика.
@@ -64,6 +66,7 @@ implementation:
 |---|---|
 | Игнор локальных данных | `.gitignore` |
 | Гейт на коммите и в CI | `scripts/lint/check_child_data.py` (хук `child-data`, канарейка в `scripts/lint/canaries.json`, смоук S6 на запись ящика) |
+| Память на телефоне: вне бэкапа, защита, очередь до разбора | `Packages/AllyMemory/Sources/Memory/MemoryQueue.swift` (`MemoryFiles`, `drain`) |
 
 # Related
 

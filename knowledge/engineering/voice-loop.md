@@ -6,7 +6,7 @@ status: draft
 tags: [engineering, app, voice, runbook]
 generated:
   by: claude_code/opus-5.5
-  at: 2026-10-23T23:30:00+03:00
+  at: 2026-10-27T23:00:00+03:00
 stale_after: 2027-01-31T00:00:00+03:00
 implementation:
   - App/project.yml
@@ -189,6 +189,8 @@ xcrun devicectl device process launch --device <UDID> --terminate-existing com.a
 # перерыв после прощания по лимиту (ключ rest_after_limit_minutes, 0–180; по умолчанию 0 — без перерыва):
 xcrun devicectl device process launch --device <UDID> --terminate-existing com.anthonypriceone.ally -- \
   -session_limit_minutes 1 -rest_after_limit_minutes 1
+# консольная сессия пополняет память только с ключом memory_console (вопрос 3 серии памяти; после проверки — стереть):
+xcrun devicectl device process launch --device <UDID> --terminate-existing com.anthonypriceone.ally -- -memory_console 1
 # первый запуск создаёт Models и пишет «модели нет: скопируй с Mac»; затем веса (4,64 ГБ, ≈ 3,5 мин по Wi-Fi):
 shasum -a 256 ~/models/gemma-4-E4B-it-Q4_K_M.gguf    # 85a896a0… — пин в delivery/model_surface.txt
 xcrun devicectl device copy to --device <UDID> --domain-type appDataContainer \
@@ -247,11 +249,21 @@ python3 scripts/copy_voice.py <UDID>      # сверка, копирование
 Бесплатная подпись живёт 7 дней: консоль пишет «подпись: осталось N дн.», при N ≤ 1 — «переустанови с Mac».
 Телефон во время прогонов не блокировать: блокировка останавливает работу GPU.
 
+# Память (memory-app)
+
+- При прогреве — строка консоли «память: включена» или «память выключена: …» (каталог не создан, пометка «не в бэкап»
+  не прочиталась, база не открылась). База — `Library/Application Support/Memory/memory.sqlite` с полной защитой.
+- После конца детской сессии при родителе (и консольной — с `-memory_console 1`) и при запуске приложение разбирает
+  очередь той же E4B в последовательности 2 (`LlamaModel.complete`, JSON-грамматика); тап «Разбудить» или по Элли
+  отменяет разбор и ждёт его, фон — тоже. Строка разбора без слов — `Library/Caches/memory.jsonl`.
+
 # След хода и падения
 
 ```bash
 xcrun devicectl device copy from --device <UDID> --domain-type appDataContainer \
   --domain-identifier com.anthonypriceone.ally --source Library/Caches/turns.jsonl --destination local/…/turns.jsonl
+xcrun devicectl device copy from --device <UDID> --domain-type appDataContainer \
+  --domain-identifier com.anthonypriceone.ally --source Library/Caches/memory.jsonl --destination local/…/memory.jsonl
 xcrun devicectl device info files --device <UDID> --domain-type systemCrashLogs
 ```
 

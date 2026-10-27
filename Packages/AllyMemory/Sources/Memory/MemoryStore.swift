@@ -9,12 +9,12 @@ public enum MemoryError: Error, Equatable {
 
 /// The memory database in its own folder (`memory.sqlite` with its WAL). One transaction per session; entities found by
 /// relation and name; a single-valued trait replaced by date; a confirmation counted once per session; «стереть всё»
-/// deletes the files. The owner serializes the calls.
-public final class MemoryStore {
+/// deletes the files. Its statements are serialized by the connection; the app does not erase while a parse runs.
+public final class MemoryStore: @unchecked Sendable {
     public static let fileName = "memory.sqlite"
     public let directory: URL
     private let flags: Int32
-    private var db: SQLiteConnection
+    var db: SQLiteConnection
 
     /// - Parameter flags: added to SQLite's open flags (on the phone — the file protection class, memory-app).
     public init(directory: URL, flags: Int32 = 0) throws {

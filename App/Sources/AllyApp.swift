@@ -5,6 +5,7 @@ import SwiftUI
 @main
 struct AllyApp: App {
     @StateObject private var loop = VoiceLoop()
+    @Environment(\.scenePhase) private var phase
 
     var body: some Scene {
         WindowGroup {
@@ -14,6 +15,7 @@ struct AllyApp: App {
                 Console(loop: loop)
             }
         }
+        .onChange(of: phase) { _, now in if now == .background { _ = loop.pauseMemory() } }  // M35
     }
 }
 
