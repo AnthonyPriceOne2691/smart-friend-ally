@@ -6,7 +6,7 @@
 - **kind:** feature
 - **repro_test:** n/a reason=не bugfix
 - **diagnosis:** n/a reason=не bugfix
-- **phase:** implement
+- **phase:** handoff
 - **builder:** agent:claude-code
 - **verifier:** process:ci
 - **human_ok_spec:** yes (by=human:anthony at=2026-10-25 «Подписываю (Рекомендую)» через ведущего — X18, X19; X9–X12 подписаны серией 2026-10-23, спека b7ef7b0, подпись e5c86ac)
@@ -26,7 +26,7 @@
 - **hooks:** not-deployed
 - **blockers:** none
   <!-- порядок, а не затор: код — после мержа V4b2 voice-app (player голоса) и D7.3 gigaam-asr; до них — документы (T1) -->
-- **waivers:** none
+- **waivers:** acceptance=X9,X10,X12 reason=постоянное решение родителя 2026-10-23 (через ведущего): телефонные проверки серии — в общую сессию теста, с ними и телефонная часть X11; 27.10 родитель: «сегодня проводка, тесты на телефоне — потом»; ядро X11, X18, X19, мутации, сборка без подписи и оракул артефакта — зелёные by=human:anthony at=2026-10-23
 - **new_dependency:** none
 - **runtime_paths:** App/Sources/Audio/
   <!-- §12.6, один рисковый путь на поставку (E1): движок звука — voice processing, аудиосессия .voiceChat, тап на сессию -->

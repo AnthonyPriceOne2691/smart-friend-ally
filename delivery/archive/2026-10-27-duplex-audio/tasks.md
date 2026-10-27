@@ -24,6 +24,7 @@
     сессии, L69); сборка без подписи и оракул артефакта — OK
 - [x] T5: знания — `voice-loop`, `turn-detector`, `knowledge/log.md`
   — и `safety-below-model` (путь реплики тот же)
-- [ ] T6: сборка `.app` без подписи и оракул артефакта; телефон — X9, X10, X12, телефонная часть X11 — в общую сессию
-  теста (постоянное решение родителя); eval-smoke, verify-report (L43), строгий `delivery_check`, CI; архив в том же PR
-  с уроками L98, L99; slug `duplex-audio` — строкой в конец `delivery/OBSERVATIONS.md`; мерж — ведущий
+- [x] T6: сборка `.app` без подписи и оракул артефакта; телефон — X9, X10, X12, телефонная часть X11 — в общую сессию
+  теста (постоянное решение родителя, waiver в STATUS); eval-smoke, verify-report (L43 — дайджест совпал), строгий
+  `delivery_check`, CI (40564235954 зелёный); архив в том же PR с уроками L98, L99; slug `duplex-audio` — строкой в
+  конец `delivery/OBSERVATIONS.md`; мерж — ведущий

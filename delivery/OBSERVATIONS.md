@@ -66,3 +66,4 @@
 - `router-guard-load`
 - `voice-app`
 - `memory-quality`
+- `duplex-audio`
