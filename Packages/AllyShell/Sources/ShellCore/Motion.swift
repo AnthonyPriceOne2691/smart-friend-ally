@@ -22,9 +22,13 @@ public final class Motion {
     private var speeds = [0.0, 0, 0, 0, 0, 0], phases = Phases(), random: Random
     private var phase = SessionState.asleep, group = Group.sleeps, dozingSince = 0.0
     private var blinkAt = 2.2, doubleBlink = false, squash = 0.0, squashSpeed = 0.0
-    private var glow = Glow(), bubbles: Bubbles, sleepingSince = 0.0, rise = 0.0
+    private var glow = Glow(), bubbles: Bubbles, sleepingSince = 0.0, rise = 0.0, syllables: Syllables
+    /// Her voice's level in the frame (0…1): the level passed in, or the rhythm of syllables while she speaks (Ш2в).
+    public private(set) var voiceLevel = 0.0
 
-    public init(seed: UInt64 = 1) { (random, bubbles) = (Random(seed: seed), Bubbles(seed: seed)) }
+    public init(seed: UInt64 = 1) {
+        (random, bubbles, syllables) = (Random(seed: seed), Bubbles(seed: seed), Syllables(seed: seed))
+    }
 
     public func weight(of group: Group) -> Double { weights[group.rawValue] }
 
@@ -34,7 +38,10 @@ public final class Motion {
         let dt = min(max(dt, 0), 0.05)
         enter(next)
         settle(dt)
-        let pose = blended(voice: voice, mic: mic, calm: calm)
+        let speaking = TalkState(phase: phase).pose == .speaks && voice == nil
+        let rhythm = syllables.step(dt, at: phases.time + dt, speaking: speaking)
+        voiceLevel = voice ?? rhythm
+        let pose = blended(voice: voiceLevel, mic: mic, calm: calm)
         phases.advance(dt, pose, calm: calm)
         wobble(dt)
         var frame = Frame(pose, phases: phases, blink: blink(), swing: calm ? Pose.calmSwing : 1, squash: squash)
@@ -95,13 +102,13 @@ public final class Motion {
         }
     }
 
-    private func blended(voice: Double?, mic: Double?, calm: Bool) -> Pose {
+    private func blended(voice: Double, mic: Double?, calm: Bool) -> Pose {
         let t = phases.time
         let parts = Group.allCases.map { group in
             let target: Pose
             switch group {
             case .sleeps: target = Pose.at(.sleeps, time: t, calm: calm)
-            case .dozes: target = goodbyeSleep(t - dozingSince, calm: calm)
+            case .dozes: target = goodbyeSleep(t - dozingSince, voice: voice, calm: calm)
             case .listens: target = Pose.at(.listens, time: t, mic: mic, calm: calm)
             case .thinks: target = Pose.at(.thinks, time: t, calm: calm)
             case .talks, .waves: target = Pose.at(.speaks, time: t, voice: voice, wave: group == .waves ? 1 : 0,
@@ -113,8 +120,8 @@ public final class Motion {
     }
 
     /// After the goodbye: the waving pose, then the yawn (in 0.3–0.9 s, out 1.6–2.4 s), then sleep (1.7–3.3 s).
-    private func goodbyeSleep(_ s: Double, calm: Bool) -> Pose {
-        let awake = Pose.at(.speaks, time: phases.time, wave: 1, calm: calm)
+    private func goodbyeSleep(_ s: Double, voice: Double, calm: Bool) -> Pose {
+        let awake = Pose.at(.speaks, time: phases.time, voice: voice, wave: 1, calm: calm)
         let yawning = smoothstep(0.3, 0.9, s) * (1 - smoothstep(1.6, 2.4, s)), sleeping = smoothstep(1.7, 3.3, s)
         return Pose.mix(Pose.mix(awake, Pose.yawn, yawning), Pose.at(.sleeps, time: phases.time, calm: calm), sleeping)
     }

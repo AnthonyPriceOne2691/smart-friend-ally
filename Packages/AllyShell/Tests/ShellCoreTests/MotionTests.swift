@@ -55,8 +55,9 @@ final class MotionTests: XCTestCase {
         }
     }
 
-    /// 100 scripts of 20 s with a fixed seed — phases in random order, switches every 0.2–3 s, levels 0…1; fails at the
-    /// first pair of frames where a jump, as a share of its bound, is over 1.
+    /// 100 scripts of 20 s with a fixed seed — phases in random order, switches every 0.2–3 s, levels 0…1 (every
+    /// other script has no voice level: the mouth goes by syllables, Ш2в); fails at the first pair of frames where a
+    /// jump, as a share of its bound, is over 1.
     private func worstJumps(_ shares: (Frame, Frame) -> [Double]) {
         var dice = Dice(seed: 2026)
         let phases: [SessionState] = [.asleep, .greeting, .listening, .thinking, .speaking, .windingDown, .goodbye]
@@ -66,7 +67,9 @@ final class MotionTests: XCTestCase {
                 script.append((start, phases[Int(dice.next() * 7) % 7]))
                 start += 0.2 + 2.8 * dice.next()
             }
-            let shots = film(script, for: 20, seed: UInt64(scenario), voice: dice.next(), mic: dice.next())
+            let voice = dice.next()
+            let shots = film(script, for: 20, seed: UInt64(scenario), voice: scenario.isMultiple(of: 2) ? nil : voice,
+                             mic: dice.next())
             for (before, after) in zip(shots, shots.dropFirst()) {
                 let jumps = shares(before.frame, after.frame)
                 if let worst = jumps.max(), worst > 1 {
