@@ -65,8 +65,8 @@ public struct VoicePresetLine: Decodable, Sendable, Equatable {
     }
 }
 
-/// A file of the voice folder: its path there, its size, its group — `voice` (Supertonic, checked by the app) or
-/// `accent` (RUAccent: copied now, checked once the placer uses it).
+/// A file of the voice folder: its path there, its size, its group — `voice` (Supertonic) or `accent` (RUAccent, the
+/// placer; without it the voice speaks with the pinned words and names only).
 public struct VoiceFile: Decodable, Sendable, Equatable {
     public let path: String, bytes: Int64, group: String
 
@@ -79,9 +79,9 @@ public struct VoiceFile: Decodable, Sendable, Equatable {
 public enum VoiceCheck: Equatable, Sendable {
     case ready, missing(String), wrongSize(String, found: Int64, expected: Int64)
 
-    /// The `voice` group in `folder`.
-    public static func check(_ settings: VoiceSettings, in folder: URL) -> VoiceCheck {
-        for file in settings.files where file.group == "voice" {
+    /// One group in `folder`: `voice` — the app's Supertonic, `accent` — the placer's RUAccent (voice-accent-wire).
+    public static func check(_ settings: VoiceSettings, in folder: URL, group: String = "voice") -> VoiceCheck {
+        for file in settings.files where file.group == group {
             let path = folder.appendingPathComponent(file.path).path
             guard let size = (try? FileManager.default.attributesOfItem(atPath: path))?[.size] as? NSNumber else {
                 return .missing(file.path)

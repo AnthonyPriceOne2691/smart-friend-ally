@@ -1,9 +1,11 @@
+import AllyAccent
 import AllyCore
 import AllyOnnx
 import AllySpeechText
 import AllyVoice
 import AllyVoiceFX
 import Foundation
+import os
 
 /// Her voice (voice series V4b2): Supertonic by the preset line, then PSOLA and the EQ — «Совсем малышка» by default —
 /// with «Э́льли» and the reading rules of speech-text.json. The app assembles the `SpokenVoice` itself — the renderer
@@ -35,10 +37,10 @@ struct SupertonicRenderer: SentenceRenderer {
     let text: SpeechTextPipeline, synth: SupertonicEngine, preset: VoicePresetLine, fx: VoiceFX
     var rate: Int { synth.sampleRate }
 
-    /// The voice folder's Supertonic, the bundled speech-text table and the processing of the preset line.
-    init(settings: VoiceSettings, folder: URL) throws {
+    /// The voice folder's Supertonic, the bundled speech-text table over the placer, the processing of the preset line.
+    init(settings: VoiceSettings, folder: URL, placer: any StressPlacer) throws {
         synth = try SupertonicEngine(folder: folder.appendingPathComponent("supertonic"))
-        text = SpeechTextPipeline(placer: PlainPlacer(), table: try .bundled())
+        text = SpeechTextPipeline(placer: placer, table: try .bundled())
         preset = settings.preset
         fx = try VoiceFX(settings.preset)
     }
@@ -61,9 +63,44 @@ struct SupertonicRenderer: SentenceRenderer {
     private var uptime: Double { ProcessInfo.processInfo.systemUptime }
 }
 
-/// Until RUAccent lands (V3c): the phrase as written — pinned words, names and reading rules still apply.
+/// Without RUAccent: the phrase as written — pinned words, names and reading rules still apply.
 struct PlainPlacer: StressPlacer {
     func place(_ text: String) throws -> String { text }
+}
+
+/// The placer of the voice (voice-accent-wire): RUAccent when the accent files of voice.json are there, else the plain
+/// phrase; the console line says which and how long the loading took.
+enum AccentPlacer {
+    static func load(_ settings: VoiceSettings, folder: URL) -> (placer: any StressPlacer, line: String) {
+        guard VoiceCheck.check(settings, in: folder, group: "accent") == .ready else {
+            return (PlainPlacer(), "ударения: " + "нет файлов RUAccent" + " — без расстановщика")
+        }
+        let start = ProcessInfo.processInfo.systemUptime, base = folder.appendingPathComponent("ruaccent")
+        do {
+            let real = try RUAccentVoice.placer(nn: base.appendingPathComponent("nn"),
+                                                dictionaries: base.appendingPathComponent("dictionary"))
+            let seconds = String(format: "%.2f", ProcessInfo.processInfo.systemUptime - start)
+            return (SafePlacer(real: real), "ударения: " + "RUAccent · \(seconds) с")
+        } catch {
+            return (PlainPlacer(), "ударения: " + "не загрузились — \(error)")
+        }
+    }
+}
+
+/// A refusal of the placer on one phrase leaves the phrase without its stresses — pinned words, names and reading
+/// rules still apply — instead of failing the turn (V3b leaves it to the app). The log keeps the error's type only.
+struct SafePlacer: StressPlacer {
+    let real: any StressPlacer
+    private static let log = Logger(subsystem: "com.anthonypriceone.ally", category: "voice")
+
+    func place(_ text: String) throws -> String {
+        do {
+            return try real.place(text)
+        } catch {
+            Self.log.error("placer refused: \(String(describing: type(of: error)), privacy: .public)")
+            return text
+        }
+    }
 }
 
 /// A band kind the line wrote but the processing does not have.
