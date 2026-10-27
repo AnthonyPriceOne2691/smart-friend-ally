@@ -76,6 +76,11 @@ struct EncyclopediaText: Sendable {
             .map { $0.split(separator: " ").map(String.init) } ?? []
     }
 
+    /// The stems that stand for a word: its own and those of its synonyms («котик» → «котик», «кошк», «кот»).
+    func standsFor(_ word: String) -> Set<String> {
+        Set([RussianStemmer.stem(word)] + synonyms(of: word).flatMap(Self.words).map(RussianStemmer.stem))
+    }
+
     func asked(_ words: [String]) -> Bool {
         let text = " " + words.joined(separator: " ") + " "
         return config.questionWords.contains { text.contains(" \($0) ") }

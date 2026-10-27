@@ -91,9 +91,11 @@ final class EncyclopediaTests: XCTestCase {
             XCTAssertEqual(decision(text), [nil, "knowledge.coverage"], text)
         }
         XCTAssertEqual(base.lookup("почему марс красный").top.first?.card, "rainbow")
-        // P6 at three points (L90): «one may be missing» — none of two words, one of three and of four
+        // P16: «one may be missing» — none of two words; of three and of four only on top of a whole phrasing of the
+        // card: «почему лёд тает» in «…быстро», «почему медведь спит зимой» in «…бурый…»
         XCTAssertEqual(decision("почему бурый медведь"), [nil, "knowledge.coverage"])
-        XCTAssertEqual(decision("почему бурый медведь спит"), ["bear-winter", "knowledge.hint"])
+        XCTAssertEqual(decision("почему бурый медведь спит"), [nil, "knowledge.coverage"])
+        XCTAssertEqual(decision("почему лёд тает быстро"), ["ice-melts", "knowledge.hint"])
         XCTAssertEqual(decision("почему бурый медведь спит зимой"), ["bear-winter", "knowledge.hint"])
     }
 

@@ -54,6 +54,20 @@ final class EncyclopediaBaseTests: XCTestCase {
         }
     }
 
+    /// Open questions of the research sets (v1, v2) that a card of the base does not answer: one word missing from the
+    /// card, and no whole phrasing in her words — no hint; one word on top of a whole phrasing — the hint stays.
+    func testOpenQuestionsWithoutACardGetNoHint() {  // P16
+        let base = Encyclopedia.bundled()
+        for text in ["почему мышка спит всю зиму", "как кит дышит под водой", "почему вода в море синяя",
+                     "как космонавты дышат в космосе", "почему солнце светит так ярко", "почему иней белый и пушистый",
+                     "сколько будет два плюс два"] {
+            XCTAssertNil(base.lookup(text).hint, text)
+        }
+        let kept = ["почему лёд тает на солнышке": "ice-melts", "зачем люди ночью спят": "why-sleep",
+                    "почему зимой так холодно на улице": "winter-cold"]
+        for (text, card) in kept { XCTAssertEqual(base.lookup(text).record.card, card, text) }
+    }
+
     private func source(of id: String, _ source: Card.Source) {
         XCTAssertFalse(source.title.isEmpty || source.note.isEmpty, id)
         XCTAssertTrue(source.url != nil || source.oldid != nil, id)

@@ -153,10 +153,15 @@ struct KnowledgeTexts: Decodable, Sendable {
 /// The search and the decision over a built base; the index answers one caller at a time.
 private struct Engine {
     let cards: [EncyclopediaCard], text: EncyclopediaText, phrasings: [Set<String>], index: Locked<EncyclopediaIndex>
+    /// Each phrasing of a card as its content words, a word as the stems that stand for it (its own, its synonyms').
+    let wholes: [[[Set<String>]]]
 
     init(_ cards: [EncyclopediaCard], _ text: EncyclopediaText, _ index: EncyclopediaIndex) {
         (self.cards, self.text, self.index) = (cards, text, Locked(index))
         phrasings = cards.map { card in Set(card.questions.flatMap(text.stems)) }
+        wholes = cards.map { card in
+            card.questions.map { text.query(EncyclopediaText.words($0)).content.map(text.standsFor) }
+        }
     }
 
     /// The card's index when there is a hint, the rule that decided, the best three.
@@ -174,14 +179,15 @@ private struct Engine {
         return Decision(card: rule == "hint" ? ranked[0].index : nil, rule: rule, top: top)
     }
 
-    /// Her content words in the card's phrasings — by stem or by a synonym's stem; one may miss from three and more.
+    /// Her content words in the card's phrasings — by stem or by a synonym's stem. One may miss from three and more,
+    /// and only on top of a whole phrasing of the card in her words (Э2): «почему мышка спит всю зиму» names no whole
+    /// phrasing of the bear's card, «почему лёд тает быстро» holds «почему лёд тает».
     private func covered(_ content: [String], _ card: Int) -> Bool {
         let known = phrasings[card]
-        let found: (String) -> Bool = { known.contains(RussianStemmer.stem($0)) }
-        let hits = content.filter { word in
-            found(word) || text.synonyms(of: word).flatMap(EncyclopediaText.words).contains(where: found)
-        }.count
-        let allowed = content.count >= text.config.oneMissingFrom ? 1 : 0
-        return hits >= 1 && hits >= content.count - allowed
+        let hits = content.filter { !text.standsFor($0).isDisjoint(with: known) }.count
+        if hits == content.count { return hits >= 1 }
+        guard hits == content.count - 1, content.count >= text.config.oneMissingFrom else { return false }
+        let asked = content.reduce(into: Set<String>()) { $0.formUnion(text.standsFor($1)) }
+        return wholes[card].contains { whole in !whole.isEmpty && whole.allSatisfy { !$0.isDisjoint(with: asked) } }
     }
 }

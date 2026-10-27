@@ -33,9 +33,9 @@
   <!-- прогрев грузит базу из ресурсов AllyCore и строит FTS5 на телефоне: SQLite iOS с FTS5 не проверен (Э1), отказ
        виден только исполнением — самопроверкой и строкой консоли (P20, с ведущим) -->
 - **irreversible_surfaces:** none reason=продукт офлайн; поиск только читает базу из бандла: отправки, трат, стирания, выкатки и публикации нет
-- **model_surface:** App/Resources/persona.v2.4.ru.md,App/Resources/model.json,Packages/AllyLlama/,Packages/AllyCore/Sources/AllyCore/Resources/encyclopedia.ru.jsonl,Packages/AllyCore/Sources/AllyCore/Resources/encyclopedia.json,Packages/AllyCore/Sources/AllyCore/Knowledge.swift
-  <!-- §14.1 п.1 и п.5: подсказка — часть входа модели, база и конфиг поиска — конфиг извлечения; код подсказки — в одном
-       файле, P19 -->
+- **model_surface:** App/Resources/persona.v2.4.ru.md,App/Resources/model.json,Packages/AllyLlama/,Packages/AllyCore/Sources/AllyCore/Resources/encyclopedia.ru.jsonl,Packages/AllyCore/Sources/AllyCore/Resources/encyclopedia.json,Packages/AllyCore/Sources/AllyCore/Knowledge.swift,Packages/AllyCore/Sources/AllyCore/Encyclopedia.swift
+  <!-- §14.1 п.1 и п.5: подсказка — часть входа модели; база, конфиг и правило решения (`Encyclopedia.swift`) — конфиг
+       извлечения; сборка входа — `Knowledge.swift`, P19 -->
 - **rule_enforcers:** knowledge/engineering/safety-below-model.md
 - **canon_drift_waiver:** no
 - **baseline_growth_waiver:** no
