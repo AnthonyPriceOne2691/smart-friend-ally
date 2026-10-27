@@ -71,3 +71,4 @@
 - `memory-app`
 - `barge-in`
 - `child-shell-mouth`
+- `app-encyclopedia`
