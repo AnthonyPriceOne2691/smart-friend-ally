@@ -95,6 +95,7 @@ final class VoiceLoop: ObservableObject {
         case .ready(let folder):
             memory = try? MemoryStore(directory: folder, flags: MemoryFiles.flags)
             screen.lines.append(memory == nil ? "память выключена: база не открылась" : "память: включена")
+            if memory != nil, let off = MemoryConsole.conversation { screen.lines.append(off) }  // M40, 2026-10-28
             refreshMemoryLines()
         case .refused(let reason):
             screen.lines.append("память выключена: " + (reason == .backup ? "пометка «не в бэкап» не прочиталась"

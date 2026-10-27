@@ -16,5 +16,8 @@
   **правило не выдержано** (быт, «почему» с подсказкой, детали D1, имя) — `escalation.md`, решение родителя
 - [x] T6: знание — `engineering/memory`, `engineering/voice-loop`, `engineering/safety-below-model`,
   `engineering/app-architecture`, `ops/child-data`, `ops/test-session`, `knowledge/log.md`
-- [ ] T7: слить main, PR, CI, verify-report, сдача: архив, строка INDEX с уроками с L134 (L131–L133 ведущий отдал Э2), `memory-recall` в
+- [x] T8: решение родителя 2026-10-28 «Слить с выключенной (Рекомендую)» — переключатель `in_conversation: false`
+  (`memory.json`), тест `// M40` «выключен — системный ход персоной байт в байт», строка консоли; новая форма блока — в
+  отложенном `engineering/memory` со словами родителя
+- [x] T7: слить main, PR, CI, verify-report, сдача: архив, строка INDEX с уроками с L134 (L131–L133 ведущий отдал Э2), `memory-recall` в
   `delivery/OBSERVATIONS.md`

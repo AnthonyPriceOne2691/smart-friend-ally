@@ -11,11 +11,21 @@ private enum Recall {
 final class MemoryRecallTests: StoreTestCase {
     func testSystemTurnIsThePersonaWhenMemoryIsEmptyElseThePersonaAndTheBlock() throws {  // M36
         let store = try makeStore()
-        XCTAssertEqual(MemoryBlock.system(persona: Recall.persona, block: try store.block().text), Recall.persona)
+        XCTAssertEqual(MemoryBlock.system(persona: Recall.persona, block: try store.block().text, on: true),
+                       Recall.persona)
         try store.write(try Fixture.session("s1", "2026-10-05 18:00", Fixture.first))
         let block = try store.block().text
-        XCTAssertEqual(MemoryBlock.system(persona: Recall.persona, block: block), Recall.persona + "\n\n" + block)
+        XCTAssertEqual(MemoryBlock.system(persona: Recall.persona, block: block, on: true),
+                       Recall.persona + "\n\n" + block)
         XCTAssertTrue(block.hasPrefix(Fixture.header))
+    }
+
+    func testBlockIsOffSoTheSystemTurnIsThePersonaByteForByte() throws {  // M40
+        let store = try makeStore([try Fixture.session("s1", "2026-10-05 18:00", Fixture.first)])
+        XCTAssertFalse(try store.block().text.isEmpty)
+        XCTAssertFalse(MemoryBlock.inConversation)
+        XCTAssertEqual(MemoryBlock.system(persona: Recall.persona, block: try store.block().text), Recall.persona)
+        XCTAssertEqual(MemoryConsole.conversation, "память: в разговор не идёт — блок выключен")
     }
 }
 
@@ -46,6 +56,7 @@ final class MemoryConsoleTests: StoreTestCase {
 
         try store.eraseAll(now: try Fixture.at("2026-10-20 12:00"))
         XCTAssertEqual(try MemoryConsole.lines(store, zone: Recall.zone), ["память: стёрта 20.10 в 12:00"])
-        XCTAssertEqual(MemoryBlock.system(persona: Recall.persona, block: try store.block().text), Recall.persona)
+        XCTAssertEqual(MemoryBlock.system(persona: Recall.persona, block: try store.block().text, on: true),
+                       Recall.persona)
     }
 }

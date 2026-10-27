@@ -1,5 +1,5 @@
 {
-  "_about": "The memory block's words (memory-core, signed by the parent 2026-10-23): the header for the model, line labels, siblings, family and favorite slots in the block's order, ages in words 1-20, line caps, the budget in tokens and the Linux estimate of characters per token (a margin to the model tokenizer's 2.71-2.80 on the research blocks); the console's lines of the parent, not for the model (memory-recall, M39).",
+  "_about": "The memory block's words (memory-core, signed by the parent 2026-10-23): the header for the model, line labels, siblings, family and favorite slots in the block's order, ages in words 1-20, line caps, the budget in tokens and the Linux estimate of characters per token (a margin to the model tokenizer's 2.71-2.80 on the research blocks); the console's lines of the parent, not for the model (memory-recall, M39); in_conversation — whether the block goes into the conversation: off by the parent's decision 2026-10-28 after M40 («Слить с выключенной (Рекомендую)»), until a new form of the block holds M40.",
   "header": "Что ты помнишь о ней из прошлых разговоров. Это для тебя: не пересказывай и не перечисляй, вспоминай что-то одно, когда к месту.",
   "labels": {"she": "Она", "favorite": "Любимое", "likes": "Любит", "can": "Умеет", "creations": "Придумала",
              "birthday": "день рождения", "pet": "питомец"},
@@ -13,8 +13,10 @@
   "caps": {"likes": 4, "can": 3, "sibling": 3, "family": 2, "pet": 3, "creation": 1},
   "budget": 300,
   "chars_per_token": 2.7,
+  "in_conversation": false,
   "console": {"nothing": "память: Элли пока ничего не знает", "facts": "память: {n} {facts}",
               "forms": ["факт", "факта", "фактов"], "erased": "память: стёрта {date} в {time}",
               "waiting": "ждёт разбора: {n}", "failed": "разбор не удался",
+              "off": "память: в разговор не идёт — блок выключен",
               "confirm": "Стереть всё, что помнит Элли? ({n} {facts})"}
 }

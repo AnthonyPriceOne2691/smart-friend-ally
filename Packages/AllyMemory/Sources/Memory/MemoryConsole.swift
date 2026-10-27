@@ -14,6 +14,10 @@ public enum MemoryConsole {
         return lines
     }
 
+    /// The console's line while the block is off (`in_conversation`, the parent 2026-10-28): she keeps her memory, the
+    /// conversation does not get it.
+    public static var conversation: String? { MemoryBlock.inConversation ? nil : Words.shared.console.off }
+
     /// «Стереть всё, что помнит Элли? (14 фактов)».
     public static func confirmation(facts: Int) -> String { count(Words.shared.console.confirm, facts) }
 
