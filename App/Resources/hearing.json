@@ -5,5 +5,7 @@
           "min_silence": 0.1, "lag": 0.128},
   "asr": {"engine": "dictation", "gigaam": [{"file": "model.int8.onnx", "bytes": 2939169},
                                          {"file": "model.int8.onnx.data", "bytes": 221818368},
-                                         {"file": "tokens.txt", "bytes": 196}]}
+                                         {"file": "tokens.txt", "bytes": 196}]},
+  "overlap": {"min_speech": 0.25, "after_voice": 0.8, "lead": 0.8},
+  "voice_processing": {"agc": true}
 }

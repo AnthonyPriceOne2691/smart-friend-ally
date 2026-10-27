@@ -61,6 +61,7 @@ final class PhoneListener: Listener, @unchecked Sendable {
         var stages = ["tail": end.ended - end.voiced, "recognize": recognized - end.ended,
                       "tap_buffer": audio.bufferSeconds]
         if let reason = turnEnding.reason, reason != .tail { stages["turn_" + reason.rawValue] = 1 }
+        if let over = audio.startedOverVoice { stages["started_over_voice"] = over }  // D6.1: began over Elly (X11)
         last { $0 = (stages, end.voiced) }
         let sound = fed { $0 }  // the speech end is the last voiced frame; its start the audio path does not give (L60)
         keep(Utterance(samples: sound.samples, rate: sound.rate, opened: opened, voiced: nil, ended: end.voiced,

@@ -66,5 +66,6 @@
 - `router-guard-load`
 - `voice-app`
 - `memory-quality`
+- `duplex-audio`
 - `voice-accent-wire`
 - `app-black-box`
