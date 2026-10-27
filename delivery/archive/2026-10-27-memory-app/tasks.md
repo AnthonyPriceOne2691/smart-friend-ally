@@ -11,5 +11,5 @@
 - [x] T5: приложение — память в `VoiceLoop`: хранилище, отбор, разбор после сна и при запуске, отмена по тапу и в фоне,
   экран не гаснет, строка консоли, `Caches/memory.jsonl`; сборка без подписи, оракул артефакта
 - [x] T6: знание — `engineering/memory`, `knowledge/log.md`; `okf_validate`, `okf_sync_gate`
-- [x] T7: слить main, PR, CI, verify-report, сдача: архив, строка INDEX с уроками L127, L128 (рождены этой поставкой), `memory-app` в
+- [x] T7: слить main, PR, CI, verify-report, сдача: архив, строка INDEX с уроками L129, L130 (рождены этой поставкой), `memory-app` в
   `delivery/OBSERVATIONS.md`
