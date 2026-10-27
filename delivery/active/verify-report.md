@@ -1,29 +1,30 @@
 # Verify report
 
-**Date:** 2026-10-23
+**Date:** 2026-10-27
 **Verifier:** process:ci
 **asserts_reviewed_by:** n/a (все утверждения ведут к примерам спеки — дайджест ниже, asserts_without_example: 0; B13–B19 подписаны родителем 2026-10-22 в спеке серии)
-**CI run:** https://github.com/AnthonyPriceOne2691/smart-friend-ally/actions/runs/39998831491 (`37c1d7e`: swift, delivery,
-gates — зелёные; первый прогон 39995408177 на `8c194d0` — тоже зелёный)
-**Commit:** 37c1d7e (документы — 8b5ad57, eval-smoke — 4bea6b6, приложение и ядро — cb8c1c3, команда на Mac и знание — 00c1f25, финальный черновик команды — 5ebc365, слияние main — b76d0b7 (child-shell)); сдача — следующими коммитами: ключ, подпись касанием, архив; PR #43
+**CI run:** прогон головы PR #43 после слияния main `8ef99ea` — номер в докладе ведущему, при сдаче строка обновится
+(до слияния: 39998831491 на `37c1d7e` и 39995408177 на `8c194d0` — зелёные)
+**Commit:** 12d68e8 — слияние main `8ef99ea` сложением и стык с GigaAM (до него: документы — 8b5ad57, eval-smoke — 4bea6b6, приложение и ядро — cb8c1c3, команда на Mac и знание — 00c1f25, финальный черновик команды — 5ebc365, слияние main — b76d0b7, отчёт — 37c1d7e, сдача без архива — 99f6e6a); PR #43
 
 ## Shape oracles
 - [x] PASS — pre-commit на коммитах поставки: SwiftLint 0 находок (App и пакеты), `file-length`, jscpd, секреты, данные
   ребёнка, `gate-coverage`
-- [x] PASS — сборка `.app` для устройства без подписи (`xcodegen generate`, `xcodebuild -destination
-  'generic/platform=iOS' CODE_SIGNING_ALLOWED=NO build`) — BUILD SUCCEEDED; оракул артефакта
-  `check_app_artifact.sh` — OK (сеть, ключи Info; права — на подписанной сборке)
-- [x] PASS — `okf_validate.py` 0/0; `okf_sync_gate.py --base origin/main` — OK: `ops/black-box` (`PhoneDisk.swift`,
-  `scripts/blackbox.py`), `ops/child-data` (`scripts/blackbox.py`), `engineering/voice-loop` (`VoiceLoop`,
-  `PhoneListener`, `AllyApp`, `DictationRecognizer`), `safety-below-model` (`VoiceLoop`)
-- [x] PASS — строгий `delivery_check --require-ci --diff-base origin/main` после слияния main: 0 ошибок; предохранитель —
-  8 файлов, net 470 из 800 (+493/−23); рисковых путей 2 по исключению родителя. Предупреждения: поверхность стирания
+- [x] PASS — сборка `.app` для устройства без подписи после слияния main 2026-10-27 (`xcodegen generate`, `xcodebuild
+  -destination 'generic/platform=iOS' CODE_SIGNING_ALLOWED=NO build`) — BUILD SUCCEEDED; оракул артефакта
+  `check_app_artifact.sh` — OK (Info, бинарей 6; права — на подписанной сборке)
+- [x] PASS — `okf_validate.py` 0/0 (52 файла); `okf_sync_gate.py --base origin/main` — OK (18 концептов): `ops/black-box`,
+  `ops/child-data`, `engineering/voice-loop` (`VoiceLoop`, `PhoneListener`, `AllyApp`, `DictationRecognizer`,
+  `RecognitionPhrase`), `engineering/turn-detector` (`BatchPhrase`), `safety-below-model` (`VoiceLoop`)
+- [x] PASS — строгий `delivery_check --require-ci --diff-base origin/main` после слияния main `8ef99ea`: 0 ошибок;
+  предохранитель — 10 файлов, net 503 из 800 (+538/−35); рисковых путей 2 по исключению родителя. Предупреждения: поверхность стирания
   объявлена и ждёт подписи пальцем до сдачи (выбор «подписать» — ответ 6 родителя в спеке серии); реляционного оракула
   детектор не видит — свойства ящика держат тесты D3
 
 ## Behavior oracles
-- [x] PASS — `swift test` AllyCore: 49 из 49 (новый — B17: `held()`, отказ стирания во время сессии, стирание с ответом);
-  покрытие AllyCore в CI — 860 из 889 строк, 96% (джоба `swift`, порог 70%)
+- [x] PASS — `swift test` AllyCore после слияния main: 120 из 120; свои — B17 (`held()`, отказ стирания во время сессии,
+  стирание с ответом) и B14 с GigaAM (ящик получает от `BatchPhrase` те же отсчёты, бит в бит, 16 кГц; расшифровка —
+  хвост тех же отсчётов с предзаписи); U25, U26 D7.3 — зелёные без правок; покрытие — в CI (джоба `swift`, порог 70%)
 - [x] PASS — смоук S9 `blackbox_pull.sh`: 13 случаев из 13 на двойнике `xcrun` — две сессии выгружены и сверены (и при
   листинге без каталога сессии); испорченный байт WAV, чужой заголовок записи и звук другого размера — сессия не
   перенесена и названа; повторная выгрузка не копирует
@@ -31,10 +32,10 @@ gates — зелёные; первый прогон 39995408177 на `8c194d0` �
   запертый телефон (и запертый посреди копирования) — «разблокируй телефон», на диске ничего; `erase` стирает только
   сверенное и не верит «стёрто» без листинга
 - [x] PASS — мутации (П30, по механизму — L59): «сторож git снят» — S9 красный (случай 3); «стирание без сверки» — S9
-  красный (случай 6), обе повторены на финальном черновике `5ebc365`; `held()` не считает папки — B17 красный
-- [x] PASS — смоук локально: S1–S4, S6, S9 зелёные; S5 — в CI зелёный (джоба `swift`). Локальный S5 покраснел в
-  `DisciplineTests` (1 из 50, 905 с под нагрузкой Mac): пакет D3.2 его не трогает, полный S5 локально больше не гоняется
-  по указанию ведущего (ложные красные тайминг-тестов под нагрузкой)
+  красный (случай 6), обе повторены на финальном черновике `5ebc365`; `held()` не считает папки — B17 красный;
+  `BatchPhrase.feed` не отдаёт ящику — B14 красный (2026-10-27)
+- [x] PASS — смоук локально после слияния: S6 и S9 (свои) зелёные; S5 целиком — в CI (джоба `swift`), локально — только
+  свой пакет AllyCore (указание ведущего о нагрузке Mac)
 - [x] PASS — Builder ≠ Verifier: черновик команды на Mac написал параллельный агент, сверил и встроил исполнитель;
   проверки — механика и CI
 
@@ -50,10 +51,11 @@ gates — зелёные; первый прогон 39995408177 на `8c194d0` �
 ## Исполнение рисковых путей
 
 - `App/Sources/BlackBox/` — на Mac исполнена сборка для устройства и оракул артефакта (`xcodebuild … CODE_SIGNING_ALLOWED=NO
-  build`, `check_app_artifact.sh`); класс защиты и пометка «не в бэкап» на телефоне НЕ исполнены — отнесены в общую сессию
-  теста решением родителя 2026-10-23, waiver в STATUS (B13). at=2026-10-23
+  build`, `check_app_artifact.sh`, повтор после слияния main); класс защиты и пометка «не в бэкап» на телефоне НЕ
+  исполнены — отнесены в общую сессию теста решением родителя 2026-10-23, waiver в STATUS (B13). at=2026-10-27
 - `App/Sources/Speech/` — на Mac исполнена та же сборка; формат распознавателя и счёт отсчётов на телефоне НЕ исполнены
-  (B14) — общая сессия теста, тот же waiver. at=2026-10-23
+  (B14) — общая сессия теста, тот же waiver; путь GigaAM (`Hearing/RecognitionPhrase.swift`) только передаёт `onFed` в
+  `BatchPhrase`, сам отвод судит тест `// B14` на Linux. at=2026-10-27
 
 ## Spec coverage gaps
 - **B13–B19 на телефоне** — общая сессия теста с родителем (его решение 2026-10-23, waiver в STATUS).
@@ -80,11 +82,11 @@ gates — зелёные; первый прогон 39995408177 на `8c194d0` �
 
 | Metric | Value |
 |---|---|
-| files_touched / loc_diff | 8 code (+14 process docs) / +493/−23 (net +470) |
-| commits | 8 с проверкой (из них слияние main) |
+| files_touched / loc_diff | 10 code / +538/−35 (net +503) после слияния main и стыка с GigaAM |
+| commits | 10 до сдачи (из них два слияния main) |
 | time_to_accepted_spec | 0h (примеры подписаны в спеке серии) |
 | rework_after_done | 0 |
-| harness_hardened | yes — смоук S9 `blackbox_pull.sh` (13 случаев), тест B17, мутации |
+| harness_hardened | yes — смоук S9 `blackbox_pull.sh` (13 случаев), тесты B17 и B14 (GigaAM), мутации |
 | implement_retries | 2 — ожидаемое B17 считалось после стирания (порядок аргументов); 5 находок SwiftLint (`inline_prompt`, длина строки) исправлены до коммита |
 | verify_fails_before_green | 0 — первый прогон CI 39995408177 на `8c194d0` зелёный во всех трёх джобах (swift, delivery, gates); PR #43 `MERGEABLE`, `CLEAN` (L35) |
 | est_token_or_cost | n/a |
@@ -93,7 +95,7 @@ gates — зелёные; первый прогон 39995408177 на `8c194d0` �
 
 База: `origin/main` · сгенерировано `assert_digest.sh`
 
-Новых/изменённых утверждений: **4**, из них без ссылки на пример спеки:
+Новых/изменённых утверждений: **7**, из них без ссылки на пример спеки:
 **0**. Вопрос к каждому непривязанному один: **откуда взято ожидаемое
 значение — из спеки или придумано под реализацию?**
 
@@ -102,9 +104,12 @@ B17	XCTAssertEqual([held.sessions, held.bytes], [2, 41 * mib])
 B17	XCTAssertEqual(try rig.box.eraseAll(), .busy)
 B17	XCTAssertEqual(try rig.box.eraseAll(), .erased(sessions: 3, bytes: before))
 B17	XCTAssertEqual([try rig.box.held().sessions, try rig.box.held().bytes], [0, 0])
+B14	XCTAssertEqual(box { $0.samples }, silence + speech)
+B14	XCTAssertEqual(box { $0.rates }, [16_000])
+B14	XCTAssertEqual(decoded { $0 }, Array((silence + speech)[(64_000 - 24_000)...]))
 ```
 
-✅ **Каждое утверждение ведёт к примеру спеки** (B17), а примеры человек
+✅ **Каждое утверждение ведёт к примеру спеки** (B14 B17), а примеры человек
 подписал до кода (`human_ok_spec`). Подпись под дайджестом здесь
 **не требуется**: она уже стоит, заранее и на числах. Пиши в verify-report
 `asserts_reviewed_by: n/a (все утверждения ведут к одобренным примерам)`.
