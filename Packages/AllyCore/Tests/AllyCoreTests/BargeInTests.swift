@@ -78,6 +78,25 @@ final class BargeInTests: XCTestCase {
         XCTAssertFalse(talk.voice.sentences.contains(greeting[1]))
     }
 
+    /// The counter in its acting part: the frame that makes an overlap says so once — a cough or «ой» never does.
+    func testAShortSoundOverElliesVoiceDoesNotCutHer() throws {  // X15
+        let hearing = try Hearing.decode(Data(contentsOf: appResources.appendingPathComponent("hearing.json")))
+        var counter = OverlapCounter(try XCTUnwrap(hearing.overlap))
+        counter.voiceStarted()
+        let cuts = { (counter: inout OverlapCounter, start: Double, seconds: Double) -> [Double] in
+            let frames = Int((seconds / 0.02).rounded())
+            return (-1...frames).compactMap { index in
+                let time = start + Double(index) * 0.02
+                return counter.frame(speech: (0..<frames).contains(index), at: time, length: 0.02) ? time : nil
+            }
+        }
+        XCTAssertEqual(cuts(&counter, 10.0, 0.2), [])
+        XCTAssertEqual(cuts(&counter, 11.0, 0.12), [])
+        let speech = cuts(&counter, 12.0, 0.4)
+        XCTAssertEqual(speech.count, 1)
+        XCTAssertEqual(speech.first ?? -1, 12.24, accuracy: 1e-9)  // her 250 ms are in: the cut comes there
+    }
+
     func testTheAudioSessionTakenAwayPausesAndHerListeningComesBack() async {  // X16
         let cut = Cut(["Слоны очень большие. Они едят траву.", "Жирафы высокие!"])
         await cut.session.handle(.wake)

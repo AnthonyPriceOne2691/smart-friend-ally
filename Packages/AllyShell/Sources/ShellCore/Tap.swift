@@ -1,17 +1,18 @@
 import AllyCore
 import Foundation
 
-/// What a tap on the child screen does (screen rules 2–4; signed in D2.2 and R, «я всё» — D7): the bubble is the only
-/// target; asleep she stirs and the app may wake her, listening the tap ends her utterance, otherwise nothing — her
-/// speech is not interrupted until D6.
+/// What a tap on the child screen does (screen rules 2–4; signed in D2.2 and R, «я всё» — D7, barge-in — D6.2): the
+/// bubble is the only target; asleep she stirs and the app may wake her, listening the tap ends her utterance, while
+/// she greets or answers it cuts her (X14); thinking, saying goodbye or paused for a call — nothing.
 public enum Tap: Equatable, Sendable {
-    case wake, done, ignore
+    case wake, done, bargeIn, ignore
 
     public static func action(_ phase: SessionState) -> Tap {
         switch phase {
         case .asleep: .wake
         case .listening, .windingDown: .done
-        case .thinking, .greeting, .speaking, .goodbye, .paused: .ignore
+        case .greeting, .speaking: .bargeIn
+        case .thinking, .goodbye, .paused: .ignore
         }
     }
 
