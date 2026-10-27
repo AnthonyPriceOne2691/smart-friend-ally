@@ -31,26 +31,27 @@ final class SyllablesTests: XCTestCase {
         XCTAssertLessThanOrEqual(zip(mouth, mouth.dropFirst()).map { abs($1.open - $0.open) }.max() ?? 1, 0.09)
     }
 
-    /// In `Motion` the rhythm leads her mouth, head, hands and gills while she greets, speaks and says goodbye, and
-    /// fades to 0 in the other phases; a voice level passed in goes as is.
+    /// In `Motion` the rhythm — the generator above with the same seed — leads her mouth, head, hands and gills while
+    /// she greets, speaks and says goodbye, and fades to 0 in the other phases; a voice level passed in goes as is.
     func testTheRhythmLeadsHerOnlyWhileSheSpeaks() {  // V34
         let motion = Motion(seed: 1)
+        var rhythm = Syllables(seed: 1), time = 0.0
         for phase in [SessionState.greeting, .speaking, .goodbye, .listening, .thinking] {
-            var opens: [Double] = []
+            let speaks = [.greeting, .speaking, .goodbye].contains(phase)
             for index in 1...360 {
+                time += step
                 let pose = motion.step(step, phase: phase).pose, level = motion.voiceLevel
+                XCTAssertEqual(level, rhythm.step(step, at: time, speaking: speaks), accuracy: 1e-12, "\(phase)")
                 guard index > 120 else { continue }
-                guard TalkState(phase: phase).pose == .speaks else {
+                guard speaks else {
                     XCTAssertLessThanOrEqual(level, 0.001, "\(phase)")
                     continue
                 }
-                opens.append(pose.mouthOpen)
                 XCTAssertEqual(pose.mouthOpen, 0.05 + 0.95 * level, accuracy: 0.01)
                 XCTAssertEqual(pose.headY, -2.2 * level, accuracy: 0.01)
                 XCTAssertEqual(pose.gillLift, 2 + 3 * level, accuracy: 0.01)
                 XCTAssertTrue(level < 0.1 || (8.9...30.1).contains((pose.armLeft - 24) / level), "\(phase)")
             }
-            XCTAssertTrue(opens.isEmpty || (opens.max() ?? 0) - (opens.min() ?? 0) > 0.4, "\(phase)")
         }
         for _ in 1...120 { _ = motion.step(step, phase: .speaking, voice: 0.3) }
         XCTAssertEqual(motion.voiceLevel, 0.3)
