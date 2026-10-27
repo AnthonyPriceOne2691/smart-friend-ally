@@ -65,10 +65,18 @@ final class GlassSnapshotTests: XCTestCase {
         .frame(width: 440, height: 956).frame(width: 440, height: 160, alignment: .top).clipped()
     }
 
+    /// The same view by `ImageRenderer`, without the glass. On CI's Mac its first picture in a fresh test process came
+    /// out empty (run 40587960448: white and plum 0 by day, as drawn by night), so an empty picture is drawn again.
     private func flat(_ view: some View, height: Double, scale: Double) -> CGImage? {
-        let renderer = ImageRenderer(content: view.frame(width: 440, height: height))
-        renderer.scale = scale
-        return renderer.cgImage
+        for _ in 0..<3 {
+            let renderer = ImageRenderer(content: view.frame(width: 440, height: height))
+            renderer.scale = scale
+            if let image = renderer.cgImage, let probe = Pixels(image, scale: scale),
+               probe.area(where: { $0.allSatisfy { $0 == 0 } }) < 0.99 * 440 * height {
+                return image
+            }
+        }
+        return nil
     }
 }
 
