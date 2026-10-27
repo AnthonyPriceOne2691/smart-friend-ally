@@ -1,6 +1,7 @@
 import AllyCore
 import AllyHearing
 import AllyLlama
+import AVFoundation
 import CryptoKit
 import os
 import ShellCore
@@ -27,7 +28,7 @@ final class VoiceLoop: ObservableObject {
     private var childMode: ChildMode?, childTalk: Conversation?, running: Task<Void, Never>?
     private let recognizer = DictationRecognizer(), audio = AudioIO(), files = FileManager.default
     private let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
-    private var model: LlamaModel?, registry: ModelRegistry?, voice: SystemVoice?, versions: [String: String] = [:]
+    private var model: LlamaModel?, registry: ModelRegistry?, voice: (any HerVoice)?, versions: [String: String] = [:]
 
     func start() async {
         guard registry == nil else { return }
@@ -56,30 +57,88 @@ final class VoiceLoop: ObservableObject {
         model.newConversation()
         screen.lines.append("прогрев: " + line(model.warmup.merging(["reply": uptime - start]) { $1 }))
         let rate = ((try? JSONSerialization.jsonObject(with: data)) as? [String: Any])?["voice_rate"] as? Double ?? 0.5
-        let speech = await recognizer.prepare(), voice = SystemVoice(identifier: registry.voice, rate: Float(rate))
+        let speech = await recognizer.prepare(), voice = makeVoice(registry, rate: rate)
         let microphone = await AudioIO.microphoneAllowed()
         screen.lines += [speech.line, voice.note, "микрофон: " + (microphone ? "да" : "нет — разреши в Настройках")]
         let (silero, listening) = SileroActivity.choose(hearing, models: models)  // D7.2: no Silero — energy
         let asr = GigaAMRecognizer.choose(hearing, models: models)  // D7.3: dictation unless GigaAM is asked and there
         screen.lines += [listening.line] + [asr.line].compactMap { $0 }
+        let sound = duplex(voice, hearing, models: models, silero: silero)
         let personaHash = SHA256.hash(data: Data(persona.utf8)).map { String(format: "%02x", $0) }.joined()
         versions = ["ios": UIDevice.current.systemVersion, "llama": settings.runtime.build, "persona": personaHash,
-                    "voice": voice.voice?.identifier ?? "", "weights": "\(registry.model.file):\(registry.model.bytes)",
-                    "vad": silero == nil ? "energy" : "silero:\(hearing.vad?.bytes ?? 0)", "asr": asr.label]
+                    "voice": voice.label, "weights": "\(registry.model.file):\(registry.model.bytes)",
+                    "vad": silero == nil ? "energy" : "silero:\(hearing.vad?.bytes ?? 0)", "asr": asr.label,
+                    "audio": sound]
         (self.registry, self.model, self.voice) = (registry, model, voice)
-        screen.ready = speech.ready && microphone && voice.voice != nil
+        screen.ready = speech.ready && microphone && voice.ready
         if screen.ready { converse(model, hearing, voice, silero, asr.decode) }
     }
 
+    /// Her voice: Supertonic when the files of voice.json are on the phone (V4b2), else Milena — the console says why.
+    private func makeVoice(_ registry: ModelRegistry, rate: Double) -> any HerVoice {
+        let milena = SystemVoice(identifier: registry.voice, rate: Float(rate))
+        do {
+            let settings = try VoiceSettings.decode(Data(contentsOf: Bundle.main.bundleURL
+                .appendingPathComponent("voice.json")))
+            let folder = files.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+                .appendingPathComponent(settings.folder)
+            if let note = settings.note { screen.lines.append(note) }
+            if let missing = VoiceCheck.check(settings, in: folder).message {
+                screen.lines.append(missing)
+                return milena
+            }
+            // The app assembles the voice on the session's engine (D6.1): the player's node joins the graph before
+            // voice processing goes on, and its sound tells the overlap counter when the voice sounds; the session for
+            // the speaker before the first phrase is set by AudioIO.
+            let accent = AccentPlacer.load(settings, folder: folder)
+            screen.lines.append(accent.line)
+            let renderer = try SupertonicRenderer(settings: settings, folder: folder, placer: accent.placer)
+            let audio = audio
+            let player = SoundingPlayer(EnginePlayer(engine: audio.engine, rate: renderer.rate),
+                                        began: { audio.voiceStarted() }, ended: { audio.voiceEnded(at: $0) })
+            let spoken = SpokenVoice(renderer: renderer, player: player, gap: 0.45 / settings.preset.speed)
+            return SupertonicVoice(spoken, preset: settings.preset)
+        } catch {
+            screen.lines.append("голос не загрузился: " + "\(error)")
+            return milena
+        }
+    }
+
     /// A tap on the sleeping friend: she greets and then talks without buttons until the session sleeps. The session of
-    /// the shown screen wakes after the last one has ended: its microphone cannot be cancelled (L60).
+    /// the shown screen wakes after the last one has ended (L60, L69); the microphone is open from its wake to its
+    /// sleep (D6.1).
     func wake() {
         guard let talker = child ? childTalk : conversation, talk.phase == .asleep else { return }
         (screen.heard, screen.said) = ("", "")
-        let previous = running
+        let previous = running, audio = audio
         running = Task {
             await previous?.value
+            do { try audio.start() } catch { screen.lines.append("микрофон не открылся: \(error)") }
             await talker.wake()
+            audio.stop()
+        }
+    }
+
+    /// The microphone and the voice of a session (D6.1): Supertonic — one engine with voice processing, the ring and
+    /// the counter outside a listening; Milena — half-duplex. The journal's `audio`: `vp+agc`, `vp` or `half`.
+    private func duplex(_ voice: any HerVoice, _ hearing: Hearing, models: URL, silero: SileroActivity?) -> String {
+        guard voice is SupertonicVoice else {
+            screen.lines.append("звук: полудуплекс (Milena)")
+            return "half"
+        }
+        // The ring's own activity: the listening's is reset at every listening (TurnDetector).
+        let own = silero == nil ? nil : hearing.vad.flatMap {
+            SileroActivity(model: models.appendingPathComponent($0.file), hearing: hearing)
+        }
+        do {
+            let mode = try audio.goDuplex(hearing, activity: own ?? EnergyActivity(), feed: own.map { ring in
+                { ring.feed($0) }
+            }, flagMinimum: own == nil ? 0 : hearing.vad?.minSpeech ?? 0)
+            screen.lines.append(mode.map { "звук: дуплекс · \($0)" } ?? "звук: полудуплекс (нет overlap)")
+            return mode ?? "half"
+        } catch {
+            screen.lines.append("звук: полудуплекс — \(error)")
+            return "half"
         }
     }
 
@@ -97,7 +156,7 @@ final class VoiceLoop: ObservableObject {
 
     /// The session (D2.2): the router before the model, the parent's limit key (`-session_limit_minutes 2` at launch),
     /// a wordless record a turn with the listening's stages into `Caches/turns.jsonl`; heard and said go to the screen.
-    private func converse(_ model: LlamaModel, _ hearing: Hearing, _ voice: SystemVoice, _ silero: SileroActivity?,
+    private func converse(_ model: LlamaModel, _ hearing: Hearing, _ voice: any HerVoice, _ silero: SileroActivity?,
                           _ decode: (@Sendable ([Float]) -> String)?) {
         let heard: @Sendable (String) -> Void = { text in Task { @MainActor in self.screen.heard = text } }
         let ear = PhoneListener(recognizer: recognizer, audio: audio, hearing: hearing,
@@ -106,11 +165,12 @@ final class VoiceLoop: ObservableObject {
         let echo = EchoVoice(voice) { sentence in Task { @MainActor in self.screen.said += sentence + " " } }
         let settings = SessionSettings(limitMinutes: UserDefaults.standard.object(forKey: SessionSettings.key)
             .map { "\($0)" })
-        let versions = versions, sink = TraceFile(url: caches.appendingPathComponent("turns.jsonl"))
+        let versions = versions, sink = TraceFile(url: caches.appendingPathComponent("turns.jsonl")), audio = audio
         let stamp: @Sendable () -> TraceStamp = {
             let thermal = ["nominal", "fair", "serious", "critical"][ProcessInfo.processInfo.thermalState.rawValue]
+            let overlaps = audio.takeOverlaps().map { ["overlap": Double($0)] } ?? [:]  // D6.1: her speech over Elly
             return TraceStamp(versions: versions, memory: Self.memory(model), thermal: thermal,
-                              stages: ear.takeStages())
+                              stages: ear.takeStages().merging(voice.takeStages()) { $1 }.merging(overlaps) { $1 })
         }
         let parts = { (audience: Audience) in
             SessionParts(model: model, voice: echo, sink: sink, router: RouterRouting(), audience: audience,

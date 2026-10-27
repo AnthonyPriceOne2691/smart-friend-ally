@@ -98,9 +98,57 @@ final class SnapshotTests: XCTestCase {
 
     /// A still frame of the child screen: the scene of a phase at 2 s and the adult's corner over it.
     private func screen(_ phase: SessionState, label: String?) -> some View {
+        screen(Frame.at(phase, time: 2), label: label)
+    }
+
+    private func screen(_ frame: Frame, label: String?) -> some View {
         ZStack {
-            ShellScene(phase: phase, time: 2, safeTop: 62, safeBottom: 34)
+            ShellScene(frame: frame, safeTop: 62, safeBottom: 34)
             AdultZone(label: label, layout: layout, onStop: {})
+        }
+    }
+
+    /// Night from the start, listening and thinking from the animator, the whole screen: the sky's top strip, the moon,
+    /// the pearls on their ring; V8's and V21's probes on the same frames (thresholds by calculation before the code).
+    func testNightThinkingAndListeningLight() throws {  // V36
+        let folder = try snapshots("light"), term = "при родителе · до 29.10 в 21:00"
+        let night = frames([(0, .asleep)], at: [2])[0]
+        let day = [frames([(0, .greeting), (1, .listening)], at: [4.9])[0],
+                   frames([(0, .greeting), (1, .listening), (3, .thinking)], at: [4])[0]]
+        var probes: [String: Pixels] = [:]
+        for (name, frame) in [("night", night), ("listening", day[0]), ("thinking", day[1])] {
+            let image = try XCTUnwrap(render(screen(frame, label: term)))
+            try save(image, to: folder.appendingPathComponent("\(name).png"))
+            probes[name] = try XCTUnwrap(Pixels(image))
+        }
+        let strip = CGRect(x: 0, y: 0, width: 440, height: 40)
+        XCTAssertLessThanOrEqual(try XCTUnwrap(probes["night"]).mean(in: strip, luminance), 0.70)
+        XCTAssertGreaterThanOrEqual(try XCTUnwrap(probes["listening"]).mean(in: strip, luminance), 0.85)
+        let moon = CGRect(x: 290, y: 380, width: 72, height: 90), moonTone = { (rgb: [Int]) in near(rgb, 0xFFF1B8, 16) }
+        XCTAssertGreaterThanOrEqual(try XCTUnwrap(probes["night"]).area(in: moon, where: moonTone), 150)
+        XCTAssertLessThanOrEqual(try XCTUnwrap(probes["listening"]).area(in: moon, where: moonTone), 10)
+        let ring = { (name: String, frame: Frame) in
+            try XCTUnwrap(probes[name]).ring(centre: CGPoint(x: 220, y: 535 + frame.light.bob), from: 0.51 * 378.4,
+                                             to: 0.58 * 378.4) { near($0, 0xFF8FC0, 24) }
+        }
+        XCTAssertGreaterThanOrEqual(try ring("listening", day[0]), 150)
+        XCTAssertLessThanOrEqual(try ring("thinking", day[1]), 20)
+        for (name, asleep) in [("night", true), ("listening", false), ("thinking", false)] {
+            let probe = try XCTUnwrap(probes[name])
+            let eyes = probe.area(in: CGRect(x: 150, y: 420, width: 140, height: 120)) { luminance($0) < 0.06 }
+            XCTAssertTrue(asleep ? eyes <= 500 : eyes >= 1000, "\(name) eyes \(eyes)")
+            XCTAssertLessThanOrEqual(probe.area(in: CGRect(x: 190, y: 490, width: 60, height: 70)) {
+                near($0, 0x7A2F57, 24) }, 85, name)
+            XCTAssertGreaterThanOrEqual(probe.area(in: CGRect(x: 140, y: 360, width: 190, height: 130)) {
+                near($0, 0x8FD9B6, 16) || near($0, 0x6FC4A2, 16) }, 100, name)
+            XCTAssertGreaterThanOrEqual(probe.area(in: CGRect(x: 380, y: 62, width: 44, height: 44)) {
+                near($0, 0x5E1A42, 12) }, 500, name)
+            XCTAssertGreaterThanOrEqual(probe.area(in: CGRect(x: 150, y: 62, width: 226, height: 44)) {
+                $0.allSatisfy { $0 >= 251 } }, 1500, name)
+            for side in [-1.0, 1.0] {
+                let rim = probe.colour(x: layout.centre.x + side * (layout.diameter / 2 - 2), y: layout.centre.y)
+                XCTAssertTrue(near(rim, 0xC2185B, 12), "\(name) rim \(rim)")
+            }
         }
     }
 
@@ -172,6 +220,31 @@ private struct Pixels {
         return Double(count) / 9
     }
 
+    /// The mean of a value over the pixels inside the box.
+    func mean(in box: CGRect, _ value: ([Int]) -> Double) -> Double {
+        var (sum, count) = (0.0, 0)
+        for y in Int(box.minY * 3)..<Int(box.maxY * 3) {
+            for x in Int(box.minX * 3)..<Int(box.maxX * 3) {
+                sum += value(colour(x: Double(x) / 3, y: Double(y) / 3))
+                count += 1
+            }
+        }
+        return sum / Double(max(count, 1))
+    }
+
+    /// Area in pt² of the pixels between two radii round a centre that pass the test.
+    func ring(centre: CGPoint, from inner: Double, to outer: Double, where test: ([Int]) -> Bool) -> Double {
+        let box = CGRect(x: centre.x - outer, y: centre.y - outer, width: outer * 2, height: outer * 2)
+        var count = 0
+        for y in Int(max(box.minY, 0) * 3)..<Int(box.maxY * 3) {
+            for x in Int(max(box.minX, 0) * 3)..<Int(min(box.maxX, Double(width) / 3) * 3) {
+                let distance = hypot(Double(x) / 3 - centre.x, Double(y) / 3 - centre.y)
+                if distance >= inner, distance <= outer, test(colour(x: Double(x) / 3, y: Double(y) / 3)) { count += 1 }
+            }
+        }
+        return Double(count) / 9
+    }
+
     /// Area in pt² of the pixels inside the box that pass the test.
     func area(in box: CGRect, where test: ([Int]) -> Bool) -> Double {
         var count = 0
@@ -207,6 +280,10 @@ final class SnapshotTests: XCTestCase {
 
     func testTheWholeScreenWithTheCrownAndTheAdultsCorner() throws {  // V21
         throw XCTSkip("экран целиком — только на Mac")
+    }
+
+    func testNightThinkingAndListeningLight() throws {  // V36
+        throw XCTSkip("свет и пузырьки — только на Mac")
     }
 }
 #endif

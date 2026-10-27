@@ -16,7 +16,8 @@ public struct VoiceSettings: Sendable, Equatable {
         let note = asked < floor
             ? "скорость " + decimal(asked) + " ниже " + decimal(floor) + " — взято " + decimal(floor) : nil
         let preset = VoicePresetLine(style: raw.preset.style, speed: max(asked, floor), steps: raw.preset.steps,
-                                     pitch: raw.preset.pitch, formant: raw.preset.formant, eq: raw.preset.eq)
+                                     pitch: raw.preset.pitch, formant: raw.preset.formant, eq: raw.preset.eq,
+                                     firstStepsAsked: raw.preset.firstStepsAsked)
         return VoiceSettings(preset: preset, folder: raw.folder, files: raw.files, note: note)
     }
 
@@ -36,6 +37,15 @@ public struct VoicePresetLine: Decodable, Sendable, Equatable {
     public static let minSpeed = 0.85
 
     public let style: String, speed: Double, steps: Int, pitch: Double, formant: Double, eq: [Band]
+    fileprivate let firstStepsAsked: Int?
+
+    /// Steps of a turn's first sentence: the line's `first_steps`, else `steps` — answer 4 of the series' signature
+    /// (8 when p95 of the first sound stays within 2.5 s, else 5) is a number in the line, not code (V4b2).
+    public var firstSteps: Int { firstStepsAsked ?? steps }
+
+    private enum CodingKeys: String, CodingKey {
+        case style, speed, steps, pitch, formant, eq, firstStepsAsked = "first_steps"
+    }
 
     /// One band as the line writes it: `["lowshelf" | "peak" | "highshelf", Hz, dB, Q]`.
     public struct Band: Decodable, Sendable, Equatable {
@@ -55,8 +65,8 @@ public struct VoicePresetLine: Decodable, Sendable, Equatable {
     }
 }
 
-/// A file of the voice folder: its path there, its size, its group — `voice` (Supertonic, checked by the app) or
-/// `accent` (RUAccent: copied now, checked once the placer uses it).
+/// A file of the voice folder: its path there, its size, its group — `voice` (Supertonic) or `accent` (RUAccent, the
+/// placer; without it the voice speaks with the pinned words and names only).
 public struct VoiceFile: Decodable, Sendable, Equatable {
     public let path: String, bytes: Int64, group: String
 
@@ -69,9 +79,9 @@ public struct VoiceFile: Decodable, Sendable, Equatable {
 public enum VoiceCheck: Equatable, Sendable {
     case ready, missing(String), wrongSize(String, found: Int64, expected: Int64)
 
-    /// The `voice` group in `folder`.
-    public static func check(_ settings: VoiceSettings, in folder: URL) -> VoiceCheck {
-        for file in settings.files where file.group == "voice" {
+    /// One group in `folder`: `voice` — the app's Supertonic, `accent` — the placer's RUAccent (voice-accent-wire).
+    public static func check(_ settings: VoiceSettings, in folder: URL, group: String = "voice") -> VoiceCheck {
+        for file in settings.files where file.group == group {
             let path = folder.appendingPathComponent(file.path).path
             guard let size = (try? FileManager.default.attributesOfItem(atPath: path))?[.size] as? NSNumber else {
                 return .missing(file.path)

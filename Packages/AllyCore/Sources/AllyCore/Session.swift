@@ -244,6 +244,7 @@ public actor Session {
 
     private func say(_ sentences: [String], _ head: TraceHead, into sounded: Sounded = Sounded()) async -> Bool {
         let voice = parts.voice
+        (voice as? VoiceLookahead)?.upcoming(sentences)  // the phrase's sentences made ahead (Z25)
         let speak: @Sendable () async throws -> Void = {
             for sentence in sentences {
                 try Task.checkCancellation()
@@ -301,8 +302,9 @@ public actor Session {
     }
 }
 
-/// The voice of a model turn: its first `speak` moves the session from thinking to speaking.
-final class Speaking: VoiceOutput {
+/// The voice of a model turn: its first `speak` moves the session from thinking to speaking; the next sentences reach
+/// the voice through it (L58).
+final class Speaking: VoiceOutput, VoiceLookahead {
     private let voice: VoiceOutput, first: @Sendable () -> Void, spoke = Locked(false)
 
     init(_ voice: VoiceOutput, first: @escaping @Sendable () -> Void) { (self.voice, self.first) = (voice, first) }
@@ -317,4 +319,6 @@ final class Speaking: VoiceOutput {
     }
 
     func stop() { voice.stop() }
+
+    func upcoming(_ sentences: [String]) { (voice as? VoiceLookahead)?.upcoming(sentences) }
 }
