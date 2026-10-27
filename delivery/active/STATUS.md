@@ -6,7 +6,7 @@
 - **kind:** feature
 - **repro_test:** n/a reason=не bugfix
 - **diagnosis:** n/a reason=не bugfix
-- **phase:** implement
+- **phase:** verify
 - **builder:** agent:claude-code
 - **verifier:** process:ci
 - **human_ok_spec:** yes (by=human:anthony, at=2026-10-23, «Подписываю (Рекомендую)» под спекой серии и ответами 1–9: ожидания M36, M37, M39, M40 — дословно в колонке ожидания spec.md)
@@ -26,7 +26,7 @@
        конфликты в VoiceLoop.swift, AllyApp.swift, INDEX.md, OBSERVATIONS.md, knowledge — сложением; канон —
        вариант D, docs/canon копией под exclude -->
 - **hooks:** not-deployed
-- **blockers:** none
+- **blockers:** M40 не выдержан (быт 30 из 45 при 33, «почему» с подсказкой 37 из 48 при 43, детали D1 5 из 7, имя в D1 74%) — решение родителя через ведущего, escalation.md
 - **waivers:** max_runtime_paths=2 reason=вопрос 9 спеки серии, подписан родителем 2026-10-23 «Подписываю (Рекомендую)»: «memory-app трогает два рисковых пути — пакет модели (разбор и пересборка префикса с блоком) и файлы памяти на телефоне (защита и бэкап): исключение max_runtime_paths=2 только для неё»; разрез ведущего 2026-10-27 его не расширяет — обе части берут те же пути Packages/AllyLlama/ и App/Sources/ (decisions.md поставки memory-app) by=human:anthony
 - **waivers:** acceptance=M36,M37,M39 reason=постоянное решение родителя 2026-10-23 на вопрос ведущего о телефонных проверках — «Да, всё в общую сессию (Рекомендую)», и его слово 27.10 «сегодня добить всё, что нужно кодить, сборку; испытание на телефоне — потом»: чтение префикса из файла ≤ 0,1 с на телефоне (M36), «помнит на телефоне» целиком (M37), экран консоли памяти (M39) — в сессии теста; код, тесты M36, M39, прогон M40 на Mac, сборка без подписи и оракул артефакта — зелёные by=human:anthony
 - **new_dependency:** none

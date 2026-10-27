@@ -12,7 +12,9 @@
   убиты
 - [x] T4: приложение — блок в префиксе при запуске и после разбора, консоль памяти: строки, «Что помнит Элли»,
   «Стереть память» с подтверждением (работа того же места у модели, что разбор); сборка без подписи, оракул артефакта
-- [ ] T5: M40 — дифференциальный прогон на стенде персоны (Mac, `nice -n 10`), слепые судьи живости, числа в eval-smoke
-- [ ] T6: знание — `engineering/memory`, `engineering/voice-loop`, `ops/test-session`, `knowledge/log.md`
+- [x] T5: M40 — дифференциальный прогон на стенде персоны (Mac, `nice -n 10`), слепые судьи живости, числа в eval-smoke:
+  **правило не выдержано** (быт, «почему» с подсказкой, детали D1, имя) — `escalation.md`, решение родителя
+- [x] T6: знание — `engineering/memory`, `engineering/voice-loop`, `engineering/safety-below-model`,
+  `engineering/app-architecture`, `ops/child-data`, `ops/test-session`, `knowledge/log.md`
 - [ ] T7: слить main, PR, CI, verify-report, сдача: архив, строка INDEX с уроками с L134 (L131–L133 ведущий отдал Э2), `memory-recall` в
   `delivery/OBSERVATIONS.md`
