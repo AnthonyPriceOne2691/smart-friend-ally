@@ -69,3 +69,4 @@
 - `duplex-audio`
 - `voice-accent-wire`
 - `barge-in`
+- `child-shell-mouth`

@@ -208,15 +208,21 @@ private struct Pixels {
         bytes = buffer
     }
 
-    func colour(x: Double, y: Double) -> [Int] {
-        let index = (Int(y * 3) * width + Int(x * 3)) * 4
-        return [Int(bytes[index]), Int(bytes[index + 1]), Int(bytes[index + 2])]
+    func colour(x: Double, y: Double) -> [Int] { pixel(at: (Int(y * 3) * width + Int(x * 3)) * 4) }
+
+    /// Red, green and blue of the pixel whose bytes start at `index` — in steps with explicit types: one expression
+    /// over a closure did not type-check in time on the macOS runner of CI.
+    func pixel(at index: Int) -> [Int] {
+        let red: UInt8 = bytes[index], green: UInt8 = bytes[index + 1], blue: UInt8 = bytes[index + 2]
+        return [Int(red), Int(green), Int(blue)]
     }
 
     /// Area in pt² of the pixels of the whole frame that pass the test.
     func area(where test: ([Int]) -> Bool) -> Double {
-        let count = stride(from: 0, to: bytes.count, by: 4).filter { test([Int(bytes[$0]), Int(bytes[$0 + 1]),
-                                                                          Int(bytes[$0 + 2])]) }.count
+        var count = 0
+        for index in stride(from: 0, to: bytes.count, by: 4) where test(pixel(at: index)) {
+            count += 1
+        }
         return Double(count) / 9
     }
 
