@@ -3,13 +3,13 @@ import Discipline
 import XCTest
 
 /// P17 through the real `Session` and the real router, on the eight cards of Э1's test base: the encyclopedia is asked
-/// only after a «pass», its hint reaches the model on a line before her words and turns the turn to `why`; without a
+/// only after a «pass», its hint reaches the model on a line after her words and turns the turn to `why`; without a
 /// hint the model gets her words byte for byte.
 final class KnowledgeSessionTests: XCTestCase {
     private let frame = "Подсказка к вопросу девочки — верный ответ: "
     private let reply = "Воздух разбрасывает голубой цвет во все стороны."
     private var base: Encyclopedia { Encyclopedia(cards: EncyclopediaTests.jsonl(EncyclopediaTests.cards)) }
-    private var skyPrompt: String { frame + EncyclopediaTests.cards[0].answer + "\nпочему небо голубое" }
+    private var skyPrompt: String { "почему небо голубое\n" + frame + EncyclopediaTests.cards[0].answer }
 
     func testTheHintGoesToTheModelOnlyAfterThePass() async throws {  // P17
         let rig = Rig(replies: [reply], router: RouterRouting(), knowledge: base)
@@ -78,13 +78,15 @@ final class KnowledgeSessionTests: XCTestCase {
         XCTAssertGreaterThan(base.searchP95(), 0)
     }
 
-    func testFormatBPutsTheHintAfterHerWords() throws {  // P18
-        var config = try XCTUnwrap(JSONSerialization.jsonObject(with: EncyclopediaConfig.bundled) as? [String: Any])
-        config["hint_place"] = "after"
-        let after = Encyclopedia(cards: EncyclopediaTests.jsonl(EncyclopediaTests.cards),
-                                 config: try JSONSerialization.data(withJSONObject: config))
+    func testTheHintComesAfterHerWordsAndFormatAIsGone() throws {  // P18
         let hint = EncyclopediaTests.cards[0].answer
-        XCTAssertEqual(after.prompt("почему небо голубое", hint: hint), "почему небо голубое\n" + frame + hint)
-        XCTAssertEqual(after.prompt("где мой мишка", hint: nil), "где мой мишка")
+        XCTAssertEqual(base.prompt("почему небо голубое", hint: hint), "почему небо голубое\n" + frame + hint)
+        XCTAssertEqual(base.prompt("где мой мишка", hint: nil), "где мой мишка")
+        var config = try XCTUnwrap(JSONSerialization.jsonObject(with: EncyclopediaConfig.bundled) as? [String: Any])
+        config["hint_place"] = "before"
+        let before = Encyclopedia(cards: EncyclopediaTests.jsonl(EncyclopediaTests.cards),
+                                  config: try JSONSerialization.data(withJSONObject: config))
+        XCTAssertFalse(before.healthy)
+        XCTAssertNil(before.lookup("почему небо голубое").hint)
     }
 }

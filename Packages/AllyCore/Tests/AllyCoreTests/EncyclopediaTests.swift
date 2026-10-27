@@ -135,7 +135,7 @@ final class EncyclopediaTests: XCTestCase {
             Broken(name: "одна первая", cards: cards { $0[1].questions[0] = "почему небо голубое" },
                    config: config),
             Broken(name: "без весов", cards: good, config: try edited(config, "field_weights", [Double]())),
-            Broken(name: "место подсказки", cards: good, config: try edited(config, "hint_place", "inside"))
+            Broken(name: "формат A", cards: good, config: try edited(config, "hint_place", "before"))
         ]
         for item in broken {
             let encyclopedia = Encyclopedia(cards: item.cards, config: item.config)

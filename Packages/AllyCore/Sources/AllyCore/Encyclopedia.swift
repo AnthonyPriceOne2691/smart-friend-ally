@@ -49,7 +49,7 @@ public final class Encyclopedia: @unchecked Sendable {
             }
         }
         (self.engine, refusal, healthy, count) = (engine, failure, engine != nil, engine?.cards.count ?? 0)
-        frame = config.map { HintFrame(text: $0.hintFrame, before: $0.hintPlace == "before") }
+        frame = config.map { HintFrame(text: $0.hintFrame) }
     }
 
     /// Every phrasing of a healthy base, card by card — the warm-up's search timing walks them.
