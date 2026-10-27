@@ -67,3 +67,4 @@
 - `voice-app`
 - `memory-quality`
 - `duplex-audio`
+- `voice-accent-wire`

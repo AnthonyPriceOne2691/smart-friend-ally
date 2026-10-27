@@ -88,8 +88,12 @@ final class VoiceLoop: ObservableObject {
                 return milena
             }
             // The app assembles the voice on the session's engine (D6.1): the player's node joins the graph before
-            // voice processing goes on, and its sound tells the overlap counter when the voice sounds.
-            let renderer = try SupertonicRenderer(settings: settings, folder: folder), audio = audio
+            // voice processing goes on, and its sound tells the overlap counter when the voice sounds; the session for
+            // the speaker before the first phrase is set by AudioIO.
+            let accent = AccentPlacer.load(settings, folder: folder)
+            screen.lines.append(accent.line)
+            let renderer = try SupertonicRenderer(settings: settings, folder: folder, placer: accent.placer)
+            let audio = audio
             let player = SoundingPlayer(EnginePlayer(engine: audio.engine, rate: renderer.rate),
                                         began: { audio.voiceStarted() }, ended: { audio.voiceEnded(at: $0) })
             let spoken = SpokenVoice(renderer: renderer, player: player, gap: 0.45 / settings.preset.speed)
