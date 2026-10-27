@@ -20,6 +20,7 @@
     кнопка «Перебить»; сборка без подписи и оракул артефакта — OK
 - [x] T5: знания — `session`, `voice-loop`, `look-and-feel` (правило 7), `knowledge/log.md`
   — и `turn-detector` (кадр наложения), `safety-below-model` (шапка)
-- [ ] T6: сборка `.app` без подписи и оракул артефакта; телефон — время X13, X14, X15, X16, X17 — в общую сессию теста
-  (постоянное решение родителя); eval-smoke, verify-report (L43), строгий `delivery_check`, CI; архив в том же PR с
-  уроком L100; slug `barge-in` — строкой в конец `delivery/OBSERVATIONS.md`; мерж — ведущий
+- [x] T6: сборка `.app` без подписи и оракул артефакта; телефон — время X13, X14, X15, X16, X17 — в общую сессию теста
+  (постоянное решение родителя, waiver в STATUS); eval-smoke, verify-report (L43 — дайджест совпал), строгий
+  `delivery_check`, CI (40569950740 зелёный); архив в том же PR с уроком L100; slug `barge-in` — строкой в конец
+  `delivery/OBSERVATIONS.md`; мерж — ведущий

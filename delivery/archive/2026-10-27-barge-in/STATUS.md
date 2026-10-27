@@ -6,7 +6,7 @@
 - **kind:** feature
 - **repro_test:** n/a reason=не bugfix
 - **diagnosis:** n/a reason=не bugfix
-- **phase:** verify
+- **phase:** handoff
 - **builder:** agent:claude-code
 - **verifier:** process:ci
 - **human_ok_spec:** yes (by=human:anthony at=2026-10-25 «Подписываю (Рекомендую)» через ведущего — время X13 от момента, когда набралось 250 мс её речи, порог 250 мс остаётся; X13–X17 подписаны серией 2026-10-23, спека b7ef7b0, подпись e5c86ac)
