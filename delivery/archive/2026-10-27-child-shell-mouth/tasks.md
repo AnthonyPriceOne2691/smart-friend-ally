@@ -1,8 +1,8 @@
 # Tasks
 
 Уроки (§2.2a) — в `plan.md`: L33, L52, L63, L88, L107, L110, L50, L51, L64, L19, L86, L87, L46, L16, L70, L62, L35, L14,
-L43, L34, L91, L37, L105; не применимы — L106, L108, L109, L1, L12, L36 (причины там же). Номера уроков этой поставки —
-у ведущего.
+L43, L34, L91, L37, L105; не применимы — L106, L108, L109, L1, L12, L36 (причины там же). Уроки этой поставки — L127,
+L128 (номера дал ведущий).
 
 ## Slice 0 — документы
 - [x] T1: документы Ш2в первым коммитом ветки `feat/child-shell-mouth`, до кода (L33): STATUS, spec (V34 таблицей со
@@ -20,8 +20,8 @@ L43, L34, L91, L37, L105; не применимы — L106, L108, L109, L1, L12,
 - [x] T5: ADR `character-rendering`, `product/look-and-feel`, `knowledge/log.md`
 - [x] T6: слить `origin/main` (до 8ef99ea, сложением); строгий `delivery_check --require-ci --diff-base origin/main` —
   0 ошибок; пуш, PR #80, CI 40566339179 зелёный
-- [x] T7: verify-report, `check_digest_report.py` до пуша сдачи; архив в том же PR, строка INDEX (находки без номеров —
-  номера у ведущего), slug — в конец `delivery/OBSERVATIONS.md`; доклад ведущему
+- [x] T7: verify-report, `check_digest_report.py` до пуша сдачи; архив в том же PR, строка INDEX с уроками L127, L128
+  (номера дал ведущий), slug — в конец `delivery/OBSERVATIONS.md`; доклад ведущему
 - [x] T8: попутно, по слову ведущего — macOS-джоба CI (Xcode 26.6) не проверила типы выражения в
   `SnapshotTests.swift:218` (код Ш2б): выражение разбито на шаги с явными типами, заодно диапазон в
   `BubblesTests.swift:32`; на Swift 6.3.2 в AllyShell ни одного выражения дольше 60 мс
