@@ -6,7 +6,7 @@
 - **kind:** feature
 - **repro_test:** n/a reason=не bugfix
 - **diagnosis:** n/a reason=не bugfix
-- **phase:** implement
+- **phase:** handoff
 - **builder:** agent:claude-code
 - **verifier:** process:ci
   <!-- облик судит родитель на глаз по снимкам на Mac (П32); стекло — по снимкам окна, снимков экрана телефона нет (L46) -->

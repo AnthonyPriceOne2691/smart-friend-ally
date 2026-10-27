@@ -2,7 +2,7 @@
 
 Уроки (§2.2a) — в `plan.md`: L18, L46, L62, L63, L88, L107, L110, L64, L105, L106, L108, L109, L127, L128, L80, L130,
 L7, L70, L34, L52, L37, L79, L113; не применимы — L17, L41, L44, L45, L58, L59, L60, L61, L68, L69, L71, L72, L73,
-L81, L82, L86, L87, L89, L90, L91, L98, L99, L100, L111, L112, L129 (причина там же).
+L81, L82, L86, L87, L89, L90, L91, L98, L99, L100, L111, L112, L129, L134, L135, L136 (причина там же).
 
 ## Slice 0 — спека и мок-снимки
 - [x] T1: документы первым коммитом ветки `feat/app-glass`, до кода (L33, L62): STATUS, spec (F1–F5), plan (≈ 250,
@@ -25,7 +25,7 @@ L81, L82, L86, L87, L89, L90, L91, L98, L99, L100, L111, L112, L129 (причи�
 
 ## Slice 2 — знание и сдача
 - [x] T8: `product/look-and-feel`, ADR `character-rendering`, `knowledge/log.md`
-- [ ] T9: слить `origin/main`; строгий `delivery_check --require-ci --diff-base origin/main`; пуш, PR, CI; метку
+- [x] T9: слить `origin/main` (до 7b9aa9e, конфликт консоли — сложением с кнопками памяти M39); строгий `delivery_check --require-ci --diff-base origin/main`; пуш, PR, CI; метку
   `macos` — моя (слово ведущего 2026-10-27)
-- [ ] T10: verify-report, `check_digest_report.py` до пуша сдачи; архив в том же PR, строка INDEX, slug — в конец
+- [x] T10: verify-report, `check_digest_report.py` до пуша сдачи; архив в том же PR, строка INDEX, slug — в конец
   `delivery/OBSERVATIONS.md`; доклад ведущему. Уроки этой поставки — с L137 (номера дал ведущий)
