@@ -1,4 +1,5 @@
 # Снимок поверхности модели (Delivery §14.1), поставка app-voice-loop: путь или ключ<TAB>sha256.
+# Поставка app-encyclopedia (Э2): база карточек, конфиг поиска и подсказки, правило решения и сборка входа модели.
 # Персона, реестр (вес, рантайм, сэмплинг), пакет модели (формат хода Gemma 4, мастер-префикс, цепочка сэмплера);
 # вес — по ключу реестра «файл:байты»; рантайм — релизный xcframework по url и checksum из Package.swift.
 App/Resources/persona.v2.4.ru.md	329790cc6d2f04760c977744d5a1aacd2eb6bf6c2de6198b60b711542e23f722
@@ -8,3 +9,7 @@ Packages/AllyLlama/Sources/AllyLlama/LlamaModel.swift	678d77db9958cc7b2f9480cdd5
 Packages/AllyLlama/Sources/AllyLlama/LlamaSettings.swift	f4c9f1076a4d801253f9c2dd1fe3dd1dd71063070f48d76bd7086bd1f829ef44
 weights:gemma-4-E4B-it-Q4_K_M.gguf:4977171584	85a896a047553e842f25297ee5b031d64ff30147d9c4af17b1e4b394cd1fab87
 llama.cpp:b10809:llama-b10809-xcframework.zip	d6813b3b6c73728a19f0bc0d1d7cea04ccdb07f9583c1d930c0b38af2377606d
+Packages/AllyCore/Sources/AllyCore/Resources/encyclopedia.ru.jsonl	def710e5ee7493b111486d96a527899ebb74a4ee489c6a4a940882c5d1cf40b7
+Packages/AllyCore/Sources/AllyCore/Resources/encyclopedia.json	838c2db1cd80c7f666eb51cc31f7002e2eebd625007778336a045154ca6eaf5b
+Packages/AllyCore/Sources/AllyCore/Knowledge.swift	abc75f78b1963025ac7e1c54114db4540f8b69d084b4de56125875eb809793a4
+Packages/AllyCore/Sources/AllyCore/Encyclopedia.swift	c9b6da50dbe3c0ab1f52d790c8ede7e716bc6b1ed90f6e7885476556d5465d6e
