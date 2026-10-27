@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# B15–B16 (поставка app-black-box, S7 в smoke): команда родителя scripts/blackbox.py выгружает чёрный ящик с «телефона»
+# B15–B16 (поставка app-black-box, S9 в smoke): команда родителя scripts/blackbox.py выгружает чёрный ящик с «телефона»
 # в local/blackbox/<дата>/<сессия>/ и стирает на нём только сверенное. Телефона нет: фальшивый xcrun на PATH играет
 # devicectl над временным каталогом-контейнером (info details; info files --json-output — result.files[].name и
 # .metadata.size; copy from; copy to --remove-existing-content true; FAKE_LOCKED — «device is locked»), фальшивый mdls —

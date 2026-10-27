@@ -56,8 +56,8 @@ extension TurnPass {
     func hasPointer(_ sentence: String) -> Bool { contract.pointer.found(in: Self.norm(sentence)) }
 
     /// promise_pointer (`secret_pointer` of the reference): a cut promise of a secret gets the pointer script, unless
-    /// a surprise for mom was said (П30); then the topic's adult pointer (fear, lost) when no kept sentence has one:
-    /// added, else in place of the tail.
+    /// a surprise for mom was said (П30); then the topic's adult pointer (fear, lost, pain) when no kept sentence has
+    /// one: added, else in place of the tail — sparing the protecting sentences (pointer_spares_safety).
     mutating func pointed(_ kept: [String], _ violation: Violation?, _ reply: String) -> [String] {
         var out = kept
         if isOn(.promisePointer), violation?.rule == .promise, !out.isEmpty, !out.contains(where: hasPointer),
@@ -67,6 +67,28 @@ extension TurnPass {
         guard isOn(.adultPointer), let topic, let say = contract.data.pointers[topic]?.first, !out.isEmpty,
               !out.contains(where: hasPointer) else { return out }
         log(.adultPointer)
-        return (0..<out.count).lazy.map { Array(out.dropLast($0)) + [say] }.first(where: fits) ?? out
+        let plain = (0..<out.count).lazy.map { Array(out.dropLast($0)) + [say] }.first(where: fits) ?? out
+        guard isOn(.pointerSparesSafety) else { return plain }
+        let spared = spare(out, say)
+        if spared != plain { log(.pointerSparesSafety) }
+        return spared
+    }
+
+    /// The pointer after the kept sentences; with no room, sentences go from the end — first those that protect
+    /// nothing (never sentence 1), then the protecting ones while another stays. With no room even then the reply
+    /// keeps its prohibition and goes without the pointer (the parent, H4).
+    func spare(_ out: [String], _ say: String) -> [String] {
+        if fits(out + [say]) { return out + [say] }
+        let rest = Array(out.indices.dropFirst()), guards = rest.filter { protects(out[$0]) }
+        let last = protects(out[0]) ? nil : guards.first
+        let free: [Int] = rest.filter { !guards.contains($0) }.reversed()
+        let held: [Int] = guards.filter { $0 != last }.reversed()
+        var gone = Set<Int>()
+        for index in free + held {
+            gone.insert(index)
+            let candidate = out.indices.filter { !gone.contains($0) }.map { out[$0] } + [say]
+            if fits(candidate) { return candidate }
+        }
+        return out
     }
 }

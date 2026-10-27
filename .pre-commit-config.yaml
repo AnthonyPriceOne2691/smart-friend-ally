@@ -28,6 +28,7 @@
 #   - file-length и jscpd судят Swift: маски — env в entry; те же значения стоят в env
 #     джобы gates (quality.yml), чтобы доктор судил тот же код, что хуки;
 #   - свои гейты: child-data (CONSTITUTION, Non-negotiables) и swiftlint-ratchet;
+#   - хук варианта D canon-texts-stay-out — рецепт AGENT_STACK §7.1a (с 2026-10-25);
 #   - pre-push — фрагмент §8.5.1 ③ дословно, рядом с остальными.
 # Объявления n/a «до первого кода» истекают через мета-гейт: `until` в
 # not-applicable.json (cqg@2.66) — свой гейт na-expiry снят.
@@ -61,10 +62,27 @@ repos:
       - id: check-merge-conflict
       - id: check-added-large-files
         args: [--maxkb=512]
-        # Снимок канонов (вариант C) весит больше порога: один
-        # CODE_QUALITY_GATES.md — 1,2 МБ. Без исключения развёртывание роняет
-        # собственный первый коммит (CQG §5 шаг 11).
-        exclude: ^docs/canon/
+        # `docs/canon/` здесь больше не исключается: с 2026-10-25 снимка канонов в git
+        # нет (вариант D, хук canon-texts-stay-out ниже). При варианте C один
+        # CODE_QUALITY_GATES.md весил 1,2 МБ и требовал исключения.
+
+  # -------------------------------------------------------------------------
+  # Тексты контура в git не кладутся (вариант D с 2026-10-25, AGENT_STACK §7.1a):
+  # репозиторий публичный (решение родителя 23.10), канон проприетарный, решение
+  # родителя 24.10 — «канон вне git». Снимок `docs/canon/` лежит локально и закрыт
+  # строкой в `.git/info/exclude`, но исключение живёт в одном клоне и в новый не
+  # приезжает — хук приезжает. Удаление из индекса он пропускает: удалённые пути
+  # pre-commit хукам не передаёт. Рецепт §7.1a; в сообщении вместо «путь» в угловых скобках — команда
+  # снятия: мета-гейт читает угловые скобки в конфиге как незаполненный шаблон
+  # (delivery/incidents/2026-10-25-variant-d-hook-reads-as-template.md).
+  # -------------------------------------------------------------------------
+  - repo: local
+    hooks:
+      - id: canon-texts-stay-out
+        name: тексты контура не коммитятся (вариант D)
+        language: fail
+        entry: "тексты контура в git не кладутся: git rm -r --cached docs/canon (корневой текст — git rm --cached ПУТЬ), AGENT_STACK §7.1a"
+        files: ^(AGENT_STACK|AGENT_DELIVERY_HARNESS|CODE_QUALITY_GATES|OKF_KNOWLEDGE_BUNDLE)\.md$|^(stack_selftest|selftest_sizes|extract_payload)\.py$|^docs/canon/
 
   # -------------------------------------------------------------------------
   # Файлы кода: prod <= 500 / tests <= 1000 строк (baseline-ratchet).
@@ -72,12 +90,13 @@ repos:
   - repo: local
     hooks:
       # Маска Swift — env в entry (CQG §6; без неё гейт Swift не видит, F16). `*.py` —
-      # генератор фикстур пакета; механику контура гейт исключает сам (`cqg@2.67`).
+      # генератор фикстур пакета; механику контура гейт исключает сам (`cqg@2.67`). `*.c *.h` —
+      # модуль C API пакета AllyOnnx (voice-onnx): без них доктор видит C-файл вне всех гейтов.
       - id: file-length
         name: Файлы кода <= 500/1000 строк (baseline-ratchet)
         language: system
-        entry: bash -c 'cd "$(git rev-parse --show-toplevel)" && LINT_LENGTH_GLOBS="*.swift *.py" bash scripts/lint/check_file_length.sh'
-        types_or: [swift, python]
+        entry: bash -c 'cd "$(git rev-parse --show-toplevel)" && LINT_LENGTH_GLOBS="*.swift *.py *.c *.h" bash scripts/lint/check_file_length.sh'
+        types_or: [swift, python, c, header]
         pass_filenames: false
 
   # -------------------------------------------------------------------------
@@ -89,11 +108,16 @@ repos:
       # Второй прогон гейта — Sources AllyLlama и App (поставка app-voice-loop): обе половины заняты пакетами,
       # третий — ядро и рисунок оболочки AllyShell (поставка child-shell);
       # общий корень `Packages` втянул бы `Tests/` и `.build/` (маска игнора знает только `**/tests/**`).
+      # четвёртый — Sources AllySpeechText (поставка voice-text), одна половина: пустой LINT_TS_SRC сбрасывает env
+      # джобы gates (AllyCore) на дефолт frontend/src, которого нет.
+      # Пятый — Sources AllyAccent (поставка accent-tokenizers), так же одной половиной.
+      # Шестой — Sources AllyVoiceFX так же (поставка voice-fx: Swift-обёртка, C-ядро jscpd формата swift не видит,
+      # его держит file-length).
       # `files:` — Swift и конфиги порогов, как у шаблона (правка порогов судится порогами).
       - id: jscpd-dry-gate
         name: DRY — рост копипаста (jscpd clone-count ratchet)
         language: system
-        entry: bash -c 'cd "$(git rev-parse --show-toplevel)" && export LINT_JSCPD_PY_FORMAT=swift LINT_JSCPD_TS_FORMAT=swift LINT_JSCPD_TS_EXTS=swift:swift && LINT_PY_SRC=Packages/AllyDiscipline/Sources LINT_TS_SRC=Packages/AllyCore/Sources bash scripts/lint/check_jscpd_gate.sh && LINT_PY_SRC=Packages/AllyLlama/Sources LINT_TS_SRC=App/Sources bash scripts/lint/check_jscpd_gate.sh && LINT_PY_SRC=Packages/AllyShell/Sources/ShellCore LINT_TS_SRC=Packages/AllyShell/Sources/ShellUI bash scripts/lint/check_jscpd_gate.sh'
+        entry: bash -c 'cd "$(git rev-parse --show-toplevel)" && export LINT_JSCPD_PY_FORMAT=swift LINT_JSCPD_TS_FORMAT=swift LINT_JSCPD_TS_EXTS=swift:swift && LINT_PY_SRC=Packages/AllyDiscipline/Sources LINT_TS_SRC=Packages/AllyCore/Sources bash scripts/lint/check_jscpd_gate.sh && LINT_PY_SRC=Packages/AllyLlama/Sources LINT_TS_SRC=App/Sources bash scripts/lint/check_jscpd_gate.sh && LINT_PY_SRC=Packages/AllyShell/Sources/ShellCore LINT_TS_SRC=Packages/AllyShell/Sources/ShellUI bash scripts/lint/check_jscpd_gate.sh && LINT_PY_SRC=Packages/AllySpeechText/Sources LINT_TS_SRC= bash scripts/lint/check_jscpd_gate.sh && LINT_PY_SRC=Packages/AllyAccent/Sources LINT_TS_SRC= bash scripts/lint/check_jscpd_gate.sh && LINT_PY_SRC=Packages/AllyVoiceFX/Sources LINT_TS_SRC= bash scripts/lint/check_jscpd_gate.sh'
         files: ^((Packages|App)/.*\.swift|\.pre-commit-config\.yaml|scripts/lint/.*)$
         pass_filenames: false
 

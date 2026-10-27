@@ -1,7 +1,10 @@
 import AllyCore
+import AllyHearing
 import AllyLlama
+import AVFoundation
 import CryptoKit
 import os
+import ShellCore
 import SwiftUI
 
 /// The voice loop behind the adult console: warm-up by stages, then a session (D2.2) — a tap wakes her, she listens by
@@ -13,20 +16,31 @@ final class VoiceLoop: ObservableObject {
     @Published private(set) var screen = Screen()
     @Published private(set) var talk = TalkState()  // the session for a screen: phase, pose, why the last one ended
     private var conversation: Conversation?
+    // The child mode (R, R2): who may talk on the child screen, whether it is shown, an exception in the container, the
+    // acceptance's line; its own session (audience `supervised`, or `child` once the acceptance holds) and the last
+    // wake, which the next one waits for — one ear for both sessions.
+    @Published private(set) var access = ChildAccess.parentOnly([])
+    @Published private(set) var child = false
+    @Published private(set) var exception = false
+    @Published private(set) var acceptance = ""
+    // The break after a goodbye by the limit (Ш3): the parent's key, none by default («Без перерыва», 2026-10-23).
+    @Published private(set) var nap = Nap(raw: UserDefaults.standard.object(forKey: Nap.key).map { "\($0)" })
+    private var childMode: ChildMode?, childTalk: Conversation?, running: Task<Void, Never>?
     private let recognizer = DictationRecognizer(), audio = AudioIO(), files = FileManager.default
     private let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
-    private var model: LlamaModel?, registry: ModelRegistry?, voice: SystemVoice?, versions: [String: String] = [:]
+    private var model: LlamaModel?, registry: ModelRegistry?, voice: (any HerVoice)?, versions: [String: String] = [:]
     private var box: BlackBox?  // the black box (D3.2): it keeps only sessions with the parent by — `audience` is R's
     private static let log = Logger(subsystem: "com.anthonypriceone.ally", category: "blackbox")
 
     func start() async {
         guard registry == nil else { return }
-        do { try await warmUp() } catch { screen.lines.append("ошибка: \(error)") }
+        do { try await warmUp() } catch { screen.lines.append((error as? LlamaError)?.line ?? "ошибка: \(error)") }
     }
 
     private func warmUp() async throws {
         let bundle = Bundle.main.bundleURL, data = try Data(contentsOf: bundle.appendingPathComponent("model.json"))
         let registry = try ModelRegistry.decode(data), settings = try LlamaSettings.decode(data)
+        let hearing = try Hearing.decode(Data(contentsOf: bundle.appendingPathComponent("hearing.json")))
         let profile = Bundle.main.url(forResource: "embedded", withExtension: "mobileprovision")
         let days = ProfileExpiry.daysLeft(profile.flatMap { try? Data(contentsOf: $0) }, now: Date())
         let available = os_proc_available_memory() >> 20
@@ -45,38 +59,84 @@ final class VoiceLoop: ObservableObject {
         model.newConversation()
         screen.lines.append("прогрев: " + line(model.warmup.merging(["reply": uptime - start]) { $1 }))
         let rate = ((try? JSONSerialization.jsonObject(with: data)) as? [String: Any])?["voice_rate"] as? Double ?? 0.5
-        let speech = await recognizer.prepare(), voice = SystemVoice(identifier: registry.voice, rate: Float(rate))
+        let speech = await recognizer.prepare(), voice = makeVoice(registry, rate: rate)
         let microphone = await AudioIO.microphoneAllowed()
         screen.lines += [speech.line, voice.note, "микрофон: " + (microphone ? "да" : "нет — разреши в Настройках")]
+        let (silero, listening) = SileroActivity.choose(hearing, models: models)  // D7.2: no Silero — energy
+        let asr = GigaAMRecognizer.choose(hearing, models: models)  // D7.3: dictation unless GigaAM is asked and there
+        screen.lines += [listening.line] + [asr.line].compactMap { $0 }
         let personaHash = SHA256.hash(data: Data(persona.utf8)).map { String(format: "%02x", $0) }.joined()
         versions = ["ios": UIDevice.current.systemVersion, "llama": settings.runtime.build, "persona": personaHash,
-                    "voice": voice.voice?.identifier ?? "", "weights": "\(registry.model.file):\(registry.model.bytes)"]
+                    "voice": voice.label, "weights": "\(registry.model.file):\(registry.model.bytes)",
+                    "vad": silero == nil ? "energy" : "silero:\(hearing.vad?.bytes ?? 0)", "asr": asr.label]
         (self.registry, self.model, self.voice) = (registry, model, voice)
-        screen.ready = speech.ready && microphone && voice.voice != nil
-        if screen.ready { converse(model, registry, voice) }
+        screen.ready = speech.ready && microphone && voice.ready
+        if screen.ready { converse(model, hearing, voice, silero, asr.decode) }
     }
 
-    /// A tap on the sleeping friend: she greets and then talks without buttons until the session sleeps.
+    /// Her voice: Supertonic when the files of voice.json are on the phone (V4b2), else Milena — the console says why.
+    private func makeVoice(_ registry: ModelRegistry, rate: Double) -> any HerVoice {
+        let milena = SystemVoice(identifier: registry.voice, rate: Float(rate))
+        do {
+            let settings = try VoiceSettings.decode(Data(contentsOf: Bundle.main.bundleURL
+                .appendingPathComponent("voice.json")))
+            let folder = files.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+                .appendingPathComponent(settings.folder)
+            if let note = settings.note { screen.lines.append(note) }
+            if let missing = VoiceCheck.check(settings, in: folder).message {
+                screen.lines.append(missing)
+                return milena
+            }
+            // The speaker before the first phrase: soloAmbient is silent under the ring switch (D6.1 — voiceChat).
+            let session = AVAudioSession.sharedInstance()
+            try session.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker])
+            try session.setActive(true)
+            // The app assembles the voice: D6.1 gives its session engine and wraps the player (SoundingPlayer).
+            let accent = AccentPlacer.load(settings, folder: folder)
+            screen.lines.append(accent.line)
+            let renderer = try SupertonicRenderer(settings: settings, folder: folder, placer: accent.placer)
+            let player = EnginePlayer(engine: AVAudioEngine(), rate: renderer.rate)
+            let spoken = SpokenVoice(renderer: renderer, player: player, gap: 0.45 / settings.preset.speed)
+            return SupertonicVoice(spoken, preset: settings.preset)
+        } catch {
+            screen.lines.append("голос не загрузился: " + "\(error)")
+            return milena
+        }
+    }
+
+    /// A tap on the sleeping friend: she greets and then talks without buttons until the session sleeps. The session of
+    /// the shown screen wakes after the last one has ended: its microphone cannot be cancelled (L60).
     func wake() {
-        guard let conversation, talk.phase == .asleep else { return }
+        guard let talker = child ? childTalk : conversation, talk.phase == .asleep else { return }
         (screen.heard, screen.said) = ("", "")
-        Task { await conversation.wake() }
+        let previous = running
+        running = Task {
+            await previous?.value
+            await talker.wake()
+        }
+    }
+
+    /// Her «я всё» — the console's button, a tap on Elly while she listens: the shown session's utterance ends now.
+    func done() {
+        guard let talker = child ? childTalk : conversation else { return }
+        Task { await talker.done() }
     }
 
     /// The parent's stop: silence now, no phrase.
     func stop() {
-        guard let conversation else { return }
-        Task { await conversation.stop() }
+        guard let talker = child ? childTalk : conversation else { return }
+        Task { await talker.stop() }
     }
 
     /// The session (D2.2): the router before the model, the parent's limit key (`-session_limit_minutes 2` at launch),
     /// a wordless record a turn with the listening's stages into `Caches/turns.jsonl`; heard and said go to the screen.
-    private func converse(_ model: LlamaModel, _ registry: ModelRegistry, _ voice: SystemVoice) {
+    private func converse(_ model: LlamaModel, _ hearing: Hearing, _ voice: any HerVoice, _ silero: SileroActivity?,
+                          _ decode: (@Sendable ([Float]) -> String)?) {
         let heard: @Sendable (String) -> Void = { text in Task { @MainActor in self.screen.heard = text } }
         let disk = PhoneDisk(), box = BlackBox(disk: disk)
-        let ear = PhoneListener(recognizer: recognizer, audio: audio, registry: registry,
+        let ear = PhoneListener(recognizer: recognizer, audio: audio, hearing: hearing,
                                 resetSound: { voice.resetFirstSound() }, firstSound: { voice.firstSound }, heard: heard,
-                                keep: { box.heard($0) })
+                                activity: silero, decode: decode, keep: { box.heard($0) })
         let echo = EchoVoice(voice) { sentence in Task { @MainActor in self.screen.said += sentence + " " } }
         let settings = SessionSettings(limitMinutes: UserDefaults.standard.object(forKey: SessionSettings.key)
             .map { "\($0)" })
@@ -85,22 +145,94 @@ final class VoiceLoop: ObservableObject {
         let stamp: @Sendable () -> TraceStamp = {
             let thermal = ["nominal", "fair", "serious", "critical"][ProcessInfo.processInfo.thermalState.rawValue]
             return TraceStamp(versions: versions, memory: Self.memory(model), thermal: thermal,
-                              stages: ear.takeStages())
+                              stages: ear.takeStages().merging(voice.takeStages()) { $1 })
         }
-        let parts = SessionParts(model: model, voice: echo, sink: sink, router: RouterRouting(), stamp: stamp)
-        let conversation = Conversation(parts, settings: settings, listener: ear)
-        (self.conversation, self.box) = (conversation, box)
+        let parts = { (audience: Audience) in
+            SessionParts(model: model, voice: echo, sink: sink, router: RouterRouting(), audience: audience,
+                         stamp: stamp)
+        }
+        childMode = ChildMode(personaSHA256: versions["persona"] ?? "", model: versions["weights"] ?? "")
+        refreshAccess()
+        // The acceptance lies in the bundle and has no term (R2): `child` holds for the whole launch, so the child
+        // session's audience is chosen once — the black box keeps only the supervised one.
+        let conversation = Conversation(parts(.parent), settings: settings, listener: ear)
+        let childTalk = Conversation(parts(access == .child ? .child : .supervised), settings: settings, listener: ear)
+        (self.conversation, self.childTalk, self.box) = (conversation, childTalk, box)
         screen.lines.append("ящик: " + disk.note)
         Self.log.info("ящик: \(disk.note, privacy: .public)")
         refreshBox()
-        screen.lines.append(settings.note ?? "лимит: \(Int(settings.limit / 60)) мин")
-        if !RouterRouting.healthy { screen.lines.append("маршрутизатор: самопроверка не прошла") }
         Task {
-            for await state in conversation.updates {
-                talk = state
+            for await state in childTalk.updates {
+                if child { show(state) }
                 refreshBox()
             }
         }
+        screen.lines.append(settings.note ?? "лимит: \(Int(settings.limit / 60)) мин")
+        if let note = nap.note { screen.lines.append(note) }
+        if !RouterRouting.healthy { screen.lines.append("маршрутизатор: самопроверка не прошла") }
+        Task {
+            for await state in conversation.updates {
+                if !child { talk = state }
+                refreshBox()
+            }
+        }
+    }
+
+    /// The lock from the container, the bundle and the build (R): at launch, on the console, at the hand-over, at each
+    /// wake on the child screen and when a child session ends.
+    func refreshAccess() {
+        guard let childMode else { return }
+        (access, exception, acceptance) = (childMode.access(), childMode.present, childMode.acceptance)
+    }
+
+    /// «Дочке, при мне»: the parent's session stops; the child screen opens while the exception or the acceptance
+    /// holds. The stop sign in its corner returns to this console in both modes (the console's own lock is not R2's).
+    func handOver() {
+        refreshAccess()
+        guard access.open, let conversation else { return }
+        Task { await conversation.stop() }
+        child = true
+        talk = childTalk?.state ?? TalkState()
+    }
+
+    /// A tap on the circle of the child screen: while Elly listens — «я всё» (D7); else she wakes, but past the
+    /// exception's term she does not and the console returns, and during the break after the limit she only stirs.
+    func childWake() {
+        if talk.pose == .listens { return done() }
+        refreshAccess()
+        guard access.open else { return leaveChild() }
+        guard !nap.holds(at: Date()) else { return }
+        wake()
+    }
+
+    /// The console's line of the break while it holds: «перерыв до 18:40».
+    var napLine: String? { nap.line(at: Date(), zone: .current) }
+
+    /// The stop sign on the child screen: silence at once, no phrase, and the console — one action.
+    func childStop() {
+        stop()
+        leaveChild()
+    }
+
+    /// «Закрыть детский режим»: the exception goes; a new one needs a new signature.
+    func closeChildMode() {
+        childMode?.close()
+        refreshAccess()
+        if child { childStop() }
+    }
+
+    /// A state of the child session; when one ends, the term is checked at this boundary, not in the middle of a talk.
+    private func show(_ state: TalkState) {
+        talk = state
+        guard state.phase == .asleep, state.ended != nil else { return }
+        nap.ended(state, at: Date())
+        refreshAccess()
+        if !access.open { leaveChild() }
+    }
+
+    private func leaveChild() {
+        child = false
+        talk = conversation?.state ?? TalkState()
     }
 
     /// What the box holds, for the console's question before «erase all».

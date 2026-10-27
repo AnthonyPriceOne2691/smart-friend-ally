@@ -41,6 +41,20 @@ public enum Palette {
     public static let waterCore = Tone(0xE9FAFF), water = Tone(0xDDF7FF), waterEdge = Tone(0xCFF3FF)
     public static let band = Tone(0xB8EAFB)
     public static let film = [Tone(0xFFB9D9), Tone(0xD9C6FF), Tone(0xBDEBFF), Tone(0xFFF0C2)]
+    /// The crown: rose petals and middle, the carnation's three ruffles and their line, the lisianthus with its heart
+    /// and stamens, two greens of the leaves, the glints in white, gold and pink (outlines — `line`, the rose's swirl
+    /// — `raspberry`).
+    public static let roseOut = Tone(0xFF9CC4), roseMid = Tone(0xFF7DB0), carnOut = Tone(0xFFC3DA)
+    public static let carnIn = Tone(0xFF9DC6), carnCore = Tone(0xF577AE), carnLine = Tone(0xE0559A)
+    public static let lisOut = Tone(0xF9D0EC), lisIn = Tone(0xEBA7D9), lisCore = Tone(0xFFF6D6)
+    public static let lisStamen = Tone(0x9CCB8F), leaf = Tone(0x8FD9B6), leafDark = Tone(0x6FC4A2)
+    public static let glitter = [Tone(0xFFFFFF), Tone(0xFFE08A), Tone(0xFFD1EC)]
+    /// The light (Ш2б): night in the water, the veil's two lilacs, the moon, the lilac of thinking, the glow and the
+    /// pearls of listening, the line of a water bubble.
+    public static let nightHigh = Tone(0xB9A7F0), nightMid = Tone(0x8E7AD8), nightLow = Tone(0x6A57BC)
+    public static let veilTop = Tone(0x442C88), veilLow = Tone(0x825AB0), moon = Tone(0xFFF1B8)
+    public static let thinkTint = Tone(0xD7C6FF), aura = Tone(0xFF96C6), pearl = Tone(0xFF8FC0)
+    public static let waterLine = Tone(0x60B0D6)
 
     /// Every line the drawing puts on a fill: eyes and mouth on the skin, her outline on the water, the rim on the sky.
     public static let borders = [

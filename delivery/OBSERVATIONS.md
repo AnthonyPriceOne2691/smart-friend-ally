@@ -1,0 +1,70 @@
+# Обязательства наблюдения
+
+Одна строка на поставку: дописывать в конец при сдаче. Срок — `observe_until` в архивном STATUS поставки.
+Файл сливается union (`.gitattributes`), параллельные сдачи не конфликтуют.
+
+- `persona-session-blackbox` (сдвинуто: сигнал наступит со спайком)
+- `na-expiry-stopper`
+- `sync-cqg-2.55`
+- `state-refresh`
+- `spike-memory-limit`
+- `look-and-feel`
+- `look-and-feel-research`
+- `snout-instead-of-trunk`
+- `flower-crown`
+- `crown-centered`
+- `character-axolotl`
+- `spike-model-bakeoff`
+- `visual-approved`
+- `sync-cqg-2.63`
+- `spike-phone-llm`
+- `incident-archived-handoff`
+- `persona-v2`
+- `swift-contour`
+- `turn-contract`
+- `sync-cqg-2.70`
+- `closing-question`
+- `router-core`
+- `router-people`
+- `voice-core`
+- `sync-cqg-2.74`
+- `session-core`
+- `app-session`
+- `router-events`
+- `app-voice-loop`
+- `black-box`
+- `child-shell`
+- `child-lock`
+- `voice-text`
+- `contract-fixes`
+- `turn-detector`
+- `voice-text-table`
+- `child-shell-motion`
+- `release-gate`
+- `voice-onnx`
+- `turn-speculation`
+- `memory-core`
+- `silero-vad`
+- `encyclopedia-core`
+- `voice-engine`
+- `voice-fx`
+- `memory-guard`
+- `kv-spoken`
+- `child-shell-app`
+- `accent-tokenizers`
+- `accent-logic`
+- `gigaam-asr`
+- `voice-config`
+- `test-session`
+- `memory-extract`
+- `accent-onnx`
+- `voice-out`
+- `memory-sense`
+- `canon-variant-d`
+- `child-shell-light`
+- `asr-step3`
+- `router-guard-load`
+- `voice-app`
+- `memory-quality`
+- `voice-accent-wire`
+- `app-black-box`

@@ -43,6 +43,7 @@ final class DictationRecognizer: @unchecked Sendable {
 final class Phrase: @unchecked Sendable {
     private let analyzer: SpeechAnalyzer, input: AsyncStream<AnalyzerInput>.Continuation, text: Task<String, Error>
     private let format: AVAudioFormat, onFed: @Sendable ([Int16], Int) -> Void
+    private let collected = Locked(TranscriptCollector())
     private var converter: AVAudioConverter?  // the tap's thread only
 
     fileprivate init(module: DictationTranscriber, format: AVAudioFormat, onText: @escaping @Sendable (String) -> Void,
@@ -52,12 +53,11 @@ final class Phrase: @unchecked Sendable {
         // Bounded by the longest turn: 20 s is ~940 tap buffers of 1024 frames at 48 kHz.
         let (stream, input) = AsyncStream<AnalyzerInput>.makeStream(bufferingPolicy: .bufferingOldest(2_048))
         (self.input, self.format, self.onFed) = (input, format, onFed)
-        text = Task {
-            var collector = TranscriptCollector()
+        text = Task { [collected] in
             for try await result in module.results {
-                onText(collector.add(String(result.text.characters), isFinal: result.isFinal))
+                onText(collected { $0.add(String(result.text.characters), isFinal: result.isFinal) })
             }
-            return collector.text
+            return collected { $0.text }
         }
         try await analyzer.prepareToAnalyze(in: format)
         try await analyzer.start(inputSequence: stream)
@@ -70,6 +70,13 @@ final class Phrase: @unchecked Sendable {
         guard format.commonFormat == .pcmFormatInt16, format.channelCount == 1,
               let channel = converted.int16ChannelData?[0] else { return }
         onFed(Array(UnsafeBufferPointer(start: channel, count: Int(converted.frameLength))), Int(format.sampleRate))
+    }
+
+    /// Her tentative end (D7.1): everything fed so far is finalized and the input stays open; the text so far
+    /// (Mac probe 2026-10-23: 0.02 s, the text ready on return).
+    func tentative() async throws -> String {
+        try await analyzer.finalize(through: nil)
+        return collected { $0.text }
     }
 
     /// End of input: everything fed so far is finalized; the phrase's text.

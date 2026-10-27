@@ -305,6 +305,24 @@ final class BlackBoxTests: XCTestCase {
     }
 
     /// On seeded random sessions, the black box keeps exactly the trace's records, the numbers matching.
+    /// B14 with GigaAM: the box keeps every sample the batch recognizer was fed, bit for bit and in order, and the
+    /// recognizer decodes the tail of those very samples — from the pre-roll before her start.
+    func testGigaAMHandsTheBoxTheSamplesItDecodesFrom() {  // B14
+        let box = Locked<(samples: [Int16], rates: Set<Int>)>(([], [])), decoded = Locked<[Int16]>([])
+        let phrase = BatchPhrase(preRoll: 1.5, decode: { samples in
+            decoded { $0 = samples }
+            return ""
+        }, onFed: { samples, rate in box { ($0.samples, $0.rates) = ($0.samples + samples, $0.rates.union([rate])) } })
+        let silence = (0..<64_000).map { Int16($0 % 7) }, speech = (0..<32_000).map { Int16(900 + $0 % 13) }
+        phrase.feed(silence)
+        phrase.started()
+        phrase.feed(speech)
+        _ = phrase.finish()
+        XCTAssertEqual(box { $0.samples }, silence + speech)
+        XCTAssertEqual(box { $0.rates }, [16_000])
+        XCTAssertEqual(decoded { $0 }, Array((silence + speech)[(64_000 - 24_000)...]))
+    }
+
     func testRecordsMatchTheTraceOnSeededSessions() async throws {  // B10
         var random = SeededGenerator(seed: 7)
         for _ in 0..<20 {

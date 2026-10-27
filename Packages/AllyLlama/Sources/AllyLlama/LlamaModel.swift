@@ -11,10 +11,14 @@ public final class LlamaModel: LanguageModel, @unchecked Sendable {
     private let model: OpaquePointer, ctx: OpaquePointer, vocab: OpaquePointer, settings: LlamaSettings
     private let queue: DispatchQueue, current = Locked<StopFlag?>(nil), prompt = Locked(0)
     private var batch: llama_batch, prefixCount: Int32 = 0, position: Int32 = 0, fresh = true, open = false
+    /// The last turn in sequence 1: `commit` and `retract` rewrite it (D5: the model remembers only what sounded).
+    private var last: LastTurn?
 
     /// Weights, context and the persona prefix, on the model's queue; `cache` holds the prefix state file.
     public static func load(weights: URL, persona: String, settings: LlamaSettings,
                             cache: URL) async throws -> LlamaModel {
+        // seq_rm of a tail longer than the sliding window is exact only with the full SWA cache (stand 2026-10-19)
+        guard settings.runtime.swaFull else { throw LlamaError.swaFullOff }
         let queue = DispatchQueue(label: "ally.llama", qos: .userInitiated)
         return try await withCheckedThrowingContinuation { done in
             queue.async {
@@ -80,6 +84,46 @@ public final class LlamaModel: LanguageModel, @unchecked Sendable {
 
     public func cancel() { current { $0 }?.raise() }
 
+    /// D5: the last turn's model part becomes what sounded — sentences played to the end, as the contract let them out;
+    /// her line stays. Empty `spoken` leaves an empty model turn.
+    public func commit(spoken: String) {
+        queue.async { [self] in
+            release()
+            guard let turn = last else { return }
+            forget(after: turn.reply)
+            do { try said(spoken) } catch { forget(after: turn.reply) }
+            open = true
+        }
+    }
+
+    /// D5: the last turn leaves the memory entirely — a silent turn of speculation she went on talking after.
+    public func retract() {
+        queue.async { [self] in
+            guard let turn = last else { return }
+            forget(after: turn.start)
+            (open, last) = (turn.wasOpen, nil)
+        }
+    }
+
+    /// D5: a turn without the model — a router's script, the contract's canned phrase — goes into the memory as her
+    /// line and what sounded.
+    public func remember(heard: String, spoken: String) {
+        queue.async { [self] in
+            release()
+            begin()
+            let (start, wasOpen) = (position, open)
+            do {
+                try user(heard)
+                last = LastTurn(start: start, reply: position, wasOpen: wasOpen)
+                try said(spoken)
+                open = true
+            } catch {
+                forget(after: start)
+                (open, last) = (wasOpen, nil)
+            }
+        }
+    }
+
     private static func contextParams(_ runtime: LlamaSettings.Runtime) -> llama_context_params {
         var params = llama_context_default_params()
         (params.n_ctx, params.n_batch, params.n_ubatch) = (runtime.nCtx, runtime.nBatch, runtime.nUbatch)
@@ -120,28 +164,61 @@ public final class LlamaModel: LanguageModel, @unchecked Sendable {
     /// of turn or the token limit; a stopped or failed turn leaves no trace in the KV.
     private func turn(_ utterance: String, stop: StopFlag,
                       output: AsyncThrowingStream<String, Error>.Continuation) throws {
-        if fresh || position + Int32(settings.sampling.maxTokens * 2) > Int32(settings.runtime.nCtx) {
-            let memory = llama_get_memory(ctx)
-            llama_memory_seq_rm(memory, 1, -1, -1)
-            llama_memory_seq_cp(memory, 0, 1, -1, -1)
-            (position, open, fresh) = (prefixCount, false, false)
-        }
+        begin()
         let (start, wasOpen) = (position, open)
-        let text = utterance.trimmingCharacters(in: .whitespacesAndNewlines)
         do {
-            let user = (open ? "<turn|>\n" : "") + "<|turn>user\n" + text + "<turn|>\n<|turn>model\n"
-            let tokens = try tokenize(user, special: false)
-            try decode(tokens, seq: 1, from: position)
-            position += Int32(tokens.count)
+            try user(utterance)
             prompt { $0 = Int(position) }
+            last = LastTurn(start: start, reply: position, wasOpen: wasOpen)
             try sample(stop: stop, output: output)
             open = true
         } catch {
-            llama_memory_seq_rm(llama_get_memory(ctx), 1, start, -1)
-            (position, open) = (start, wasOpen)
+            if error as? LlamaError == .stopped, let turn = last, turn.start == start {
+                forget(after: turn.reply)  // a stopped reply leaves her line; what sounded comes with `commit`
+                open = true
+                return
+            }
+            forget(after: start)
+            (open, last) = (wasOpen, nil)
             if error as? LlamaError != .stopped { throw error }
         }
     }
+
+    /// A new conversation, or one about to overflow the context, starts again from the persona prefix.
+    private func begin() {
+        guard fresh || position + Int32(settings.sampling.maxTokens * 2) > Int32(settings.runtime.nCtx) else { return }
+        let memory = llama_get_memory(ctx)
+        llama_memory_seq_rm(memory, 1, -1, -1)
+        llama_memory_seq_cp(memory, 0, 1, -1, -1)
+        (position, open, fresh, last) = (prefixCount, false, false, nil)
+    }
+
+    /// Her line closes the open model turn and opens the model's.
+    private func user(_ utterance: String) throws {
+        let text = utterance.trimmingCharacters(in: .whitespacesAndNewlines)
+        let tokens = try tokenize((open ? "<turn|>\n" : "") + "<|turn>user\n" + text + "<turn|>\n<|turn>model\n",
+                                  special: false)
+        try decode(tokens, seq: 1, from: position)
+        position += Int32(tokens.count)
+    }
+
+    /// What Elly said, as it sounded, written into the open model turn.
+    private func said(_ spoken: String) throws {
+        let text = spoken.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty else { return }
+        let tokens = try tokenize(text, special: false)
+        try decode(tokens, seq: 1, from: position)
+        position += Int32(tokens.count)
+    }
+
+    /// Sequence 1 from `position` on leaves the KV.
+    private func forget(after position: Int32) {
+        llama_memory_seq_rm(llama_get_memory(ctx), 1, position, -1)
+        self.position = position
+    }
+
+    /// A stopped reply's raised flag must not abort the memory work that follows it; a new reply's flag stays.
+    private func release() { current { if $0?.isRaised == true { $0 = nil } } }
 
     /// The bench's chain — top-k → top-p → min-p → temperature → dist(seed); accumulated text after every token.
     private func sample(stop: StopFlag, output: AsyncThrowingStream<String, Error>.Continuation) throws {
@@ -204,4 +281,9 @@ public final class LlamaModel: LanguageModel, @unchecked Sendable {
         }
         return ""
     }
+}
+
+/// A turn in sequence 1: where it began (before her line), where the reply began, whether a model turn was open before.
+struct LastTurn {
+    let start: Int32, reply: Int32, wasOpen: Bool
 }

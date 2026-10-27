@@ -1,6 +1,7 @@
 # Ручная macOS-джоба приложения (поставка app-voice-loop, решение E3): раз на поставку, а не на каждый PR — минута
 # macOS стоит десяти Linux (CQG §8.7), а ядро и форму кода уже судит Linux-джоба quality. Что делает: тесты AllyLlama
-# (A23 без весов — пропуск виден, П34), тесты AllyShell со снимками (V8), сборка Ally.app без подписи, оракул артефакта (A7).
+# (A23 без весов — пропуск виден, П34), AllyOnnx и AllyVoice (серия голоса: Z2–Z7 без весов — пропуск),
+# тесты AllyShell со снимками (V8), сборка Ally.app без подписи, оракул артефакта (A7).
 # Подписанную сборку, права (A8) и телефон (A9–A12) судит человек с Mac: команды — knowledge/engineering/voice-loop.md.
 name: ios
 
@@ -28,6 +29,16 @@ jobs:
           xcodegen --version
       - name: AllyLlama tests (A23; без весов — пропуск)
         run: swift test --disable-keychain --package-path Packages/AllyLlama
+      - name: AllyOnnx tests (один ORT 1.28.0, слой C API)
+        run: swift test --disable-keychain --package-path Packages/AllyOnnx
+      # Слух (D7.2): пара sherpa 1.13.8 / ORT 1.28.0 на настоящем рантайме (U16); паритет флагов Silero (U17) — только с
+      # моделью и набором спайка в local/, на раннере — видимый пропуск (П34).
+      - name: AllyHearing tests (U16, U17)
+        run: swift test --disable-keychain --package-path Packages/AllyHearing
+      - name: AllyVoice tests (Z2–Z7; без весов и эталонов в ~/models — пропуск)
+        run: swift test --disable-keychain --package-path Packages/AllyVoice
+      - name: AllyCore tests on macOS (G7 — подпись родителя на CryptoKit; на Linux пропуск)
+        run: swift test --disable-keychain --package-path Packages/AllyCore --filter SignatureTests
       # Оболочка (child-shell): рисунок SwiftUI и пиксельные пробы снимков (V8) — только на macOS; ядро судит Linux.
       - name: AllyShell tests (V1–V9, снимки V8)
         run: swift test --disable-keychain --package-path Packages/AllyShell

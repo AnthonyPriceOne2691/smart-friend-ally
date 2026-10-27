@@ -12,7 +12,15 @@ excluded:
   - Packages/AllyDiscipline/.build
   - Packages/AllyCore/.build
   - Packages/AllyLlama/.build
+  - Packages/AllyOnnx/.build
+  - Packages/AllyHearing/.build
+  - Packages/AllyVoice/.build
   - Packages/AllyShell/.build
+  - Packages/AllySpeechText/.build
+  - Packages/AllySQLite/.build
+  - Packages/AllyMemory/.build
+  - Packages/AllyAccent/.build
+  - Packages/AllyVoiceFX/.build
   - App/build
   - Packages/AllyDiscipline/Tests/DisciplineTests/Fixtures
 
@@ -81,7 +89,14 @@ custom_rules:
     name: "Надпись в детском экране"
     regex: '\b(Text|Label|TextField|SecureField|TextEditor|ProgressView|Toggle)\s*\('
     included: ".*/Packages/AllyShell/Sources/ShellUI/.*"
+    excluded: ".*/ShellUI/AdultZone\\.swift"
     message: "Ребёнку ни одной надписи (правило экрана 1): состояние показывает тело Элли, текст — только в зоне взрослых"
+    severity: error
+  child_screen_gestures:  # правило экрана 3 (look-and-feel): в детском экране только тап (оболочка Ш3)
+    name: "Жест в детском экране"
+    regex: '\b(LongPressGesture|DragGesture|MagnifyGesture|MagnificationGesture|RotateGesture|RotationGesture|onLongPressGesture|onDrag|swipeActions)\b|TapGesture\(count:\s*[2-9]|onTapGesture\(count:\s*[2-9]'
+    included: ".*/(Packages/AllyShell/Sources/ShellUI/.*|App/Sources/ChildScreen\\.swift)"
+    message: "Пятилетке — только тап (правило экрана 3): без долгого нажатия, перетаскивания, щипка, поворота, свайпа и двойного тапа"
     severity: error
   no_network:            # граница CONSTITUTION «продукт не ходит в сеть»; артефакт судит check_app_artifact.sh
     name: "Сеть в продукте"

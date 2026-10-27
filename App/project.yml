@@ -10,6 +10,18 @@ packages:
     path: ../Packages/AllyCore
   AllyLlama:
     path: ../Packages/AllyLlama
+  AllyShell:
+    path: ../Packages/AllyShell
+  AllyHearing:  # Silero VAD through sherpa on the one ONNX Runtime of the app (D7.2)
+    path: ../Packages/AllyHearing
+  AllyVoice:  # her voice: Supertonic on the same ONNX Runtime (voice series V1b, V4b2)
+    path: ../Packages/AllyVoice
+  AllyVoiceFX:  # PSOLA and the EQ after the synthesis (V4a, V4b1)
+    path: ../Packages/AllyVoiceFX
+  AllySpeechText:  # the engine's text: stresses, names, reading rules (V2)
+    path: ../Packages/AllySpeechText
+  AllyAccent:  # RUAccent on Swift — the placer (V3a–V3c, voice-accent-wire)
+    path: ../Packages/AllyAccent
 settings:
   base:
     CODE_SIGN_STYLE: Automatic
@@ -27,9 +39,26 @@ targets:
       - path: Sources
       - path: Resources
         buildPhase: resources
+      - path: ../.github/allowed_signers  # the parent's key for the exception (R child-lock), one copy with the Mac
+        buildPhase: resources
     dependencies:
       - package: AllyCore
       - package: AllyLlama
+      - package: AllyShell  # the child screen (Ш3): Ellie in her bubble, the break after the limit
+        product: ShellUI
+      - package: AllyShell
+        product: ShellCore
+      - package: AllyHearing
+      - package: AllyVoice
+      - package: AllyVoiceFX
+      - package: AllySpeechText
+      - package: AllyAccent
+    info:  # generated with the project, not in git; merged with the build's own keys (GENERATE_INFOPLIST_FILE)
+      path: Info.plist
+      properties:
+        CADisableMinimumFrameDurationOnPhone: true  # ProMotion: listening may run at 120 Hz (the parent's answer 5)
+        CFBundleShortVersionString: $(MARKETING_VERSION)  # the file's keys win over the generated ones
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
     entitlements:
       path: Ally.entitlements
       properties:

@@ -76,4 +76,47 @@ final class TraceTests: XCTestCase {
                                                                     "reply_end"]))
         for (stage, seconds) in stages { XCTAssertEqual(measured[stage] ?? -1, seconds, accuracy: 1e-9, stage) }
     }
+
+    func testTheRecordNamesWhoListens() async {  // G9
+        for audience in [Audience.supervised, .parent] {
+            let sink = RecordingSink(), model = ReplyQueue(["Жирафы очень высокие."])
+            let parts = SessionParts(model: model, voice: RecordingVoice(), sink: sink, clock: TestClock(),
+                                     audience: audience)
+            let session = Session(parts)
+            await session.handle(.wake)
+            await session.handle(.heard("Привет, это Соня"))
+            await session.handle(.stop)
+            XCTAssertEqual(sink.records.map(\.audience), Array(repeating: audience.rawValue, count: 3))
+            for line in sink.records.compactMap({ $0.jsonLine() }) {
+                XCTAssertTrue(line.contains("\"audience\":\"\(audience.rawValue)\""), line)
+                XCTAssertNil(line.range(of: "[А-Яа-яЁё]", options: .regularExpression), line)
+            }
+        }
+        // The app's path (L58): the child screen's own `Conversation` keeps the audience through its wrappers.
+        let sink = RecordingSink(), clock = TestClock(), voice = RecordingVoice()
+        let ear = ScriptedEar([], clock: clock, voice: voice), model = ReplyQueue([])
+        let parts = SessionParts(model: model, voice: voice, sink: sink, clock: clock, audience: .supervised)
+        let child = Conversation(parts, listener: ear)
+        ear.watch(child)
+        await child.wake()
+        XCTAssertEqual(sink.records.map(\.audience), ["supervised", "supervised", "supervised"])
+    }
+
+    /// The girl alone (R2): her session through the app's driver says so in every record; the black box keeps nothing.
+    func testASessionWithoutTheParentIsTracedAsChildAndNotKept() async {  // G18
+        let clock = TestClock(), disk = MemoryDisk(), voice = RecordingVoice(), trace = RecordingSink()
+        let ear = ScriptedEar([.init(text: "Я сегодня была в зоопарке"), .init(text: nil), .init(text: nil)],
+                              clock: clock, voice: voice)
+        let parts = SessionParts(model: ReplyQueue(["Ух ты, в зоопарке!"]), voice: voice,
+                                 sink: TraceFanOut([trace, BlackBox(disk: disk, clock: clock)]), clock: clock,
+                                 audience: .child)
+        let alone = Conversation(parts, listener: ear)
+        ear.watch(alone)
+        await alone.wake()
+        XCTAssertEqual(trace.records.map(\.audience), Array(repeating: "child", count: 4))
+        for line in trace.records.compactMap({ $0.jsonLine() }) {
+            XCTAssertTrue(line.contains("\"audience\":\"child\""), line)
+        }
+        XCTAssertEqual(disk.paths, [])
+    }
 }

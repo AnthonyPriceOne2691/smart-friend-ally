@@ -1,3 +1,4 @@
+import Foundation  // clock_gettime: Darwin on the Mac, Glibc on Linux CI
 import XCTest
 @testable import Discipline
 
@@ -23,6 +24,57 @@ func decided(_ text: String, game: Bool = false, off: Set<String> = [], by route
 let routerRules = ["known_exact", "glue", "child_costs", "negation", "adult_agent", "pretend", "rule", "story",
                    "adult_scene", "ask", "fear", "stove_source", "fire_verb", "game", "frame", "tale"]
     + routerData.hazards.flatMap { hazard in (hazard.clauses ?? []).map { "\(hazard.topic).\($0.first ?? "")" } }
+
+/// The CPU time the current thread spends in `work` — not wall time: the scheduler's pauses do not count.
+func cpuTime(_ work: () -> Void) -> Duration {
+    var start = timespec(), end = timespec()
+    clock_gettime(CLOCK_THREAD_CPUTIME_ID, &start)
+    work()
+    clock_gettime(CLOCK_THREAD_CPUTIME_ID, &end)
+    return .seconds(end.tv_sec - start.tv_sec) + .nanoseconds(end.tv_nsec - start.tv_nsec)
+}
+
+/// The rows' decision times in CPU time, each its best of three, on a worker of the highest QoS: the Mac runs it on
+/// a performance core (an efficiency core takes 2–3× the CPU time for the same decision); Linux CI has one kind.
+func decisionTimes(_ rows: [RouterRow]) async -> [Duration] {
+    await withCheckedContinuation { done in
+        DispatchQueue.global(qos: .userInteractive).async {
+            let times = rows.map { row in
+                (0..<3).map { _ in cpuTime { _ = Router.shared.route(row.text) } }.min() ?? .zero
+            }
+            done.resume(returning: times.sorted())
+        }
+    }
+}
+
+/// Пропускать ли сторож скорости (`router-guard-load`, ведущий 2026-10-25): вне CI на машине, где загрузка за минуту
+/// выше числа производительных ядер, он меряет планировщик и экономичные ядра, а не решение (L39, L54); на CI — судит.
+func speedGuardSkips(load: Double, performanceCores: Int, isCI: Bool) -> Bool {
+    !isCI && load > Double(performanceCores)
+}
+
+/// Производительные ядра Mac (`hw.perflevel0.physicalcpu`); где счёта нет — половина активных.
+func performanceCores() -> Int {
+    #if canImport(Darwin)
+    var cores: Int32 = 0
+    var size = MemoryLayout<Int32>.size
+    if sysctlbyname("hw.perflevel0.physicalcpu", &cores, &size, nil, 0) == 0, cores > 0 { return Int(cores) }
+    #endif
+    return max(1, ProcessInfo.processInfo.activeProcessorCount / 2)
+}
+
+/// Средняя загрузка за минуту; не прочиталась — 0, и сторож судит.
+func loadAverage() -> Double {
+    var load = [Double](repeating: 0, count: 3)
+    return getloadavg(&load, 3) > 0 ? load[0] : 0
+}
+
+/// Прогон на CI: GitHub Actions ставит `CI`. Правило `env_access` стережёт настройки продукта, а тест читает только
+/// признак среды, где судить сторож.
+func runsOnCI() -> Bool {
+    // swiftlint:disable:next env_access
+    ProcessInfo.processInfo.environment["CI"] != nil
+}
 
 final class RouterTests: XCTestCase {
     func testMatchesTheReferenceOnTheOpenSets() throws {  // R10 E26 E36 E48
@@ -206,13 +258,24 @@ final class RouterTests: XCTestCase {
         XCTAssertEqual(broken, [])
     }
 
-    /// A guard against a slow decision in the test build, each row its best of three (a busy machine's pauses are not
-    /// the decision's); R12's 5 ms p95 is measured in release (discipline-replay).
-    func testDecisionIsFast() throws {  // R12 E28 E38 E49
-        let clock = ContinuousClock()
-        let times = try routerRows().map { row in
-            (0..<3).map { _ in clock.measure { _ = Router.shared.route(row.text) } }.min() ?? .zero
-        }.sorted()
+    /// A guard against a slow decision in the test build: the thread's CPU time per row on a performance core, its
+    /// best of three — a busy machine's scheduler pauses and an efficiency core are not the decision's (wall time
+    /// failed merge_guard at load 110–170); R12's 5 ms p95 is measured in release (discipline-replay).
+    func testDecisionIsFast() async throws {  // R12 E28 E38 E49
+        let load = loadAverage(), cores = performanceCores()
+        if speedGuardSkips(load: load, performanceCores: cores, isCI: runsOnCI()) {
+            let reason = String(format: "машина занята: load %.1f > P-ядер %d — сторож скорости судит CI", load, cores)
+            throw XCTSkip(reason)
+        }
+        let times = await decisionTimes(try routerRows())
         XCTAssertLessThan(times[times.count * 95 / 100], .milliseconds(50))  // R12
+    }
+
+    /// Решение сторожа: пропуск — только вне CI и только при загрузке выше числа производительных ядер.
+    func testSpeedGuardSkipsOnlyABusyMachineOutsideCI() {
+        XCTAssertTrue(speedGuardSkips(load: 4.5, performanceCores: 4, isCI: false))
+        XCTAssertFalse(speedGuardSkips(load: 4, performanceCores: 4, isCI: false))
+        XCTAssertFalse(speedGuardSkips(load: 63, performanceCores: 4, isCI: true))
+        XCTAssertFalse(speedGuardSkips(load: 0.5, performanceCores: 4, isCI: true))
     }
 }

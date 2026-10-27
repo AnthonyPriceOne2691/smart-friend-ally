@@ -9,9 +9,10 @@ public enum SessionState: String, Sendable {
     public var listens: Bool { self == .listening || self == .windingDown }
 }
 
-/// What the app tells the session: a tap woke her, the recognizer's text, silence, the parent's stop.
+/// What the app tells the session: a tap woke her, the recognizer's text, silence, the parent's stop; while she
+/// listens — her tentative end with the text so far and her speech coming back (D7.1).
 public enum SessionEvent: Sendable {
-    case wake, heard(String), silence, stop
+    case wake, heard(String), silence, stop, tentative(String), resumed
 }
 
 /// What a session needs: the model and the voice, the trace sink, the clock, the router hook, the app's stamp and a
@@ -32,24 +33,36 @@ public struct SessionParts: Sendable {
 /// The structure of a talk is code (П1): a canned greeting, turns through the router hook and the contract, «не
 /// расслышала» and rest on misses, her goodbye and the soft limit closed by a canned goodbye — one record per turn.
 /// The limit is checked at turn boundaries: a turn begun before it is finished, the first utterance after it is the
-/// last turn, in `goodbye` mode; a turn with a router topic does not close the session.
+/// last turn, in `goodbye` mode; a turn with a router topic does not close the session. What Elly said last sets the
+/// kind of her next turn — how long the ear waits for silence (D7).
 public actor Session {
-    private let parts: SessionParts, settings: SessionSettings, data = SessionData.shared
-    private let current = Locked(SessionState.asleep)
-    private var id = "", start = 0.0, count = 0, misses = 0, heard: String?, cancel: (@Sendable () -> Void)?
+    private let parts: SessionParts, settings: SessionSettings, data = SessionData.shared, kinds = TurnKinds.shared
+    private let current = Locked(SessionState.asleep), expecting = Locked(TurnKind.open)
+    private var id = "", start = 0.0, count = 0, misses = 0, heard: String?, listening: TurnKind?
+    private var cancel: (@Sendable () -> Void)?
+    private let speculation: Speculation
+
+    /// The answer begun in her pause has been written to its end (a test waits for it before her speech comes back).
+    nonisolated var begunAnswerFinished: Bool { speculation.finished }
 
     public init(_ parts: SessionParts, settings: SessionSettings = SessionSettings()) {
         (self.parts, self.settings) = (parts, settings)
+        speculation = Speculation(parts.model, clock: parts.clock)
     }
 
     public nonisolated var state: SessionState { current { $0 } }
+
+    /// The kind of her next turn, by what Elly said last; «не расслышала» keeps it — she says the same again.
+    public nonisolated var expect: TurnKind { expecting { $0 } }
 
     /// One event at a time; an event of another state changes nothing. `stop` comes in while a turn runs.
     public func handle(_ event: SessionEvent) async {
         switch (state, event) {
         case (.asleep, .wake): await greet()
-        case (.listening, .heard(let text)), (.windingDown, .heard(let text)): await hear(text)
-        case (.listening, .silence), (.windingDown, .silence): await missed()
+        case (.listening, .heard), (.windingDown, .heard), (.listening, .silence), (.windingDown, .silence):
+            await answer(event)
+        case (.listening, .tentative(let text)), (.windingDown, .tentative(let text)): speculate(text)
+        case (.listening, .resumed), (.windingDown, .resumed): speculation.drop()
         case (let now, .stop) where now != .asleep: stop()
         default: return
         }
@@ -57,18 +70,46 @@ public actor Session {
 
     private var late: Bool { parts.clock.now() - start >= settings.limit }
 
+    /// Her utterance or silence: every record it brings names the kind the ear listened with.
+    private func answer(_ event: SessionEvent) async {
+        listening = expect
+        defer { listening = nil }
+        if case .heard(let text) = event { await hear(text) } else { await missed() }
+    }
+
     private func greet() async {
         (id, start, count, misses) = (UUID().uuidString, parts.clock.now(), 0, 0)
         if await phrase("greeting", in: .greeting) { move(to: .listening) }
+    }
+
+    /// Her utterance in her pause: the model begins its answer silently — only for an utterance the turn would give
+    /// the model; a script, her goodbye and a forgotten one never reach it (D7.1).
+    private func speculate(_ text: String) {
+        let plan = plan(text)
+        guard text.contains(where: \.isLetter), plan.toModel else { return speculation.drop() }
+        speculation.start(text)
+    }
+
+    /// Where her utterance goes: the router's decision, her goodbye, a script line — one answer for the turn and for
+    /// the answer begun in her pause; the model gets only the rest.
+    private struct Plan {
+        let route: Route, goodbye: Bool, script: (key: String, line: String)?
+        var toModel: Bool { !goodbye && script == nil && !route.forget }
+    }
+
+    private func plan(_ text: String) -> Plan {
+        let route = parts.router.route(text)
+        let script = route.key.flatMap { key in Router.script(for: key).map { (key: key, line: $0) } }
+        return Plan(route: route, goodbye: route.decision == .pass && data.isGoodbye(text), script: script)
     }
 
     private func hear(_ text: String) async {
         heard = text  // her words go with the next record, whatever it is (D3)
         guard text.contains(where: \.isLetter) else { return await missed() }
         misses = 0
-        let route = parts.router.route(text), last = state == .windingDown || late
-        if route.decision == .pass, data.isGoodbye(text) { return await close("goodbye", end: "goodbye_word") }
-        let script = route.key.flatMap { key in Router.script(for: key).map { (key: key, line: $0) } }
+        let plan = plan(text), route = plan.route, script = plan.script, last = state == .windingDown || late
+        if !plan.toModel { speculation.drop() }
+        if plan.goodbye { return await close("goodbye", end: "goodbye_word") }
         let head = head(script.map { "script:" + $0.key }, mode: last ? .goodbye : .talk, route: route)
         move(to: .thinking)
         // A forgotten utterance never reaches the model: a script sounds as ever, else the contract's canned reply.
@@ -79,18 +120,21 @@ public actor Session {
 
     /// A script (or, for a forgotten utterance, nothing — the contract's canned reply) sounds without the model; else
     /// the model answers with the decision (an unknown script key — as a guard without a topic). Her utterance and the
-    /// decision reach the contract either way.
+    /// decision reach the contract either way. What a script said goes into the model's memory with her line, so the
+    /// model knows what Elly has already told her; a forgotten utterance never gets there (D5).
     private func respond(_ text: String, route: Route, line: String?, head: TraceHead) async -> TurnOutcome? {
         if let line {
             let turn = TurnContract(mode: head.mode, heard: text, decision: route.decision).finish(line)
+            let sounded = Sounded()
+            defer { if !route.forget { speculation.remember(heard: text, spoken: sounded.text) } }
             move(to: .speaking)
-            guard await say(turn.sentences, head) else { return nil }
+            guard await say(turn.sentences, head, into: sounded) else { return nil }
             return TurnOutcome(turn: turn, times: TurnTimes(), modelTimeout: false)
         }
         let decision = route.key == nil ? route.decision : .guard(topic: nil), mode = head.mode
         let voice = Speaking(parts.voice) { self.move(to: .speaking) }
-        return await perform(head) { [parts] in
-            try await TurnRunner(model: parts.model, voice: voice, clock: parts.clock, mode: mode)
+        return await perform(head) { [parts, speculation] in
+            try await TurnRunner(model: speculation, voice: voice, clock: parts.clock, mode: mode)
                 .run(text, decision: decision)
         }
     }
@@ -98,6 +142,7 @@ public actor Session {
     /// A last turn without a topic closes the session with the goodbye, unless the contract has already said the
     /// mode's own canned goodbye; with a topic she listens on; else she listens — past the limit, for the last time.
     private func after(_ outcome: TurnOutcome, route: Route, head: TraceHead, last: Bool) async {
+        expectAfter(outcome.turn.sentences)
         guard last, route.decision == .pass else {
             write(head, outcome)
             return move(to: last || late ? .windingDown : .listening)
@@ -109,6 +154,7 @@ public actor Session {
     }
 
     private func missed() async {
+        speculation.drop()
         if state == .windingDown || late { return await close("goodbye", end: "limit") }
         misses += 1
         if misses >= data.missesBeforeRest { return await close("rest", end: "rest") }
@@ -121,6 +167,7 @@ public actor Session {
 
     private func stop() {
         if let cancel { return cancel() }
+        speculation.drop()
         write(head("session:stop", mode: .talk, route: nil), nil, end: "parent")
         move(to: .asleep)
     }
@@ -131,16 +178,23 @@ public actor Session {
         let head = head("session:" + key, mode: mode, route: nil)
         move(to: next)
         guard await say(turn.sentences, head) else { return false }
+        if key != "misheard" { expectAfter(turn.sentences) }
         write(head, TurnOutcome(turn: turn, times: TurnTimes(), modelTimeout: false), end: end)
         return true
     }
 
-    private func say(_ sentences: [String], _ head: TraceHead) async -> Bool {
+    private func expectAfter(_ sentences: [String]) {
+        let next = kinds.kind(after: sentences)
+        expecting { $0 = next }
+    }
+
+    private func say(_ sentences: [String], _ head: TraceHead, into sounded: Sounded = Sounded()) async -> Bool {
         let voice = parts.voice
+        (voice as? VoiceLookahead)?.upcoming(sentences)  // the phrase's sentences made ahead (Z25)
         let speak: @Sendable () async throws -> Void = {
             for sentence in sentences {
                 try Task.checkCancellation()
-                try await voice.speak(sentence)
+                try await sounded.say(sentence, voice)
             }
         }
         return await perform(head) { try await withTaskCancellationHandler(operation: speak) { voice.stop() } } != nil
@@ -170,12 +224,15 @@ public actor Session {
     private func head(_ source: String?, mode: TurnMode, route: Route?) -> TraceHead {
         count += 1
         return TraceHead(session: id, turn: count, phase: state, mode: mode, source: source, route: route,
-                         elapsed: parts.clock.now() - start, limit: settings.limit, audience: parts.audience)
+                         elapsed: parts.clock.now() - start, limit: settings.limit, audience: parts.audience,
+                         turnKind: listening)
     }
 
     private func write(_ head: TraceHead, _ outcome: TurnOutcome?, cancelled: Bool = false, error: String? = nil,
                        end: String? = nil) {
-        let stamp = parts.stamp(), elapsed = parts.clock.now() - start
+        let app = parts.stamp(), elapsed = parts.clock.now() - start
+        let stamp = TraceStamp(versions: app.versions, memory: app.memory, thermal: app.thermal,
+                               stages: app.stages.merging(speculation.takeStages()) { $1 })
         let words = TurnWords(heard: heard, modelText: outcome?.modelText, said: outcome?.turn.sentences,
                               elapsed: elapsed)
         heard = nil
@@ -189,8 +246,9 @@ public actor Session {
     }
 }
 
-/// The voice of a model turn: its first `speak` moves the session from thinking to speaking.
-final class Speaking: VoiceOutput {
+/// The voice of a model turn: its first `speak` moves the session from thinking to speaking; the next sentences reach
+/// the voice through it (L58).
+final class Speaking: VoiceOutput, VoiceLookahead {
     private let voice: VoiceOutput, first: @Sendable () -> Void, spoke = Locked(false)
 
     init(_ voice: VoiceOutput, first: @escaping @Sendable () -> Void) { (self.voice, self.first) = (voice, first) }
@@ -205,4 +263,6 @@ final class Speaking: VoiceOutput {
     }
 
     func stop() { voice.stop() }
+
+    func upcoming(_ sentences: [String]) { (voice as? VoiceLookahead)?.upcoming(sentences) }
 }
