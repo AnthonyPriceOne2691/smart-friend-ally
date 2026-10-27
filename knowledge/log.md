@@ -1,5 +1,12 @@
 # Knowledge Bundle Update Log
 
+## 2026-10-27 — расстановщик ударений в приложении (хвост серии голоса)
+
+* **Update**: `engineering/voice-loop` — RUAccent вместо заглушки, файлы группы `accent` в раскладке V3c, строка
+  консоли без файлов. `engineering/voice-engine` — проверка файлов по группам. `engineering/safety-below-model` —
+  расстановщик меняет только текст для движка. `references/repo-map` — `AllyAccent` в приложении.
+* **Источник**: поставка `voice-accent-wire` (хвост серии голоса; примеры подписаны родителем 2026-10-23).
+
 ## 2026-10-25 — память: качество разбора на E4B (memory-quality, M32)
 
 * **Update**: `engineering/memory` — раздел «Качество на E4B»: справка — ловушек и запрещённого 0, «Мурка — кошка» и

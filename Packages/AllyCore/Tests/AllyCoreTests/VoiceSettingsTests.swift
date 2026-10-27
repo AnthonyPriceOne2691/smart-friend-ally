@@ -59,6 +59,25 @@ final class VoiceSettingsTests: XCTestCase {
         XCTAssertEqual(try settings(preset: fewer).preset.steps, 8)
     }
 
+    func testEachGroupIsCheckedOnItsOwn() throws {
+        // Z20: the voice there, the placer's file missing, then the wrong size — the accent group is not ready alone
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: folder.appendingPathComponent("nn"),
+                                                withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let files = #"[{"to": "a.onnx", "bytes": 4, "group": "voice"}, "#
+            + #"{"to": "nn/b.onnx", "bytes": 2, "group": "accent"}]"#
+        let voice = try settings(files: files)
+        try Data("abcd".utf8).write(to: folder.appendingPathComponent("a.onnx"))
+        XCTAssertEqual(VoiceCheck.check(voice, in: folder), .ready)
+        XCTAssertEqual(VoiceCheck.check(voice, in: folder, group: "accent"), .missing("nn/b.onnx"))
+        try Data("abc".utf8).write(to: folder.appendingPathComponent("nn/b.onnx"))
+        XCTAssertEqual(VoiceCheck.check(voice, in: folder, group: "accent"),
+                       .wrongSize("nn/b.onnx", found: 3, expected: 2))
+        try Data("ab".utf8).write(to: folder.appendingPathComponent("nn/b.onnx"))
+        XCTAssertEqual(VoiceCheck.check(voice, in: folder, group: "accent"), .ready)
+    }
+
     func testAnUnknownBandIsRefused() throws {
         // Z19: a band the stand does not have is an error of the line, not a silent default
         XCTAssertThrowsError(try settings(preset: line.replacingOccurrences(of: "lowshelf", with: "notch")))
