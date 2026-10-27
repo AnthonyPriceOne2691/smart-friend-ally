@@ -18,6 +18,7 @@ L43, L34, L91, L37, L105; не применимы — L106, L108, L109, L1, L12,
 
 ## Slice 2 — знание и сдача
 - [x] T5: ADR `character-rendering`, `product/look-and-feel`, `knowledge/log.md`
-- [ ] T6: слить `origin/main`; строгий `delivery_check --require-ci --diff-base origin/main`; пуш, PR, CI
-- [ ] T7: verify-report, `check_digest_report.py` до пуша сдачи; архив в том же PR, строка INDEX с уроками, slug — в
-  конец `delivery/OBSERVATIONS.md`; доклад ведущему
+- [x] T6: слить `origin/main` (до 8ef99ea, сложением); строгий `delivery_check --require-ci --diff-base origin/main` —
+  0 ошибок; пуш, PR #80, CI 40566339179 зелёный
+- [x] T7: verify-report, `check_digest_report.py` до пуша сдачи; архив в том же PR, строка INDEX (находки без номеров —
+  номера у ведущего), slug — в конец `delivery/OBSERVATIONS.md`; доклад ведущему
