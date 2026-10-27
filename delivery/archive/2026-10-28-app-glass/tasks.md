@@ -20,8 +20,8 @@ L81, L82, L86, L87, L89, L90, L91, L98, L99, L100, L111, L112, L129, L134, L135,
 - [x] T6: `GlassCapsule` и консоль; F4; мутации «недоступная не бледнеет», «высота 36»
 - [x] T7: цель iOS 27.0 (`project.yml`, `Package.swift`), F5 в `check_app_artifact.sh`; образ `ios.yml` — по слову
   ведущего (решение 2026-10-27 — `xcode-27`); сборка `.app` на Mac — BUILD SUCCEEDED, `MinimumOSVersion` 27.0
-- [x] T7a: порог дня V36 0,85 → 0,75 под подписанное небо (замер 0,773, ночь 0,277) — мерж после слова родителя
-  (поправка в `spec.md`, `decisions.md`)
+- [x] T7a: порог дня V36 0,85 → 0,75 под подписанное небо (замер 0,773, ночь 0,277) — решение родителя 2026-10-28:
+  «Перенести порог (Рекомендую)» (`spec.md`, `decisions.md`)
 
 ## Slice 2 — знание и сдача
 - [x] T8: `product/look-and-feel`, ADR `character-rendering`, `knowledge/log.md`
