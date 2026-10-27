@@ -35,6 +35,7 @@ final class VoiceLoop: ObservableObject {
     // memory-recall: the persona, the system turn with the memory's block (M36) and the console's memory lines (M39).
     private var persona = "", system = ""
     @Published private(set) var memoryLines: [String] = []
+    private var encyclopedia: Encyclopedia?  // Э2: loaded at warm-up, both sessions get it
 
     func start() async {
         guard registry == nil else { return }
@@ -75,13 +76,15 @@ final class VoiceLoop: ObservableObject {
         let (silero, listening) = SileroActivity.choose(hearing, models: models)  // D7.2: no Silero — energy
         let asr = GigaAMRecognizer.choose(hearing, models: models)  // D7.3: dictation unless GigaAM is asked and there
         screen.lines += [listening.line] + [asr.line].compactMap { $0 }
+        let encyclopedia = Encyclopedia.bundled()  // Э2: the base and FTS5 on the phone — the self-test says if not
+        screen.lines.append(encyclopedia.line(searchP95: encyclopedia.searchP95()))
         let sound = duplex(voice, hearing, models: models, silero: silero)
         let personaHash = SHA256.hash(data: Data(persona.utf8)).map { String(format: "%02x", $0) }.joined()
         versions = ["ios": UIDevice.current.systemVersion, "llama": settings.runtime.build, "persona": personaHash,
                     "voice": voice.label, "weights": "\(registry.model.file):\(registry.model.bytes)",
                     "vad": silero == nil ? "energy" : "silero:\(hearing.vad?.bytes ?? 0)", "asr": asr.label,
                     "audio": sound]
-        (self.registry, self.model, self.voice) = (registry, model, voice)
+        (self.registry, self.model, self.voice, self.encyclopedia) = (registry, model, voice, encyclopedia)
         screen.ready = speech.ready && microphone && voice.ready
         if screen.ready { converse(model, hearing, voice, silero, asr.decode) }
         parseMemory()  // what a closed app left in the queue (M34)
@@ -224,8 +227,9 @@ final class VoiceLoop: ObservableObject {
         Task { await talker.interruption(began: began) }
     }
 
-    /// The session (D2.2): the router before the model, the parent's limit key (`-session_limit_minutes 2` at launch),
-    /// a wordless record a turn with the listening's stages into `Caches/turns.jsonl`; heard and said go to the screen.
+    /// The session (D2.2): the router before the model and the encyclopedia after it (Э2, both sessions), the parent's
+    /// limit key (`-session_limit_minutes 2` at launch), a wordless record a turn with the listening's stages into
+    /// `Caches/turns.jsonl`; heard and said go to the screen.
     private func converse(_ model: LlamaModel, _ hearing: Hearing, _ voice: any HerVoice, _ silero: SileroActivity?,
                           _ decode: (@Sendable ([Float]) -> String)?) {
         let heard: @Sendable (String) -> Void = { text in Task { @MainActor in self.screen.heard = text } }
@@ -245,6 +249,7 @@ final class VoiceLoop: ObservableObject {
             self.parseMemory()
         } })
         let sink = TraceFanOut(memory == nil ? [journal] : [journal, tap])
+        let encyclopedia = encyclopedia
         let stamp: @Sendable () -> TraceStamp = {
             let thermal = ["nominal", "fair", "serious", "critical"][ProcessInfo.processInfo.thermalState.rawValue]
             let overlaps = audio.takeOverlaps().map { ["overlap": Double($0)] } ?? [:]  // D6.1: her speech over Elly
@@ -252,8 +257,8 @@ final class VoiceLoop: ObservableObject {
                               stages: ear.takeStages().merging(voice.takeStages()) { $1 }.merging(overlaps) { $1 })
         }
         let parts = { (audience: Audience) in
-            SessionParts(model: model, voice: echo, sink: sink, router: RouterRouting(), audience: audience,
-                         stamp: stamp)
+            SessionParts(model: model, voice: echo, sink: sink, router: RouterRouting(), knowledge: encyclopedia,
+                         audience: audience, stamp: stamp)
         }
         childMode = ChildMode(personaSHA256: versions["persona"] ?? "", model: versions["weights"] ?? "")
         refreshAccess()
