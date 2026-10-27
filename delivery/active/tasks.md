@@ -6,7 +6,7 @@
 ## Slice 0 — спека и мок-снимки
 - [x] T1: документы первым коммитом ветки `feat/app-glass`, до кода (L33, L62): STATUS, spec (F1–F5), plan (≈ 250,
   с поправкой ≈ 375), tasks, decisions
-- [ ] T2: мок-снимки на стенде `local/spike/glass/` (вне git): детский экран — день, ночь, «слушает», «думает»;
+- [x] T2: мок-снимки на стенде `local/spike/glass/` (вне git): детский экран — день, ночь, «слушает», «думает»;
   консоль и зона взрослых крупно; «было / стало» рядом — PNG и страничка в `local/checkpoint/glass-mockups/`;
   доклад ведущему — подпись под примерами и видом, вопрос об образе macOS-джобы
 
@@ -25,4 +25,4 @@
 - [ ] T9: слить `origin/main`; строгий `delivery_check --require-ci --diff-base origin/main`; пуш, PR, CI; метку
   `macos` вешает ведущий
 - [ ] T10: verify-report, `check_digest_report.py` до пуша сдачи; архив в том же PR, строка INDEX, slug — в конец
-  `delivery/OBSERVATIONS.md`; доклад ведущему
+  `delivery/OBSERVATIONS.md`; доклад ведущему. Уроки этой поставки — с L137 (номера дал ведущий)
