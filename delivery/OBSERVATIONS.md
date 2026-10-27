@@ -73,3 +73,4 @@
 - `child-shell-mouth`
 - `app-encyclopedia`
 - `memory-recall`
+- `app-glass`

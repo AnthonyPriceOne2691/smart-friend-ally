@@ -124,6 +124,10 @@ implementation:
 
 # Сборка на Mac
 
+Цель сборки — iOS 27.0 (app-glass, 2026-10-27: жидкое стекло «под iOS 27», телефон — iOS 27), поэтому нужен Xcode 27
+с SDK iOS 27; ручная macOS-джоба `ios.yml` идёт на образе `xcode-27`. Консоль «Для взрослых» — в розовом небе со
+стеклянными кнопками (`AdultSky`, `GlassCapsule` из `ShellUI`), её кнопки и их доступность — прежние.
+
 Пакеты с удалёнными артефактами собираются без связки ключей (ассет llama.cpp публичный):
 
 ```bash
@@ -131,7 +135,7 @@ cd "<репозиторий>/App" && xcodegen generate
 export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
 xcodebuild -project Ally.xcodeproj -scheme Ally -destination 'generic/platform=iOS' -derivedDataPath build \
   -packageAuthorizationProvider netrc CODE_SIGNING_ALLOWED=NO build     # без подписи: CI и оракул артефакта
-bash ../scripts/lint/check_app_artifact.sh                               # A7: сеть, ключи Info
+bash ../scripts/lint/check_app_artifact.sh                               # A7, F5: сеть, ключи Info, iOS 27.0
 swift test --disable-keychain --package-path ../Packages/AllyLlama        # A23: паритет со стендом (веса в ~/models)
 ```
 

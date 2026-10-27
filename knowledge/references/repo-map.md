@@ -34,11 +34,15 @@ implementation:
   `swift test --package-path Packages/AllyCore` (тулчейн Xcode: `DEVELOPER_DIR`). Паритет энциклопедии со стендом —
   `swift run -c release --package-path Packages/AllyCore encyclopedia-replay <база.jsonl> [конфиг.json] < вопросы.jsonl`.
 - **Детский экран (оболочка)** — `Packages/AllyShell`: `ShellCore` (позы фаз, кадры, движение, раскладка, палитра,
-  венок, правило тапа `Tap`, перерыв после лимита `Nap` — Linux) и `ShellUI` (Элли с венком, пузырь и небо в SwiftUI
-  под `#if canImport(SwiftUI)`; экран дочки `ChildShell` с зоной взрослых). Приложение берёт `ShellUI` и `ShellCore`
-  через `App/project.yml`, тело `App/Sources/ChildScreen.swift` — `ChildShell`. Снимки семи фаз, лист `sheet.png`,
+  венок, правило тапа `Tap`, перерыв после лимита `Nap` — Linux) и `ShellUI` (Элли с венком, пузырь и небо `SkyArt` в
+  SwiftUI под `#if canImport(SwiftUI)`; экран дочки `ChildShell` с зоной взрослых в стекле; фон консоли `AdultSky` и
+  стеклянные кнопки `GlassCapsule`). Цель пакета и приложения — iOS 27 (app-glass; `App/project.yml`), тесты пакета на
+  Mac — macOS 27. Приложение берёт `ShellUI` и `ShellCore` через `App/project.yml`, тело `App/Sources/ChildScreen.swift`
+  — `ChildShell`, консоль — `App/Sources/AllyApp.swift`. Снимки семи фаз, лист `sheet.png`,
   полосы движения и экран целиком (`app/`) пишет `swift test --disable-keychain --package-path Packages/AllyShell` на
-  Mac в `local/shell-snapshots/`; на Linux снимки пропускаются видимо. Снимков экрана телефона нет никогда (L46).
+  Mac в `local/shell-snapshots/`; на Linux снимки пропускаются видимо. Настоящее стекло (`glass/`) снимает своё окно
+  на Mac — окно на миг у правого верхнего края экрана; `ImageRenderer` стекло не рисует. Снимков экрана телефона нет
+  никогда (L46).
 - **Расстановщик ударений** — `Packages/AllyAccent` (RUAccent на Swift: токенизаторы; паритет на Mac — файлы в
   `~/models/tts/ruaccent` и `~/models/tts/ruaccent-parity`): `swift test --disable-keychain --package-path Packages/AllyAccent`.
 - **Текст для синтеза** — `Packages/AllySpeechText` (ударения, закреплённый словарь, правила чтения; данные —

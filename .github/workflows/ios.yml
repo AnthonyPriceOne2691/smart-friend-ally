@@ -17,7 +17,9 @@ jobs:
   app:
     # Метка `macos` на PR — тот же ручной запуск до мержа: `workflow_dispatch` видит только файлы ветки по умолчанию.
     if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'macos'
-    runs-on: macos-26
+    # app-glass: цель iOS 27.0 требует SDK iOS 27 — он есть на образе xcode-27 (preview: macOS 27.0.1, Xcode 27.1 по
+    # умолчанию, как на Mac разработки), а на macos-26 только Xcode 26.x; решение ведущего 2026-10-27.
+    runs-on: xcode-27
     # §8.7: предохранитель — сборка пакетов с нуля и приложения ≈ 10 мин; 30 значит «что-то повисло».
     timeout-minutes: 30
     steps:

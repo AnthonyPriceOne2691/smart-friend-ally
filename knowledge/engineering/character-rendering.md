@@ -26,6 +26,8 @@ implementation:
   - Packages/AllyShell/Sources/ShellUI/Glow.swift
   - Packages/AllyShell/Sources/ShellUI/BubbleArt.swift
   - Packages/AllyShell/Sources/ShellCore/Syllables.swift
+  - Packages/AllyShell/Sources/ShellUI/SkyArt.swift
+  - Packages/AllyShell/Sources/ShellUI/GlassCapsule.swift
 ---
 
 # Context
@@ -119,6 +121,20 @@ WWDC25 soft-deprecated), Unity as a Library (на iOS только полный 
 голову, ручки и жабры позы «говорит»; вне речи гаснет к 0 без скачка (V34, свойство V12 — и с ритмом). Замер 27.10 на
 500 зёрнах: 39–44 слога за 10 с, рот ≥ 0,586 в каждую секунду, в паузе фразы ≤ 0,052, шаг за кадр ≤ 0,089.
 Рот по настоящему звуку — когда голос отдаст огибающую фразы: она пойдёт тем же полем уровня.
+
+**Как сделано в app-glass (2026-10-27):** небо — данные палитры (`Palette.sky`, `skyLights`), рисунок — `SkyArt`;
+то же небо — фон консоли (`AdultSky`). Стекло — системное Liquid Glass (`glassEffect`, `Glass.regular` с
+тонировкой), цель сборки и пакета `AllyShell` — iOS и macOS 27.
+
+- **Нового API стекла в iOS 27 нет.** В SDK iOS 27.1 стекло то же, что в iOS 26.
+- **`ImageRenderer` стекло не рисует.** Стекло на пустой фигуре он заливает непрозрачным белым, а вид со стеклом
+  на собственном содержимом выкидывает вместе с ним. Поэтому:
+  - стекло — только подложка: слова и цвета, которые судят пробы, лежат на непрозрачных видах;
+  - настоящее стекло судит снимок своего окна на Mac (`GlassSnapshotTests`, F3 и F4); без сервера окон —
+    видимый пропуск.
+- **Без `GlassEffectContainer`.** Внутри контейнера стекло ложилось поверх плашки и знака.
+- **Кнопки — свой стиль `GlassCapsule` на `glassEffect`.** Системные `.glass` и `.glassProminent` в окне Mac не в
+  фокусе теряют тонировку.
 
 **Следующий шаг — после теста первой версии:** Rive «2.5D» основным кандидатом, RealityKit + VRMKit запасным, клипы
 HEVC резервом. Решает зонд ниже, где база для сравнения — 2D первой версии, и слепой выбор родителя (V1) с реакцией

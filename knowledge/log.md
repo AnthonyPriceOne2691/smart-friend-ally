@@ -1,5 +1,15 @@
 # Knowledge Bundle Update Log
 
+## 2026-10-28 — жидкое стекло и розовое небо (app-glass)
+
+* **Update**: `product/look-and-feel` — правило «жидкое стекло и розовое небо» (слова и цвета на непрозрачной
+  подложке, стекло вокруг, у дочки кнопок не прибавилось), строка «в коде (app-glass)»; `implementation:` +=
+  `SkyArt.swift`, `GlassCapsule.swift`. `engineering/character-rendering` — как сделано: небо данными палитры,
+  системное стекло, `ImageRenderer` его не рисует — настоящее стекло судит снимок окна на Mac. `product/index` —
+  строка облика. `engineering/voice-loop` — цель iOS 27.0 и Xcode 27, образ `xcode-27`, консоль в стекле.
+  `references/repo-map` — `SkyArt`, `AdultSky`, `GlassCapsule`, снимки настоящего стекла.
+* **Источник**: поставка `app-glass` (слово родителя 2026-10-27; примеры F1–F5 и вид подписаны 2026-10-27).
+
 ## 2026-10-27 — память в разговоре: блок в префиксе персоны, консоль памяти, стирание из консоли (memory-recall)
 
 * **Update**: `engineering/memory` — раздел «В приложении — помнит»: системный ход «персона + блок» по токенизатору
