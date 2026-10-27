@@ -43,6 +43,9 @@ extension MemoryStore {
             let parse = try await remember(conversation, model: model)
             parsed.append(parse)
             if parse.status == .parsed || (talk[2].int ?? 0) >= 1 {
+                try db.run(parse.status == .parsed ? "DELETE FROM meta WHERE key = 'failed'"
+                           : "INSERT OR REPLACE INTO meta (key, value) VALUES ('failed', ?)",
+                           parse.status == .parsed ? [] : [.real(Date().timeIntervalSince1970)])
                 try release(session)
             } else {
                 try db.run("UPDATE queue SET attempts = attempts + 1 WHERE session = ?", [.text(session)])

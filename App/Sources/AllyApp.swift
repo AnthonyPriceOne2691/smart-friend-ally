@@ -24,6 +24,8 @@ struct AllyApp: App {
 /// at once (D2.2).
 struct Console: View {
     @ObservedObject var loop: VoiceLoop
+    @State private var remembered: String?
+    @State private var erasing = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -38,6 +40,7 @@ struct Console: View {
             Text(loop.screen.heard).foregroundStyle(.secondary)
             Text(loop.screen.said).bold()
             Text("Элли: " + Self.word(loop.talk.phase)).accessibilityIdentifier("console.phase")
+            ForEach(loop.memoryLines, id: \.self) { Text($0).font(.caption) }.accessibilityIdentifier("console.memory")
             ForEach(ReleaseGate.lines(loop.access, zone: .current) + [loop.acceptance, loop.napLine].compactMap { $0 },
                     id: \.self) {
                 Text($0).font(.caption)
@@ -59,6 +62,22 @@ struct Console: View {
                     .accessibilityIdentifier("console.handOver")
                 Button("Закрыть детский режим", action: loop.closeChildMode).buttonStyle(.bordered)
                     .disabled(!loop.exception).accessibilityIdentifier("console.closeChildMode")
+            }
+            HStack {  // M39: what she remembers, and the parent's erase with its confirmation
+                Button("Что помнит Элли") { remembered = loop.memoryText }.buttonStyle(.bordered)
+                    .disabled(loop.memoryLines.isEmpty).accessibilityIdentifier("console.memoryText")
+                Button("Стереть память", role: .destructive) { erasing = true }.buttonStyle(.bordered)
+                    .disabled(loop.memoryLines.isEmpty || loop.talk.phase != .asleep)
+                    .accessibilityIdentifier("console.eraseMemory")
+            }
+            .confirmationDialog(loop.memoryConfirmation, isPresented: $erasing, titleVisibility: .visible) {
+                Button("Стереть", role: .destructive, action: loop.eraseMemory)
+            }
+            .alert("Что помнит Элли", isPresented: Binding(get: { remembered != nil },
+                                                          set: { if !$0 { remembered = nil } })) {
+                Button("Закрыть", role: .cancel) {}
+            } message: {
+                Text(remembered.map { $0.isEmpty ? loop.memoryLines.first ?? "" : $0 } ?? "")
             }
         }
         .padding()
