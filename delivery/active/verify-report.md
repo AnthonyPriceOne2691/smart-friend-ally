@@ -4,7 +4,7 @@
 **Verifier:** process:ci
 **asserts_reviewed_by:** n/a (все утверждения ведут к примерам спеки M36, M39, M40 — дайджест ниже, asserts_without_example: 0; подписаны родителем 2026-10-23 «Подписываю (Рекомендую)» в спеке серии)
 **CI run:** первый прогон PR — ссылка дописывается следующим коммитом
-**Commit:** COMMIT (документы — 5654e56 до кода, код — 8dfcf49, заморозка стенда M40 до прогона — 4dbe06c, итог M40 — c2c3590, переключатель по решению родителя — COMMIT; сдача — следующим прогоном PR #84)
+**Commit:** 2ceed5a (документы — 5654e56 до кода, код — 8dfcf49, заморозка стенда M40 до прогона — 4dbe06c, итог M40 — c2c3590, переключатель по решению родителя — 2ceed5a; сдача — следующим прогоном PR #84)
 
 ## Shape oracles
 - [x] PASS — pre-commit на коммитах поставки: `file-length`, jscpd — рост 0; SwiftLint — 0 находок (снимок 0; класс
@@ -119,7 +119,7 @@
 
 База: `origin/main` · сгенерировано `assert_digest.sh`
 
-Новых/изменённых утверждений: **26**, из них без ссылки на пример спеки:
+Новых/изменённых утверждений: **30**, из них без ссылки на пример спеки:
 **0**. Вопрос к каждому непривязанному один: **откуда взято ожидаемое
 значение — из спеки или придумано под реализацию?**
 
@@ -138,9 +138,13 @@ M36	XCTAssertEqual(try prefixes(cache), file)
 M36	XCTAssertEqual(model.prefixInKV, prefix)
 M36	XCTAssertEqual(after, before)
 M36	XCTAssertGreaterThan(model.prefixInKV, bare)
-M36	XCTAssertEqual(MemoryBlock.system(persona: Recall.persona, block: try store.block().text), Recall.persona)
-M36	XCTAssertEqual(MemoryBlock.system(persona: Recall.persona, block: block), Recall.persona + "\n\n" + block)
+M36	XCTAssertEqual(MemoryBlock.system(persona: Recall.persona, block: try store.block().text, on: true),
+M36	XCTAssertEqual(MemoryBlock.system(persona: Recall.persona, block: block, on: true),
 M36	XCTAssertTrue(block.hasPrefix(Fixture.header))
+M40	XCTAssertFalse(try store.block().text.isEmpty)
+M40	XCTAssertFalse(MemoryBlock.inConversation)
+M40	XCTAssertEqual(MemoryBlock.system(persona: Recall.persona, block: try store.block().text), Recall.persona)
+M40	XCTAssertEqual(MemoryConsole.conversation, "память: в разговор не идёт — блок выключен")
 M39	XCTAssertEqual(try MemoryConsole.lines(store, zone: Recall.zone), ["память: Элли пока ничего не знает"])
 M39	XCTAssertEqual(try MemoryConsole.lines(store, zone: Recall.zone), ["память: 14 фактов"])
 M39	XCTAssertEqual(MemoryConsole.confirmation(facts: 14), "Стереть всё, что помнит Элли? (14 фактов)")
@@ -149,10 +153,10 @@ M39	XCTAssertEqual(try MemoryConsole.lines(store, zone: Recall.zone), ["памя
 M39	XCTAssertEqual(try MemoryConsole.lines(store, zone: Recall.zone), ["память: 14 фактов", "разбор не удался"])
 M39	XCTAssertEqual(try MemoryConsole.lines(store, zone: Recall.zone).count, 1)
 M39	XCTAssertEqual(try MemoryConsole.lines(store, zone: Recall.zone), ["память: стёрта 20.10 в 12:00"])
-M39	XCTAssertEqual(MemoryBlock.system(persona: Recall.persona, block: try store.block().text), Recall.persona)
+M39	XCTAssertEqual(MemoryBlock.system(persona: Recall.persona, block: try store.block().text, on: true),
 ```
 
-✅ **Каждое утверждение ведёт к примеру спеки** (M36 M39), а примеры человек
+✅ **Каждое утверждение ведёт к примеру спеки** (M36 M39 M40), а примеры человек
 подписал до кода (`human_ok_spec`). Подпись под дайджестом здесь
 **не требуется**: она уже стоит, заранее и на числах. Пиши в verify-report
 `asserts_reviewed_by: n/a (все утверждения ведут к одобренным примерам)`.
