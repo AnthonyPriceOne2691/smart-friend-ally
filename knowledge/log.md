@@ -1,5 +1,12 @@
 # Knowledge Bundle Update Log
 
+## 2026-10-27 — живой разговор: микрофон и голос в одном движке (duplex-audio)
+
+* **Update**: `engineering/voice-loop` — один `AVAudioEngine` на сессию: с Supertonic — voice processing, `.voiceChat`,
+  AGC из реестра, кольцо и счётчик вне слушания, этапы `overlap` и `started_over_voice`, версия `audio`; с Milena —
+  полудуплекс; стоп кончает слушание сразу. `engineering/turn-detector` — ядро подключено в приложении.
+  `engineering/safety-below-model` — путь реплики тот же.
+* **Источник**: поставка `duplex-audio` (D6.1; X9–X12, X18, X19 подписаны родителем 2026-10-23 и 2026-10-25).
 ## 2026-10-25 — живой разговор: окно голоса от проигрывателя (duplex-audio)
 
 * **Update**: `engineering/turn-detector` — `SoundingPlayer`: голос звучит с начала `play` до последнего отсчёта
