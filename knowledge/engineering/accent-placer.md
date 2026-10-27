@@ -1,7 +1,7 @@
 ---
 type: Design
 title: Расстановщик ударений — RUAccent на Swift (серия голоса V3)
-description: Пакет AllyAccent — настоящий StressPlacer для текста синтеза; V3a — три токенизатора RUAccent с паритетом HF, V3b — текст, словари и решения как в Python (повтор по записи), V3c — модели через AllyOnnx и примеры Z14–Z18.
+description: Пакет AllyAccent — настоящий StressPlacer для текста синтеза; V3a — три токенизатора RUAccent с паритетом HF, V3b — текст, словари и решения как в Python (повтор по записи), V3c — модели через AllyOnnx в AllyVoice и сборка: 163 из 163 на настоящих моделях.
 status: draft
 tags: [engineering, speech, tts, stress]
 generated:
@@ -20,6 +20,8 @@ implementation:
   - Packages/AllyAccent/Sources/AllyAccent/OmographDecision.swift
   - Packages/AllyAccent/Sources/AllyAccent/StressDecision.swift
   - Packages/AllyAccent/Sources/AllyAccent/RuAccentPlacer.swift
+  - Packages/AllyVoice/Sources/AllyVoice/RUAccentModels.swift
+  - Packages/AllyVoice/Sources/AllyVoice/RUAccentVoice.swift
 ---
 
 # Purpose
@@ -58,7 +60,19 @@ V3 разрезана на три поставки под одной подпи�
   не подавал, и считает несделанные вызовы. Запись стенда судит только ветки, по которым прошли её фразы (L102):
   фильтр, « - », «о», «##»-куски и [UNK] модели «ё», группы омографов держат пробы.
 
+- **Модели (V3c) — `RUAccentModels` в `AllyVoice` поверх `AllyOnnx`:** омографы turbo3.1 int8 с весами в external data
+  (`nn_omograph/turbo3.1-int8/turbo31_int8.onnx`, 90 МБ, отображаются из файла), «ё» и модель слов; 2 потока, без spin.
+  Сборка — `RUAccentVoice.placer(nn:dictionaries:)`: словари — первыми (временная память разбора JSON переиспользуется:
+  отпечаток +157 МБ против +175 при словарях последними).
+- **Числовой паритет задаёт версия ORT (Z18, переподписан родителем 2026-10-23):** логиты на ORT 1.28.0 бит в бит равны
+  onnxruntime 1.28.0 на Python; против 1.31 — до 0,038 (омографы) и 0,171 (модель слов) при тех же решениях на всех
+  804 вызовах. Эталоны — `~/models/tts/ruaccent-parity` (`pipeline.jsonl` — 1.31, `logits_ort1.28.0.jsonl` — 1.28.0).
+- **Цена на Mac (Z17, порог отпечатка переподписан родителем 2026-10-25):** медиана ≈ 5 мс на фразу; отпечаток ≈ 158 МБ
+  (словари строками Swift — 75, токенизаторы — 17, модели — 67) при пороге 170. Сжатие словарей (плоские массивы и
+  двоичный поиск, оценка ≈ 90 МБ) — отложено на полировку.
+
 # Status
 
 V3a — токенизаторы; V3b — логика: 163 из 163 позиций стенда, 9 фраз страницы, Z15 и Z16 по записи Python (Mac и
-Linux). Модели — V3c; расстановщик готов, но до V4 вызывающего в приложении нет (L50).
+Linux); V3c — модели: собранный расстановщик на настоящих моделях — 163 из 163, 9 фраз страницы, Z15 8 из 8,
+«аксоло́тлик» (тесты `AllyVoice` на Mac). До V4 вызывающего в приложении нет (L50).

@@ -6,11 +6,12 @@ import Foundation
 /// are the code's to judge, not the model's.
 struct Reading {
     let turns: [MemoryTurn]
-    private let texts: ExtractTexts, sense: SenseWords, fiction: Set<Int>
+    private let texts: ExtractTexts, sense: SenseWords, fiction: Set<Int>, names: [String]
     private(set) var candidates: [Candidate] = [], dropped: [Extraction.Drop] = []
 
-    init(turns: [MemoryTurn], texts: ExtractTexts = .shared, sense: SenseWords = .shared) {
-        (self.turns, self.texts, self.sense, fiction) = (turns, texts, sense, sense.fiction(turns))
+    /// - Parameter names: the keys of the names memory already has — a creation is not named after one of them.
+    init(turns: [MemoryTurn], names: [String] = [], texts: ExtractTexts = .shared, sense: SenseWords = .shared) {
+        (self.turns, self.texts, self.sense, fiction, self.names) = (turns, texts, sense, sense.fiction(turns), names)
     }
 
     /// What she no longer likes in this conversation («больше не люблю танцы» → «танцы»).
@@ -24,7 +25,7 @@ struct Reading {
             put(.child, .birthday, she.birthday, "she.birthday")
             for item in she.favorites ?? [] { favorite(item) }
             for item in she.likes ?? [] { put(.child, .likes, item, "she.likes") }
-            for item in she.can ?? [] { put(.child, .can, item, "she.can") }
+            for item in she.can ?? [] where !past(item) { put(.child, .can, item, "she.can") }
         }
         for person in answer.people ?? [] { family(person) }
         for pet in answer.pets ?? [] { thing(pet, "pets") { .pet(species: $0, name: $1) } }
@@ -109,7 +110,41 @@ struct Reading {
 
     private mutating func put(_ subject: Subject, _ trait: Trait, _ item: String?, _ field: String, slot: Slot? = nil) {
         guard let hit = take(item, field) else { return }
+        if trait == .detail, restates(hit.value, subject) {
+            return dropped.append(Extraction.Drop(field: field, reason: .restates))
+        }
         candidates.append(Candidate(subject, trait, hit.value, slot: slot, turn: hit.turn, anchor: hit.anchor))
+    }
+
+    /// A detail that only repeats who it is about: «для Тёмы» of the brother Тёма.
+    private func restates(_ detail: String, _ subject: Subject) -> Bool {
+        let who: [String?] = switch subject {
+        case .child: []
+        case .person(let relation, let name):
+            [(Words.shared.siblings + Words.shared.family).label(relation.rawValue), name]
+        case .pet(let species, let name), .creation(let species, let name): [species, name]
+        }
+        let identity = words(who.compactMap { $0 }.joined(separator: " ")), said = words(detail)
+        let making = subject.made ? sense.making : []
+        return !said.isEmpty && said.allSatisfy { word in
+            identity.contains { Taint.alike(word, $0, least: 3) } || making.contains(where: word.hasPrefix)
+        }
+    }
+
+    /// «Умеет: рисовала» is what she did, not what she can: a skill is not in the past tense.
+    private mutating func past(_ item: String) -> Bool {
+        guard let first = words(Self.split(item).1).first, first.count >= 5,
+              sense.past.contains(where: first.hasSuffix) else { return false }
+        dropped.append(Extraction.Drop(field: "she.can", reason: .restates))
+        return true
+    }
+
+    /// A creation named after someone memory knows: «домик для мурки» is not a house named Мурка.
+    private func namesake(_ value: String) -> Bool {
+        let key = MemoryStore.key(value)
+        let known = names
+            + candidates.filter { $0.trait == .name && !$0.subject.made }.map { MemoryStore.key($0.value) }
+        return known.contains { Taint.alike($0, key, least: 3) }
     }
 
     /// An age in words or digits, 1–20 as the base keeps it.
@@ -127,7 +162,9 @@ struct Reading {
         guard let hit = take(item, "she.favorite") else { return }
         let dash = hit.value.range(of: "—") ?? hit.value.range(of: "–") ?? hit.value.range(of: " - ")
         let word = dash.map { MemoryStore.key(String(hit.value[..<$0.lowerBound])) } ?? ""
-        let value = dash.map { hit.value[$0.upperBound...].trimmingCharacters(in: .whitespaces) } ?? hit.value
+        let after = dash.map { hit.value[$0.upperBound...].trimmingCharacters(in: .whitespaces) } ?? hit.value
+        let before = dash.map { String(hit.value[..<$0.lowerBound]).trimmingCharacters(in: .whitespaces) } ?? ""
+        let value = words(after).isEmpty && !words(before).isEmpty ? before : after  // «качели — больше всего»
         let said = SenseWords.phrase(her(hit.turn) + " " + ellyBefore(hit.turn))
         guard sense.favorite.contains(where: { said.contains(" " + $0) }) else {
             return candidates.append(Candidate(.child, .likes, value, turn: hit.turn, anchor: hit.anchor))
@@ -150,7 +187,14 @@ struct Reading {
 
     /// A pet or a creation: its kind and name anchor it; without both its colour and details belong to no one.
     private mutating func thing(_ thing: ModelAnswer.Thing, _ field: String, _ make: (String?, String?) -> Subject) {
-        let kind = take(thing.kind, field + ".species"), name = take(thing.name, field + ".name")
+        let kind = take(thing.kind, field + ".species")
+        var name = take(thing.name, field + ".name")
+        if field == "creations", let hit = name, namesake(hit.value) {
+            (name, _) = (nil, dropped.append(Extraction.Drop(field: field + ".name", reason: .namesake)))
+        }
+        if field == "pets", let hit = kind, !sense.homely(words(hit.value)) {
+            return dropped.append(Extraction.Drop(field: field + ".species", reason: .notPet))
+        }
         guard kind != nil || name != nil else {
             let orphans = (thing.color.map { _ in [field + ".color"] } ?? [])
                 + (thing.details ?? []).map { _ in field + ".detail" }
@@ -182,4 +226,9 @@ struct Reading {
             + (thing.details ?? []).map { _ in "pets.detail" }
         dropped += own.map { Extraction.Drop(field: $0, reason: .foreign) }
     }
+}
+
+extension Subject {
+    /// Something she made up — its name may repeat a real one.
+    var made: Bool { if case .creation = self { true } else { false } }
 }

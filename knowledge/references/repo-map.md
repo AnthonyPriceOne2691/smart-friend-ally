@@ -66,9 +66,9 @@ implementation:
 | `knowledge/` | канон домена (OKF v0.2) |
 | `delivery/` | поставки: `active/` — текущая, `archive/` — завершённые с уроками |
 | `scripts/`, `scripts/lint/` | механика контура; канонные файлы правятся только перевендориванием; продуктовые — `scripts/reinstall_app.sh` (E4), `scripts/child_mode.sh` (R) |
-| `docs/canon/` | снимок канонов с самопроверкой (вариант C) |
+| `docs/canon/` | снимок канонов с самопроверкой — только локально, в git его нет (вариант D с 2026-10-25: репозиторий публичный, канон проприетарный; `.git/info/exclude` и хук `canon-texts-stay-out`); в свежем клоне и новом ворктри каталога нет — снимок раскладывается локально |
 | `App/` | приложение iOS: `project.yml`, `Sources/` (консоль, цикл, звук, распознавание), `Resources/` (персона, реестр) |
-| `Packages/` | Swift-пакеты: `AllyDiscipline` (дисциплина ответа), `AllyCore` (ядро хода), `AllyLlama` (модель), `AllyShell` (детский экран), `AllySpeechText` (текст для синтеза), `AllyOnnx` (один ONNX Runtime приложения, sherpa-onnx), `AllyVoice` (движок голоса), `AllySQLite` (общий SQLite), `AllyMemory` (память о ребёнке), `AllyHearing` (слух: Silero VAD) |
+| `Packages/` | Swift-пакеты: `AllyDiscipline` (дисциплина ответа), `AllyCore` (ядро хода), `AllyLlama` (модель), `AllyShell` (детский экран), `AllySpeechText` (текст для синтеза), `AllyOnnx` (один ONNX Runtime приложения, sherpa-onnx), `AllyVoice` (движок голоса), `AllyVoiceFX` (PSOLA и эквалайзер), `AllySQLite` (общий SQLite), `AllyMemory` (память о ребёнке), `AllyHearing` (слух: Silero VAD) |
 | `local/` | данные ребёнка и прочее локальное — игнорируется, гейт не пускает в git |
 
 # Грабли
@@ -84,6 +84,9 @@ implementation:
   хотя ассет llama.cpp публичный. Симулятора нет: в xcframework llama.cpp b10809 только срезы iOS-устройства и macOS.
 - **Роли «до кода приложения» решены** (`app-voice-loop`): `cpu-in-async` и `unbounded-list` держат правила SwiftLint
   `blocking_wait` и `unbounded_stream`; объявлений с `until` в `scripts/lint/not-applicable.json` больше нет.
+- **Сторож скорости маршрутизатора на общем Mac** (`RouterTests.testDecisionIsFast`, отладочная сборка, p95 < 50 мс):
+  вне CI при загрузке за минуту выше числа производительных ядер (`hw.perflevel0.physicalcpu`) — пропуск с причиной в
+  логе, на CI судит всегда; R12 (p95 5 мс) меряет release-реплей `discipline-replay` (поставка `router-guard-load`).
 - **`raw.githubusercontent.com` из песочницы агента недоступен** (таймаут);
   содержимое GitHub — через `gh api`.
 - **Синхронизация с каноном — по содержимому, не по SHA:** HEAD Prepare двигают правки

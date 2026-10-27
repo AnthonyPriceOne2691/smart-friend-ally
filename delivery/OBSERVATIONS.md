@@ -57,6 +57,12 @@
 - `voice-config`
 - `test-session`
 - `memory-extract`
+- `accent-onnx`
 - `voice-out`
 - `memory-sense`
+- `canon-variant-d`
+- `child-shell-light`
 - `asr-step3`
+- `router-guard-load`
+- `voice-app`
+- `memory-quality`
