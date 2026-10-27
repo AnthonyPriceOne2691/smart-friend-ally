@@ -1,5 +1,25 @@
 # Knowledge Bundle Update Log
 
+## 2026-10-27 — живой разговор: микрофон и голос в одном движке (duplex-audio)
+
+* **Update**: `engineering/voice-loop` — один `AVAudioEngine` на сессию: с Supertonic — voice processing, `.voiceChat`,
+  AGC из реестра, кольцо и счётчик вне слушания, этапы `overlap` и `started_over_voice`, версия `audio`; с Milena —
+  полудуплекс; стоп кончает слушание сразу. `engineering/turn-detector` — ядро подключено в приложении.
+  `engineering/safety-below-model` — путь реплики тот же.
+* **Источник**: поставка `duplex-audio` (D6.1; X9–X12, X18, X19 подписаны родителем 2026-10-23 и 2026-10-25).
+## 2026-10-25 — живой разговор: окно голоса от проигрывателя (duplex-audio)
+
+* **Update**: `engineering/turn-detector` — `SoundingPlayer`: голос звучит с начала `play` до последнего отсчёта
+  (`started + frames / rate` V4b2a), конец буфера окно не сдвигает.
+* **Источник**: поставка `duplex-audio` (D6.1), сверка плана с V4b2a `voice-out` (T1).
+
+## 2026-10-25 — живой разговор: речь поверх голоса Элли — ядро (duplex-audio)
+
+* **Update**: `engineering/turn-detector` — кольцо микрофона через голос (`VoiceRing`: с её первого флага речи минус
+  0,8 с, без её речи не отдаётся) и счётчик наложений (`OverlapCounter`: речь ≥ 250 мс поверх голоса или в 0,8 с
+  после, только счёт); ключи реестра слуха `overlap` и `voice_processing`; `implementation:` — `Overlap.swift`.
+  `engineering/voice-loop` — ключи лежат в реестре, приложение пока слушает полудуплексом.
+* **Источник**: поставка `duplex-audio` (D6.1 серии «живой разговор»; X18, X19 и план подписаны родителем 2026-10-25).
 ## 2026-10-27 — расстановщик ударений в приложении (хвост серии голоса)
 
 * **Update**: `engineering/voice-loop` — RUAccent вместо заглушки, файлы группы `accent` в раскладке V3c, строка

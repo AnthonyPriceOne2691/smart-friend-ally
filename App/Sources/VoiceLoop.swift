@@ -63,10 +63,12 @@ final class VoiceLoop: ObservableObject {
         let (silero, listening) = SileroActivity.choose(hearing, models: models)  // D7.2: no Silero — energy
         let asr = GigaAMRecognizer.choose(hearing, models: models)  // D7.3: dictation unless GigaAM is asked and there
         screen.lines += [listening.line] + [asr.line].compactMap { $0 }
+        let sound = duplex(voice, hearing, models: models, silero: silero)
         let personaHash = SHA256.hash(data: Data(persona.utf8)).map { String(format: "%02x", $0) }.joined()
         versions = ["ios": UIDevice.current.systemVersion, "llama": settings.runtime.build, "persona": personaHash,
                     "voice": voice.label, "weights": "\(registry.model.file):\(registry.model.bytes)",
-                    "vad": silero == nil ? "energy" : "silero:\(hearing.vad?.bytes ?? 0)", "asr": asr.label]
+                    "vad": silero == nil ? "energy" : "silero:\(hearing.vad?.bytes ?? 0)", "asr": asr.label,
+                    "audio": sound]
         (self.registry, self.model, self.voice) = (registry, model, voice)
         screen.ready = speech.ready && microphone && voice.ready
         if screen.ready { converse(model, hearing, voice, silero, asr.decode) }
@@ -85,15 +87,15 @@ final class VoiceLoop: ObservableObject {
                 screen.lines.append(missing)
                 return milena
             }
-            // The speaker before the first phrase: soloAmbient is silent under the ring switch (D6.1 — voiceChat).
-            let session = AVAudioSession.sharedInstance()
-            try session.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker])
-            try session.setActive(true)
-            // The app assembles the voice: D6.1 gives its session engine and wraps the player (SoundingPlayer).
+            // The app assembles the voice on the session's engine (D6.1): the player's node joins the graph before
+            // voice processing goes on, and its sound tells the overlap counter when the voice sounds; the session for
+            // the speaker before the first phrase is set by AudioIO.
             let accent = AccentPlacer.load(settings, folder: folder)
             screen.lines.append(accent.line)
             let renderer = try SupertonicRenderer(settings: settings, folder: folder, placer: accent.placer)
-            let player = EnginePlayer(engine: AVAudioEngine(), rate: renderer.rate)
+            let audio = audio
+            let player = SoundingPlayer(EnginePlayer(engine: audio.engine, rate: renderer.rate),
+                                        began: { audio.voiceStarted() }, ended: { audio.voiceEnded(at: $0) })
             let spoken = SpokenVoice(renderer: renderer, player: player, gap: 0.45 / settings.preset.speed)
             return SupertonicVoice(spoken, preset: settings.preset)
         } catch {
@@ -103,14 +105,40 @@ final class VoiceLoop: ObservableObject {
     }
 
     /// A tap on the sleeping friend: she greets and then talks without buttons until the session sleeps. The session of
-    /// the shown screen wakes after the last one has ended: its microphone cannot be cancelled (L60).
+    /// the shown screen wakes after the last one has ended (L60, L69); the microphone is open from its wake to its
+    /// sleep (D6.1).
     func wake() {
         guard let talker = child ? childTalk : conversation, talk.phase == .asleep else { return }
         (screen.heard, screen.said) = ("", "")
-        let previous = running
+        let previous = running, audio = audio
         running = Task {
             await previous?.value
+            do { try audio.start() } catch { screen.lines.append("микрофон не открылся: \(error)") }
             await talker.wake()
+            audio.stop()
+        }
+    }
+
+    /// The microphone and the voice of a session (D6.1): Supertonic — one engine with voice processing, the ring and
+    /// the counter outside a listening; Milena — half-duplex. The journal's `audio`: `vp+agc`, `vp` or `half`.
+    private func duplex(_ voice: any HerVoice, _ hearing: Hearing, models: URL, silero: SileroActivity?) -> String {
+        guard voice is SupertonicVoice else {
+            screen.lines.append("звук: полудуплекс (Milena)")
+            return "half"
+        }
+        // The ring's own activity: the listening's is reset at every listening (TurnDetector).
+        let own = silero == nil ? nil : hearing.vad.flatMap {
+            SileroActivity(model: models.appendingPathComponent($0.file), hearing: hearing)
+        }
+        do {
+            let mode = try audio.goDuplex(hearing, activity: own ?? EnergyActivity(), feed: own.map { ring in
+                { ring.feed($0) }
+            }, flagMinimum: own == nil ? 0 : hearing.vad?.minSpeech ?? 0)
+            screen.lines.append(mode.map { "звук: дуплекс · \($0)" } ?? "звук: полудуплекс (нет overlap)")
+            return mode ?? "half"
+        } catch {
+            screen.lines.append("звук: полудуплекс — \(error)")
+            return "half"
         }
     }
 
@@ -137,11 +165,12 @@ final class VoiceLoop: ObservableObject {
         let echo = EchoVoice(voice) { sentence in Task { @MainActor in self.screen.said += sentence + " " } }
         let settings = SessionSettings(limitMinutes: UserDefaults.standard.object(forKey: SessionSettings.key)
             .map { "\($0)" })
-        let versions = versions, sink = TraceFile(url: caches.appendingPathComponent("turns.jsonl"))
+        let versions = versions, sink = TraceFile(url: caches.appendingPathComponent("turns.jsonl")), audio = audio
         let stamp: @Sendable () -> TraceStamp = {
             let thermal = ["nominal", "fair", "serious", "critical"][ProcessInfo.processInfo.thermalState.rawValue]
+            let overlaps = audio.takeOverlaps().map { ["overlap": Double($0)] } ?? [:]  // D6.1: her speech over Elly
             return TraceStamp(versions: versions, memory: Self.memory(model), thermal: thermal,
-                              stages: ear.takeStages().merging(voice.takeStages()) { $1 })
+                              stages: ear.takeStages().merging(voice.takeStages()) { $1 }.merging(overlaps) { $1 })
         }
         let parts = { (audience: Audience) in
             SessionParts(model: model, voice: echo, sink: sink, router: RouterRouting(), audience: audience,
