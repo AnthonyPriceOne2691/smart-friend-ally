@@ -20,6 +20,8 @@ packages:
     path: ../Packages/AllyVoiceFX
   AllySpeechText:  # the engine's text: stresses, names, reading rules (V2)
     path: ../Packages/AllySpeechText
+  AllyAccent:  # RUAccent on Swift — the placer (V3a–V3c, voice-accent-wire)
+    path: ../Packages/AllyAccent
 settings:
   base:
     CODE_SIGN_STYLE: Automatic
@@ -50,6 +52,7 @@ targets:
       - package: AllyVoice
       - package: AllyVoiceFX
       - package: AllySpeechText
+      - package: AllyAccent
     info:  # generated with the project, not in git; merged with the build's own keys (GENERATE_INFOPLIST_FILE)
       path: Info.plist
       properties:
