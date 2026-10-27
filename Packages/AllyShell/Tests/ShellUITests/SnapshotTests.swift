@@ -123,9 +123,9 @@ final class SnapshotTests: XCTestCase {
         }
         let strip = CGRect(x: 0, y: 0, width: 440, height: 40)
         XCTAssertLessThanOrEqual(try XCTUnwrap(probes["night"]).mean(in: strip, luminance), 0.70)
-        // The day's bound follows the pink sky (F1, signed 2026-10-27): its top #DCEEFF alone is 0.836, with the
-        // sky-blue and lilac lights the strip is 0.773, so 0.85 (computed for the old sky, 0.94) became 0.75;
-        // the night is 0.277.
+        // The day's bound follows the pink sky signed 2026-10-27: its top #DCEEFF alone is 0.836, with the sky-blue
+        // and lilac lights the strip is 0.773, so 0.85 (computed for the old sky, 0.94) became 0.75; the night is
+        // 0.277 — V36
         XCTAssertGreaterThanOrEqual(try XCTUnwrap(probes["listening"]).mean(in: strip, luminance), 0.75)
         let moon = CGRect(x: 290, y: 380, width: 72, height: 90), moonTone = { (rgb: [Int]) in near(rgb, 0xFFF1B8, 16) }
         XCTAssertGreaterThanOrEqual(try XCTUnwrap(probes["night"]).area(in: moon, where: moonTone), 150)

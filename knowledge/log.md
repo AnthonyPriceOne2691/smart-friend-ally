@@ -6,7 +6,8 @@
   подложке, стекло вокруг, у дочки кнопок не прибавилось), строка «в коде (app-glass)»; `implementation:` +=
   `SkyArt.swift`, `GlassCapsule.swift`. `engineering/character-rendering` — как сделано: небо данными палитры,
   системное стекло, `ImageRenderer` его не рисует — настоящее стекло судит снимок окна на Mac. `product/index` —
-  строка облика.
+  строка облика. `engineering/voice-loop` — цель iOS 27.0 и Xcode 27, образ `xcode-27`, консоль в стекле.
+  `references/repo-map` — `SkyArt`, `AdultSky`, `GlassCapsule`, снимки настоящего стекла.
 * **Источник**: поставка `app-glass` (слово родителя 2026-10-27; примеры F1–F5 и вид подписаны 2026-10-27).
 
 ## 2026-10-27 — память в приложении: отбор, очередь, разбор после прощания, хранилище (memory-app)
