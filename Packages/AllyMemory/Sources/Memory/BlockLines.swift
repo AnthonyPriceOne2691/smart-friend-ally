@@ -4,8 +4,9 @@ import Foundation
 /// ages in words, line caps, the budget and the Linux estimate of characters per token.
 struct Words: Decodable {
     struct Labels: Decodable { let she, favorite, likes, can, creations, birthday, pet: String }
+    struct Console: Decodable { let nothing, facts, erased, waiting, failed, confirm: String, forms: [String] }
     let header: String, labels: Labels, siblings: [[String]], family: [[String]], slots: [[String]], ages: [String]
-    let caps: [String: Int], budget: Int, charsPerToken: Double
+    let caps: [String: Int], budget: Int, charsPerToken: Double, console: Console
 
     static let shared: Words = {
         guard let url = Bundle.module.url(forResource: "memory", withExtension: "json"),

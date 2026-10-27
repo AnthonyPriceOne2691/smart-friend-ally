@@ -1,12 +1,12 @@
 ---
 type: Design
 title: Память о ребёнке — факты с опорой на её ход, замена по дате, блок для промпта
-description: Память-портрет в пакете AllyMemory над общим SQLite — что хранится, что не хранится никогда (проверка записи и триггер базы на любом пути), разбор разговора моделью с опорой на её слова, опора и уверенность кодом, замена однозначного по дате, узнавание сущностей, блок ≤ 300 токенов с несокращаемым ядром, «стереть всё» удалением файлов; что из серии ещё не подключено.
+description: Память-портрет в пакете AllyMemory над общим SQLite — что хранится, что не хранится никогда (проверка записи и триггер базы на любом пути), разбор разговора моделью с опорой на её слова, опора и уверенность кодом, замена однозначного по дате, узнавание сущностей, блок ≤ 300 токенов с несокращаемым ядром в префиксе персоны, консоль памяти и «стереть всё» удалением файлов; что из серии ещё не подключено.
 status: draft
 tags: [engineering, memory, privacy, child]
 generated:
   by: claude_code/opus-5.5
-  at: 2026-10-27T23:00:00+03:00
+  at: 2026-10-27T23:50:00+03:00
 implementation:
   - Packages/AllyMemory/Sources/Memory/MemoryStore.swift
   - Packages/AllyMemory/Sources/Memory/Schema.swift
@@ -26,6 +26,7 @@ implementation:
   - Packages/AllyMemory/Sources/Memory/Sense.swift
   - Packages/AllyMemory/Sources/Memory/Resources/sense.json
   - Packages/AllyMemory/Sources/Memory/MemoryQueue.swift
+  - Packages/AllyMemory/Sources/Memory/MemoryConsole.swift
   - Packages/AllyCore/Sources/AllyCore/MemoryTap.swift
   - App/Sources/MemoryLlama.swift
 ---
@@ -38,7 +39,8 @@ implementation:
 профиля — детали 0,75 против 0,13, поправка «Мурка — кошка» 3 из 3 против 0 из 3. Серия подписана родителем 2026-10-23:
 `memory-core` (база и блок) → `memory-guard` (запрет на любом пути) → `memory-extract` (запрос и опора) →
 `memory-sense` (чужое, выдуманное, любимое, отрицание) → `memory-quality` (качество на E4B) → `memory-app` (телефон) →
-`memory-forget`; разрезы — решения ведущего 2026-10-23, содержание подписанное.
+`memory-recall` (в разговоре) → `memory-forget`; разрезы — решения ведущего 2026-10-23 и 2026-10-27, содержание
+подписанное.
 
 # Canonical rules
 
@@ -151,11 +153,28 @@ implementation:
   Соединение SQLite держит замок: запись очереди из сессии и разбор не перекрываются внутри оператора и транзакции.
 - **Телефонные части** — p95 разбора, экран, тап, фон, класс защиты на телефоне — сессия теста (`ops/test-session`).
 
+# В приложении — помнит (memory-recall, 2026-10-27)
+
+- **Блок в префиксе** (`MemoryBlock.system`, `LlamaModel.load(…, system:)`, `rebuildPrefix`): системный ход — персона,
+  а при непустой памяти — персона, пустая строка и блок ≤ 300 токенов по токенизатору E4B; пустая память — персона байт
+  в байт и тот же файл префикса. Загрузка считает блок токенизатором самой модели до префикса, поэтому новый запуск
+  читает файл, записанный прошлой сессией (Mac: 0,007 с); после разбора во сне, если блок изменился, и после стирания
+  префикс пересобирается, следующая сессия копирует его.
+- **Пересборка не ломает персону:** префикс читается или собирается в стороне, в последовательности 3, и только целым
+  копируется в последовательность 0; разговор перед пересборкой очищается, флаг законченного ответа отпускается. Не
+  уместилась — префикс прежний (Mac: переполненная пересборка `decode(1)`, последовательность 0 та же).
+- **Консоль памяти** (`MemoryConsole`, слова — `console` в `memory.json`): «память: Элли пока ничего не знает»,
+  «память: N фактов» (факт / факта / фактов), «память: стёрта ДД.ММ в ЧЧ:ММ» по времени телефона, «ждёт разбора: K»,
+  «разбор не удался» (отметка `failed` в `meta` — ставит второй неудачный разбор, снимает удачный, стирание — вместе с
+  базой). «Что помнит Элли» — текст блока, как его получает модель; «Стереть память» — только при спящей, с
+  подтверждением «Стереть всё, что помнит Элли? (N фактов)»; стирание — та же работа у модели, что разбор: тап ждёт её.
+- **Файл префикса** `Caches/persona-*` несёт блок — класс полной защиты, вне бэкапа (Caches), уходит со стиранием.
+- **Телефонные части** — чтение префикса ≤ 0,1 с, экран консоли, «помнит на телефоне» 3 из 3 и «не знает» после
+  стирания (M37) — сессия теста (`ops/test-session`).
+
 # Что ещё не подключено (L50)
 
-Блок в префиксе персоны, консоль памяти («Что помнит Элли», «Стереть память»), проверка «помнит на телефоне» и
-дифференциальный прогон модели — `memory-recall`; до неё Элли копит факты, но в разговор их не берёт. Забыть один
-факт и счётчики брата и имени — `memory-forget`.
+Забыть один факт («забудь про…») и счётчики брата и имени — `memory-forget`; до неё родитель стирает только всё сразу.
 
 # Implementation map
 
@@ -166,6 +185,7 @@ implementation:
 | Запрет на любом пути | `Packages/AllyMemory/Sources/Memory/Forbidden.swift`, `Resources/forbidden.json`, триггеры в `Schema.swift` |
 | Разбор разговора | `Packages/AllyMemory/Sources/Memory/Extract.swift`, `ExtractPrompt.swift`, `ModelAnswer.swift`, `Anchors.swift`, `Resources/extract.*` |
 | Не правда о ней, любимое, «больше не люблю» | `Packages/AllyMemory/Sources/Memory/Sense.swift`, `Resources/sense.json`, `Anchors.swift`, снятие в `MemoryStore.swift` |
+| Блок в префиксе, консоль памяти, стирание из консоли | `Packages/AllyMemory/Sources/Memory/MemoryBlock.swift` (`system`), `MemoryConsole.swift`, `Packages/AllyLlama/Sources/AllyLlama/LlamaModel.swift` (`load(…, system:)`, `rebuildPrefix`), `App/Sources/VoiceLoop.swift`, `App/Sources/AllyApp.swift` |
 | Отбор, очередь, разбор после прощания, хранилище | `Packages/AllyCore/Sources/AllyCore/MemoryTap.swift`, `Packages/AllyMemory/Sources/Memory/MemoryQueue.swift`, `Packages/AllyLlama/Sources/AllyLlama/LlamaModel.swift` (`complete`, `json.gbnf`), `App/Sources/MemoryLlama.swift`, `App/Sources/VoiceLoop.swift` |
 | Общий SQLite | `Packages/AllySQLite` (функция для триггера — `SQLiteConnection.function`) |
 | Примеры M15–M31 | `Packages/AllyMemory/Tests/MemoryTests/`, `Packages/AllySQLite/Tests/`, смоук S7 |
@@ -184,4 +204,5 @@ implementation:
 - Поставка `memory-sense` (M30, M31 из той же спеки серии).
 - Поставка `memory-quality` (M32 той же спеки серии; стенд вне git).
 - Поставка `memory-app` (M33–M35, M38 той же спеки серии; разрез — ведущий 2026-10-27).
+- Поставка `memory-recall` (M36, M37, M39, M40 той же спеки серии; стенд M40 вне git).
 - [Memory portrait](/references/research/memory-portrait.md) — замеры варианта B, приёмка M1–M14.
