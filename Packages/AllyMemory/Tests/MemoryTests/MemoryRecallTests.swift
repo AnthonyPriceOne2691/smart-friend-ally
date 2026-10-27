@@ -17,7 +17,9 @@ final class MemoryRecallTests: StoreTestCase {
         XCTAssertEqual(MemoryBlock.system(persona: Recall.persona, block: block), Recall.persona + "\n\n" + block)
         XCTAssertTrue(block.hasPrefix(Fixture.header))
     }
+}
 
+final class MemoryConsoleTests: StoreTestCase {
     func testConsoleTellsTheMemoryStatesApart() async throws {  // M39
         let store = try makeStore()
         XCTAssertEqual(try MemoryConsole.lines(store, zone: Recall.zone), ["память: Элли пока ничего не знает"])
