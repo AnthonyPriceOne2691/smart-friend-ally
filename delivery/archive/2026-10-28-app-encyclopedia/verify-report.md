@@ -3,7 +3,7 @@
 **Date:** 2026-10-28
 **Verifier:** process:ci
 **asserts_reviewed_by:** n/a (все утверждения ведут к примерам спеки P12, P13, P16, P17, P18, P20 — дайджест ниже, asserts_without_example: 0; ожидания P12–P20 подписаны родителем 2026-10-23 в спеке серии, решения 2026-10-27 — в `escalation.md`)
-**CI run:** — (PR открывается этим коммитом; ссылка будет вписана после зелёного прогона)
+**CI run:** https://github.com/AnthonyPriceOne2691/smart-friend-ally/actions/runs/40584169434 (PR #83, коммит 4cee1c8: `delivery`, `gates`, `swift` — зелёные с первого прогона; `mergeable: MERGEABLE`, `CLEAN` — проверено до ссылки, L35)
 **Commit:** документы — ec456f5, 7de7c1c до кода; код — 6c8ce57, 7f63467 (правило покрытия), 38e37ad (формат B); слияния main — e726524, b4b9e76
 
 ## Shape oracles
@@ -19,7 +19,8 @@
 
 ## Behavior oracles
 - [x] PASS — `swift test` AllyCore на Mac (Xcode 27) после слияния main b4b9e76: 137 тестов из 137; новые —
-  `EncyclopediaBaseTests` (P12, P13, P16), `KnowledgeSessionTests` (P17, P18, P20); покрытие — джоба CI `swift` (с PR)
+  `EncyclopediaBaseTests` (P12, P13, P16), `KnowledgeSessionTests` (P17, P18, P20); покрытие AllyCore в CI на Linux —
+  36 файлов `Sources/`, 2253 из 2326 строк, 96% (порог 70%), слепота гейта проверена порогом 101%
 - [x] PASS — приложение без подписи: `xcodebuild` — BUILD SUCCEEDED; оракул артефакта OK; база
   `encyclopedia.ru.jsonl` и `knowledge.json` лежат в бандле AllyCore внутри `Ally.app`
 - [x] PASS — мутации в ту же сессию, исходник восстанавливался из git после каждой: 11 из 11 убиты —
@@ -96,12 +97,12 @@
 | Metric | Value |
 |---|---|
 | files_touched / loc_diff | 17 code (+17 process docs) / +490/−57 (net +433); предохранитель — 17 файлов, net 433 из 800 |
-| commits | 19 до отчёта, из них слияния main — 3 |
+| commits | 21 с коммитом сдачи, из них слияния main — 3 |
 | time_to_accepted_spec | 0.0h (подпись серии 2026-10-23) |
 | rework_after_done | 0 (handoff not declared yet) |
 | harness_hardened | yes — `EncyclopediaBaseTests.swift`, `KnowledgeSessionTests.swift` (новые оракулы), стенды P18 и P19 |
 | implement_retries | 3 — Russian-литералы консоли в ресурс `knowledge.json`, Data → String, пять параметров `converse` |
-| verify_fails_before_green | 0 локально; CI — с PR |
+| verify_fails_before_green | 0 — первый прогон CI на PR #83 зелёный |
 | est_token_or_cost | n/a |
 
 ## Assertion digest (ревью ожиданий, не кода)
@@ -178,6 +179,6 @@ asserts_without_example: 0
 
 ## Verdict
 
-Verify сделан локально; PR открывается этим коммитом.
+Verify сделан, CI на PR #83 зелёный с первого прогона; P16, P18 и P20 закрыты решениями родителя (waivers).
 
-- [ ] READY FOR HANDOFF — после зелёного CI
+- [x] READY FOR HANDOFF
