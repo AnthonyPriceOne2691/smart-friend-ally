@@ -53,7 +53,7 @@ public struct TurnTrace: Encodable, Sendable {
         }
         (rules, contractHash, modelTimeout) = (log?.rules ?? [], log?.contractHash, log?.modelTimeout ?? false)
         (self.cancelled, self.error, self.end) = (cancelled, error.map(TurnLog.wordless), end)
-        (elapsed, limit, stages) = (head.elapsed, head.limit, log?.stages ?? [:])
+        (elapsed, limit, stages) = (head.elapsed, head.limit, log?.stages ?? stamp.stages)
         (versions, memory) = (stamp.versions.mapValues(TurnLog.wordless), stamp.memory)
         (thermal, audience) = (TurnLog.wordless(stamp.thermal), head.audience.rawValue)
         turnKind = head.turnKind?.rawValue

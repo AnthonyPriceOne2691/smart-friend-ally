@@ -46,6 +46,8 @@ struct Console: View {
                     .disabled(!loop.screen.ready || loop.talk.phase != .asleep).accessibilityIdentifier("console.wake")
                 Button("Я всё", action: loop.done).buttonStyle(.bordered)
                     .disabled(loop.talk.pose != .listens).accessibilityIdentifier("console.done")
+                Button("Перебить", action: loop.bargeIn).buttonStyle(.bordered)
+                    .disabled(loop.talk.pose != .speaks).accessibilityIdentifier("console.bargeIn")
                 Button("Стоп", action: loop.stop).buttonStyle(.bordered)
                     .disabled(loop.talk.phase == .asleep).accessibilityIdentifier("console.stop")
             }
@@ -74,6 +76,7 @@ struct Console: View {
         case .speaking: "говорит"
         case .windingDown: "дослушивает"
         case .goodbye: "прощается"
+        case .paused: "пауза"
         }
     }
 }

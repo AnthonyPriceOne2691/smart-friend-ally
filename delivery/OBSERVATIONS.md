@@ -68,3 +68,4 @@
 - `memory-quality`
 - `duplex-audio`
 - `voice-accent-wire`
+- `barge-in`
