@@ -28,6 +28,13 @@ final class TestClock: TurnClock, @unchecked Sendable {
         }
     }
 
+    /// Moves the clock to the earliest sleeper's deadline; false when nobody sleeps.
+    @discardableResult func advanceToNext() -> Bool {
+        guard let next = state({ $0.sleepers.map(\.until).min() }) else { return false }
+        advance(by: max(0, next - now()))
+        return true
+    }
+
     func advance(by seconds: Double) {
         state { (s: inout State) -> [Sleeper] in
             s.time += seconds

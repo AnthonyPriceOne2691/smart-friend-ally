@@ -5,6 +5,7 @@ import SwiftUI
 @main
 struct AllyApp: App {
     @StateObject private var loop = VoiceLoop()
+    @Environment(\.scenePhase) private var phase
 
     var body: some Scene {
         WindowGroup {
@@ -14,6 +15,7 @@ struct AllyApp: App {
                 Console(loop: loop)
             }
         }
+        .onChange(of: phase) { _, now in if now == .background { _ = loop.pauseMemory() } }  // M35
     }
 }
 
@@ -46,6 +48,8 @@ struct Console: View {
                     .disabled(!loop.screen.ready || loop.talk.phase != .asleep).accessibilityIdentifier("console.wake")
                 Button("Я всё", action: loop.done).buttonStyle(.bordered)
                     .disabled(loop.talk.pose != .listens).accessibilityIdentifier("console.done")
+                Button("Перебить", action: loop.bargeIn).buttonStyle(.bordered)
+                    .disabled(loop.talk.pose != .speaks).accessibilityIdentifier("console.bargeIn")
                 Button("Стоп", action: loop.stop).buttonStyle(.bordered)
                     .disabled(loop.talk.phase == .asleep).accessibilityIdentifier("console.stop")
             }
@@ -74,6 +78,7 @@ struct Console: View {
         case .speaking: "говорит"
         case .windingDown: "дослушивает"
         case .goodbye: "прощается"
+        case .paused: "пауза"
         }
     }
 }

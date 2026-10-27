@@ -72,18 +72,13 @@ struct CrownArt {
 
     /// A glint: a star with a raspberry edge or a plain dot, at its brightness.
     private func shine(_ base: GraphicsContext, _ glint: Crown.Glint, _ brightness: Double) {
-        var ctx = base
-        ctx.opacity = brightness
-        let tone = Color(Palette.glitter[glint.tone])
-        if !glint.star {
-            ctx.fill(circle(CGPoint(x: glint.x, y: glint.y), glint.size), with: .color(tone))
-            return
+        let tone = Color(Palette.glitter[glint.tone]), spot = CGPoint(x: glint.x, y: glint.y)
+        guard glint.star else {
+            var dot = base
+            dot.opacity *= brightness
+            return dot.fill(circle(spot, glint.size), with: .color(tone))
         }
-        ctx.translateBy(x: glint.x, y: glint.y)
-        ctx.scaleBy(x: glint.size / 24, y: glint.size / 24)
-        ctx.fill(Blooms.star, with: .color(tone))
-        ctx.stroke(Blooms.star, with: .color(Color(Palette.raspberry)),
-                   style: StrokeStyle(lineWidth: 1.1, lineJoin: .round))
+        sparkle(base, at: spot, width: glint.size, fill: tone, opacity: brightness)
     }
 }
 

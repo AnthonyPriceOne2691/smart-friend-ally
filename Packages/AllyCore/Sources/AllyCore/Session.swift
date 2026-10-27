@@ -1,18 +1,42 @@
 import Discipline
 import Foundation
 
-/// Where the session is (spec, «Состояния»): what she does and whether the microphone is open.
+/// Where the session is (spec, «Состояния»): what she does and whether the microphone is open; `paused` — the audio
+/// session was taken away (a call, Siri), she listens again when it comes back (D6.2).
 public enum SessionState: String, Sendable {
-    case asleep, greeting, listening, thinking, speaking, windingDown, goodbye
+    case asleep, greeting, listening, thinking, speaking, windingDown, goodbye, paused
 
     /// The microphone is open only while she listens: for an utterance or, past the limit, for the last one.
     public var listens: Bool { self == .listening || self == .windingDown }
 }
 
 /// What the app tells the session: a tap woke her, the recognizer's text, silence, the parent's stop; while she
-/// listens — her tentative end with the text so far and her speech coming back (D7.1).
+/// listens — her tentative end with the text so far and her speech coming back (D7.1); while Elly speaks — her speech
+/// or tap over Elly; the audio session taken away and given back (D6.2).
 public enum SessionEvent: Sendable {
-    case wake, heard(String), silence, stop, tentative(String), resumed
+    case wake, heard(String), silence, stop, tentative(String), resumed, bargeIn, interruptionBegan, interruptionEnded
+}
+
+/// Why a turn's work was cancelled: the parent's stop — she sleeps; her speech or tap over Elly — she listens at once;
+/// the audio session taken away — a pause until it comes back (D6.2). The record of the cut turn names the last two.
+enum Cut {
+    case parent, bargeIn, interrupted
+
+    var next: SessionState {
+        switch self {
+        case .parent: .asleep
+        case .bargeIn: .listening
+        case .interrupted: .paused
+        }
+    }
+
+    var marks: [String: Double] {
+        switch self {
+        case .parent: [:]
+        case .bargeIn: ["barge_in": 1]
+        case .interrupted: ["interrupted": 1]
+        }
+    }
 }
 
 /// What a session needs: the model and the voice, the trace sink, the clock, the router hook, the encyclopedia after it
@@ -40,7 +64,7 @@ public actor Session {
     private let parts: SessionParts, settings: SessionSettings, data = SessionData.shared, kinds = TurnKinds.shared
     private let current = Locked(SessionState.asleep), expecting = Locked(TurnKind.open)
     private var id = "", start = 0.0, count = 0, misses = 0, heard: String?, listening: TurnKind?
-    private var cancel: (@Sendable () -> Void)?
+    private var cancel: (@Sendable () -> Void)?, cut = Cut.parent
     private let speculation: Speculation
 
     /// The answer begun in her pause has been written to its end (a test waits for it before her speech comes back).
@@ -56,14 +80,34 @@ public actor Session {
     /// The kind of her next turn, by what Elly said last; «не расслышала» keeps it — she says the same again.
     public nonisolated var expect: TurnKind { expecting { $0 } }
 
-    /// One event at a time; an event of another state changes nothing. `stop` comes in while a turn runs.
+    /// One event at a time; an event of another state changes nothing. The parent's stop, her speech or tap over Elly
+    /// and the audio session's coming and going come in while a turn runs.
     public func handle(_ event: SessionEvent) async {
+        switch event {
+        case .stop, .bargeIn, .interruptionBegan, .interruptionEnded: control(event)
+        default: await converse(event)
+        }
+    }
+
+    private func converse(_ event: SessionEvent) async {
         switch (state, event) {
         case (.asleep, .wake): await greet()
         case (.listening, .heard), (.windingDown, .heard), (.listening, .silence), (.windingDown, .silence):
             await answer(event)
         case (.listening, .tentative(let text)), (.windingDown, .tentative(let text)): speculate(text)
         case (.listening, .resumed), (.windingDown, .resumed): speculation.drop()
+        default: return
+        }
+    }
+
+    /// Her speech or tap cuts Elly only while she greets or answers — the goodbye closes the session as ever; the audio
+    /// session taken away pauses any awake session, and its coming back lets her listen.
+    private func control(_ event: SessionEvent) {
+        switch (state, event) {
+        case (.greeting, .bargeIn), (.speaking, .bargeIn): interrupt(.bargeIn)
+        case (.asleep, .interruptionBegan), (.paused, .interruptionBegan): return
+        case (_, .interruptionBegan): interrupt(.interrupted)
+        case (.paused, .interruptionEnded): move(to: .listening)
         case (let now, .stop) where now != .asleep: stop()
         default: return
         }
@@ -182,10 +226,20 @@ public actor Session {
     }
 
     private func stop() {
+        cut = .parent
         if let cancel { return cancel() }
         speculation.drop()
         write(head("session:stop", mode: .talk, route: nil), nil, end: "parent")
         move(to: .asleep)
+    }
+
+    /// The turn in flight is cut for `why` — the voice stops, the model's memory keeps what sounded (D5); with none in
+    /// flight a pause still pauses.
+    private func interrupt(_ why: Cut) {
+        cut = why
+        if let cancel { return cancel() }
+        speculation.drop()
+        if why == .interrupted { move(to: .paused) }
     }
 
     /// A phrase of the session through its mode's contract: one turn, one record.
@@ -206,6 +260,7 @@ public actor Session {
 
     private func say(_ sentences: [String], _ head: TraceHead, into sounded: Sounded = Sounded()) async -> Bool {
         let voice = parts.voice
+        (voice as? VoiceLookahead)?.upcoming(sentences)  // the phrase's sentences made ahead (Z25)
         let speak: @Sendable () async throws -> Void = {
             for sentence in sentences {
                 try Task.checkCancellation()
@@ -215,24 +270,26 @@ public actor Session {
         return await perform(head) { try await withTaskCancellationHandler(operation: speak) { voice.stop() } } != nil
     }
 
-    /// The turn's work as the one child task `stop` cancels. A cancellation ends the session with one record
-    /// `cancelled`, a failure with one record `error`, and neither says a phrase. Only these two are caught: the first
-    /// is the session's own stop, the second is named in the record (П28).
+    /// The turn's work as the one child task a stop, her speech over Elly or a pause cancels. A cancellation writes one
+    /// record `cancelled` and goes where its cause leads — sleep, listening, a pause (`Cut`); a failure ends the
+    /// session with one record `error`; neither says a phrase. Only these two are caught: the first is the session's
+    /// own, the second is named in the record (П28).
     private func perform<Value: Sendable>(_ head: TraceHead, _ work: @escaping @Sendable () async throws -> Value)
         async -> Value? {
         let task = Task(operation: work)
         cancel = { task.cancel() }
-        defer { cancel = nil }
+        defer { (cancel, cut) = (nil, .parent) }
         do {
             let value = try await task.value
             if task.isCancelled { throw CancellationError() }
             return value
         } catch is CancellationError {
-            write(head, nil, cancelled: true, end: "parent")
+            write(head, nil, cancelled: true, end: cut == .parent ? "parent" : nil, marks: cut.marks)
+            move(to: cut.next)
         } catch {
             write(head, nil, error: String(describing: type(of: error)), end: "error")
+            move(to: .asleep)
         }
-        move(to: .asleep)
         return nil
     }
 
@@ -245,10 +302,10 @@ public actor Session {
     }
 
     private func write(_ head: TraceHead, _ outcome: TurnOutcome?, cancelled: Bool = false, error: String? = nil,
-                       end: String? = nil) {
+                       end: String? = nil, marks: [String: Double] = [:]) {
         let app = parts.stamp(), elapsed = parts.clock.now() - start
-        let stamp = TraceStamp(versions: app.versions, memory: app.memory, thermal: app.thermal,
-                               stages: app.stages.merging(speculation.takeStages()) { $1 })
+        let stages = app.stages.merging(speculation.takeStages()) { $1 }.merging(marks) { $1 }
+        let stamp = TraceStamp(versions: app.versions, memory: app.memory, thermal: app.thermal, stages: stages)
         let words = TurnWords(heard: heard, modelText: outcome?.modelText, said: outcome?.turn.sentences,
                               elapsed: elapsed)
         heard = nil
@@ -262,8 +319,9 @@ public actor Session {
     }
 }
 
-/// The voice of a model turn: its first `speak` moves the session from thinking to speaking.
-final class Speaking: VoiceOutput {
+/// The voice of a model turn: its first `speak` moves the session from thinking to speaking; the next sentences reach
+/// the voice through it (L58).
+final class Speaking: VoiceOutput, VoiceLookahead {
     private let voice: VoiceOutput, first: @Sendable () -> Void, spoke = Locked(false)
 
     init(_ voice: VoiceOutput, first: @escaping @Sendable () -> Void) { (self.voice, self.first) = (voice, first) }
@@ -278,4 +336,6 @@ final class Speaking: VoiceOutput {
     }
 
     func stop() { voice.stop() }
+
+    func upcoming(_ sentences: [String]) { (voice as? VoiceLookahead)?.upcoming(sentences) }
 }

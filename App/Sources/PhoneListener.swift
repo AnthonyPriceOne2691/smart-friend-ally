@@ -51,6 +51,7 @@ final class PhoneListener: Listener, @unchecked Sendable {
         var stages = ["tail": end.ended - end.voiced, "recognize": recognized - end.ended,
                       "tap_buffer": audio.bufferSeconds]
         if let reason = turnEnding.reason, reason != .tail { stages["turn_" + reason.rawValue] = 1 }
+        if let over = audio.startedOverVoice { stages["started_over_voice"] = over }  // D6.1: began over Elly (X11)
         last { $0 = (stages, end.voiced) }
         return text
     }
@@ -89,8 +90,8 @@ final class PhoneListener: Listener, @unchecked Sendable {
     }
 }
 
-/// Her voice as the console hears it: every sentence also goes to the screen.
-final class EchoVoice: VoiceOutput, @unchecked Sendable {
+/// Her voice as the console hears it: every sentence also goes to the screen; the next sentences reach the voice (L58).
+final class EchoVoice: VoiceOutput, VoiceLookahead, @unchecked Sendable {
     private let voice: VoiceOutput, said: @Sendable (String) -> Void
 
     init(_ voice: VoiceOutput, said: @escaping @Sendable (String) -> Void) { (self.voice, self.said) = (voice, said) }
@@ -101,4 +102,6 @@ final class EchoVoice: VoiceOutput, @unchecked Sendable {
     }
 
     func stop() { voice.stop() }
+
+    func upcoming(_ sentences: [String]) { (voice as? VoiceLookahead)?.upcoming(sentences) }
 }

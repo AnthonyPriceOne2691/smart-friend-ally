@@ -13,7 +13,7 @@ public struct TalkState: Equatable, Sendable {
 
     public var pose: Pose {
         switch phase {
-        case .asleep: .sleeps
+        case .asleep, .paused: .sleeps
         case .listening, .windingDown: .listens
         case .thinking: .thinks
         case .greeting, .speaking, .goodbye: .speaks
@@ -42,6 +42,7 @@ public actor Conversation {
     nonisolated let session: Session
     private let listener: Listener, board: Board
     private var loop: Task<Void, Never>?, running = false, starting = false
+    private var paused: CheckedContinuation<Void, Never>?
 
     public init(_ parts: SessionParts, settings: SessionSettings = SessionSettings(), listener: Listener) {
         let board = Board(), sink = EndWatch(sink: parts.sink, board: board)
@@ -83,12 +84,33 @@ public actor Conversation {
     public func stop() async {
         running = false
         await session.handle(.stop)
+        resumeFromPause()
+    }
+
+    /// Her speech or tap over Elly — the ear's overlap, the child screen's tap while Elly speaks, the console's
+    /// «Перебить» (D6.2): Elly stops and listens at once; nothing unless she greets or answers.
+    public func bargeIn() async { await session.handle(.bargeIn) }
+
+    /// The audio session taken away (a call, Siri) or given back (D6.2): the turn in flight is cut and the session
+    /// waits; once it is back, she listens.
+    public func interruption(began: Bool) async {
+        await session.handle(began ? .interruptionBegan : .interruptionEnded)
+        if !began { resumeFromPause() }
+    }
+
+    private func resumeFromPause() {
+        paused?.resume()
+        paused = nil
     }
 
     private func run() async {
         defer { running = false }
         await session.handle(.wake)
-        while session.state.listens {
+        while session.state.listens || session.state == .paused {
+            if session.state == .paused {
+                await withCheckedContinuation { paused = $0 }
+                continue
+            }
             let (events, feed) = AsyncStream.makeStream(of: EarEvent.self, bufferingPolicy: .bufferingOldest(128))
             let relay = Task { [session] in
                 for await event in events {

@@ -24,8 +24,19 @@ public final class SQLiteConnection {
     /// The library's version, «3.45.1»: the SQLite of the system the package runs on.
     public static var version: String { String(cString: sqlite3_libversion()) }
 
+    /// The open flag of the complete file protection for the base, its WAL and SHM — Apple's SQLite; elsewhere none.
+    public static var protectionComplete: Int32 {
+        #if canImport(Darwin)
+        SQLITE_OPEN_FILEPROTECTION_COMPLETE
+        #else
+        0
+        #endif
+    }
+
     private static let transient = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
     private var handle: OpaquePointer?
+    /// One caller at a time on the connection; a transaction holds it for its whole body.
+    private let lock = NSRecursiveLock()
 
     /// Opens the file, creating it; `flags` add to read-write-create (on Apple — the file protection class).
     public init(path: String, flags: Int32 = 0) throws {
@@ -47,6 +58,8 @@ public final class SQLiteConnection {
 
     /// One or several statements that return no rows.
     public func exec(_ sql: String) throws {
+        lock.lock()
+        defer { lock.unlock() }
         var message: UnsafeMutablePointer<CChar>?
         let code = sqlite3_exec(handle, sql, nil, nil, &message)
         defer { sqlite3_free(message) }
@@ -57,6 +70,8 @@ public final class SQLiteConnection {
 
     /// The rows of one statement with the values bound in order; each row — its columns.
     public func rows(_ sql: String, _ values: [SQLiteValue] = []) throws -> [[SQLiteValue]] {
+        lock.lock()
+        defer { lock.unlock() }
         var statement: OpaquePointer?
         let prepared = sqlite3_prepare_v2(handle, sql, -1, &statement, nil)
         defer { sqlite3_finalize(statement) }
@@ -83,6 +98,8 @@ public final class SQLiteConnection {
 
     /// All of `body` or nothing: `BEGIN IMMEDIATE` … `COMMIT`; an error rolls back all of it and goes to the caller.
     public func transaction<Result>(_ body: () throws -> Result) throws -> Result {
+        lock.lock()
+        defer { lock.unlock() }
         try exec("BEGIN IMMEDIATE")
         do {
             let result = try body()

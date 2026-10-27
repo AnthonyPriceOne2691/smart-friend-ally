@@ -5,7 +5,7 @@ import Foundation
 /// weights of her poses (ω = 11: about 0.43 s to 95%, screen rule 10), oscillation phases that accumulate their tempo,
 /// blinks on a seeded schedule and, after a goodbye, the yawn and sleep of `poseBye`. Speaking has two groups — talking
 /// and waving (greeting, goodbye) — and sleep two — plain and after a goodbye (dozing) — so every switch is a spring
-/// between groups whose own poses run on without a break.
+/// between groups whose own poses run on without a break. The light and the bubbles of the screen step with her (Ш2б).
 public final class Motion {
     public static let stiffness = 11.0
     /// The squash of a tap on the sleeping Ellie (prototype v3, `giggle` asleep): a soft spring that wobbles back.
@@ -22,8 +22,13 @@ public final class Motion {
     private var speeds = [0.0, 0, 0, 0, 0, 0], phases = Phases(), random: Random
     private var phase = SessionState.asleep, group = Group.sleeps, dozingSince = 0.0
     private var blinkAt = 2.2, doubleBlink = false, squash = 0.0, squashSpeed = 0.0
+    private var glow = Glow(), bubbles: Bubbles, sleepingSince = 0.0, rise = 0.0, syllables: Syllables
+    /// Her voice's level in the frame (0…1): the level passed in, or the rhythm of syllables while she speaks (Ш2в).
+    public private(set) var voiceLevel = 0.0
 
-    public init(seed: UInt64 = 1) { random = Random(seed: seed) }
+    public init(seed: UInt64 = 1) {
+        (random, bubbles, syllables) = (Random(seed: seed), Bubbles(seed: seed), Syllables(seed: seed))
+    }
 
     public func weight(of group: Group) -> Double { weights[group.rawValue] }
 
@@ -33,14 +38,26 @@ public final class Motion {
         let dt = min(max(dt, 0), 0.05)
         enter(next)
         settle(dt)
-        let pose = blended(voice: voice, mic: mic, calm: calm)
+        let speaking = TalkState(phase: phase).pose == .speaks && voice == nil
+        let rhythm = syllables.step(dt, at: phases.time + dt, speaking: speaking)
+        voiceLevel = voice ?? rhythm
+        let pose = blended(voice: voiceLevel, mic: mic, calm: calm)
         phases.advance(dt, pose, calm: calm)
         wobble(dt)
-        return Frame(pose, phases: phases, blink: blink(), swing: calm ? Pose.calmSwing : 1, squash: squash)
+        var frame = Frame(pose, phases: phases, blink: blink(), swing: calm ? Pose.calmSwing : 1, squash: squash)
+        rise = frame.rise
+        let clocks = Clocks(time: phases.time, weights: weights, sleeping: phases.time - sleepingSince,
+                            dozing: phases.time - dozingSince, rise: rise, calm: calm)
+        (frame.light, frame.bubbles) = (glow.step(dt, clocks), bubbles.step(dt, clocks))
+        return frame
     }
 
-    /// A tap on the sleeping Ellie: a kick to the squash spring — 1, with Reduce Motion 0.5 (prototype v3, `giggle`).
-    public func poke(calm: Bool = false) { squashSpeed -= calm ? 0.5 : 1 }
+    /// A tap on the sleeping Ellie: a kick to the squash spring — 1, with Reduce Motion 0.5 (prototype v3, `giggle`) —
+    /// and one «Z» over her (Ш2б, the parent's answer 6).
+    public func poke(calm: Bool = false) {
+        squashSpeed -= calm ? 0.5 : 1
+        bubbles.poke(rise: rise)
+    }
 
     /// The squash springs back to 0 — semi-implicit Euler in substeps of ≤ 8 ms, like the poses.
     private func wobble(_ dt: Double) {
@@ -58,6 +75,7 @@ public final class Motion {
         guard next != phase else { return }
         group = Motion.group(of: next, after: phase)
         if group == .dozes, weight(of: .dozes) < 0.01 { dozingSince = phases.time }
+        if group == .sleeps, weight(of: .sleeps) < 0.01 { sleepingSince = phases.time }
         if phase == .asleep { (blinkAt, doubleBlink) = (phases.time + 2.2, false) }
         phase = next
     }
@@ -84,13 +102,13 @@ public final class Motion {
         }
     }
 
-    private func blended(voice: Double?, mic: Double?, calm: Bool) -> Pose {
+    private func blended(voice: Double, mic: Double?, calm: Bool) -> Pose {
         let t = phases.time
         let parts = Group.allCases.map { group in
             let target: Pose
             switch group {
             case .sleeps: target = Pose.at(.sleeps, time: t, calm: calm)
-            case .dozes: target = goodbyeSleep(t - dozingSince, calm: calm)
+            case .dozes: target = goodbyeSleep(t - dozingSince, voice: voice, calm: calm)
             case .listens: target = Pose.at(.listens, time: t, mic: mic, calm: calm)
             case .thinks: target = Pose.at(.thinks, time: t, calm: calm)
             case .talks, .waves: target = Pose.at(.speaks, time: t, voice: voice, wave: group == .waves ? 1 : 0,
@@ -102,8 +120,8 @@ public final class Motion {
     }
 
     /// After the goodbye: the waving pose, then the yawn (in 0.3–0.9 s, out 1.6–2.4 s), then sleep (1.7–3.3 s).
-    private func goodbyeSleep(_ s: Double, calm: Bool) -> Pose {
-        let awake = Pose.at(.speaks, time: phases.time, wave: 1, calm: calm)
+    private func goodbyeSleep(_ s: Double, voice: Double, calm: Bool) -> Pose {
+        let awake = Pose.at(.speaks, time: phases.time, voice: voice, wave: 1, calm: calm)
         let yawning = smoothstep(0.3, 0.9, s) * (1 - smoothstep(1.6, 2.4, s)), sleeping = smoothstep(1.7, 3.3, s)
         return Pose.mix(Pose.mix(awake, Pose.yawn, yawning), Pose.at(.sleeps, time: phases.time, calm: calm), sleeping)
     }
