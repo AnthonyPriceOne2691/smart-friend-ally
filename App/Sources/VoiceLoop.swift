@@ -199,6 +199,20 @@ final class VoiceLoop: ObservableObject {
         Task { await talker.stop() }
     }
 
+    /// Her speech or tap over Elly — the ear's overlap, the child screen's tap while Elly speaks, the console's
+    /// «Перебить» (D6.2): the shown session's Elly stops and listens at once.
+    func bargeIn() {
+        guard let talker = child ? childTalk : conversation else { return }
+        Task { await talker.bargeIn() }
+    }
+
+    /// The audio session taken away or given back (a call, Siri, an alarm — D6.2): the shown session pauses and then
+    /// listens again.
+    private func interrupted(_ began: Bool) {
+        guard let talker = child ? childTalk : conversation else { return }
+        Task { await talker.interruption(began: began) }
+    }
+
     /// The session (D2.2): the router before the model, the parent's limit key (`-session_limit_minutes 2` at launch),
     /// a wordless record a turn with the listening's stages into `Caches/turns.jsonl`; heard and said go to the screen.
     private func converse(_ model: LlamaModel, _ hearing: Hearing, _ voice: any HerVoice, _ silero: SileroActivity?,
@@ -234,6 +248,8 @@ final class VoiceLoop: ObservableObject {
         let conversation = Conversation(parts(.parent), settings: settings, listener: ear)
         let childTalk = Conversation(parts(access == .child ? .child : .supervised), settings: settings, listener: ear)
         (self.conversation, self.childTalk) = (conversation, childTalk)
+        audio.whenOverlap { Task { @MainActor in self.bargeIn() } }  // D6.2: her speech over Elly cuts her
+        audio.whenInterrupted { began in Task { @MainActor in self.interrupted(began) } }
         Task { for await state in childTalk.updates where child { show(state) } }
         screen.lines.append(settings.note ?? "лимит: \(Int(settings.limit / 60)) мин")
         if let note = nap.note { screen.lines.append(note) }
@@ -258,10 +274,12 @@ final class VoiceLoop: ObservableObject {
         talk = childTalk?.state ?? TalkState()
     }
 
-    /// A tap on the circle of the child screen: while Elly listens — «я всё» (D7); else she wakes, but past the
-    /// exception's term she does not and the console returns, and during the break after the limit she only stirs.
+    /// A tap on the circle of the child screen: while Elly listens — «я всё» (D7), while she speaks — she is cut
+    /// (D6.2); else she wakes, but past the exception's term she does not and the console returns, and during the break
+    /// after the limit she only stirs.
     func childWake() {
         if talk.pose == .listens { return done() }
+        if talk.pose == .speaks { return bargeIn() }
         refreshAccess()
         guard access.open else { return leaveChild() }
         guard !nap.holds(at: Date()) else { return }

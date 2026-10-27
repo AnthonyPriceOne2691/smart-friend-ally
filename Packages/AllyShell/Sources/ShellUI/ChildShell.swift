@@ -6,8 +6,8 @@ import SwiftUI
 
 /// The child's screen (Ш3): Ellie alive in her bubble with the crown, the bubble as the only target and the adult's
 /// corner. What a tap does is the phase's (`Tap`): asleep she stirs at once and the app may wake her, listening it ends
-/// her utterance («я всё»), otherwise nothing. No words for the girl; the status bar and the home bar are hidden and
-/// the system gestures wait for a second swipe (screen rules 1–3, 15).
+/// her utterance («я всё»), speaking it cuts her (D6.2), otherwise nothing. No words for the girl; the status bar and
+/// the home bar are hidden and the system gestures wait for a second swipe (screen rules 1–3, 15).
 public struct ChildShell: View {
     let talk: TalkState, until: Date?, onTap: () -> Void, onStop: () -> Void
     @State private var pokes = 0
@@ -41,7 +41,7 @@ public struct ChildShell: View {
         case .wake:
             pokes += 1
             onTap()
-        case .done: onTap()
+        case .done, .bargeIn: onTap()
         case .ignore: break
         }
     }

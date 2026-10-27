@@ -69,3 +69,4 @@
 - `duplex-audio`
 - `voice-accent-wire`
 - `memory-app`
+- `barge-in`
