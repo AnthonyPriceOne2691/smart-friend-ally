@@ -28,4 +28,4 @@ L81, L82, L86, L87, L89, L90, L91, L98, L99, L100, L111, L112, L129, L134, L135,
 - [x] T9: слить `origin/main` (до 7b9aa9e, конфликт консоли — сложением с кнопками памяти M39); строгий `delivery_check --require-ci --diff-base origin/main`; пуш, PR, CI; метку
   `macos` — моя (слово ведущего 2026-10-27)
 - [x] T10: verify-report, `check_digest_report.py` до пуша сдачи; архив в том же PR, строка INDEX, slug — в конец
-  `delivery/OBSERVATIONS.md`; доклад ведущему. Уроки этой поставки — с L137 (номера дал ведущий)
+  `delivery/OBSERVATIONS.md`; доклад ведущему. Уроки этой поставки — L137, L138, L139 (номера с L137 дал ведущий)
