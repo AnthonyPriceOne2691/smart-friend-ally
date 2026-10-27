@@ -7,6 +7,16 @@ public struct MemoryBlock: Equatable, Sendable {
 
     public static var budget: Int { Words.shared.budget }
 
+    /// Whether the block goes into the conversation (`in_conversation`): off — the parent 2026-10-28 after M40
+    /// («Слить с выключенной»); the console, the erase and the prefix rebuild work either way.
+    public static var inConversation: Bool { Words.shared.inConversation }
+
+    /// The system turn of a conversation (M36): the persona as it is when memory is empty or the block is off — the
+    /// prefix of today byte for byte — else the persona, an empty line and the block.
+    public static func system(persona: String, block: String, on: Bool = inConversation) -> String {
+        block.isEmpty || !on ? persona : persona + "\n\n" + block
+    }
+
     /// The counter on Linux: ⌈Unicode scalars / 2.7⌉, a margin to the model's tokenizer; the app passes the tokenizer.
     public static func estimate(_ text: String) -> Int {
         Int((Double(text.unicodeScalars.count) / Words.shared.charsPerToken).rounded(.up))

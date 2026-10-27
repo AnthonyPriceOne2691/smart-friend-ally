@@ -25,6 +25,8 @@ struct AllyApp: App {
 /// at once (D2.2). In the pink sky with plum words, the lines on glass cards, the buttons glass capsules (app-glass).
 struct Console: View {
     @ObservedObject var loop: VoiceLoop
+    @State private var remembered: String?
+    @State private var erasing = false
 
     var body: some View {
         AdultSky {
@@ -46,9 +48,12 @@ struct Console: View {
                 .glassCard()
                 Text("Элли: " + Self.word(loop.talk.phase)).font(.system(.body, design: .rounded).weight(.semibold))
                     .accessibilityIdentifier("console.phase")
+                ForEach(loop.memoryLines, id: \.self) { Text($0).font(.caption) }
+                .accessibilityIdentifier("console.memory")
                 ForEach(lockLines, id: \.self) { Text($0).font(.caption) }
                 .accessibilityIdentifier("console.lock")
                 buttons
+                memoryButtons
             }
             .padding()
         }
@@ -84,6 +89,26 @@ struct Console: View {
                 Button("Закрыть детский режим", action: loop.closeChildMode).buttonStyle(GlassCapsule())
                     .disabled(!loop.exception).accessibilityIdentifier("console.closeChildMode")
             }
+        }
+    }
+
+    /// M39: what she remembers, and the parent's erase with its confirmation — glass capsules too.
+    private var memoryButtons: some View {
+        HStack {
+            Button("Что помнит Элли") { remembered = loop.memoryText }.buttonStyle(GlassCapsule())
+                .disabled(loop.memoryLines.isEmpty).accessibilityIdentifier("console.memoryText")
+            Button("Стереть память", role: .destructive) { erasing = true }.buttonStyle(GlassCapsule())
+                .disabled(loop.memoryLines.isEmpty || loop.talk.phase != .asleep)
+                .accessibilityIdentifier("console.eraseMemory")
+        }
+        .confirmationDialog(loop.memoryConfirmation, isPresented: $erasing, titleVisibility: .visible) {
+            Button("Стереть", role: .destructive, action: loop.eraseMemory)
+        }
+        .alert("Что помнит Элли", isPresented: Binding(get: { remembered != nil },
+                                                      set: { if !$0 { remembered = nil } })) {
+            Button("Закрыть", role: .cancel) {}
+        } message: {
+            Text(remembered.map { $0.isEmpty ? loop.memoryLines.first ?? "" : $0 } ?? "")
         }
     }
 

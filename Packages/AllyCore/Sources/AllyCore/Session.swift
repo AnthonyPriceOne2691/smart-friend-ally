@@ -39,18 +39,19 @@ enum Cut {
     }
 }
 
-/// What a session needs: the model and the voice, the trace sink, the clock, the router hook, the app's stamp and a
-/// watcher of the states (the app opens the microphone by them).
+/// What a session needs: the model and the voice, the trace sink, the clock, the router hook, the encyclopedia after it
+/// (nil — no lookups), the app's stamp and a watcher of the states (the app opens the microphone by them).
 public struct SessionParts: Sendable {
     public let model: LanguageModel, voice: VoiceOutput, sink: TraceSink, clock: TurnClock, router: TurnRouting
+    public let knowledge: Encyclopedia?
     public let audience: Audience, stamp: @Sendable () -> TraceStamp, onState: @Sendable (SessionState) -> Void
 
     public init(model: LanguageModel, voice: VoiceOutput, sink: TraceSink, clock: TurnClock = SystemClock(),
-                router: TurnRouting = PassThroughRouting(), audience: Audience = .parent,
-                stamp: @escaping @Sendable () -> TraceStamp = { TraceStamp() },
+                router: TurnRouting = PassThroughRouting(), knowledge: Encyclopedia? = nil,
+                audience: Audience = .parent, stamp: @escaping @Sendable () -> TraceStamp = { TraceStamp() },
                 onState: @escaping @Sendable (SessionState) -> Void = { _ in }) {
         (self.model, self.voice, self.sink, self.clock, self.router) = (model, voice, sink, clock, router)
-        (self.audience, self.stamp, self.onState) = (audience, stamp, onState)
+        (self.knowledge, self.audience, self.stamp, self.onState) = (knowledge, audience, stamp, onState)
     }
 }
 
@@ -131,20 +132,31 @@ public actor Session {
     private func speculate(_ text: String) {
         let plan = plan(text)
         guard text.contains(where: \.isLetter), plan.toModel else { return speculation.drop() }
-        speculation.start(text)
+        speculation.start(prompt(text, plan))
     }
 
-    /// Where her utterance goes: the router's decision, her goodbye, a script line — one answer for the turn and for
-    /// the answer begun in her pause; the model gets only the rest.
+    /// Where her utterance goes: the router's decision, her goodbye, a script line, the encyclopedia's lookup — one
+    /// answer for the turn and for the answer begun in her pause; the model gets only the rest. The encyclopedia is
+    /// asked only on a «pass» that is neither her goodbye nor forgotten: a script and a guard never reach it (Э2).
     private struct Plan {
-        let route: Route, goodbye: Bool, script: (key: String, line: String)?
+        let route: Route, goodbye: Bool, script: (key: String, line: String)?, lookup: Lookup?
         var toModel: Bool { !goodbye && script == nil && !route.forget }
+
+        /// A hint gives the turn `why`; the last turn stays `goodbye` — its rules close the session.
+        func mode(last: Bool) -> TurnMode { last ? .goodbye : lookup?.hint == nil ? .talk : .why }
     }
 
     private func plan(_ text: String) -> Plan {
         let route = parts.router.route(text)
         let script = route.key.flatMap { key in Router.script(for: key).map { (key: key, line: $0) } }
-        return Plan(route: route, goodbye: route.decision == .pass && data.isGoodbye(text), script: script)
+        let goodbye = route.decision == .pass && data.isGoodbye(text)
+        let asks = route.decision == .pass && !goodbye && !route.forget
+        return Plan(route: route, goodbye: goodbye, script: script, lookup: asks ? parts.knowledge?.lookup(text) : nil)
+    }
+
+    /// What the model gets: her words, with the hint's line when the encyclopedia gave one (`Knowledge.swift`).
+    private func prompt(_ text: String, _ plan: Plan) -> String {
+        parts.knowledge?.prompt(text, hint: plan.lookup?.hint) ?? text
     }
 
     private func hear(_ text: String) async {
@@ -154,19 +166,23 @@ public actor Session {
         let plan = plan(text), route = plan.route, script = plan.script, last = state == .windingDown || late
         if !plan.toModel { speculation.drop() }
         if plan.goodbye { return await close("goodbye", end: "goodbye_word") }
-        let head = head(script.map { "script:" + $0.key }, mode: last ? .goodbye : .talk, route: route)
+        let head = head(script.map { "script:" + $0.key }, mode: plan.mode(last: last), route: route,
+                        knowledge: plan.lookup?.record)
         move(to: .thinking)
         // A forgotten utterance never reaches the model: a script sounds as ever, else the contract's canned reply.
         let line = script?.line ?? (route.forget ? "" : nil)
-        guard let outcome = await respond(text, route: route, line: line, head: head) else { return }
+        guard let outcome = await respond(text, prompt: prompt(text, plan), route: route, line: line, head: head)
+        else { return }
         await after(outcome, route: route, head: head, last: last)
     }
 
     /// A script (or, for a forgotten utterance, nothing — the contract's canned reply) sounds without the model; else
     /// the model answers with the decision (an unknown script key — as a guard without a topic). Her utterance and the
     /// decision reach the contract either way. What a script said goes into the model's memory with her line, so the
-    /// model knows what Elly has already told her; a forgotten utterance never gets there (D5).
-    private func respond(_ text: String, route: Route, line: String?, head: TraceHead) async -> TurnOutcome? {
+    /// model knows what Elly has already told her; a forgotten utterance never gets there (D5). The model gets
+    /// `prompt`: her words, with the encyclopedia's hint when there is one (Э2).
+    private func respond(_ text: String, prompt: String, route: Route, line: String?, head: TraceHead) async
+        -> TurnOutcome? {
         if let line {
             let turn = TurnContract(mode: head.mode, heard: text, decision: route.decision).finish(line)
             let sounded = Sounded()
@@ -179,7 +195,7 @@ public actor Session {
         let voice = Speaking(parts.voice) { self.move(to: .speaking) }
         return await perform(head) { [parts, speculation] in
             try await TurnRunner(model: speculation, voice: voice, clock: parts.clock, mode: mode)
-                .run(text, decision: decision)
+                .run(text, decision: decision, prompt: prompt)
         }
     }
 
@@ -277,11 +293,12 @@ public actor Session {
         return nil
     }
 
-    private func head(_ source: String?, mode: TurnMode, route: Route?) -> TraceHead {
+    private func head(_ source: String?, mode: TurnMode, route: Route?, knowledge: KnowledgeRecord? = nil)
+        -> TraceHead {
         count += 1
         return TraceHead(session: id, turn: count, phase: state, mode: mode, source: source, route: route,
-                         elapsed: parts.clock.now() - start, limit: settings.limit, audience: parts.audience,
-                         turnKind: listening)
+                         knowledge: knowledge, elapsed: parts.clock.now() - start, limit: settings.limit,
+                         audience: parts.audience, turnKind: listening)
     }
 
     private func write(_ head: TraceHead, _ outcome: TurnOutcome?, cancelled: Bool = false, error: String? = nil,

@@ -31,7 +31,11 @@ final class VoiceLoop: ObservableObject {
     private let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
     private var model: LlamaModel?, registry: ModelRegistry?, voice: (any HerVoice)?, versions: [String: String] = [:]
     // The memory (memory-app): the base out of the backup, the parse after a session sleeps — cancelled by a wake.
-    private var memory: MemoryStore?, parsing: Task<Void, Never>?
+    private var memory: MemoryStore?, parsing: Task<Void, Never>?, slot = 0
+    // memory-recall: the persona, the system turn with the memory's block (M36) and the console's memory lines (M39).
+    private var persona = "", system = ""
+    @Published private(set) var memoryLines: [String] = []
+    private var encyclopedia: Encyclopedia?  // Э2: loaded at warm-up, both sessions get it
 
     func start() async {
         guard registry == nil else { return }
@@ -53,8 +57,14 @@ final class VoiceLoop: ObservableObject {
         try (models as NSURL).setResourceValue(true, forKey: .isExcludedFromBackupKey)  // 4.6 GB, not for backups
         if let missing = ModelCheck.check(registry: data, in: models).message { return screen.lines.append(missing) }
         let persona = try String(contentsOf: bundle.appendingPathComponent(registry.persona), encoding: .utf8)
+        openMemory()
+        let store = memory  // the block by the model's own tokenizer: a new load reads the prefix the last wrote (M36)
         let model = try await LlamaModel.load(weights: models.appendingPathComponent(registry.model.file),
-                                              persona: persona, settings: settings, cache: caches)
+                                              settings: settings, cache: caches) {
+            MemoryBlock.system(persona: persona, block: Self.block(store, $0))
+        }
+        system = MemoryBlock.system(persona: persona, block: Self.block(store, model.tokenCount))
+        self.persona = persona
         let start = uptime
         for try await _ in model.reply(to: "Привет!") {}
         model.newConversation()
@@ -66,14 +76,15 @@ final class VoiceLoop: ObservableObject {
         let (silero, listening) = SileroActivity.choose(hearing, models: models)  // D7.2: no Silero — energy
         let asr = GigaAMRecognizer.choose(hearing, models: models)  // D7.3: dictation unless GigaAM is asked and there
         screen.lines += [listening.line] + [asr.line].compactMap { $0 }
+        let encyclopedia = Encyclopedia.bundled()  // Э2: the base and FTS5 on the phone — the self-test says if not
+        screen.lines.append(encyclopedia.line(searchP95: encyclopedia.searchP95()))
         let sound = duplex(voice, hearing, models: models, silero: silero)
         let personaHash = SHA256.hash(data: Data(persona.utf8)).map { String(format: "%02x", $0) }.joined()
         versions = ["ios": UIDevice.current.systemVersion, "llama": settings.runtime.build, "persona": personaHash,
                     "voice": voice.label, "weights": "\(registry.model.file):\(registry.model.bytes)",
                     "vad": silero == nil ? "energy" : "silero:\(hearing.vad?.bytes ?? 0)", "asr": asr.label,
                     "audio": sound]
-        (self.registry, self.model, self.voice) = (registry, model, voice)
-        openMemory()
+        (self.registry, self.model, self.voice, self.encyclopedia) = (registry, model, voice, encyclopedia)
         screen.ready = speech.ready && microphone && voice.ready
         if screen.ready { converse(model, hearing, voice, silero, asr.decode) }
         parseMemory()  // what a closed app left in the queue (M34)
@@ -87,6 +98,8 @@ final class VoiceLoop: ObservableObject {
         case .ready(let folder):
             memory = try? MemoryStore(directory: folder, flags: MemoryFiles.flags)
             screen.lines.append(memory == nil ? "память выключена: база не открылась" : "память: включена")
+            if memory != nil, let off = MemoryConsole.conversation { screen.lines.append(off) }  // M40, 2026-10-28
+            refreshMemoryLines()
         case .refused(let reason):
             screen.lines.append("память выключена: " + (reason == .backup ? "пометка «не в бэкап» не прочиталась"
                                                                          : "каталог не создан"))
@@ -97,7 +110,7 @@ final class VoiceLoop: ObservableObject {
     private func parseMemory() {
         guard let memory, let model, parsing == nil else { return }
         let journal = caches.appendingPathComponent("memory.jsonl")
-        parsing = Task {
+        occupy { [self] in
             let start = uptime, done = (try? await memory.drain(model: MemoryLlama(model: model))) ?? []
             if !done.isEmpty, let line = MemoryLlama.line(done, seconds: uptime - start, stats: model.completionStats) {
                 if let handle = try? FileHandle(forWritingTo: journal) {
@@ -107,7 +120,8 @@ final class VoiceLoop: ObservableObject {
                     try? line.write(to: journal)
                 }
             }
-            parsing = nil
+            if !Task.isCancelled { await refreshPrefix(model) }  // what she knows now goes into the prefix (M36)
+            refreshMemoryLines()
         }
     }
 
@@ -213,8 +227,9 @@ final class VoiceLoop: ObservableObject {
         Task { await talker.interruption(began: began) }
     }
 
-    /// The session (D2.2): the router before the model, the parent's limit key (`-session_limit_minutes 2` at launch),
-    /// a wordless record a turn with the listening's stages into `Caches/turns.jsonl`; heard and said go to the screen.
+    /// The session (D2.2): the router before the model and the encyclopedia after it (Э2, both sessions), the parent's
+    /// limit key (`-session_limit_minutes 2` at launch), a wordless record a turn with the listening's stages into
+    /// `Caches/turns.jsonl`; heard and said go to the screen.
     private func converse(_ model: LlamaModel, _ hearing: Hearing, _ voice: any HerVoice, _ silero: SileroActivity?,
                           _ decode: (@Sendable ([Float]) -> String)?) {
         let heard: @Sendable (String) -> Void = { text in Task { @MainActor in self.screen.heard = text } }
@@ -229,8 +244,12 @@ final class VoiceLoop: ObservableObject {
         let tap = MemoryTap(audiences: console ? [.supervised, .parent] : [.supervised], take: { heard in
             try? memory?.enqueue(session: heard.session, started: Date(), turn: heard.turn, her: heard.her,
                                  elly: heard.elly)
-        }, close: { _ in Task { @MainActor in self.parseMemory() } })
+        }, close: { _ in Task { @MainActor in
+            self.refreshMemoryLines()
+            self.parseMemory()
+        } })
         let sink = TraceFanOut(memory == nil ? [journal] : [journal, tap])
+        let encyclopedia = encyclopedia
         let stamp: @Sendable () -> TraceStamp = {
             let thermal = ["nominal", "fair", "serious", "critical"][ProcessInfo.processInfo.thermalState.rawValue]
             let overlaps = audio.takeOverlaps().map { ["overlap": Double($0)] } ?? [:]  // D6.1: her speech over Elly
@@ -238,8 +257,8 @@ final class VoiceLoop: ObservableObject {
                               stages: ear.takeStages().merging(voice.takeStages()) { $1 }.merging(overlaps) { $1 })
         }
         let parts = { (audience: Audience) in
-            SessionParts(model: model, voice: echo, sink: sink, router: RouterRouting(), audience: audience,
-                         stamp: stamp)
+            SessionParts(model: model, voice: echo, sink: sink, router: RouterRouting(), knowledge: encyclopedia,
+                         audience: audience, stamp: stamp)
         }
         childMode = ChildMode(personaSHA256: versions["persona"] ?? "", model: versions["weights"] ?? "")
         refreshAccess()
@@ -336,5 +355,60 @@ final class VoiceLoop: ObservableObject {
     private func line(_ stages: [String: Double]) -> String {
         stages.sorted { $0.key < $1.key }.map { "\($0.key) " + String(format: "%.2f с", $0.value) }
             .joined(separator: " · ")
+    }
+}
+
+/// The memory in the conversation (memory-recall): the prefix with the block, the console's lines, the parent's erase.
+extension VoiceLoop {
+    /// The memory's one job at the model (M35): a wake waits for it, the background stops it; its end frees the slot
+    /// unless a later job took it — an erase after the parse it stopped.
+    private func occupy(_ work: @escaping @MainActor () async -> Void) {
+        slot += 1
+        let mine = slot
+        parsing = Task {
+            await work()
+            if slot == mine { parsing = nil }
+        }
+    }
+
+    /// The memory's block counted by `count`; empty without a memory (M36).
+    nonisolated private static func block(_ memory: MemoryStore?, _ count: (String) -> Int) -> String {
+        (try? memory?.block(count: count).text) ?? ""
+    }
+
+    /// The system turn with the block by the model's tokenizer (M36): rebuilt and written to its state file when it
+    /// changed — the next session copies it.
+    private func refreshPrefix(_ model: LlamaModel) async {
+        let next = MemoryBlock.system(persona: persona, block: Self.block(memory, model.tokenCount))
+        guard next != system else { return }
+        do {
+            try await model.rebuildPrefix(next, cache: caches)
+            system = next
+        } catch {
+            screen.lines.append("память: префикс не собран — \(error)")
+        }
+    }
+
+    /// The console's memory lines (M39): knows nothing, N facts, erased at …; waiting; a failed parse.
+    func refreshMemoryLines() {
+        memoryLines = memory.flatMap { try? MemoryConsole.lines($0, zone: .current) } ?? []
+    }
+
+    /// «Что помнит Элли»: the block as the model gets it.
+    var memoryText: String { model.map { Self.block(memory, $0.tokenCount) } ?? "" }
+
+    /// «Стереть всё, что помнит Элли? (N фактов)».
+    var memoryConfirmation: String { MemoryConsole.confirmation(facts: (try? memory?.facts().count) ?? 0) }
+
+    /// «Стереть память» (M39): the parse stops, the files go, the prefix is the persona again.
+    func eraseMemory() {
+        guard let memory, let model, talk.phase == .asleep else { return }
+        let parse = pauseMemory()
+        occupy { [self] in  // a wake waits for the erase as for a parse: one model, no reply while the prefix is built
+            await parse?.value
+            _ = try? memory.eraseAll(now: Date())
+            await refreshPrefix(model)
+            refreshMemoryLines()
+        }
     }
 }
