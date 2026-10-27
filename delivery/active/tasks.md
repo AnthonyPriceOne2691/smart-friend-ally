@@ -12,17 +12,19 @@
 
 ## Slice 1 — код (после подписи)
 - [x] T3: `eval-smoke.md` — строки F1–F5 до кода; `phase: implement`
-- [ ] T4: палитра и небо (`Palette`, `SkyArt`, `AdultSky`); F1, F2; мутации «обод на небе бледнее 3:1», «небо без
+- [x] T4: палитра и небо (`Palette`, `SkyArt`, `AdultSky`); F1, F2; мутации «обод на небе бледнее 3:1», «небо без
   голубизны»
-- [ ] T5: стекло в зоне взрослых, снимок окна (`GlassSnapshotTests`); F3; мутации «плашка без белой подложки», «знак
+- [x] T5: стекло в зоне взрослых, снимок окна (`GlassSnapshotTests`); F3; мутации «плашка без белой подложки», «знак
   без сливы»
-- [ ] T6: `GlassCapsule` и консоль; F4; мутации «недоступная не бледнеет», «высота 36»
-- [ ] T7: цель iOS 27.0 (`project.yml`, `Package.swift`), F5 в `check_app_artifact.sh`; образ `ios.yml` — по слову
-  ведущего
+- [x] T6: `GlassCapsule` и консоль; F4; мутации «недоступная не бледнеет», «высота 36»
+- [x] T7: цель iOS 27.0 (`project.yml`, `Package.swift`), F5 в `check_app_artifact.sh`; образ `ios.yml` — по слову
+  ведущего (решение 2026-10-27 — `xcode-27`); сборка `.app` на Mac — BUILD SUCCEEDED, `MinimumOSVersion` 27.0
+- [x] T7a: порог дня V36 0,85 → 0,75 под подписанное небо (замер 0,773, ночь 0,277) — мерж после слова родителя
+  (поправка в `spec.md`, `decisions.md`)
 
 ## Slice 2 — знание и сдача
-- [ ] T8: `product/look-and-feel`, ADR `character-rendering`, `knowledge/log.md`
+- [x] T8: `product/look-and-feel`, ADR `character-rendering`, `knowledge/log.md`
 - [ ] T9: слить `origin/main`; строгий `delivery_check --require-ci --diff-base origin/main`; пуш, PR, CI; метку
-  `macos` вешает ведущий
+  `macos` — моя (слово ведущего 2026-10-27)
 - [ ] T10: verify-report, `check_digest_report.py` до пуша сдачи; архив в том же PR, строка INDEX, slug — в конец
   `delivery/OBSERVATIONS.md`; доклад ведущему. Уроки этой поставки — с L137 (номера дал ведущий)

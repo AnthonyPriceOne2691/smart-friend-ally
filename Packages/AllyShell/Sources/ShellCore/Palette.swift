@@ -28,10 +28,28 @@ public struct Border: Sendable {
     public init(_ line: Tone, on fill: Tone) { (self.line, self.fill) = (line, fill) }
 }
 
-/// The tokens of prototype v3, approved by the parent 2026-10-17: pink only as fills, plum and raspberry lines.
+/// A light of the sky: its tone and strength, its place in shares of the screen, its reach in shares of the width.
+public struct SkyLight: Sendable {
+    public let tone: Tone, opacity: Double, x: Double, y: Double, reach: Double
+}
+
+/// The tokens of prototype v3, approved by the parent 2026-10-17: pink only as fills, plum and raspberry lines; the sky
+/// is the pink sky of app-glass (the parent 2026-10-27).
 public enum Palette {
-    public static let skyTop = Tone(0xFFF6FA), skyMid = Tone(0xFFE6F1), skyLow = Tone(0xFCD2E5)
-    public static let skyLilac = Tone(0xEFDDFF), skyPeach = Tone(0xFFE3D9), blossom = Tone(0xFFF0F5)
+    /// The pink sky: a breath of sky blue at the top, lilac haze, pink, peach low; lights of sky blue, lilac, peach.
+    public static let skyTop = Tone(0xDCEEFF), skyHaze = Tone(0xF1E2FF), skyMid = Tone(0xFFDCEB)
+    public static let skyLow = Tone(0xFFD6C8)
+    public static let skyBlue = Tone(0xCFE6FF), skyLilac = Tone(0xE3D3FF), skyPeach = Tone(0xFFD3BF)
+    public static let blossom = Tone(0xFFF0F5)
+    /// The sky from top to bottom: a tone and its share of the height.
+    public static let sky: [(tone: Tone, at: Double)] = [(skyTop, 0), (skyHaze, 0.3), (skyMid, 0.62), (skyLow, 1)]
+    /// Sky blue in the upper left, lilac in the upper right, peach in the lower left, white in the middle.
+    public static let skyLights = [
+        SkyLight(tone: skyBlue, opacity: 1, x: 0.1, y: 0.04, reach: 0.65),
+        SkyLight(tone: skyLilac, opacity: 1, x: 0.92, y: 0.12, reach: 0.6),
+        SkyLight(tone: skyPeach, opacity: 1, x: 0.06, y: 0.96, reach: 0.7),
+        SkyLight(tone: Tone(0xFFFFFF), opacity: 0.55, x: 0.5, y: 0.52, reach: 0.85)
+    ]
     public static let plum = Tone(0x5E1A42), raspberry = Tone(0xC2185B), line = Tone(0xB4487A)
     public static let skinLight = Tone(0xFFC4D8), skin = Tone(0xF98AAF), skinShade = Tone(0xE2739A)
     public static let bellyLight = Tone(0xFFF4F7), belly = Tone(0xFFE6EE), cheek = Tone(0xFF6FA0)
@@ -56,9 +74,12 @@ public enum Palette {
     public static let thinkTint = Tone(0xD7C6FF), aura = Tone(0xFF96C6), pearl = Tone(0xFF8FC0)
     public static let waterLine = Tone(0x60B0D6)
 
-    /// Every line the drawing puts on a fill: eyes and mouth on the skin, her outline on the water, the rim on the sky.
+    /// Every line the drawing puts on a fill: eyes and mouth on the skin, her outline on the water, the plum on the
+    /// blossom, the rim on every tone of the sky.
     public static let borders = [
         Border(eye, on: skin), Border(mouth, on: skin), Border(line, on: water), Border(line, on: waterEdge),
-        Border(raspberry, on: skyMid), Border(raspberry, on: skyLow), Border(plum, on: blossom)
-    ]
+        Border(plum, on: blossom)
+    ] + skyTones.map { Border(raspberry, on: $0) }
+    /// The seven tones of the sky.
+    public static let skyTones = [skyTop, skyHaze, skyMid, skyLow, skyBlue, skyLilac, skyPeach]
 }

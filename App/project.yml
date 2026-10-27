@@ -2,7 +2,7 @@
 name: Ally
 options:
   deploymentTarget:
-    iOS: "26.0"
+    iOS: "27.0"  # Liquid Glass «под iOS 27» (app-glass); the phone runs iOS 27 (the parent 2026-10-27)
 configFiles:
   Debug: Ally.xcconfig
 packages:

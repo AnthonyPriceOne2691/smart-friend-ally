@@ -29,7 +29,7 @@
   },
   ".github/workflows/ios.yml": {
     "reason": "ручная macOS-джоба приложения (решение E3): тесты AllyLlama, тесты подписи AllyCore на CryptoKit (G7, child-lock), сборка .app без подписи, оракул артефакта — раз на поставку, минута macOS ×10 (CQG §8.7)",
-    "changed": "свой workflow: workflow_dispatch и метка macos на PR (workflow_dispatch видит только файлы ветки по умолчанию), macos-26, timeout-minutes 30; наверх не просится"
+    "changed": "свой workflow: workflow_dispatch и метка macos на PR (workflow_dispatch видит только файлы ветки по умолчанию), образ xcode-27 (цель iOS 27, app-glass), timeout-minutes 30; наверх не просится"
   },
   "scripts/delivery_artifact.py": {
     "reason": "правило §6.5a «у артефакта сборки есть оракул» молчит у iOS-проекта: BUILD_MARKERS знают package.json, Makefile и justfile, но не XcodeGen и Xcode — declares_build() у Ally пуст (delivery/incidents/2026-10-22-build-markers-no-xcode.md)",

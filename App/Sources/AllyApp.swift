@@ -1,4 +1,5 @@
 import AllyCore
+import ShellUI
 import SwiftUI
 
 /// Ally: the adult console only — the girl gets her screen with the child lock (R) and the shell (E2).
@@ -21,51 +22,68 @@ struct AllyApp: App {
 
 /// «Для взрослых» (A12): readiness, signing days, the session's state and limit; what was heard and said stays on
 /// this screen. «Разбудить» starts a session, «Я всё» ends the utterance while she listens (D7), «Стоп» silences her
-/// at once (D2.2).
+/// at once (D2.2). In the pink sky with plum words, the lines on glass cards, the buttons glass capsules (app-glass).
 struct Console: View {
     @ObservedObject var loop: VoiceLoop
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Для взрослых").font(.title2.bold()).accessibilityIdentifier("console.adultsOnly")
-            ScrollView {  // 20 turn lines overflowed the screen and pushed the button off it (phone, 2026-10-22)
-                VStack(alignment: .leading, spacing: 12) {
-                    ForEach(Array(loop.screen.lines.enumerated()), id: \.offset) {
-                        Text($0.element).font(.caption.monospaced())
-                    }
-                }.frame(maxWidth: .infinity, alignment: .leading)
+        AdultSky {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Для взрослых").font(.system(.title2, design: .rounded).bold())
+                    .accessibilityIdentifier("console.adultsOnly")
+                ScrollView {  // 20 turn lines overflowed the screen and pushed the button off it (phone, 2026-10-22)
+                    VStack(alignment: .leading, spacing: 12) {
+                        ForEach(Array(loop.screen.lines.enumerated()), id: \.offset) {
+                            Text($0.element).font(.caption.monospaced())
+                        }
+                    }.frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .glassCard()
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(loop.screen.heard).opacity(0.75)
+                    Text(loop.screen.said).bold()
+                }
+                .glassCard()
+                Text("Элли: " + Self.word(loop.talk.phase)).font(.system(.body, design: .rounded).weight(.semibold))
+                    .accessibilityIdentifier("console.phase")
+                ForEach(lockLines, id: \.self) { Text($0).font(.caption) }
+                .accessibilityIdentifier("console.lock")
+                buttons
             }
-            Text(loop.screen.heard).foregroundStyle(.secondary)
-            Text(loop.screen.said).bold()
-            Text("Элли: " + Self.word(loop.talk.phase)).accessibilityIdentifier("console.phase")
-            ForEach(ReleaseGate.lines(loop.access, zone: .current) + [loop.acceptance, loop.napLine].compactMap { $0 },
-                    id: \.self) {
-                Text($0).font(.caption)
-            }
-            .accessibilityIdentifier("console.lock")
-            HStack {
-                Button("Разбудить", action: loop.wake).buttonStyle(.borderedProminent)
-                    .disabled(!loop.screen.ready || loop.talk.phase != .asleep).accessibilityIdentifier("console.wake")
-                Button("Я всё", action: loop.done).buttonStyle(.bordered)
-                    .disabled(loop.talk.pose != .listens).accessibilityIdentifier("console.done")
-                Button("Перебить", action: loop.bargeIn).buttonStyle(.bordered)
-                    .disabled(loop.talk.pose != .speaks).accessibilityIdentifier("console.bargeIn")
-                Button("Стоп", action: loop.stop).buttonStyle(.bordered)
-                    .disabled(loop.talk.phase == .asleep).accessibilityIdentifier("console.stop")
-            }
-            HStack {
-                Button("Дочке, при мне", action: loop.handOver).buttonStyle(.bordered)
-                    .disabled(!loop.access.open || loop.talk.phase != .asleep)
-                    .accessibilityIdentifier("console.handOver")
-                Button("Закрыть детский режим", action: loop.closeChildMode).buttonStyle(.bordered)
-                    .disabled(!loop.exception).accessibilityIdentifier("console.closeChildMode")
-            }
+            .padding()
         }
-        .padding()
         .task { await loop.start() }
         .onAppear {
             UIApplication.shared.isIdleTimerDisabled = true  // a locked phone stops the GPU work
             loop.refreshAccess()  // an exception copied while the app runs shows up when the console does
+        }
+    }
+
+    /// The lock, the acceptance and the break, one line each.
+    private var lockLines: [String] {
+        ReleaseGate.lines(loop.access, zone: .current) + [loop.acceptance, loop.napLine].compactMap { $0 }
+    }
+
+    /// The session's buttons and the child mode's, glass capsules: «Разбудить» is the main one.
+    private var buttons: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Button("Разбудить", action: loop.wake).buttonStyle(GlassCapsule(prominent: true))
+                    .disabled(!loop.screen.ready || loop.talk.phase != .asleep).accessibilityIdentifier("console.wake")
+                Button("Я всё", action: loop.done).buttonStyle(GlassCapsule())
+                    .disabled(loop.talk.pose != .listens).accessibilityIdentifier("console.done")
+                Button("Перебить", action: loop.bargeIn).buttonStyle(GlassCapsule())
+                    .disabled(loop.talk.pose != .speaks).accessibilityIdentifier("console.bargeIn")
+                Button("Стоп", action: loop.stop).buttonStyle(GlassCapsule())
+                    .disabled(loop.talk.phase == .asleep).accessibilityIdentifier("console.stop")
+            }
+            HStack {
+                Button("Дочке, при мне", action: loop.handOver).buttonStyle(GlassCapsule())
+                    .disabled(!loop.access.open || loop.talk.phase != .asleep)
+                    .accessibilityIdentifier("console.handOver")
+                Button("Закрыть детский режим", action: loop.closeChildMode).buttonStyle(GlassCapsule())
+                    .disabled(!loop.exception).accessibilityIdentifier("console.closeChildMode")
+            }
         }
     }
 

@@ -23,6 +23,7 @@
   <!-- §5.1a: интеграция в main только через scripts/merge_guard.sh (мержит ведущий); на телефон — в общую сессию теста -->
 - **hooks:** not-deployed
 - **blockers:** none
+  <!-- до мержа — слово родителя о пороге дня V36 0,85 → 0,75 под подписанное небо (поправка в spec.md, decisions.md) -->
 - **waivers:** none
 - **new_dependency:** none
 - **runtime_paths:** none reason=облик: палитра, стекло и стиль кнопок — рисунок SwiftUI с тестами на Mac; вид на телефоне — общая сессия теста
