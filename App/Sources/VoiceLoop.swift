@@ -3,6 +3,7 @@ import AllyHearing
 import AllyLlama
 import AVFoundation
 import CryptoKit
+import Memory
 import os
 import ShellCore
 import SwiftUI
@@ -29,6 +30,8 @@ final class VoiceLoop: ObservableObject {
     private let recognizer = DictationRecognizer(), audio = AudioIO(), files = FileManager.default
     private let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
     private var model: LlamaModel?, registry: ModelRegistry?, voice: (any HerVoice)?, versions: [String: String] = [:]
+    // The memory (memory-app): the base out of the backup, the parse after a session sleeps — cancelled by a wake.
+    private var memory: MemoryStore?, parsing: Task<Void, Never>?
 
     func start() async {
         guard registry == nil else { return }
@@ -68,8 +71,49 @@ final class VoiceLoop: ObservableObject {
                     "voice": voice.label, "weights": "\(registry.model.file):\(registry.model.bytes)",
                     "vad": silero == nil ? "energy" : "silero:\(hearing.vad?.bytes ?? 0)", "asr": asr.label]
         (self.registry, self.model, self.voice) = (registry, model, voice)
+        openMemory()
         screen.ready = speech.ready && microphone && voice.ready
         if screen.ready { converse(model, hearing, voice, silero, asr.decode) }
+        parseMemory()  // what a closed app left in the queue (M34)
+    }
+
+    /// The memory's base in `Application Support/Memory` (M38): out of the backup as read back, complete protection;
+    /// a refusal — no memory, and the console says why.
+    private func openMemory() {
+        let support = files.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+        switch MemoryFiles.prepare(under: support) {
+        case .ready(let folder):
+            memory = try? MemoryStore(directory: folder, flags: MemoryFiles.flags)
+            screen.lines.append(memory == nil ? "память выключена: база не открылась" : "память: включена")
+        case .refused(let reason):
+            screen.lines.append("память выключена: " + (reason == .backup ? "пометка «не в бэкап» не прочиталась"
+                                                                         : "каталог не создан"))
+        }
+    }
+
+    /// The queue's parse while she sleeps (M35): oldest first, a wordless line into `Caches/memory.jsonl`.
+    private func parseMemory() {
+        guard let memory, let model, parsing == nil else { return }
+        let journal = caches.appendingPathComponent("memory.jsonl")
+        parsing = Task {
+            let start = uptime, done = (try? await memory.drain(model: MemoryLlama(model: model))) ?? []
+            if !done.isEmpty, let line = MemoryLlama.line(done, seconds: uptime - start, stats: model.completionStats) {
+                if let handle = try? FileHandle(forWritingTo: journal) {
+                    _ = try? handle.seekToEnd()
+                    try? handle.write(contentsOf: line)
+                } else {
+                    try? line.write(to: journal)
+                }
+            }
+            parsing = nil
+        }
+    }
+
+    /// The background or a wake: the parse stops at once and waits for the next sleep (M35).
+    func pauseMemory() -> Task<Void, Never>? {
+        let task = parsing
+        task?.cancel()
+        return task
     }
 
     /// Her voice: Supertonic when the files of voice.json are on the phone (V4b2), else Milena — the console says why.
@@ -107,8 +151,9 @@ final class VoiceLoop: ObservableObject {
     func wake() {
         guard let talker = child ? childTalk : conversation, talk.phase == .asleep else { return }
         (screen.heard, screen.said) = ("", "")
-        let previous = running
+        let previous = running, parse = pauseMemory()
         running = Task {
+            await parse?.value  // one model: the parse gives it back first (M35)
             await previous?.value
             await talker.wake()
         }
@@ -137,7 +182,13 @@ final class VoiceLoop: ObservableObject {
         let echo = EchoVoice(voice) { sentence in Task { @MainActor in self.screen.said += sentence + " " } }
         let settings = SessionSettings(limitMinutes: UserDefaults.standard.object(forKey: SessionSettings.key)
             .map { "\($0)" })
-        let versions = versions, sink = TraceFile(url: caches.appendingPathComponent("turns.jsonl"))
+        let versions = versions, journal = TraceFile(url: caches.appendingPathComponent("turns.jsonl"))
+        let memory = memory, console = UserDefaults.standard.bool(forKey: "memory_console")  // вопрос 3
+        let tap = MemoryTap(audiences: console ? [.supervised, .parent] : [.supervised], take: { heard in
+            try? memory?.enqueue(session: heard.session, started: Date(), turn: heard.turn, her: heard.her,
+                                 elly: heard.elly)
+        }, close: { _ in Task { @MainActor in self.parseMemory() } })
+        let sink = TraceFanOut(memory == nil ? [journal] : [journal, tap])
         let stamp: @Sendable () -> TraceStamp = {
             let thermal = ["nominal", "fair", "serious", "critical"][ProcessInfo.processInfo.thermalState.rawValue]
             return TraceStamp(versions: versions, memory: Self.memory(model), thermal: thermal,

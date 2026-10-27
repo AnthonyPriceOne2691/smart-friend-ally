@@ -63,6 +63,37 @@ public final class LlamaModel: LanguageModel, @unchecked Sendable {
     /// Tokens of the conversation when the last reply started: the persona prefix, earlier turns, this user turn.
     public var promptTokens: Int { prompt { $0 } }
 
+    /// The last `complete`: tokens in and out, seconds (the memory's journal, M35).
+    public var completionStats: CompletionStats { stats { $0 } }
+    private let stats = Locked(CompletionStats())
+
+    /// The JSON grammar of llama.cpp (`json.gbnf`): any object, as the memory's parse asks.
+    public static let jsonGrammar: String = {
+        guard let url = Bundle.module.url(forResource: "json", withExtension: "gbnf"),
+              let text = try? String(contentsOf: url, encoding: .utf8) else { fatalError("AllyLlama: json.gbnf") }
+        return text
+    }()
+
+    /// One answer without the persona (the memory's parse, M35): the messages into sequence 2 from zero, the chain
+    /// grammar → temperature → dist(seed), up to the end of turn or `maxTokens`. The task's cancellation raises the
+    /// stop flag, which aborts a decode in flight; the conversation in sequence 1 is cleared only when both would not
+    /// fit.
+    public func complete(_ messages: [(role: String, text: String)], temperature: Float, seed: UInt32,
+                         grammar: String?, maxTokens: Int = 1100) async throws -> String {
+        let stop = StopFlag()
+        current { $0 = stop }
+        return try await withTaskCancellationHandler {
+            try await withCheckedThrowingContinuation { done in
+                queue.async { [self] in
+                    done.resume(with: Result {
+                        try completion(messages, Sampling(temperature: temperature, seed: seed, grammar: grammar,
+                                                          maxTokens: maxTokens), stop: stop)
+                    })
+                }
+            }
+        } onCancel: { stop.raise() }
+    }
+
     /// The next reply starts a new conversation from a fresh copy of the persona prefix.
     public func newConversation() { queue.async { self.fresh = true } }
 
@@ -211,6 +242,54 @@ public final class LlamaModel: LanguageModel, @unchecked Sendable {
         position += Int32(tokens.count)
     }
 
+    private func completion(_ messages: [(role: String, text: String)], _ sampling: Sampling,
+                            stop: StopFlag) throws -> String {
+        let start = ProcessInfo.processInfo.systemUptime, memory = llama_get_memory(ctx)
+        var tokens: [llama_token] = []
+        for message in messages {
+            let role = message.role == "assistant" ? "model" : message.role
+            tokens += try tokenize("<|turn>" + role + "\n", special: true)
+            tokens += try tokenize(message.text.trimmingCharacters(in: .whitespacesAndNewlines), special: false)
+            tokens += try tokenize("<turn|>\n", special: true)
+        }
+        tokens += try tokenize("<|turn>model\n", special: true)
+        if Int(position) + tokens.count + sampling.maxTokens > Int(settings.runtime.nCtx) {
+            llama_memory_seq_rm(memory, 1, -1, -1)
+            fresh = true
+        }
+        llama_memory_seq_rm(memory, 2, -1, -1)
+        defer { llama_memory_seq_rm(memory, 2, -1, -1) }
+        try decode(tokens, seq: 2, from: 0)
+        guard let chain = llama_sampler_chain_init(llama_sampler_chain_default_params()) else {
+            throw LlamaError.context
+        }
+        defer { llama_sampler_free(chain) }
+        if let grammar = sampling.grammar, let rule = llama_sampler_init_grammar(vocab, grammar, "root") {
+            llama_sampler_chain_add(chain, rule)
+        }
+        llama_sampler_chain_add(chain, llama_sampler_init_temp(sampling.temperature))
+        llama_sampler_chain_add(chain, llama_sampler_init_dist(sampling.seed))
+        var bytes: [UInt8] = [], made = 0
+        while made < sampling.maxTokens {
+            guard !stop.isRaised else { throw LlamaError.stopped }
+            let token = llama_sampler_sample(chain, ctx, -1)
+            if llama_vocab_is_eog(vocab, token) { break }
+            bytes += piece(token)
+            try decode([token], seq: 2, from: Int32(tokens.count + made))
+            made += 1
+        }
+        stats { $0 = CompletionStats(prompt: tokens.count, output: made,
+                                    seconds: ProcessInfo.processInfo.systemUptime - start) }
+        return Self.complete(bytes)
+    }
+
+    /// The bytes of one token's text.
+    private func piece(_ token: llama_token) -> [UInt8] {
+        var piece = [CChar](repeating: 0, count: 256)
+        let count = llama_token_to_piece(vocab, token, &piece, Int32(piece.count), 0, false)
+        return piece.prefix(Int(max(count, 0))).map { UInt8(bitPattern: $0) }
+    }
+
     /// Sequence 1 from `position` on leaves the KV.
     private func forget(after position: Int32) {
         llama_memory_seq_rm(llama_get_memory(ctx), 1, position, -1)
@@ -237,9 +316,7 @@ public final class LlamaModel: LanguageModel, @unchecked Sendable {
             guard !stop.isRaised else { throw LlamaError.stopped }
             let token = llama_sampler_sample(chain, ctx, -1)
             if llama_vocab_is_eog(vocab, token) { return }
-            var piece = [CChar](repeating: 0, count: 256)
-            let count = llama_token_to_piece(vocab, token, &piece, Int32(piece.count), 0, false)
-            bytes += piece.prefix(Int(max(count, 0))).map { UInt8(bitPattern: $0) }
+            bytes += piece(token)
             output.yield(Self.complete(bytes))
             try decode([token], seq: 1, from: position)
             position += 1
@@ -286,4 +363,14 @@ public final class LlamaModel: LanguageModel, @unchecked Sendable {
 /// A turn in sequence 1: where it began (before her line), where the reply began, whether a model turn was open before.
 struct LastTurn {
     let start: Int32, reply: Int32, wasOpen: Bool
+}
+
+/// What the memory's parse samples with: temperature, seed, a GBNF grammar, the token limit.
+struct Sampling {
+    let temperature: Float, seed: UInt32, grammar: String?, maxTokens: Int
+}
+
+/// The last parse of the model: tokens in and out, seconds.
+public struct CompletionStats: Equatable, Sendable {
+    public var prompt = 0, output = 0, seconds = 0.0
 }

@@ -6,7 +6,7 @@ status: draft
 tags: [engineering, memory, privacy, child]
 generated:
   by: claude_code/opus-5.5
-  at: 2026-10-25T23:00:00+03:00
+  at: 2026-10-27T23:00:00+03:00
 implementation:
   - Packages/AllyMemory/Sources/Memory/MemoryStore.swift
   - Packages/AllyMemory/Sources/Memory/Schema.swift
@@ -25,6 +25,9 @@ implementation:
   - Packages/AllyMemory/Sources/Memory/Resources/extract.user.ru.md
   - Packages/AllyMemory/Sources/Memory/Sense.swift
   - Packages/AllyMemory/Sources/Memory/Resources/sense.json
+  - Packages/AllyMemory/Sources/Memory/MemoryQueue.swift
+  - Packages/AllyCore/Sources/AllyCore/MemoryTap.swift
+  - App/Sources/MemoryLlama.swift
 ---
 
 # Purpose
@@ -131,15 +134,28 @@ implementation:
 - **Опора и отказы:** «без опоры» 150 значений на свежем наборе против 82 на справке, отрицание и вымысел — 6 пропусков;
   правила смягчать только по живым данным чёрного ящика, не по набору (он одноразовый и сосчитан).
 
+# В приложении — записывает (memory-app, 2026-10-27)
+
+- **Отбор** (`MemoryTap` в разветвлении журнала хода): её реплика с ответом модели при `pass` без `forget` — с тем, что
+  сказала Элли; скрипт, фраза сессии, указатель и адрес — ничего; только сессии `supervised`, консольные — с ключом
+  запуска `-memory_console 1` (вопрос 3); запись конца сессии закрывает разговор.
+- **Очередь** (`MemoryQueue.swift`): таблицы `queue` и `pending` в той же базе (вопрос 5); разбор от старых к новым;
+  разобран или не разобран второй раз — расшифровка стёрта, WAL обрезан чекпойнтом; старше стирания — стёрт без разбора;
+  отменённый разбор (тап, фон, убийство) не трогает ничего, запись фактов — одна транзакция.
+- **Разбор после прощания** (`VoiceLoop`, `MemoryLlama`): при запуске и после конца сессии — E4B в последовательности 2
+  с JSON-грамматикой (`LlamaModel.complete`), разговор в последовательности 1 очищается, только если обоим не хватит
+  контекста; `wake` любой сессии отменяет разбор и ждёт его; фон — отмена; экран не гаснет с консоли; строка без слов
+  в `Caches/memory.jsonl` (разобрано, не разобрано, факты, токены последнего ответа, секунды).
+- **Хранилище** (`MemoryFiles`): `Library/Application Support/Memory`, пометка «не в бэкап» читается обратно, база с
+  флагом SQLite полной защиты (и WAL, и SHM); отказ — памяти нет, строка консоли «память выключена: …» (вопрос 7).
+  Соединение SQLite держит замок: запись очереди из сессии и разбор не перекрываются внутри оператора и транзакции.
+- **Телефонные части** — p95 разбора, экран, тап, фон, класс защиты на телефоне — сессия теста (`ops/test-session`).
+
 # Что ещё не подключено (L50)
 
-Пока нет `memory-app`, у базы, блока и разбора нет вызывающего: Элли в приложении ещё ничего не помнит, а модель
-разбор зовёт только в тестах — двойником; E4B подключат `memory-quality` (Mac) и `memory-app` (телефон). Окно
-вымысла, хозяин, отрицание и маркеры любимого исполняются кодом, но их словари проверены только на вымышленных
-примерах — полноту и ловушки на E4B меряет `memory-quality` (M32).
-Разбор E4B после прощания, отбор реплик (только `pass` без `forget`, только детские сессии при родителе), очередь,
-блок в префиксе персоны, файлы на телефоне (`Application Support/Memory`, вне бэкапа, `NSFileProtectionComplete`) и
-кнопка «Стереть память» в консоли — следующие поставки серии; забыть один факт и счётчики брата и имени — `memory-forget`.
+Блок в префиксе персоны, консоль памяти («Что помнит Элли», «Стереть память»), проверка «помнит на телефоне» и
+дифференциальный прогон модели — `memory-recall`; до неё Элли копит факты, но в разговор их не берёт. Забыть один
+факт и счётчики брата и имени — `memory-forget`.
 
 # Implementation map
 
@@ -150,6 +166,7 @@ implementation:
 | Запрет на любом пути | `Packages/AllyMemory/Sources/Memory/Forbidden.swift`, `Resources/forbidden.json`, триггеры в `Schema.swift` |
 | Разбор разговора | `Packages/AllyMemory/Sources/Memory/Extract.swift`, `ExtractPrompt.swift`, `ModelAnswer.swift`, `Anchors.swift`, `Resources/extract.*` |
 | Не правда о ней, любимое, «больше не люблю» | `Packages/AllyMemory/Sources/Memory/Sense.swift`, `Resources/sense.json`, `Anchors.swift`, снятие в `MemoryStore.swift` |
+| Отбор, очередь, разбор после прощания, хранилище | `Packages/AllyCore/Sources/AllyCore/MemoryTap.swift`, `Packages/AllyMemory/Sources/Memory/MemoryQueue.swift`, `Packages/AllyLlama/Sources/AllyLlama/LlamaModel.swift` (`complete`, `json.gbnf`), `App/Sources/MemoryLlama.swift`, `App/Sources/VoiceLoop.swift` |
 | Общий SQLite | `Packages/AllySQLite` (функция для триггера — `SQLiteConnection.function`) |
 | Примеры M15–M31 | `Packages/AllyMemory/Tests/MemoryTests/`, `Packages/AllySQLite/Tests/`, смоук S7 |
 
@@ -166,4 +183,5 @@ implementation:
 - Поставка `memory-extract` (M26–M28 из той же спеки серии).
 - Поставка `memory-sense` (M30, M31 из той же спеки серии).
 - Поставка `memory-quality` (M32 той же спеки серии; стенд вне git).
+- Поставка `memory-app` (M33–M35, M38 той же спеки серии; разрез — ведущий 2026-10-27).
 - [Memory portrait](/references/research/memory-portrait.md) — замеры варианта B, приёмка M1–M14.

@@ -41,6 +41,11 @@ enum Schema {
           session TEXT NOT NULL, started REAL NOT NULL, turn INTEGER NOT NULL, value TEXT NOT NULL,
           anchor REAL NOT NULL, PRIMARY KEY (fact_id, session));
         CREATE INDEX IF NOT EXISTS fact_entity ON fact (entity_id, trait, status);
+        CREATE TABLE IF NOT EXISTS queue (session TEXT PRIMARY KEY, started REAL NOT NULL,
+          attempts INTEGER NOT NULL DEFAULT 0);
+        CREATE TABLE IF NOT EXISTS pending (
+          session TEXT NOT NULL REFERENCES queue (session) ON DELETE CASCADE, turn INTEGER NOT NULL,
+          her TEXT NOT NULL, elly TEXT NOT NULL, PRIMARY KEY (session, turn));
         CREATE TRIGGER IF NOT EXISTS fact_insert_forbidden BEFORE INSERT ON fact
           WHEN forbidden(NEW.value) OR forbidden(NEW.value_key) BEGIN SELECT RAISE(ABORT, 'forbidden value'); END;
         CREATE TRIGGER IF NOT EXISTS fact_update_forbidden BEFORE UPDATE OF value, value_key ON fact
