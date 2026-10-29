@@ -6,11 +6,11 @@
 - **kind:** feature
 - **repro_test:** n/a reason=не bugfix
 - **diagnosis:** n/a reason=не bugfix
-- **phase:** specify
+- **phase:** implement
 - **builder:** agent:claude-code
 - **verifier:** process:ci
-- **human_ok_spec:** no
-  <!-- вопрос на подпись — spec.md, раздел «Вопрос на подпись»; родителю его передаёт ведущий, ответ вписывается дословно -->
+- **human_ok_spec:** yes (by=human:anthony, at=2026-10-29, через ведущего: «Подписываю: фраза + карточка (Рекомендую)» под примером P21–P23 спеки card-fallback; вопрос дословно — spec.md, раздел «Подпись»)
+  <!-- спека — коммит 901e5ae до кода (L33); вопрос ушёл с двумя правками ведущего, они — в spec.md и decisions.md -->
 - **human_ok_plan:** n/a
 - **shape-oracles:** cqg-deployed
 - **behavior-oracles:** tests-present

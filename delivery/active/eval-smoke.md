@@ -1,0 +1,26 @@
+# Eval smoke: `card-fallback`
+
+Примеры P21–P24 и перегон P18 — из спеки, подписанной родителем 2026-10-29. Факты вписываются по мере прогона.
+
+| # | Как судится | Ожидание | Факт |
+|---|---|---|---|
+| P21 | `CardFallbackTests` (CI): настоящая `Session`, маршрутизатор, база из ресурсов; мутации | «почему кораблик не тонет», ответ без сути → «Ой, какой ты умненький!» и текст карточки `boats-float`; `why`, `knowledge.hint` + `knowledge.fallback`; память модели — прозвучавшее; заготовку контракта карточка не заменяет; на последнем ходе — карточка, потом прощание | — |
+| P22 | `CardFallbackTests` (CI) | ответ с сутью звучит как есть, `knowledge.rules` — только `knowledge.hint` | — |
+| P23 | `CardFallbackTests` (CI) | «почему бурый медведь спит» без подсказки (`knowledge.coverage`) — ответ как есть, вход модели — её фраза байт в байт | — |
+| P24 | `EncyclopediaBaseTests` (CI): все 100 карточек | ключ собирается и ловит свой текст; текст проходит `why` слово в слово, и после первой фразы в 22 слова — целиком; негодный ключ — `selftest_failed` | — |
+| P18 | стенд формата: Mac, llama.cpp b10809, E4B Q4_K_M, персона v2.4, `er` × seed 48, 49, 50, `nice -n 10`; обёртка `cards-v1/p18_fallback.py` с шагом продукта (`encyclopedia-replay --said`) | верных ≥ 43 из 48, артефактов 0; рядом — на скольких ходах прозвучала карточка | — |
+
+## Судья P18 — заморожен до перегона
+
+sha256, сверено 2026-10-29 до кода. Совпадают с заморозкой Э2 (`archive/2026-10-28-app-encyclopedia/decisions.md`):
+
+| Файл | sha256 |
+|---|---|
+| `local/spike/erudition/cards-v1/p18_format.py` | `8ce919bb51e12f3b54d5922310de73eafa562f8a7407d7d42fe540e776ece35c` |
+| `local/spike/persona-v2/erudition_rules.py` | `76353844f5f549dd59b9b51c03c5673f3b6e813261e0a46fade03550bc88d9e6` |
+| `local/spike/persona-v2/erudition_cases.jsonl` | `b39e780921c314d56791942a6ea058bd629b4dc64da7e551bd72686428e399ed` |
+| база `cards-v1/base.jsonl` = `Resources/encyclopedia.ru.jsonl` | `def710e5ee7493b111486d96a527899ebb74a4ee489c6a4a940882c5d1cf40b7` |
+| `Resources/encyclopedia.json` | `2f76cb1d5aee86072201fa60aa2dcfb9cc6a62993cec7fc3cbc1f251440d9774` |
+| `App/Resources/persona.v2.4.ru.md` | `329790cc6d2f04760c977744d5a1aacd2eb6bf6c2de6198b60b711542e23f722` |
+
+Обёртка `p18_fallback.py` и её хэш — до прогона, строкой ниже. Seed 48, 49, 50 свободны: открыты 42–47.
