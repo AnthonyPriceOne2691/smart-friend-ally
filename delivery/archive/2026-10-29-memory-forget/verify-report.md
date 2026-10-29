@@ -35,6 +35,9 @@
   демо без пакета памяти) — «Забыть…» перенесён туда простыми значениями (`ForgetGroup`), список строит `VoiceLoop`
   (`forgettable`); сборки Ally.app и AllyDemo без подписи, оракулы артефакта и границы демо — OK; концепт
   `engineering/design-demo` дополнен (гейт синхронизации знания поймал `ConsoleView.swift`)
+- [x] PASS — слияние main (card-fallback, 832849c) в cebb78a: окно и карточка подсказки — в одном
+  `TurnRunner.run(_:decision:prompt:card:window:)`, окно читает текст модели до карточки; AllyCore 152 из 152 на Mac;
+  `engineering/session` и `engineering/safety-below-model` сложены из обеих поставок
 
 ## Product oracles
 - [x] PASS — `human_ok_spec: yes`: M41, M42 подписаны в спеке серии (подпись 37bb5a9); документы поставки — коммитом
