@@ -1,7 +1,8 @@
 import Foundation
 
 /// The prompt block (П11, П13): built once a session from the active facts — lines in a fixed order, items by first
-/// appearance, capped per line, cut by rank to the budget; the core (her name and age, siblings, pets) is never cut.
+/// appearance, capped per line, cut by rank to the budget; the core (her age, siblings, pets) is never cut. Her name is
+/// not in the block (memory-block-form, the parent 2026-10-29).
 public struct MemoryBlock: Equatable, Sendable {
     public let text: String, tokens: Int, trimmed: [String]
 
