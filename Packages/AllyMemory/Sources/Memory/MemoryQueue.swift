@@ -57,7 +57,7 @@ extension MemoryStore {
     /// The talk leaves the queue with its transcript, and the WAL is truncated after it.
     private func release(_ session: String) throws {
         try db.run("DELETE FROM queue WHERE session = ?", [.text(session)])
-        _ = try db.rows("PRAGMA wal_checkpoint(TRUNCATE)")
+        try checkpoint()
     }
 }
 

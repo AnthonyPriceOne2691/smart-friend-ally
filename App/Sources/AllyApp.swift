@@ -1,4 +1,5 @@
 import AllyCore
+import Memory
 import ShellUI
 import SwiftUI
 
@@ -26,7 +27,7 @@ struct AllyApp: App {
 struct Console: View {
     @ObservedObject var loop: VoiceLoop
     @State private var remembered: String?
-    @State private var erasing = false
+    @State private var erasing = false, forgetting = false
 
     var body: some View {
         AdultSky {
@@ -92,15 +93,21 @@ struct Console: View {
         }
     }
 
-    /// M39: what she remembers, and the parent's erase with its confirmation — glass capsules too.
+    /// M39: what she remembers, and the parent's erase with its confirmation; M41: forget one thing — glass capsules.
     private var memoryButtons: some View {
-        HStack {
-            Button("Что помнит Элли") { remembered = loop.memoryText }.buttonStyle(GlassCapsule())
-                .disabled(loop.memoryLines.isEmpty).accessibilityIdentifier("console.memoryText")
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Button("Что помнит Элли") { remembered = loop.memoryText }.buttonStyle(GlassCapsule())
+                    .disabled(loop.memoryLines.isEmpty).accessibilityIdentifier("console.memoryText")
+                Button("Забыть…") { forgetting = true }.buttonStyle(GlassCapsule())
+                    .disabled(loop.memoryLines.isEmpty || loop.talk.phase != .asleep)
+                    .accessibilityIdentifier("console.forget")
+            }
             Button("Стереть память", role: .destructive) { erasing = true }.buttonStyle(GlassCapsule())
                 .disabled(loop.memoryLines.isEmpty || loop.talk.phase != .asleep)
                 .accessibilityIdentifier("console.eraseMemory")
         }
+        .sheet(isPresented: $forgetting) { ForgetSheet(loop: loop) }
         .confirmationDialog(loop.memoryConfirmation, isPresented: $erasing, titleVisibility: .visible) {
             Button("Стереть", role: .destructive, action: loop.eraseMemory)
         }
@@ -123,5 +130,40 @@ struct Console: View {
         case .goodbye: "прощается"
         case .paused: "пауза"
         }
+    }
+}
+
+/// M41: what she remembers by entity — the parent forgets one fact or everything about one entity, each confirmed.
+struct ForgetSheet: View {
+    @ObservedObject var loop: VoiceLoop
+    @State private var asked: (question: String, forget: () -> Void)?
+
+    var body: some View {
+        NavigationStack {
+            List(loop.remembered, id: \.entity) { who in
+                Section {
+                    ForEach(who.items, id: \.fact) { item in
+                        Button(item.text) {
+                            asked = (MemoryConsole.forgetting(item), { loop.forget(fact: item.fact) })
+                        }
+                    }
+                } header: {
+                    HStack {
+                        Text(who.title)
+                        Spacer()
+                        Button("Забыть всё") {
+                            asked = (MemoryConsole.forgetting(who), { loop.forget(entity: who.entity) })
+                        }
+                    }
+                }
+            }
+            .navigationTitle("Забыть")
+            .confirmationDialog(asked?.question ?? "", isPresented: Binding(get: { asked != nil },
+                                                                            set: { if !$0 { asked = nil } }),
+                                titleVisibility: .visible) {
+                Button("Забыть", role: .destructive) { asked?.forget() }
+            }
+        }
+        .disabled(loop.talk.phase != .asleep)
     }
 }
