@@ -19,5 +19,5 @@ command -v xcodegen >/dev/null 2>&1 || fail "нет xcodegen (brew install xcode
 ( cd "$REPO/App" && xcodegen generate >/dev/null ) || fail "xcodegen не собрал проект"
 [ -f "$HOME/models/ally-mac/manifest.json" ] || printf 'папки файлов нет — сначала: python3 scripts/mac_files.py\n'
 open -a Xcode "$REPO/App/Ally.xcodeproj" || fail "Xcode не открыл проект"
-printf '%s\n' "В Xcode: устройство «My Mac (Designed for iPhone)», затем ⌘R." \
+printf '%s\n' "В Xcode: схема Ally (не AllyDemo), устройство «My Mac (Designed for iPhone)», затем ⌘R." \
   "Первый раз: в консоли «Файлы с Mac…» → ~/models/ally-mac; на вопрос macOS про микрофон — «Разрешить»."

@@ -324,7 +324,7 @@ macOS — свои у Mac, модель — официальный слайс `i
 
 ```bash
 python3 scripts/mac_files.py     # сверка и папка ~/models/ally-mac: Models/, Voice/, manifest.json — клоны APFS
-bash scripts/mac_app.sh          # проект заново и в Xcode; дальше родитель: «My Mac (Designed for iPhone)», ⌘R
+bash scripts/mac_app.sh          # проект заново и в Xcode; дальше родитель: схема Ally, «My Mac (Designed for iPhone)», ⌘R
 ```
 
 - **Первый запуск:** консоль пишет «модели нет: скопируй с Mac»; кнопка «Файлы с Mac…» (только на Mac, только пока
