@@ -4,6 +4,8 @@
 # до текущего main: файл менял memory-recall (7b9aa9e), снимок тогда не обновлялся.
 # Персона, реестр (вес, рантайм, сэмплинг), пакет модели (формат хода Gemma 4, мастер-префикс, цепочка сэмплера);
 # вес — по ключу реестра «файл:байты»; рантайм — релизный xcframework по url и checksum из Package.swift.
+# Поставка memory-block-form: блок памяти новой формы идёт в системный ход (решение родителя 2026-10-29) — шапка,
+# бюджет и строки блока (memory.json), его сборка (MemoryBlock.swift, BlockLines.swift).
 App/Resources/persona.v2.4.ru.md	329790cc6d2f04760c977744d5a1aacd2eb6bf6c2de6198b60b711542e23f722
 App/Resources/model.json	5240c360e1994042048d0fccc3d0504e7cb73937d9b75b4b8bddb385e981cc47
 Packages/AllyLlama/Package.swift	69092644cd98f8d31a8f8265af344692969796837b825d6b3aa32d9ca55b8c2a
@@ -15,3 +17,6 @@ Packages/AllyCore/Sources/AllyCore/Resources/encyclopedia.ru.jsonl	def710e5ee749
 Packages/AllyCore/Sources/AllyCore/Resources/encyclopedia.json	2f76cb1d5aee86072201fa60aa2dcfb9cc6a62993cec7fc3cbc1f251440d9774
 Packages/AllyCore/Sources/AllyCore/Knowledge.swift	9c4eeed51a7e6bccee080597695bf8723aced807a081ebdf807c0ee2ce74fac8
 Packages/AllyCore/Sources/AllyCore/Encyclopedia.swift	2412495f6780253eaef9782bdad23a2cb6db5538deafa5acdee7613a5d08f6a6
+Packages/AllyMemory/Sources/Memory/Resources/memory.json	1b711b3bafe63ee404c176f009b6ffce9300623b52d03e604ace76581211fac9
+Packages/AllyMemory/Sources/Memory/MemoryBlock.swift	d6d0765bb0370d2edb57487d138f72adf9ef811399acab2c6f90fe7e09204574
+Packages/AllyMemory/Sources/Memory/BlockLines.swift	444564aeec64624d5a6eb21445b01fff916d8219abd73a9270d3d145bd02ce3f

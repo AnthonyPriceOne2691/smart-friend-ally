@@ -9,6 +9,7 @@
 #   Y5  у каждой фазы SessionState (Packages/AllyCore/.../Session.swift) есть строка #Preview в App/Demo/DemoPreviews.swift.
 # Собранное — когда есть (macOS-джоба ios.yml, run_demo.sh); вид .app — по CFBundleIdentifier:
 #   Y1  AllyDemo.app — com.anthonypriceone.ally.demo, имя «Ally Demo», MinimumOSVersion 27.0;
+#   I6  AllyDemo.app — значок из каталога App/Demo: CFBundleIconName AppIcon и Assets.car (поставка app-icon);
 #   Y2  Ally.app — в Info и бинарях нет метки демо «ally-demo» и bundle id демо; метка в AllyDemo.app есть, иначе
 #       проверка слепа (короткие строки Swift живут в коде, а не в таблице строк — метка нарочно длинная);
 #   Y3  AllyDemo.app — нет ключей микрофона, распознавания и сети; в бинарях нет символов llama/ggml, ONNX Runtime,
@@ -109,6 +110,10 @@ def check_demo(app: Path, info: dict, bins: list[Path]) -> None:
     if info.get("CFBundleDisplayName") != "Ally Demo" or str(info.get("MinimumOSVersion")) != "27.0":  # Y1
         problems.append(f"Y1: {app.name} — имя {info.get('CFBundleDisplayName')!r}, "
                         f"MinimumOSVersion {info.get('MinimumOSVersion')!r} вместо «Ally Demo» и 27.0")
+    icon = ((info.get("CFBundleIcons") or {}).get("CFBundlePrimaryIcon") or {}).get("CFBundleIconName")  # I6
+    if icon != "AppIcon" or not (app / "Assets.car").is_file():
+        problems.append(f"I6: {app.name} — значка нет: CFBundleIconName {icon!r}, Assets.car "
+                        f"{'есть' if (app / 'Assets.car').is_file() else 'нет'} (каталог App/Demo/Assets.xcassets)")
     for key in [k for k in EAR + NET if k in info]:  # Y3
         problems.append(f"Y3: в Info демо ключ {key} — в демо нет микрофона, распознавания и сети")
     for path in app.rglob("*"):

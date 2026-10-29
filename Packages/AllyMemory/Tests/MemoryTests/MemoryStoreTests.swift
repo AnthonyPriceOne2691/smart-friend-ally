@@ -15,13 +15,13 @@ final class MemoryStoreTests: StoreTestCase {
         XCTAssertEqual(facts.map(\.turn), Fixture.first.map(\.turn))
         XCTAssertEqual(facts.map(\.confidence), Fixture.first.map { $0.value == "считать до десяти" ? 0.8 : 0.9 })
         let block = try store.block()
-        XCTAssertEqual(block.text, Fixture.lines("Она: Соня, пять лет.", "Любимое: цвет фиолетовый.",
+        XCTAssertEqual(block.text, Fixture.lines("Она: пять лет.", "Любимое: цвет фиолетовый.",  // M15
                                                  "Умеет: считать до десяти.",
                                                  "Брат Тёма, восемь лет: строили замок из подушек.",
                                                  "Кошка Мурка, рыжая: любит спать на батарее.",
                                                  "Придумала: единорог Звёздочка — был фиолетовый."))
-        XCTAssertEqual(block.text.unicodeScalars.count, 342)
-        XCTAssertEqual(block.tokens, 127)
+        XCTAssertEqual(block.text.unicodeScalars.count, 441)  // M15
+        XCTAssertEqual(block.tokens, 164)  // M15
         XCTAssertEqual(block.trimmed, [])
     }
 
