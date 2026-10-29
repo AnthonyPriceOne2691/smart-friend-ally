@@ -27,7 +27,8 @@ struct AllyApp: App {
 struct Console: View {
     @ObservedObject var loop: VoiceLoop
     @State private var remembered: String?
-    @State private var erasing = false, forgetting = false
+    @State private var erasing = false
+    @State private var forgetting = false
 
     var body: some View {
         AdultSky {
