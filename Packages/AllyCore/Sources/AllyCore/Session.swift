@@ -144,6 +144,12 @@ public actor Session {
 
         /// A hint gives the turn `why`; the last turn stays `goodbye` — its rules close the session.
         func mode(last: Bool) -> TurnMode { last ? .goodbye : lookup?.hint == nil ? .talk : .why }
+
+        /// The hint's card when it has a key: its text sounds if the reply misses the essence (card-fallback).
+        var card: HintCard? {
+            guard let hint = lookup?.hint, let key = lookup?.key else { return nil }
+            return HintCard(text: hint, key: key)
+        }
     }
 
     private func plan(_ text: String) -> Plan {
@@ -171,18 +177,18 @@ public actor Session {
         move(to: .thinking)
         // A forgotten utterance never reaches the model: a script sounds as ever, else the contract's canned reply.
         let line = script?.line ?? (route.forget ? "" : nil)
-        guard let outcome = await respond(text, prompt: prompt(text, plan), route: route, line: line, head: head)
-        else { return }
+        guard let outcome = await respond(text, plan: plan, line: line, head: head) else { return }
         await after(outcome, route: route, head: head, last: last)
     }
 
     /// A script (or, for a forgotten utterance, nothing — the contract's canned reply) sounds without the model; else
     /// the model answers with the decision (an unknown script key — as a guard without a topic). Her utterance and the
     /// decision reach the contract either way. What a script said goes into the model's memory with her line, so the
-    /// model knows what Elly has already told her; a forgotten utterance never gets there (D5). The model gets
-    /// `prompt`: her words, with the encyclopedia's hint when there is one (Э2).
-    private func respond(_ text: String, prompt: String, route: Route, line: String?, head: TraceHead) async
-        -> TurnOutcome? {
+    /// model knows what Elly has already told her; a forgotten utterance never gets there (D5). The model gets her
+    /// words, with the encyclopedia's hint when there is one (Э2); the hint's card sounds when the reply misses its
+    /// essence (card-fallback).
+    private func respond(_ text: String, plan: Plan, line: String?, head: TraceHead) async -> TurnOutcome? {
+        let route = plan.route
         if let line {
             let turn = TurnContract(mode: head.mode, heard: text, decision: route.decision).finish(line)
             let sounded = Sounded()
@@ -192,10 +198,11 @@ public actor Session {
             return TurnOutcome(turn: turn, times: TurnTimes(), modelTimeout: false)
         }
         let decision = route.key == nil ? route.decision : .guard(topic: nil), mode = head.mode
+        let prompt = prompt(text, plan), card = plan.card
         let voice = Speaking(parts.voice) { self.move(to: .speaking) }
         return await perform(head) { [parts, speculation] in
             try await TurnRunner(model: speculation, voice: voice, clock: parts.clock, mode: mode)
-                .run(text, decision: decision, prompt: prompt)
+                .run(text, decision: decision, prompt: prompt, card: card)
         }
     }
 
