@@ -1,5 +1,15 @@
 # Knowledge Bundle Update Log
 
+## 2026-10-29 — значок приложения из рисунка Элли (app-icon)
+
+* **Update**: `product/look-and-feel` — правило «значок приложения — та же Элли» (выбор родителя «В»: мордочка крупно в
+  пузыре, ночная пара для тёмной темы, у демо — пометка «демо»), строка «в коде (app-icon)»; `implementation:` +=
+  `IconScene.swift`. `engineering/character-rendering` — как сделан значок: квадрат 440 pt, конвейер PNG со снятием
+  дизеринга, почему не Icon Composer, имя `AppIcon` пресетом XcodeGen; `implementation:` += `IconScene.swift`,
+  `scripts/render_app_icon.sh`. `references/repo-map` — `IconScene`, каталоги значка, `render_app_icon.sh`.
+  `engineering/design-demo` — значок демо. `product/index` — строка облика.
+* **Источник**: поставка `app-icon` (слово родителя 2026-10-29; выбор варианта «В» на странице — 2026-10-29).
+
 ## 2026-10-29 — демо облика на Mac, превью и токены (design-demo)
 
 * **Creation**: `engineering/design-demo` (Runbook) — демо-цель `AllyDemo` в симуляторе одной командой

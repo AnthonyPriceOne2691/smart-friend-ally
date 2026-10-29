@@ -43,7 +43,8 @@ implementation:
   полосы движения и экран целиком (`app/`) пишет `swift test --disable-keychain --package-path Packages/AllyShell` на
   Mac в `local/shell-snapshots/`; на Linux снимки пропускаются видимо. Настоящее стекло (`glass/`) снимает своё окно
   на Mac — окно на миг у правого верхнего края экрана; `ImageRenderer` стекло не рисует. Снимков экрана телефона нет
-  никогда (L46).
+  никогда (L46). Значок приложения — `ShellUI/IconScene.swift`, каталоги `App/Resources/Assets.xcassets` и
+  `App/Demo/Assets.xcassets`; пересборка PNG из кода — `bash scripts/render_app_icon.sh` (Mac, app-icon).
 - **Расстановщик ударений** — `Packages/AllyAccent` (RUAccent на Swift: токенизаторы; паритет на Mac — файлы в
   `~/models/tts/ruaccent` и `~/models/tts/ruaccent-parity`): `swift test --disable-keychain --package-path Packages/AllyAccent`.
 - **Текст для синтеза** — `Packages/AllySpeechText` (ударения, закреплённый словарь, правила чтения; данные —
@@ -72,9 +73,9 @@ implementation:
 | `KNOWLEDGE.md` | база исследования и принципы П1–П37 — читать до решения о продукте |
 | `knowledge/` | канон домена (OKF v0.2) |
 | `delivery/` | поставки: `active/` — текущая, `archive/` — завершённые с уроками |
-| `scripts/`, `scripts/lint/` | механика контура; канонные файлы правятся только перевендориванием; продуктовые — `scripts/reinstall_app.sh` (E4), `scripts/child_mode.sh` (R), `scripts/run_demo.sh` (демо в симуляторе) |
+| `scripts/`, `scripts/lint/` | механика контура; канонные файлы правятся только перевендориванием; продуктовые — `scripts/reinstall_app.sh` (E4), `scripts/child_mode.sh` (R), `scripts/run_demo.sh` (демо в симуляторе), `scripts/render_app_icon.sh` (значок из кода) |
 | `docs/canon/` | снимок канонов с самопроверкой — только локально, в git его нет (вариант D с 2026-10-25: репозиторий публичный, канон проприетарный; `.git/info/exclude` и хук `canon-texts-stay-out`); в свежем клоне и новом ворктри каталога нет — снимок раскладывается локально |
-| `App/` | приложение iOS: `project.yml`, `Sources/` (консоль, цикл, звук, распознавание), `Resources/` (персона, реестр); `Demo/` — демо облика для симулятора, своя цель `AllyDemo` без модели, микрофона и голоса, в приложение не попадает (`bash scripts/run_demo.sh`, граница — `scripts/lint/check_demo_boundary.sh`; [Design demo](/engineering/design-demo.md)) |
+| `App/` | приложение iOS: `project.yml`, `Sources/` (консоль, цикл, звук, распознавание), `Resources/` (персона, реестр, каталог значка `Assets.xcassets`); `Demo/` — демо облика для симулятора, своя цель `AllyDemo` без модели, микрофона и голоса, в приложение не попадает (`bash scripts/run_demo.sh`, граница — `scripts/lint/check_demo_boundary.sh`; [Design demo](/engineering/design-demo.md)) |
 | `Packages/` | Swift-пакеты: `AllyDiscipline` (дисциплина ответа), `AllyCore` (ядро хода), `AllyLlama` (модель), `AllyShell` (детский экран), `AllySpeechText` (текст для синтеза), `AllyOnnx` (один ONNX Runtime приложения, sherpa-onnx), `AllyVoice` (движок голоса), `AllyVoiceFX` (PSOLA и эквалайзер), `AllyAccent` (RUAccent на Swift, в приложении — расстановщик), `AllySQLite` (общий SQLite), `AllyMemory` (память о ребёнке), `AllyHearing` (слух: Silero VAD) |
 | `local/` | данные ребёнка и прочее локальное — игнорируется, гейт не пускает в git |
 
