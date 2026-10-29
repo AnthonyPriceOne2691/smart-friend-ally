@@ -26,7 +26,7 @@ public struct AdultSky<Content: View>: View {
     public init(@ViewBuilder content: () -> Content) { self.content = content() }
 
     public var body: some View {
-        content.foregroundStyle(Color(Palette.plum))
+        content.foregroundStyle(Look.words)
             .background { Canvas { ctx, size in SkyArt.draw(ctx, size) }.ignoresSafeArea() }
     }
 }
@@ -35,9 +35,9 @@ extension View {
     /// A card of clear glass with a breath of white behind the view (the console's lines): the words stay on the view,
     /// the glass is only the card under them.
     public func glassCard() -> some View {
-        let card = RoundedRectangle(cornerRadius: 22, style: .continuous)
-        return padding(14).frame(maxWidth: .infinity, alignment: .leading)
-            .background { card.fill(.clear).glassEffect(.regular.tint(.white.opacity(0.2)), in: card) }
+        let card = RoundedRectangle(cornerRadius: Look.cardRadius, style: .continuous)
+        return padding(Look.cardPadding).frame(maxWidth: .infinity, alignment: .leading)
+            .background { card.fill(.clear).glassEffect(.regular.tint(Look.cardTint), in: card) }
     }
 }
 #endif

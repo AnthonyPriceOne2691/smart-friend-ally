@@ -15,6 +15,7 @@ implementation:
   - App/Sources/VoiceLoop.swift
   - App/Sources/PhoneListener.swift
   - App/Sources/AllyApp.swift
+  - App/Sources/ConsoleView.swift
   - scripts/reinstall_app.sh
   - scripts/copy_voice.py
   - App/Resources/voice.json
@@ -151,6 +152,11 @@ bash ../scripts/lint/check_app_artifact.sh build/Build/Products/Debug-iphoneos/A
 ```
 
 macOS может спросить доступ `codesign` к ключу разработчика — это окно для рук владельца Mac.
+
+Проект — две цели: `Ally` (приложение) и `AllyDemo` (демо облика для симулятора без модели, микрофона и голоса,
+design-demo). Вид консоли — `App/Sources/ConsoleView.swift`: его показывают обе цели, данные приложению даёт `Console`
+в `AllyApp.swift` из `VoiceLoop`, демо — вымышленные. Демо в приложение не попадает (`check_demo_boundary.sh`); как его
+смотреть — [Design demo](/engineering/design-demo.md).
 
 # Переустановка одной командой (E4)
 
