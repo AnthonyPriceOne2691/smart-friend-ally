@@ -22,6 +22,7 @@ excluded:
   - Packages/AllyAccent/.build
   - Packages/AllyVoiceFX/.build
   - App/build
+  - App/build-demo
   - Packages/AllyDiscipline/Tests/DisciplineTests/Fixtures
 
 disabled_rules:

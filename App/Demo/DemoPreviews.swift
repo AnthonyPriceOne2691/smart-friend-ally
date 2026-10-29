@@ -2,8 +2,9 @@ import AllyCore
 import ShellUI
 import SwiftUI
 
-/// The canvas of Xcode (Y5): every phase of the child screen and the console twice, on the demo's made-up lines. Pin
-/// a preview, then change `Look.swift` or `Palette.swift` — the canvas redraws without a run (scheme AllyDemo).
+/// The canvas of Xcode (Y5): the loading screen (child-open), every phase of the child screen and the console twice,
+/// on the demo's made-up lines. Pin a preview, then change `Look.swift` or `Palette.swift` — the canvas redraws without
+/// a run (scheme AllyDemo).
 enum DemoPreviews {
     static func child(_ phase: SessionState) -> some View {
         ChildShell(talk: TalkState(phase: phase), until: nil, onTap: {}, onStop: {})
@@ -14,6 +15,7 @@ enum DemoPreviews {
     }
 }
 
+#Preview("Загрузка") { LoadingScreen() }
 #Preview("Спит") { DemoPreviews.child(.asleep) }
 #Preview("Здоровается") { DemoPreviews.child(.greeting) }
 #Preview("Слушает") { DemoPreviews.child(.listening) }
