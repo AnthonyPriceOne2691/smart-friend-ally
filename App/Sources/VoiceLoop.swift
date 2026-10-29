@@ -4,6 +4,7 @@ import AllyLlama
 import AVFoundation
 import CryptoKit
 import Memory
+import Metal
 import os
 import ShellCore
 import SwiftUI
@@ -35,6 +36,9 @@ final class VoiceLoop: ObservableObject {
     // memory-recall: the persona, the system turn with the memory's block (M36) and the console's memory lines (M39).
     private var persona = "", system = ""
     @Published private(set) var memoryLines: [String] = []
+    // sim-app: «Файлы с Mac…» — the line under the button and whether a copy is under way.
+    @Published private(set) var macFilesLine: String?
+    @Published private(set) var importingMacFiles = false
     private var encyclopedia: Encyclopedia?  // Э2: loaded at warm-up, both sessions get it
 
     func start() async {
@@ -69,6 +73,8 @@ final class VoiceLoop: ObservableObject {
         for try await _ in model.reply(to: "Привет!") {}
         model.newConversation()
         screen.lines.append("прогрев: " + line(model.warmup.merging(["reply": uptime - start]) { $1 }))
+        let metal = MTLCreateSystemDefaultDevice()?.name  // sim-app: the GPU the model's 99 layers are sent to
+        screen.lines.append(metal.map { "модель: Metal — " + $0 } ?? "модель: CPU — нет Metal")
         let rate = ((try? JSONSerialization.jsonObject(with: data)) as? [String: Any])?["voice_rate"] as? Double ?? 0.5
         let speech = await recognizer.prepare(), voice = makeVoice(registry, rate: rate)
         let microphone = await AudioIO.microphoneAllowed()
@@ -83,11 +89,33 @@ final class VoiceLoop: ObservableObject {
         versions = ["ios": UIDevice.current.systemVersion, "llama": settings.runtime.build, "persona": personaHash,
                     "voice": voice.label, "weights": "\(registry.model.file):\(registry.model.bytes)",
                     "vad": silero == nil ? "energy" : "silero:\(hearing.vad?.bytes ?? 0)", "asr": asr.label,
-                    "audio": sound]
+                    "audio": sound, "metal": metal ?? "none"]
         (self.registry, self.model, self.voice, self.encyclopedia) = (registry, model, voice, encyclopedia)
         screen.ready = speech.ready && microphone && voice.ready
         if screen.ready { converse(model, hearing, voice, silero, asr.decode) }
         parseMemory()  // what a closed app left in the queue (M34)
+    }
+
+    /// «Файлы с Mac…» (sim-app): the picked folder's files into the container — the registries, sizes and sha256 decide
+    /// — off the main thread, then the warm-up if it has not run; the line under the button says what came.
+    func importMacFiles(_ folder: URL) {
+        guard !importingMacFiles else { return }
+        importingMacFiles = true
+        let bundle = Bundle.main.bundleURL
+        let support = files.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+        Task {
+            let line = await Task.detached(priority: .userInitiated) {
+                MacFilesButton.copy(folder, bundle: bundle, support: support)
+            }.value
+            (macFilesLine, importingMacFiles) = (line + (registry == nil ? "" : MacImport.texts.later), false)
+            await start()
+        }
+    }
+
+    /// The trace's line into the system log (sim-app, N8): a turn on the Mac is read with `log show --predicate
+    /// 'subsystem == "com.anthonypriceone.ally" AND category == "turn"'`, the container unread; wordless like the file.
+    private static let systemLog = TraceLine { line in
+        Logger(subsystem: "com.anthonypriceone.ally", category: "turn").log("\(line, privacy: .public)")
     }
 
     /// The memory's base in `Application Support/Memory` (M38): out of the backup as read back, complete protection;
@@ -248,7 +276,8 @@ final class VoiceLoop: ObservableObject {
             self.refreshMemoryLines()
             self.parseMemory()
         } })
-        let sink = TraceFanOut(memory == nil ? [journal] : [journal, tap])
+        let sinks: [TraceSink] = memory == nil ? [journal] : [journal, tap]
+        let sink = TraceFanOut(sinks + [Self.systemLog])  // sim-app: the same wordless line into the system log
         let encyclopedia = encyclopedia
         let stamp: @Sendable () -> TraceStamp = {
             let thermal = ["nominal", "fair", "serious", "critical"][ProcessInfo.processInfo.thermalState.rawValue]

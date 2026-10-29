@@ -54,6 +54,7 @@ struct Console: View {
                 .accessibilityIdentifier("console.lock")
                 buttons
                 memoryButtons
+                MacFilesButton(loop: loop)  // sim-app: only the iPhone app on a Mac
             }
             .padding()
         }

@@ -1,0 +1,14 @@
+{
+  "_about": "The lines of «Файлы с Mac…» (sim-app): what the copy from the Mac's folder did or why nothing (more) was copied. {path} — the folder's path, {name} — the name as the registry writes it, {found} and {bytes} — sizes, {count} — files, {gb} — gigabytes.",
+  "unreadable": "список файлов не читается",
+  "registries": "реестры приложения не читаются",
+  "stranger": "чужой файл в списке: {path}",
+  "size": "файл не тот: {name} — {found} байт вместо {bytes}",
+  "hash": "файл не тот: {name} — sha256 не сходится",
+  "copy": "не скопирован: {path}",
+  "after": "файл не тот после копии: {path}",
+  "place": "не поставлен на место: {path}",
+  "done": "файлы с Mac на месте: {count}, {gb} ГБ",
+  "nolist": "в папке нет manifest.json — сначала python3 scripts/mac_files.py",
+  "later": " — новые файлы после ⌘R"
+}
