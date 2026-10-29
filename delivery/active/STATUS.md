@@ -6,7 +6,7 @@
 - **kind:** feature
 - **repro_test:** n/a reason=не bugfix
 - **diagnosis:** n/a reason=не bugfix
-- **phase:** implement
+- **phase:** verify
 - **builder:** agent:claude-code
 - **verifier:** process:ci
 - **human_ok_spec:** yes (by=human:anthony, at=2026-10-29, «Подписываю (Рекомендую)» через ведущего: шапка блока, бюджет 200, пример на вымышленных фактах)
@@ -27,7 +27,7 @@
        слова консоли, BlockLines.swift — Words.Console, engineering/memory), card-fallback — конфликты сложением; канон —
        вариант D, docs/canon копией под exclude -->
 - **hooks:** not-deployed
-- **blockers:** none
+- **blockers:** M40 не выдержан (имя D1 74%, вываливание 1 из 221, живость 38%) — решение родителя, escalation.md
 - **waivers:** acceptance=M36,M37 reason=постоянное решение родителя 2026-10-23 на вопрос ведущего о телефонных проверках — «Да, всё в общую сессию (Рекомендую)»: чтение префикса с блоком на телефоне (M36) и «помнит на телефоне» (M37) — в сессии теста после включения блока; код, тесты и M40 на Mac — до слияния by=human:anthony
 - **new_dependency:** none
 - **runtime_paths:** none reason=дифф трогает только слова и сборку блока в пакете AllyMemory (Linux и Mac, тесты); путь пересборки префикса с блоком исполнен на Mac с весами в memory-recall (PrefixTests M36), на телефоне — сессия теста (waiver M36, M37)
