@@ -49,8 +49,10 @@ extension BlockLine {
             })]
     }
 
+    /// Her line without her name (memory-block-form, the parent 2026-10-29: with her name the block brought it back in
+    /// 74% of the replies of D1, M40) — her age and birthday.
     private static func she(_ facts: [StoredFact], _ words: Words) -> [BlockLine] {
-        let head = [value(facts, .name), value(facts, .age).map(words.age)].compactMap { $0 }.joined(separator: ", ")
+        let head = [value(facts, .age).map(words.age)].compactMap { $0 }.joined(separator: ", ")
         let birthday = facts.filter { $0.trait == .birthday }
             .map { BlockItem(text: words.labels.birthday + " " + $0.value, rank: 12, seen: $0.lastSeen) }
         let favorites = facts.filter { $0.trait == .favorite }
