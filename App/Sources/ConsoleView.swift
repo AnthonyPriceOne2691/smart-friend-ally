@@ -10,6 +10,8 @@ struct ConsoleModel {
     var talk = TalkState()
     /// M39: what she remembers, one line each, and the question before the erase.
     var memoryLines: [String] = [], memoryConfirmation = ""
+    /// M41: what she remembers by entity, for «Забыть…».
+    var forgettable: [ForgetGroup] = []
     /// The lock, the acceptance and the break, one line each (R, R2, Ш3).
     var lockLines: [String] = []
     /// The child mode may be handed over (the access is open), an exception lies in the container.
@@ -23,6 +25,15 @@ struct ConsoleActions {
     var handOver: @MainActor () -> Void = {}, closeChildMode: @MainActor () -> Void = {}
     var eraseMemory: @MainActor () -> Void = {}
     var memoryText: @MainActor () -> String = { "" }
+    /// M41: forget one fact, or everything about one entity — by the ids of `ForgetGroup`.
+    var forgetFact: @MainActor (Int64) -> Void = { _ in }, forgetEntity: @MainActor (Int64) -> Void = { _ in }
+}
+
+/// M41: an entity of her memory as the console shows it — the title, the facts in the block's words — with the parent's
+/// question before each «Забыть»; plain values, so the demo builds the console without the memory.
+struct ForgetGroup: Identifiable {
+    struct Item: Identifiable { let id: Int64, text: String, question: String }
+    let id: Int64, title: String, question: String, items: [Item]
 }
 
 /// «Для взрослых» (A12): readiness, signing days, the session's state and limit; what was heard and said stays on
@@ -33,6 +44,7 @@ struct ConsoleView: View {
     let model: ConsoleModel, actions: ConsoleActions
     @State private var remembered: String?
     @State private var erasing = false
+    @State private var forgetting = false
 
     var body: some View {
         AdultSky {
@@ -88,14 +100,22 @@ struct ConsoleView: View {
         }
     }
 
-    /// M39: what she remembers, and the parent's erase with its confirmation — glass capsules too.
+    /// M39: what she remembers, and the parent's erase with its confirmation; M41: forget one thing — glass capsules.
     private var memoryButtons: some View {
-        HStack {
-            Button("Что помнит Элли") { remembered = actions.memoryText() }.buttonStyle(GlassCapsule())
-                .disabled(model.memoryLines.isEmpty).accessibilityIdentifier("console.memoryText")
+        VStack(alignment: .leading, spacing: Look.rowSpacing) {
+            HStack {
+                Button("Что помнит Элли") { remembered = actions.memoryText() }.buttonStyle(GlassCapsule())
+                    .disabled(model.memoryLines.isEmpty).accessibilityIdentifier("console.memoryText")
+                Button("Забыть…") { forgetting = true }.buttonStyle(GlassCapsule())
+                    .disabled(model.forgettable.isEmpty || model.talk.phase != .asleep)
+                    .accessibilityIdentifier("console.forget")
+            }
             Button("Стереть память", role: .destructive) { erasing = true }.buttonStyle(GlassCapsule())
                 .disabled(model.memoryLines.isEmpty || model.talk.phase != .asleep)
                 .accessibilityIdentifier("console.eraseMemory")
+        }
+        .sheet(isPresented: $forgetting) {
+            ForgetSheet(groups: model.forgettable, asleep: model.talk.phase == .asleep, actions: actions)
         }
         .confirmationDialog(model.memoryConfirmation, isPresented: $erasing, titleVisibility: .visible) {
             Button("Стереть", role: .destructive, action: actions.eraseMemory)
@@ -120,5 +140,36 @@ struct ConsoleView: View {
         case .goodbye: "прощается"
         case .paused: "пауза"
         }
+    }
+}
+
+/// M41: what she remembers by entity — the parent forgets one fact or everything about one entity, each confirmed.
+struct ForgetSheet: View {
+    let groups: [ForgetGroup], asleep: Bool, actions: ConsoleActions
+    @State private var asked: (question: String, forget: @MainActor () -> Void)?
+
+    var body: some View {
+        NavigationStack {
+            List(groups) { who in
+                Section {
+                    ForEach(who.items) { item in
+                        Button(item.text) { asked = (item.question, { actions.forgetFact(item.id) }) }
+                    }
+                } header: {
+                    HStack {
+                        Text(who.title)
+                        Spacer()
+                        Button("Забыть всё") { asked = (who.question, { actions.forgetEntity(who.id) }) }
+                    }
+                }
+            }
+            .navigationTitle("Забыть")
+            .confirmationDialog(asked?.question ?? "", isPresented: Binding(get: { asked != nil },
+                                                                            set: { if !$0 { asked = nil } }),
+                                titleVisibility: .visible) {
+                Button("Забыть", role: .destructive) { asked?.forget() }
+            }
+        }
+        .disabled(!asleep)
     }
 }

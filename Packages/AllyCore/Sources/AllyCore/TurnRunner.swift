@@ -33,8 +33,9 @@ public final class TurnRunner {
     ///     adult pointer is kept).
     ///   - prompt: what the model gets when it is not her words alone — with the encyclopedia's hint (Э2).
     ///   - card: the hint's card: when the reply's kept sentences miss its essence, its text sounds (card-fallback).
+    ///   - window: what the session lets this turn say (M42): it reads the model's text before the contract.
     public func run(_ utterance: String, decision: RouterDecision = .pass, prompt: String? = nil,
-                    card: HintCard? = nil) async throws -> TurnOutcome {
+                    card: HintCard? = nil, window: TurnWindow = .open) async throws -> TurnOutcome {
         let watchdog = Watchdog(), sounded = Sounded()
         let carded = card.map { CardTurn(card: $0, mode: mode, heard: utterance, decision: decision) }
         let timer = Task { [clock, model, firstSentenceTimeout] in
@@ -47,7 +48,7 @@ public final class TurnRunner {
         }
         return try await withTaskCancellationHandler {
             let contract = TurnContract(mode: mode, heard: utterance, decision: decision)
-            var state = TurnState(contract: contract, start: clock.now(), sounded: sounded)
+            var state = TurnState(contract: contract, start: clock.now(), sounded: sounded, window: window)
             try await stream(prompt ?? utterance, into: &state, watchdog: watchdog)
             try Task.checkCancellation()
             return try await finish(&state, timedOut: watchdog.state == .fired, card: carded)
@@ -62,7 +63,9 @@ public final class TurnRunner {
         for try await text in model.reply(to: input) {
             state.text = text
             if state.times.firstText == nil, text.contains(where: \.isLetter) { state.times.firstText = elapsed(state) }
-            guard state.head == .pending, let sentence = SentenceStream.first(in: text) else { continue }
+            guard state.head == .pending, let sentence = SentenceStream.first(in: state.window.apply(text)) else {
+                continue
+            }
             guard watchdog.move(to: .disarmed) else { return }
             guard let spoken = state.contract.first(sentence) else {
                 state.head = .refused
@@ -79,7 +82,7 @@ public final class TurnRunner {
     /// hinted turn whose kept sentences miss the card's essence, the card's text after what already sounded.
     private func finish(_ state: inout TurnState, timedOut: Bool, card: CardTurn?) async throws -> TurnOutcome {
         state.times.replyEnd = elapsed(state)
-        let kept = state.contract.finish(timedOut ? "" : state.text)
+        let kept = state.contract.finish(timedOut ? "" : state.window.apply(state.text))
         let carded = card?.turn(after: kept, spoken: state.head == .spoken), turn = carded ?? kept
         let rest = state.head == .spoken ? Array(turn.sentences.dropFirst()) : turn.sentences
         (voice as? VoiceLookahead)?.upcoming(rest)  // made ahead while the first sounds (Z25)
@@ -100,10 +103,11 @@ public final class TurnRunner {
     private func elapsed(_ state: TurnState) -> Double { clock.now() - state.start }
 }
 
-/// One turn in flight: its contract, the reply so far, what became of sentence 1, the stage times, what sounded.
+/// One turn in flight: its contract, the reply so far, what became of sentence 1, the stage times, what sounded, the
+/// session's window over the model's text (M42).
 struct TurnState {
     enum Head { case pending, refused, spoken }
-    let contract: TurnContract, start: Double, sounded: Sounded
+    let contract: TurnContract, start: Double, sounded: Sounded, window: TurnWindow
     var text = "", head = Head.pending, times = TurnTimes()
 }
 

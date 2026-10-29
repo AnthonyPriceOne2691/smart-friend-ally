@@ -12,6 +12,7 @@ implementation:
   - .gitignore
   - scripts/lint/check_child_data.py
   - Packages/AllyMemory/Sources/Memory/MemoryQueue.swift
+  - Packages/AllyMemory/Sources/Memory/MemoryForget.swift
 ---
 
 # Purpose
@@ -58,6 +59,10 @@ implementation:
   флагом полной защиты; не прочиталась — память не пишется (`MemoryFiles`). С `memory-recall`: когда блок памяти
   включён (сейчас выключен решением родителя 2026-10-28), файл префикса `Library/Caches/persona-*` несёт его — класс
   полной защиты, Caches в бэкап не идёт, «Стереть память» пересобирает префикс из персоны и удаляет файл с блоком.
+  С `memory-forget` (2026-10-29): «Забыть» один факт или сущность удаляет строки с историей и повторами,
+  `secure_delete` их затирает, чекпойнт `TRUNCATE` опустошает WAL — ни байта значения в базе, WAL и SHM (M41);
+  надгробие хранит кто, что и когда, но не значение — ни открытым, ни хэшем; разговор из очереди с этим словом
+  стирается после своего разбора, как любой.
 - **Продукт не ходит в сеть** — данным некуда уйти с телефона, кроме выгрузки родителем.
 - **Запись о нарушении контракта** — id правил в следе хода; текст модели до контракта и сказанное после —
   в записи чёрного ящика.
@@ -69,6 +74,7 @@ implementation:
 | Игнор локальных данных | `.gitignore` |
 | Гейт на коммите и в CI | `scripts/lint/check_child_data.py` (хук `child-data`, канарейка в `scripts/lint/canaries.json`, смоук S6 на запись ящика) |
 | Память на телефоне: вне бэкапа, защита, очередь до разбора | `Packages/AllyMemory/Sources/Memory/MemoryQueue.swift` (`MemoryFiles`, `drain`) |
+| «Забыть» один факт или сущность: удаление, затирание, чекпойнт, надгробие без значения | `Packages/AllyMemory/Sources/Memory/MemoryForget.swift` |
 
 # Related
 
