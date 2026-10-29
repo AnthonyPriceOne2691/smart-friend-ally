@@ -6,7 +6,7 @@
 - **kind:** feature
 - **repro_test:** n/a reason=не bugfix
 - **diagnosis:** n/a reason=не bugfix
-- **phase:** implement
+- **phase:** verify
 - **builder:** agent:claude-code
 - **verifier:** process:ci
   <!-- первый ход на Mac исполняет родитель кнопками (⌘R, «Разбудить»), агент говорит синтетикой и снимает строки журнала -->
