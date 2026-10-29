@@ -3,8 +3,8 @@
 **Date:** 2026-10-29
 **Verifier:** process:ci
 **asserts_reviewed_by:** n/a (все утверждения ведут к примерам спеки M41, M42 — дайджест ниже, asserts_without_example: 0; ожидания подписаны родителем 2026-10-23 «Подписываю (Рекомендую)» в спеке серии)
-**CI run:** — (после открытия PR)
-**Commit:** — (сдача — следующим прогоном PR)
+**CI run:** https://github.com/AnthonyPriceOne2691/smart-friend-ally/actions/runs/40940538096 (f1595e5 — delivery, swift, gates зелёные; PR #88)
+**Commit:** f1595e5 (документы — f5c8350 до кода, код — f418822, сборка — 4e98d1c, знание — 2edf49a, 4eab166, 5054ee6, M42 на E4B — d28a5f8; сдача — следующим прогоном PR #88)
 
 ## Shape oracles
 - [x] PASS — pre-commit на коммитах поставки: `file-length`, jscpd — рост 0; SwiftLint — 0 находок (снимок 0; длины
@@ -71,6 +71,8 @@
 - **Телефон** — экран «Забыть» — сессия теста.
 - **Уменьшительные имени** («Сонечка») окно не считает — по данным чёрного ящика (L28: форма, а не список).
 - **Весь ответ о брате** после двух — звучит заготовка режима («повтори, я не расслышала»); видно в чёрном ящике.
+- **Ход, оборванный стопом или перебиванием,** окно не считает (исхода хода нет): доигранное до обрыва упоминание брата
+  или имени в счёт не идёт — граница может сдвинуться на один ответ; по данным чёрного ящика.
 
 ## Harness metrics (this shipment)
 
@@ -84,7 +86,7 @@
 | rework_after_done | 0 |
 | harness_hardened | yes — новые оракулы `MemoryForgetTests`, `WindowTests`; 11 мутаций; стенд M42 на E4B |
 | implement_retries | 3 — SwiftLint (длины строк, шесть параметров), `@State` с двумя именами — исправлены до PR |
-| verify_fails_before_green | — (после CI) |
+| verify_fails_before_green | 0 — прогон CI 40940538096 зелёный во всех трёх джобах (delivery, swift, gates) |
 | est_token_or_cost | n/a |
 
 ## Assertion digest (ревью ожиданий, не кода)
@@ -126,6 +128,6 @@ M41	XCTAssertEqual(try Fixture.occurrences(["Тёма"], in: folder), 0)
 asserts_without_example: 0
 
 ## Verdict
-- [ ] READY FOR HANDOFF (после зелёного CI)
+- [x] READY FOR HANDOFF
 - [ ] NEED CONVERGE (new tasks)
 - [ ] BLOCKED

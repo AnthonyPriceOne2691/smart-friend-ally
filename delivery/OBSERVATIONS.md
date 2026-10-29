@@ -74,3 +74,4 @@
 - `app-encyclopedia`
 - `memory-recall`
 - `app-glass`
+- `memory-forget`

@@ -11,5 +11,5 @@
 - [x] T4: приложение — имена из памяти в сессию, экран «Забыть» с подтверждениями; сборка без подписи, оракул артефакта
 - [x] T5: стенд M42 на E4B (D2 × seed 42/7/1234) — по «можно» ведущего; числа в eval-smoke
 - [x] T6: знание — `engineering/memory`, `engineering/safety-below-model`, `ops/test-session`, `knowledge/log.md`
-- [ ] T7: PR, CI, verify-report, строгий `delivery_check`; сдача: архив, строка INDEX с уроками L148–L150,
+- [x] T7: PR, CI, verify-report, строгий `delivery_check`; сдача: архив, строка INDEX с уроками L148–L150,
   `memory-forget` в `delivery/OBSERVATIONS.md`
