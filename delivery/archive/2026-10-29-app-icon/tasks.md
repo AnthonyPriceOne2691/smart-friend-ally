@@ -31,5 +31,5 @@ L154, L157, L58, L171, L172 (причина там же).
   `product/index`, `knowledge/log.md`
 - [x] T10: слить свежий `origin/main` (до 88e9920: child-open; конфликты знания — сложением); строгий
   `delivery_check --require-ci --diff-base origin/main`; пуш, PR #91, CI; метка `macos` — моя (слово ведущего)
-- [ ] T11: verify-report, `check_digest_report.py` до пуша сдачи; архив в том же PR, строка INDEX (уроки L174–L176),
+- [x] T11: verify-report, `check_digest_report.py` до пуша сдачи; архив в том же PR, строка INDEX (уроки L174, L175, L176),
   slug — в конец `delivery/OBSERVATIONS.md`; доклад ведущему «готово к мержу»
