@@ -22,6 +22,8 @@ implementation:
   - App/Sources/Audio/SystemVoice.swift
   - App/Sources/Audio/SupertonicVoice.swift
   - App/Sources/Audio/EnginePlayer.swift
+  - App/Sources/Audio/BackgroundMusic.swift
+  - App/Resources/music.json
   - App/Sources/Speech/DictationRecognizer.swift
   - App/Sources/Hearing/RecognitionPhrase.swift
   - Packages/AllyLlama/Sources/AllyLlama/LlamaModel.swift
@@ -105,6 +107,19 @@ implementation:
     переключателе «без звука»), с Supertonic — режим `.voiceChat`.
   - Консоль пишет «голос: Supertonic F2 · 9/5 · ORT 1.28.0». Версия `voice` в журнале — движок, пресет, ORT; этапы
     `voice_text`, `voice_synth`, `voice_fx`, `voice_start` идут в запись хода вместе с этапами слуха.
+- **Музыка экрана дочки** (background-music, правило 14 словами родителя — [Look and feel](/product/look-and-feel.md)).
+  - «Шкатулку Элли» собирает код на прогреве, в фоне (`MusicBox` из `ShellCore`); файла музыки нет — копировать нечего.
+  - Строка `App/Resources/music.json`: `on`, `volume` (0–1, по умолчанию 0,8), `duck_db` (−60–0, −20), `fade_out`
+    (0,4 с), `delay` (2 с), `fade_in` (3 с). Значение вне диапазона — умолчание и строка консоли; `"on": false` —
+    тихо, как раньше. Меняется без кода, вступает после переустановки.
+  - Консоль пишет «музыка: «Шкатулка Элли» · 0,80 · -20,00 дБ» или «музыка: выключена»; с Milena — ещё
+    «музыка: в разговоре молчит — нет эхоподавления».
+  - Покой — `AVAudioPlayer` с плавной громкостью, микрофон закрыт. Тап — путь вниз за 0,4 с, затем петля с того же места
+    переходит в узел `AVAudioPlayerNode` на движке `AudioIO` (подключён до voice processing, X9), и только потом
+    `audio.start()`. Сессия кончилась — узел отдаёт петлю обратно проигрывателю покоя, через 2 с подъём за 3 с.
+  - Аудиосессию музыка не трогает: играет на той, что поставил прогрев. Звонок вернул звук — проигрыватель покоя
+    продолжает; фон приложения — тишина.
+  - Второй тап, пока пробуждение ждёт музыку, нового пробуждения не ставит.
 - **Milena — запасной голос.** Нет файла или размер не тот («голоса нет: скопируй с Mac», «голос не тот: N байт вместо
   M»), голос не загрузился — звучит Milena по идентификатору из реестра, и консоль пишет причину.
   - Нет enhanced — compact с видимой пометкой (П23).
