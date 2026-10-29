@@ -112,12 +112,12 @@ repos:
       # джобы gates (AllyCore) на дефолт frontend/src, которого нет.
       # Пятый — Sources AllyAccent (поставка accent-tokenizers), так же одной половиной.
       # Шестой — Sources AllyVoiceFX так же (поставка voice-fx: Swift-обёртка, C-ядро jscpd формата swift не видит,
-      # его держит file-length).
+      # его держит file-length). Седьмой — исходники демо App/Demo одной половиной (поставка design-demo).
       # `files:` — Swift и конфиги порогов, как у шаблона (правка порогов судится порогами).
       - id: jscpd-dry-gate
         name: DRY — рост копипаста (jscpd clone-count ratchet)
         language: system
-        entry: bash -c 'cd "$(git rev-parse --show-toplevel)" && export LINT_JSCPD_PY_FORMAT=swift LINT_JSCPD_TS_FORMAT=swift LINT_JSCPD_TS_EXTS=swift:swift && LINT_PY_SRC=Packages/AllyDiscipline/Sources LINT_TS_SRC=Packages/AllyCore/Sources bash scripts/lint/check_jscpd_gate.sh && LINT_PY_SRC=Packages/AllyLlama/Sources LINT_TS_SRC=App/Sources bash scripts/lint/check_jscpd_gate.sh && LINT_PY_SRC=Packages/AllyShell/Sources/ShellCore LINT_TS_SRC=Packages/AllyShell/Sources/ShellUI bash scripts/lint/check_jscpd_gate.sh && LINT_PY_SRC=Packages/AllySpeechText/Sources LINT_TS_SRC= bash scripts/lint/check_jscpd_gate.sh && LINT_PY_SRC=Packages/AllyAccent/Sources LINT_TS_SRC= bash scripts/lint/check_jscpd_gate.sh && LINT_PY_SRC=Packages/AllyVoiceFX/Sources LINT_TS_SRC= bash scripts/lint/check_jscpd_gate.sh'
+        entry: bash -c 'cd "$(git rev-parse --show-toplevel)" && export LINT_JSCPD_PY_FORMAT=swift LINT_JSCPD_TS_FORMAT=swift LINT_JSCPD_TS_EXTS=swift:swift && LINT_PY_SRC=Packages/AllyDiscipline/Sources LINT_TS_SRC=Packages/AllyCore/Sources bash scripts/lint/check_jscpd_gate.sh && LINT_PY_SRC=Packages/AllyLlama/Sources LINT_TS_SRC=App/Sources bash scripts/lint/check_jscpd_gate.sh && LINT_PY_SRC=Packages/AllyShell/Sources/ShellCore LINT_TS_SRC=Packages/AllyShell/Sources/ShellUI bash scripts/lint/check_jscpd_gate.sh && LINT_PY_SRC=Packages/AllySpeechText/Sources LINT_TS_SRC= bash scripts/lint/check_jscpd_gate.sh && LINT_PY_SRC=Packages/AllyAccent/Sources LINT_TS_SRC= bash scripts/lint/check_jscpd_gate.sh && LINT_PY_SRC=Packages/AllyVoiceFX/Sources LINT_TS_SRC= bash scripts/lint/check_jscpd_gate.sh && LINT_PY_SRC=App/Demo LINT_TS_SRC= bash scripts/lint/check_jscpd_gate.sh'
         files: ^((Packages|App)/.*\.swift|\.pre-commit-config\.yaml|scripts/lint/.*)$
         pass_filenames: false
 
@@ -184,6 +184,13 @@ repos:
         entry: bash -c 'cd "$(git rev-parse --show-toplevel)" && bash scripts/lint/check_swiftlint_ratchet.sh'
         language: system
         types_or: [swift]
+        pass_filenames: false
+      # Граница демо (поставка design-demo, Y1, Y2, Y5): проект — на каждом коммите, собранное — macOS-джоба ios.yml.
+      - id: demo-boundary
+        name: граница демо — демо не в приложении, в демо нет модели, микрофона и голоса
+        entry: bash -c 'cd "$(git rev-parse --show-toplevel)" && bash scripts/lint/check_demo_boundary.sh --project'
+        language: system
+        files: ^(App/project\.yml|App/Demo/.*|App/Sources/ConsoleView\.swift|Packages/AllyCore/Sources/AllyCore/Session\.swift|scripts/lint/check_demo_boundary\.sh)$
         pass_filenames: false
 
   # -------------------------------------------------------------------------
