@@ -3,8 +3,8 @@
 **Date:** 2026-10-29
 **Verifier:** process:ci
 **asserts_reviewed_by:** n/a (все утверждения ведут к примерам спеки — дайджест ниже; Y1–Y11 подписаны родителем 2026-10-29)
-**CI run:** _после пуша_
-**Commit:** _после пуша_ (спека — 7057e53, подпись — 73eaa1e, eval-smoke до кода — fdac009)
+**CI run:** https://github.com/AnthonyPriceOne2691/smart-friend-ally/actions/runs/40953192650 (quality на aeaf537: gates, swift, delivery — зелёные)
+**Commit:** aeaf537 (спека — 7057e53, подпись — 73eaa1e, eval-smoke до кода — fdac009, код — d9e7fe0, знание — b6edb16, слияние main 88e9920 — 32847ba, сжатие — 5ce622d); macOS-джоба по метке `macos` — https://github.com/AnthonyPriceOne2691/smart-friend-ally/actions/runs/40953044381
 
 ## Shape oracles
 - [x] PASS — SwiftLint 0.65 по всему дереву — 0 находок, ратчет 0 → 0; строки ≤ 120; правило `inline_prompt` — строки
@@ -12,11 +12,15 @@
 - [x] PASS — `okf_validate.py`: 0 ошибок (52 файла); в том же диффе правлены `product/look-and-feel` (правило 14, раздел
   «Музыка», `implementation:`), `engineering/voice-loop` (музыка в приложении, `implementation:`), `ops/test-session`,
   `log.md`
-- [ ] строгий `delivery_check --require-ci --diff-base origin/main` — после пуша
+- [x] PASS — строгий `delivery_check --require-ci --diff-base origin/main`: 0 ошибок; предохранитель — 9 файлов, net 780 из
+  800 (план ≈ 610, +28%: SHA-256 в тесте для Linux и `while` по указателям — L34). Предупреждение «нет реляционного
+  оракула»: детектор знает только hypothesis и fast-check, а свойство здесь — фейдер на 100 сценариях с зерном (без
+  скачков, путь вниз ≤ 0,4 с, ожидаемых чисел нет)
 
 ## Behavior oracles
 - [x] PASS — `swift test --filter ShellCoreTests` на Mac (Xcode 27.1, `nice -n 10`) после слияния main (88e9920): 46 из 46;
-  музыкальные после сжатия до предохранителя — 11 из 11 (Y1–Y10 и свойство на 100 сценариях); CI Linux — после пуша
+  музыкальные после сжатия до предохранителя — 11 из 11 (Y1–Y10 и свойство на 100 сценариях). CI Linux, джоба `swift`
+  (40953192650) — зелёная: sha256 отсчётов на Linux тот же, что на Mac (Y10)
 - [x] PASS — мутации на окончательных тестах (L64 — по видимому эффекту), 12 из 12 убиты падением тестов, а не сборкой,
   файлы восстановлены:
   - «уход за 0 с» — Y2, Y5, Y6/Y7 и свойство; «„еле слышно“ = обычная громкость» — Y2, Y4, Y5;
@@ -29,7 +33,9 @@
   CI). Сборка петли без оптимизации — 0,61 с (с итераторами было 42,7 с), с оптимизацией — 0,08 с
 - [x] PASS — проверка типов `BackgroundMusic.swift` на SDK macOS 27 с собранным `ShellCore` — 0 ошибок и 0 предупреждений
   (вызовы iOS 27 `connectNode`, `playAudio`)
-- [ ] сборка `Ally.app` без подписи и оракул артефакта — по слову ведущего (до 00:00 на Mac шёл отбор моделей)
+- [x] PASS — macOS-джоба по метке `macos` (40953044381, образ `xcode-27`, по слову ведущего — Mac не грузили): пакеты,
+  AllyShell с музыкой (Y1–Y10), сборка `Ally.app` для устройства без подписи — проводка `VoiceLoop`, `BackgroundMusic`,
+  `AllyApp` собирается на SDK iOS 27; оракул артефакта — OK; демо и его граница — OK
 
 ## Product oracles
 - [x] PASS — `human_ok_spec: yes` (родитель 2026-10-29, «Подписываю (Рекомендую)» через ведущего): покой 0,8, в разговоре
