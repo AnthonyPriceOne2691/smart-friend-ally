@@ -1,0 +1,27 @@
+# Tasks
+
+Уроки (§2.2a) — в `plan.md`: L33, L62, L46, L105, L106, L137, L138, L139, L130, L63, L107, L64, L80, L7, L16, L70,
+L44, L45, L34, L52; не применимы — L1–L4, L6, L11–L14, L21, L26, L27, L31, L32, L37, L40–L43, L50, L53, L56–L61, L68,
+L69, L71–L79, L81, L82, L86–L101, L104, L108–L113, L125, L127–L129, L131–L136 (причина там же).
+
+## Slice 0 — спека
+- [ ] T1: документы первым коммитом ветки `feat/design-demo`, до кода (L33, L62): STATUS, spec (Y1–Y7), plan, tasks
+- [ ] T2: вопрос родителю через ведущего — подпись под Y1–Y7; код — под `deferred` (показ сегодня по слову родителя)
+
+## Slice 1 — показ
+- [ ] T3: `eval-smoke.md` — строки Y1–Y7 до кода; `phase: implement`
+- [ ] T4: `ConsoleView` из `AllyApp.swift` (модель и действия), обёртка приложения
+- [ ] T5: цель `AllyDemo` (`project.yml`), `App/Demo/` — вход, тур, плашка, вымышленная консоль, превью
+- [ ] T6: `scripts/run_demo.sh`; сборка под симулятор; как встанет рантайм — запуск на iPhone 17 Pro Max, доклад
+  ведущему «демо в симуляторе открыто»
+
+## Slice 2 — токены, оракул, CI
+- [ ] T7: `Look.swift`, числа облика из `AdultZone`, `GlassCapsule`, `glassCard`, `ConsoleView`; пробы `ShellUITests`
+  на Mac; мутация «высота 36» (Y6)
+- [ ] T8: `check_demo_boundary.sh` (Y1, Y2, Y3, Y5), pre-commit; мутации «Demo в Ally», «AllyLlama у демо»
+- [ ] T9: `ios.yml` — сборка демо под симулятор и оракул границы; jscpd — `App/Demo`
+
+## Slice 3 — знание и сдача
+- [ ] T10: runbook демо, `look-and-feel`, ADR `character-rendering`, `voice-loop`, `repo-map`, `log.md`, индексы
+- [ ] T11: свежий main; строгий `delivery_check --require-ci --diff-base origin/main`; пуш, PR, CI, метка `macos`
+- [ ] T12: verify-report, архив в том же PR, строка INDEX (уроки L154–L157), `OBSERVATIONS.md`; доклад ведущему
