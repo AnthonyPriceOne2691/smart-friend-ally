@@ -74,4 +74,5 @@
 - `app-encyclopedia`
 - `memory-recall`
 - `app-glass`
+- `card-fallback`
 - `design-demo`
