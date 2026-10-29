@@ -3,8 +3,8 @@
 **Date:** 2026-10-29
 **Verifier:** process:ci
 **asserts_reviewed_by:** n/a (все утверждения ведут к примерам спеки P21–P24 — дайджест ниже, asserts_without_example: 0; примеры подписаны родителем 2026-10-29 до кода, спека — 901e5ae)
-**CI run:** — (PR и прогон — после пуша; ссылка вписывается в коммите сдачи до мержа, `mergeable` проверяется до ссылки, L35)
-**Commit:** документы — 901e5ae (спека, STATUS), f76610b (подпись, план, задачи, решения, eval-smoke) до кода; код — cb23637; заморозка обёртки P18 — caecdc8; знание — 0e76d54
+**CI run:** https://github.com/AnthonyPriceOne2691/smart-friend-ally/actions/runs/40939444142 (PR #87, коммит 3c700cb: `delivery`, `gates`, `swift` — зелёные с первого прогона; `mergeable: MERGEABLE`, `CLEAN` — проверено до ссылки, L35)
+**Commit:** документы — 901e5ae (спека, STATUS), f76610b (подпись, план, задачи, решения, eval-smoke) до кода; код — cb23637; заморозка обёртки P18 — caecdc8; знание — 0e76d54; verify — 3c700cb
 
 ## Shape oracles
 - [x] PASS — pre-commit на коммитах поставки: `file-length`, jscpd, секреты, данные ребёнка, `gate-coverage`.
@@ -20,7 +20,8 @@
 ## Behavior oracles
 - [x] PASS — `swift test` AllyCore на Mac (Xcode 27): 148 тестов из 148. Новые — `CardFallbackTests` (P21–P23, 9 тестов
   через настоящую `Session`, маршрутизатор и базу из ресурсов) и `EncyclopediaBaseTests` (P24, 2 теста). Покрытие
-  AllyCore — в CI на Linux.
+  AllyCore в CI на Linux — 37 файлов `Sources/`, 2296 из 2370 строк, 96% (порог 70%); слепота гейта проверена порогом
+  101% — красный.
 - [x] PASS — мутации в ту же сессию, исходник восстанавливался из git после каждой: 10 из 10 убиты.
   - Проводка: отката нет; сессия не передаёт карточку; поиск не отдаёт ключ; без метки в следе.
   - Правило: суть в сыром ответе; откат на заготовке; без первой фразы; без «ё» как «е»; откат только в `why`.
@@ -109,7 +110,7 @@
 | rework_after_done | 0 (handoff not declared yet) |
 | harness_hardened | yes — `CardFallbackTests.swift` (новый оракул), P24 в `EncyclopediaBaseTests.swift`, обёртка стенда `p18_fallback.py`, `encyclopedia-replay --said` |
 | implement_retries | 1 — две находки SwiftLint на первом коммите кода (буфер потока, `String(bytes:encoding:)`) |
-| verify_fails_before_green | 0 до PR (CI — после пуша) |
+| verify_fails_before_green | 0 — первый прогон CI на PR #87 зелёный |
 | est_token_or_cost | n/a |
 
 ## Assertion digest (ревью ожиданий, не кода)
@@ -163,6 +164,7 @@ asserts_without_example: 0
 
 ## Verdict
 
-Verify сделан на Mac; CI — после пуша, ссылка — в коммите сдачи.
+Verify сделан, CI на PR #87 зелёный с первого прогона; P18 перегнан на свежих seed и прошёл (48 из 48, артефактов 0),
+цена — карточка на 12 ходах из 48.
 
-- [ ] READY FOR HANDOFF — после зелёного CI на PR
+- [x] READY FOR HANDOFF

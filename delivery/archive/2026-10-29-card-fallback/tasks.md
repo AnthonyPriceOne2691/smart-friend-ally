@@ -13,6 +13,7 @@
 - [x] T8: знание — `encyclopedia.md`, `safety-below-model.md`, `session.md`, `log.md`, индекс; снимок поверхности и
   блок §14.4 (решения поиска на открытых вопросах до и после)
 - [x] T9: сборка — `swift test` AllyCore, `xcodebuild` приложения без подписи, оракул артефакта
-- [ ] T10: слияние main, строгий `delivery_check --require-ci --diff-base origin/main`, verify-report, PR, CI
-- [ ] T11: сдача в том же PR — архив, INDEX (уроки L145–L147; по слову ведущего — L140–L144 и L162 у старых строк),
+- [x] T10: main не двигался (6341428); строгий `delivery_check --require-ci --diff-base origin/main`, verify-report,
+  PR #87, CI зелёный с первого прогона
+- [x] T11: сдача в том же PR — архив, INDEX (уроки L145–L147; по слову ведущего — L140–L144 и L162 у старых строк),
   строка в `delivery/OBSERVATIONS.md`; доклад «готово к мержу»
