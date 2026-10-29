@@ -78,4 +78,5 @@
 - `card-fallback`
 - `design-demo`
 - `child-open`
+- `app-icon`
 - `memory-block-form`
