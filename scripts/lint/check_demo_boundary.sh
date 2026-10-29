@@ -92,8 +92,10 @@ def check_project() -> None:
     missing = [p.strip() for p in phases if not any(re.search(rf"\.{p.strip()}\b", line) for line in previews)]
     for phase in missing:  # Y5
         problems.append(f"Y5: у фазы {phase} нет #Preview в App/Demo/DemoPreviews.swift")
-    print(f"demo-boundary: проект — Ally без Demo, AllyDemo: {len(spec.get('AllyDemo', {}).get('deps', []))} "
-          f"зависимости, превью фаз {len(phases) - len(missing)} из {len(phases)}")
+    leak = any(line.startswith("Y2:") for line in problems)
+    print(f"demo-boundary: проект — Ally {'с Demo' if leak else 'без Demo'}, AllyDemo: "
+          f"{len(spec.get('AllyDemo', {}).get('deps', []))} зависимости, превью фаз {len(phases) - len(missing)} из "
+          f"{len(phases)}")
 
 
 def binaries(app: Path, info: dict) -> list[Path]:
