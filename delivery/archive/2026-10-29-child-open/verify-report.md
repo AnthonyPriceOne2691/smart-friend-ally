@@ -87,6 +87,9 @@
   `release.json` остались для тестов R. Кнопка «Дочке, при мне» доступна по `childAllowed`.
 - **Голос:** фраза «Привет!» синтезом без плеера (`SupertonicRenderer.render`) в `makeVoice`. Ошибка синтеза — как
   прежде: голос Milena и строка причины.
+- **Производительность — риска нет.** Маячок поднят строками `json.loads` и `json.dumps` удалённого
+  `scripts/child_mode.sh`. Нового разбора в горячем пути нет: прогрев голоса — одна фраза при загрузке
+  (`SupertonicRenderer.render`), `LoadingBubble` рисует четыре пузырька на `TimelineView` с 30 кадрами в секунду.
 - **Параллельные поставки:** `sim-app` правит `App/`; правки здесь — прогрев, переход после него и снятие сверок доступа
   в `VoiceLoop`, корень `AllyApp`, `ChildScreen`, новый `LoadingScreen`; main влит до 832849c (`card-fallback`).
 
