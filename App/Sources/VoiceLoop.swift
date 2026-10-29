@@ -104,9 +104,12 @@ final class VoiceLoop: ObservableObject {
         let bundle = Bundle.main.bundleURL
         let support = files.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
         Task {
-            let line = await Task.detached(priority: .userInitiated) {
-                MacFilesButton.copy(folder, bundle: bundle, support: support)
-            }.value
+            // 5.5 GB copied and hashed: its own queue, not the cooperative pool (L143)
+            let line = await withCheckedContinuation { (done: CheckedContinuation<String, Never>) in
+                DispatchQueue(label: "ally.macfiles", qos: .userInitiated).async {
+                    done.resume(returning: MacFilesButton.copy(folder, bundle: bundle, support: support))
+                }
+            }
             (macFilesLine, importingMacFiles) = (line + (registry == nil ? "" : MacImport.texts.later), false)
             await start()
         }

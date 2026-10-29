@@ -93,7 +93,7 @@
 | time_to_accepted_spec | 0,3 ч (спека e91d0bf → подпись a3e6c1e) |
 | rework_after_done | 0 (сдача не объявлена) |
 | harness_hardened | yes — `MacImportTests`, `TraceLineTests` (новые оракулы), smoke S9 `mac_files_check.sh` |
-| implement_retries | 3 — `@Published` на двух переменных одной строкой; правило `inline_prompt` (тексты импорта — в ресурс) и длина строк; детектор секретов на хэше «abc» |
+| implement_retries | 4 — `@Published` на двух переменных одной строкой; правило `inline_prompt` (тексты импорта — в ресурс) и длина строк; детектор секретов на хэше «abc»; импорт с `Task.detached` на свою очередь по L143 после слияния card-fallback |
 | verify_fails_before_green | заполняется по прогонам CI |
 | est_token_or_cost | n/a |
 
