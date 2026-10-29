@@ -28,11 +28,14 @@ implementation:
   `swift test --package-path Packages/AllyDiscipline`.
 - **Ядро голосового цикла** — `Packages/AllyCore` (ход через контракт, конец реплики, журнал хода без слов, реестр
   модели, сессия с мягким лимитом и крючком маршрутизатора, драйвер сессии со слухом `Conversation`, маршрутизатор на
-  живом ходе `RouterRouting`, след хода и его файл `TraceFile`; тексты сессии — `Resources/session.json`; энциклопедия
+  живом ходе `RouterRouting`, след хода и его файл `TraceFile`; тексты сессии — `Resources/session.json`; окно брата и
+  имени `TurnWindow` — `Resources/window.json`; энциклопедия
   «почему» `Encyclopedia` — основы Snowball, SQLite FTS5 через `AllySQLite`, списки — `Resources/encyclopedia.json`,
   база — `Resources/encyclopedia.ru.jsonl`, подсказка во входе модели — `Knowledge.swift`):
   `swift test --package-path Packages/AllyCore` (тулчейн Xcode: `DEVELOPER_DIR`). Паритет энциклопедии со стендом —
-  `swift run -c release --package-path Packages/AllyCore encyclopedia-replay <база.jsonl> [конфиг.json] < вопросы.jsonl`.
+  `swift run -c release --package-path Packages/AllyCore encyclopedia-replay <база.jsonl> [конфиг.json] < вопросы.jsonl`;
+  с `--said` — что сказала бы Элли на сохранённый ответ модели (`TurnRunner` с откатом на карточку, стенд P18; печатает
+  слова — только открытые наборы).
 - **Детский экран (оболочка)** — `Packages/AllyShell`: `ShellCore` (позы фаз, кадры, движение, раскладка, палитра,
   венок, правило тапа `Tap`, перерыв после лимита `Nap` — Linux) и `ShellUI` (Элли с венком, пузырь и небо `SkyArt` в
   SwiftUI под `#if canImport(SwiftUI)`; экран дочки `ChildShell` с зоной взрослых в стекле; фон консоли `AdultSky` и
@@ -54,7 +57,7 @@ implementation:
   цепочки стенда — `local/spike/voice-fx/scripts/port_vs_py.py` на Mac (Z30). Строка пресета и файлы голоса —
   `App/Resources/voice.json` (`VoiceSettings` в `AllyCore`); на телефон — `python3 scripts/copy_voice.py <UDID>`.
 - **Память о ребёнке** — `Packages/AllyMemory` (факты с опорой на ход, замена по дате, блок для промпта, «стереть всё»,
-  запрет на любом пути, разбор разговора; слова блока — `Resources/memory.json`, правила запрета —
+  «забыть» один факт или сущность с надгробием без значения, запрет на любом пути, разбор разговора; слова блока — `Resources/memory.json`, правила запрета —
   `Resources/forbidden.json`, промпт разбора — `Resources/extract.*`) поверх общего SQLite приложения
   `Packages/AllySQLite` (системный модуль `CSQLite` и тонкая обёртка):
   `swift test --disable-keychain --package-path Packages/AllyMemory`;

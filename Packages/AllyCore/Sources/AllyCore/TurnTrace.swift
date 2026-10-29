@@ -40,6 +40,7 @@ public struct TurnTrace: Encodable, Sendable {
 
     public let session: String, turn: Int, phase: String, mode: String, source: String, route: Decision?
     /// The encyclopedia's record of the turn — card id, rule ids, data hash; absent when it was not asked (Э2).
+    /// `knowledge.fallback` follows `knowledge.hint` when the card's text sounded (card-fallback).
     public let knowledge: KnowledgeRecord?
     public let rules: [String], contractHash: String?, modelTimeout: Bool, cancelled: Bool, error: String?
     public let elapsed: Double, limit: Double, stages: [String: Double], end: String?
@@ -55,7 +56,11 @@ public struct TurnTrace: Encodable, Sendable {
             Decision(kind: $0.kind, topic: $0.topic, key: $0.key, rules: $0.rules, dataHash: $0.dataHash,
                      forget: $0.forget)
         }
-        knowledge = head.knowledge
+        knowledge = head.knowledge.map { record in
+            guard outcome?.cardSaid == true else { return record }
+            return KnowledgeRecord(card: record.card, rules: record.rules + ["knowledge.fallback"],
+                                   dataHash: record.dataHash)
+        }
         (rules, contractHash, modelTimeout) = (log?.rules ?? [], log?.contractHash, log?.modelTimeout ?? false)
         (self.cancelled, self.error, self.end) = (cancelled, error.map(TurnLog.wordless), end)
         (elapsed, limit, stages) = (head.elapsed, head.limit, log?.stages ?? stamp.stages)

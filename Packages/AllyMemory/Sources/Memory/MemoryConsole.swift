@@ -21,6 +21,16 @@ public enum MemoryConsole {
     /// «Стереть всё, что помнит Элли? (14 фактов)».
     public static func confirmation(facts: Int) -> String { count(Words.shared.console.confirm, facts) }
 
+    /// «Забыть «рыжая»?» — one fact (memory-forget, M41).
+    public static func forgetting(_ item: Remembered.Item) -> String {
+        Words.shared.console.forget.replacingOccurrences(of: "{what}", with: item.text)
+    }
+
+    /// «Забыть всё про «Брат Тёма»? (3 факта)» — an entity with its facts (M41).
+    public static func forgetting(_ entity: Remembered) -> String {
+        count(Words.shared.console.forgetAll.replacingOccurrences(of: "{what}", with: entity.title), entity.items.count)
+    }
+
     /// A template with `{n}` and `{facts}` in the right form: 1 факт, 2 факта, 5 фактов, 21 факт.
     static func count(_ template: String, _ count: Int) -> String {
         let forms = Words.shared.console.forms, tens = count % 100, ones = count % 10

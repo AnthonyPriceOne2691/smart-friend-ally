@@ -1,9 +1,11 @@
 import Foundation
 
-/// A card as the runtime reads it: id, the child's phrasings, the verified answer. The authoring fields (topic, key,
-/// avoid, sources, license) are judged by the base's tests (Э2), not here.
+/// A card as the runtime reads it: id, the child's phrasings, the verified answer and the key of its essence — the
+/// judge's pattern, which since card-fallback also decides whether a reply carried the essence (nil: the card never
+/// sounds as text). The other authoring fields (topic, avoid, sources, license) are judged by the base's tests (Э2).
 public struct EncyclopediaCard: Decodable, Equatable, Sendable {
     public let id: String, questions: [String], answer: String
+    public let key: String?
 }
 
 /// Why the encyclopedia answered so — the card, the rule ids `knowledge.*`, the data hash; never a word of hers.
@@ -11,10 +13,11 @@ public struct KnowledgeRecord: Codable, Equatable, Sendable {
     public let card: String?, rules: [String], dataHash: String
 }
 
-/// A lookup: the hint — the card's answer word for word — or nothing; the record; the best three for the stand.
+/// A lookup: the hint — the card's answer word for word — or nothing; the key of the hint's card (card-fallback); the
+/// record; the best three for the stand.
 public struct Lookup: Equatable, Sendable {
     public struct Ranked: Equatable, Sendable { public let card: String, score: Double }
-    public let hint: String?, record: KnowledgeRecord, top: [Ranked]
+    public let hint: String?, key: String?, record: KnowledgeRecord, top: [Ranked]
 }
 
 /// The children's encyclopedia before the model: a hint only when the search is sure. In order: no question word,
@@ -56,9 +59,9 @@ public final class Encyclopedia: @unchecked Sendable {
     var phrasings: [String] { engine?.cards.flatMap(\.questions) ?? [] }
 
     public func lookup(_ utterance: String) -> Lookup {
-        guard let engine else { return Lookup(hint: nil, record: record(nil, refusal), top: []) }
+        guard let engine else { return Lookup(hint: nil, key: nil, record: record(nil, refusal), top: []) }
         let decision = engine.decide(utterance), card = decision.card.map { engine.cards[$0] }
-        return Lookup(hint: card?.answer, record: record(card?.id, decision.rule), top: decision.top)
+        return Lookup(hint: card?.answer, key: card?.key, record: record(card?.id, decision.rule), top: decision.top)
     }
 
     private func record(_ card: String?, _ rule: String) -> KnowledgeRecord {
@@ -85,7 +88,8 @@ public final class Encyclopedia: @unchecked Sendable {
     }
 
     /// Id in kebab-case Latin; distinct phrasings in the config's range; the answer — Cyrillic and plain punctuation,
-    /// within the length and the number of sentences.
+    /// within the length and the number of sentences; a key, when there is one, that compiles and finds the essence in
+    /// the card's own answer (card-fallback).
     private static func valid(_ card: EncyclopediaCard, _ config: EncyclopediaConfig) -> Bool {
         let phrasings = Set(card.questions.map { EncyclopediaText.words($0).joined(separator: " ") })
         let chars = Array(card.answer)
@@ -95,6 +99,7 @@ public final class Encyclopedia: @unchecked Sendable {
             && phrasings.count == card.questions.count && !phrasings.contains("")
             && !chars.isEmpty && chars.count <= config.answerMaxChars && sentences <= config.answerMaxSentences
             && card.answer.unicodeScalars.allSatisfy(answerScalar)
+            && card.key.map { CardEssence($0)?.found(in: [card.answer]) == true } ?? true
     }
 
     private static func answerScalar(_ scalar: Unicode.Scalar) -> Bool {
