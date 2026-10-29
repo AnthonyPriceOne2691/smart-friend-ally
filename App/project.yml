@@ -73,3 +73,20 @@ targets:
         INFOPLIST_KEY_CFBundleDisplayName: Ally
         INFOPLIST_KEY_NSMicrophoneUsageDescription: "Ally слушает фразу взрослого, чтобы подруга ответила голосом."
         INFOPLIST_KEY_NSSpeechRecognitionUsageDescription: "Речь распознаётся на телефоне, без сети."
+  AllyDemo:  # design-demo: the look in the simulator on a made-up session — no model, microphone, voice or memory
+    type: application
+    platform: iOS
+    sources:
+      - path: Demo
+      - path: Sources/ConsoleView.swift  # the app's own console view, the same file
+      - path: Sources/LoadingScreen.swift  # and its loading screen (child-open)
+    dependencies:
+      - package: AllyCore
+      - package: AllyShell
+        product: ShellUI
+      - package: AllyShell
+        product: ShellCore
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.anthonypriceone.ally.demo
+        INFOPLIST_KEY_CFBundleDisplayName: Ally Demo

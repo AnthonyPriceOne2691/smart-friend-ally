@@ -16,19 +16,20 @@ public struct AdultZone: View {
     }
 
     public var body: some View {
-        let target = layout.stopTarget, plum = Color(Palette.plum)
-        HStack(spacing: 6) {
+        let target = layout.stopTarget
+        HStack(spacing: Look.zoneSpacing) {
             if let label {
-                Text(label).font(.system(size: 12, weight: .heavy, design: .rounded)).foregroundStyle(plum)
-                    .padding(.horizontal, 12).frame(height: 28)
-                    .background(Capsule().fill(Color.white))  // opaque: at night the veil lies behind it (Ш2б)
-                    .padding(5)
+                Text(label).font(Look.labelFont).foregroundStyle(Look.words)
+                    .padding(.horizontal, Look.labelPadding).frame(height: Look.labelHeight)
+                    .background(Capsule().fill(Look.plate))  // opaque: at night the veil lies behind it (Ш2б)
+                    .padding(Look.ring)
                     .background { Capsule().fill(.clear).glassEffect(Self.glass, in: .capsule) }
                     .allowsHitTesting(false).accessibilityIdentifier("child.until")
             }
             Button(action: onStop) {
-                Circle().fill(plum).frame(width: 32, height: 32)
-                    .overlay(RoundedRectangle(cornerRadius: 3).fill(Color.white).frame(width: 11, height: 11))
+                Circle().fill(Look.words).frame(width: Look.stopSign, height: Look.stopSign)
+                    .overlay(RoundedRectangle(cornerRadius: Look.stopSquareRadius).fill(Look.plate)
+                        .frame(width: Look.stopSquare, height: Look.stopSquare))
                     .frame(width: target.width, height: target.height)
                     .background { Circle().fill(.clear).glassEffect(Self.glass.interactive(), in: .circle) }
                     .contentShape(Rectangle())
@@ -42,6 +43,6 @@ public struct AdultZone: View {
 
     /// Clear glass with a blush of the blossom; no `GlassEffectContainer` — in it the glass lay over the plate and
     /// the sign (the stand, 2026-10-27).
-    static let glass = Glass.regular.tint(Color(Palette.blossom, opacity: 0.35))
+    static let glass = Glass.regular.tint(Look.zoneTint)
 }
 #endif

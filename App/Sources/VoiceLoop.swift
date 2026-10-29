@@ -15,15 +15,16 @@ import SwiftUI
 final class VoiceLoop: ObservableObject {
     struct Screen { var lines: [String] = [], heard = "", said = "", ready = false }
     @Published private(set) var screen = Screen()
-    @Published private(set) var talk = TalkState() {  // the session for a screen: phase, pose, why the last one ended
-        didSet { music?.update { $0.phase = talk.phase } }
-    }
+    // the session for a screen: phase, pose, why the last one ended; the music follows its phase (background-music)
+    @Published private(set) var talk = TalkState() { didSet { music?.update { $0.phase = talk.phase } } }
     private var conversation: Conversation?
     // The child mode (R, R2): who may talk on the child screen, whether it is shown, an exception in the container, the
     // acceptance's line; its own session (audience `supervised`, or `child` once the acceptance holds) and the last
     // wake, which the next one waits for — one ear for both sessions.
     @Published private(set) var access = ChildAccess.parentOnly([])
     @Published private(set) var child = false { didSet { music?.update { $0.child = child } } }
+    /// The loading screen is up while everything for her first answer warms up (child-open); then Ellie or the console.
+    @Published private(set) var warming = true
     @Published private(set) var exception = false
     @Published private(set) var acceptance = ""
     // The break after a goodbye by the limit (Ш3): the parent's key, none by default («Без перерыва», 2026-10-23).
@@ -37,13 +38,33 @@ final class VoiceLoop: ObservableObject {
     // memory-recall: the persona, the system turn with the memory's block (M36) and the console's memory lines (M39).
     private var persona = "", system = ""
     @Published private(set) var memoryLines: [String] = []
+    @Published private(set) var forgettable: [ForgetGroup] = []  // M41: what she remembers by entity, for «Забыть…»
     private var encyclopedia: Encyclopedia?  // Э2: loaded at warm-up, both sessions get it
     // background-music: «Шкатулка Элли» on the child screen; a wake waits for it to go quiet, a second tap — no wake
     private var music: BackgroundMusic?, waking = false
+    private var started = false, stages: [(name: String, seconds: Double)] = []  // child-open: the loading's stages
+    private static let log = Logger(subsystem: "com.anthonypriceone.ally", category: "launch")
 
+    /// The launch (child-open, J1–J3, J6): the warm-up behind the loading screen, its length on the console and in the
+    /// log, then Ellie at once when she can talk, else the console with the reason.
     func start() async {
-        guard registry == nil else { return }
+        guard !started else { return }
+        started = true
+        let begin = uptime
         do { try await warmUp() } catch { screen.lines.append((error as? LlamaError)?.line ?? "ошибка: \(error)") }
+        let loading = LoadingLine.text(total: uptime - begin, stages: stages)
+        screen.lines.append(loading)
+        Self.log.info("\(loading, privacy: .public)")
+        child = childAllowed
+        if child { talk = childTalk?.state ?? TalkState() }
+        warming = false
+    }
+
+    /// Ellie may be shown (child-open): the warm-up made her ready and the rules below the model passed their self-test
+    /// — no exception and no term (`Launch.after`).
+    var childAllowed: Bool {
+        guard let childMode, conversation != nil else { return false }
+        return Launch.after(ready: screen.ready, build: childMode.build) == .child
     }
 
     private func warmUp() async throws {
@@ -61,6 +82,7 @@ final class VoiceLoop: ObservableObject {
         try (models as NSURL).setResourceValue(true, forKey: .isExcludedFromBackupKey)  // 4.6 GB, not for backups
         if let missing = ModelCheck.check(registry: data, in: models).message { return screen.lines.append(missing) }
         let persona = try String(contentsOf: bundle.appendingPathComponent(registry.persona), encoding: .utf8)
+        let modelStart = uptime
         openMemory()
         let store = memory  // the block by the model's own tokenizer: a new load reads the prefix the last wrote (M36)
         let model = try await LlamaModel.load(weights: models.appendingPathComponent(registry.model.file),
@@ -74,17 +96,19 @@ final class VoiceLoop: ObservableObject {
         model.newConversation()
         screen.lines.append("прогрев: " + line(model.warmup.merging(["reply": uptime - start]) { $1 }))
         let rate = ((try? JSONSerialization.jsonObject(with: data)) as? [String: Any])?["voice_rate"] as? Double ?? 0.5
-        let speech = await recognizer.prepare(), voice = makeVoice(registry, rate: rate)
+        let voiceStart = uptime
+        let voice = makeVoice(registry, rate: rate)
+        let earStart = uptime
+        let speech = await recognizer.prepare()
         let microphone = await AudioIO.microphoneAllowed()
         screen.lines += [speech.line, voice.note, "микрофон: " + (microphone ? "да" : "нет — разреши в Настройках")]
         let (silero, listening) = SileroActivity.choose(hearing, models: models)  // D7.2: no Silero — energy
         let asr = GigaAMRecognizer.choose(hearing, models: models)  // D7.3: dictation unless GigaAM is asked and there
         screen.lines += [listening.line] + [asr.line].compactMap { $0 }
+        stages = [("модель", voiceStart - modelStart), ("голос", earStart - voiceStart), ("слух", uptime - earStart)]
         let encyclopedia = Encyclopedia.bundled()  // Э2: the base and FTS5 on the phone — the self-test says if not
         screen.lines.append(encyclopedia.line(searchP95: encyclopedia.searchP95()))
-        let music = makeMusic(bundle)  // its node joins the session's engine before voice processing (X9)
-        let sound = duplex(voice, hearing, models: models, silero: silero)
-        startMusic(music, sound: sound)
+        let sound = withMusic(bundle) { duplex(voice, hearing, models: models, silero: silero) }
         let personaHash = SHA256.hash(data: Data(persona.utf8)).map { String(format: "%02x", $0) }.joined()
         versions = ["ios": UIDevice.current.systemVersion, "llama": settings.runtime.build, "persona": personaHash,
                     "voice": voice.label, "weights": "\(registry.model.file):\(registry.model.bytes)",
@@ -157,6 +181,7 @@ final class VoiceLoop: ObservableObject {
             let accent = AccentPlacer.load(settings, folder: folder)
             screen.lines.append(accent.line)
             let renderer = try SupertonicRenderer(settings: settings, folder: folder, placer: accent.placer)
+            _ = try renderer.render("Привет!", first: true)  // child-open: one phrase without sound warms her voice
             let audio = audio
             let player = SoundingPlayer(EnginePlayer(engine: audio.engine, rate: renderer.rate),
                                         began: { audio.voiceStarted() }, ended: { audio.voiceEnded(at: $0) })
@@ -166,41 +191,6 @@ final class VoiceLoop: ObservableObject {
             screen.lines.append("голос не загрузился: " + "\(error)")
             return milena
         }
-    }
-
-    /// A tap on the sleeping friend: she greets and then talks without buttons until the session sleeps. The session of
-    /// the shown screen wakes after the last one has ended (L60, L69); the microphone is open from its wake to its
-    /// sleep (D6.1).
-    func wake() {
-        guard let talker = child ? childTalk : conversation, talk.phase == .asleep, !waking else { return }
-        (screen.heard, screen.said) = ("", "")
-        let previous = running, audio = audio, parse = pauseMemory(), music = music
-        waking = true
-        running = Task {
-            await parse?.value  // one model: the parse gives it back first (M35)
-            await previous?.value
-            await music?.duck()  // the music quiet and on the voice's engine before the microphone opens (Y2)
-            do { try audio.start() } catch { screen.lines.append("микрофон не открылся: \(error)") }
-            music?.join()
-            await talker.wake()
-            await music?.release()
-            audio.stop()
-            waking = false
-        }
-    }
-
-    /// background-music: the parent's line and the music's node on the session's engine.
-    private func makeMusic(_ bundle: URL) -> BackgroundMusic {
-        let line = MusicLine.decode((try? Data(contentsOf: bundle.appendingPathComponent("music.json"))) ?? Data())
-        return BackgroundMusic(line: line, engine: audio.engine)
-    }
-
-    /// The console's music lines and the loop made in the background; no echo canceller (Milena) — no music in a talk.
-    private func startMusic(_ music: BackgroundMusic, sound: String) {
-        screen.lines += [music.line.console] + music.line.notes
-            + (sound == "half" && music.line.on ? ["музыка: в разговоре молчит" + " — нет эхоподавления"] : [])
-        self.music = music
-        Task { await music.load(cancelsEcho: sound != "half") }
     }
 
     /// The microphone and the voice of a session (D6.1): Supertonic — one engine with voice processing, the ring and
@@ -282,16 +272,17 @@ final class VoiceLoop: ObservableObject {
             return TraceStamp(versions: versions, memory: Self.memory(model), thermal: thermal,
                               stages: ear.takeStages().merging(voice.takeStages()) { $1 }.merging(overlaps) { $1 })
         }
+        let names: @Sendable () -> FamilyNames = { Self.names(memory) }  // her name and the brother, at each wake (M42)
         let parts = { (audience: Audience) in
             SessionParts(model: model, voice: echo, sink: sink, router: RouterRouting(), knowledge: encyclopedia,
-                         audience: audience, stamp: stamp)
+                         audience: audience, stamp: stamp, names: names)
         }
         childMode = ChildMode(personaSHA256: versions["persona"] ?? "", model: versions["weights"] ?? "")
         refreshAccess()
         // The acceptance lies in the bundle and has no term (R2): `child` holds for the whole launch, so the child
         // session's audience is chosen once — the black box keeps only the supervised one.
         let conversation = Conversation(parts(.parent), settings: settings, listener: ear)
-        let childTalk = Conversation(parts(access == .child ? .child : .supervised), settings: settings, listener: ear)
+        let childTalk = Conversation(parts(ReleaseGate.audience(access)), settings: settings, listener: ear)
         (self.conversation, self.childTalk) = (conversation, childTalk)
         audio.whenOverlap { Task { @MainActor in self.bargeIn() } }  // D6.2: her speech over Elly cuts her
         audio.whenInterrupted { began in Task { @MainActor in self.interrupted(began) } }
@@ -302,31 +293,30 @@ final class VoiceLoop: ObservableObject {
         Task { for await state in conversation.updates where !child { talk = state } }
     }
 
-    /// The lock from the container, the bundle and the build (R): at launch, on the console, at the hand-over, at each
-    /// wake on the child screen and when a child session ends.
+    /// The acceptance (R2) and a leftover exception from the container, for the console's lines and the child session's
+    /// listener: at launch, on the console, at the hand-over, at each wake and when a child session ends. Since
+    /// child-open they open nothing — `childAllowed` does.
     func refreshAccess() {
         guard let childMode else { return }
         (access, exception, acceptance) = (childMode.access(), childMode.present, childMode.acceptance)
     }
 
-    /// «Дочке, при мне»: the parent's session stops; the child screen opens while the exception or the acceptance
-    /// holds. The stop sign in its corner returns to this console in both modes (the console's own lock is not R2's).
+    /// «Дочке, при мне»: the parent's session stops and Ellie is back whenever she may be shown (`childAllowed`,
+    /// child-open: no exception, no term); the stop sign in her corner returns to this console.
     func handOver() {
         refreshAccess()
-        guard access.open, let conversation else { return }
+        guard childAllowed, let conversation else { return }
         Task { await conversation.stop() }
         child = true
         talk = childTalk?.state ?? TalkState()
     }
 
     /// A tap on the circle of the child screen: while Elly listens — «я всё» (D7), while she speaks — she is cut
-    /// (D6.2); else she wakes, but past the exception's term she does not and the console returns, and during the break
-    /// after the limit she only stirs.
+    /// (D6.2); else she wakes, and during the break after the limit she only stirs.
     func childWake() {
         if talk.pose == .listens { return done() }
         if talk.pose == .speaks { return bargeIn() }
         refreshAccess()
-        guard access.open else { return leaveChild() }
         guard !nap.holds(at: Date()) else { return }
         wake()
     }
@@ -347,13 +337,12 @@ final class VoiceLoop: ObservableObject {
         if child { childStop() }
     }
 
-    /// A state of the child session; when one ends, the term is checked at this boundary, not in the middle of a talk.
+    /// A state of the child session; when one ends by the limit, the break starts (Ш3).
     private func show(_ state: TalkState) {
         talk = state
         guard state.phase == .asleep, state.ended != nil else { return }
         nap.ended(state, at: Date())
         refreshAccess()
-        if !access.open { leaveChild() }
     }
 
     private func leaveChild() {
@@ -377,9 +366,6 @@ final class VoiceLoop: ObservableObject {
     }
 
     private var uptime: Double { ProcessInfo.processInfo.systemUptime }
-
-    /// The app in front or behind (background-music): behind, the music goes.
-    func front(_ shown: Bool) { music?.update { $0.front = shown } }
 
     private func line(_ stages: [String: Double]) -> String {
         stages.sorted { $0.key < $1.key }.map { "\($0.key) " + String(format: "%.2f с", $0.value) }
@@ -418,9 +404,16 @@ extension VoiceLoop {
         }
     }
 
-    /// The console's memory lines (M39): knows nothing, N facts, erased at …; waiting; a failed parse.
+    /// The console's memory lines (M39): knows nothing, N facts, erased at …; waiting; a failed parse; what she
+    /// remembers by entity with the parent's questions (M41).
     func refreshMemoryLines() {
         memoryLines = memory.flatMap { try? MemoryConsole.lines($0, zone: .current) } ?? []
+        forgettable = ((try? memory?.remembered()) ?? []).map { who in
+            let items = who.items.map {
+                ForgetGroup.Item(id: $0.fact, text: $0.text, question: MemoryConsole.forgetting($0))
+            }
+            return ForgetGroup(id: who.entity, title: who.title, question: MemoryConsole.forgetting(who), items: items)
+        }
     }
 
     /// «Что помнит Элли»: the block as the model gets it.
@@ -430,14 +423,70 @@ extension VoiceLoop {
     var memoryConfirmation: String { MemoryConsole.confirmation(facts: (try? memory?.facts().count) ?? 0) }
 
     /// «Стереть память» (M39): the parse stops, the files go, the prefix is the persona again.
-    func eraseMemory() {
+    func eraseMemory() { change { _ = try? $0.eraseAll(now: Date()) } }
+
+    /// «Забыть» one fact (M41): with its history, no byte of it left; an older talk does not bring it back.
+    func forget(fact: Int64) { change { _ = try? $0.forget(fact: fact, now: Date()) } }
+
+    /// «Забыть всё про…» one entity (M41).
+    func forget(entity: Int64) { change { _ = try? $0.forget(entity: entity, now: Date()) } }
+
+    /// The parent's change of the memory while she sleeps (M39, M41): the parse stops, the change, the prefix rebuilt
+    /// when the block changed — the memory's one job at the model, so a wake waits for it as for a parse.
+    private func change(_ apply: @escaping @MainActor (MemoryStore) -> Void) {
         guard let memory, let model, talk.phase == .asleep else { return }
         let parse = pauseMemory()
-        occupy { [self] in  // a wake waits for the erase as for a parse: one model, no reply while the prefix is built
+        occupy { [self] in  // one model, no reply while the prefix is built
             await parse?.value
-            _ = try? memory.eraseAll(now: Date())
+            apply(memory)
             await refreshPrefix(model)
             refreshMemoryLines()
         }
     }
+
+    /// Her name and her brothers' from the memory for the session's window (M42); none without a memory.
+    nonisolated private static func names(_ memory: MemoryStore?) -> FamilyNames {
+        guard let names = try? memory?.names() else { return FamilyNames() }
+        return FamilyNames(her: names.her, brothers: names.brothers)
+    }
+}
+
+/// The wake and the child screen's music (background-music): the music goes quiet before the microphone opens; it is
+/// set up at warm-up around the voice processing and told of the app's front.
+extension VoiceLoop {
+    /// A tap on the sleeping friend: she greets and then talks without buttons until the session sleeps. The session of
+    /// the shown screen wakes after the last one has ended (L60, L69); the microphone is open from its wake to its
+    /// sleep (D6.1).
+    func wake() {
+        guard let talker = child ? childTalk : conversation, talk.phase == .asleep, !waking else { return }
+        (screen.heard, screen.said) = ("", "")
+        let previous = running, audio = audio, parse = pauseMemory(), music = music
+        waking = true
+        running = Task {
+            await parse?.value  // one model: the parse gives it back first (M35)
+            await previous?.value
+            await music?.duck()  // the music quiet and on the voice's engine before the microphone opens (Y2)
+            do { try audio.start() } catch { screen.lines.append("микрофон не открылся: \(error)") }
+            music?.join()
+            await talker.wake()
+            await music?.release()
+            audio.stop()
+            waking = false
+        }
+    }
+
+    /// The music's node joins the session's engine before `duplex` turns voice processing on (X9); then the console's
+    /// lines and the loop made in the background — no echo canceller (Milena), no music in a talk. The sound's mode.
+    private func withMusic(_ bundle: URL, duplex: () -> String) -> String {
+        let line = MusicLine.decode((try? Data(contentsOf: bundle.appendingPathComponent("music.json"))) ?? Data())
+        let music = BackgroundMusic(line: line, engine: audio.engine), sound = duplex()
+        screen.lines += [line.console] + line.notes
+            + (sound == "half" && line.on ? ["музыка: в разговоре молчит" + " — нет эхоподавления"] : [])
+        self.music = music
+        Task { await music.load(cancelsEcho: sound != "half") }
+        return sound
+    }
+
+    /// The app in front or behind: behind, the music goes.
+    func front(_ shown: Bool) { music?.update { $0.front = shown } }
 }

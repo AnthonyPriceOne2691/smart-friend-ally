@@ -11,6 +11,56 @@
 * **Источник**: поставка `background-music` (слово родителя 2026-10-29; выбор трека на слух; числа Y1–Y11 подписаны
   2026-10-29).
 
+## 2026-10-29 — детский экран открыт всегда, загрузка до Элли (child-open)
+
+* **Update**: `product/child-mode` (Policy) переписана: детский экран открыт всегда, без замка и надписи, — решение
+  родителя дословно (ответы на два вопроса, довод про Face ID и пароль телефона, сказанное ему про 15% при цели 5%);
+  запуск — загрузка, потом Элли (`Launch`), знак стопа — консоль без Face ID, детская сессия `supervised`, приёмка R2 —
+  на будущее; `scripts/child_mode.sh` удалён. `product/look-and-feel` — строка «в коде (child-open)», поправки правил 1,
+  13, 14; `implementation:` += `LoadingBubble.swift`. `engineering/voice-loop` — запуск через загрузку, строки консоли,
+  исключение снято; `implementation:` += `LoadingScreen.swift`. `ops/black-box`, `ops/child-data`, `engineering/session`,
+  `engineering/safety-below-model`, `product/session-limit` — каждая детская сессия, перерыв после перезапуска забыт.
+  `ops/test-session` — шаг подписи и G8, G10 сняты, новые J1, J2, J5. `engineering/design-demo` — загрузка в демо и
+  превью. `references/repo-map`, индексы `product`, `ops`; `KNOWLEDGE.md` — решение 2026-10-29.
+* **Источник**: поставка `child-open` (решение родителя 2026-10-29 через ведущего; примеры J1–J6 подписаны
+  2026-10-29).
+
+## 2026-10-29 — забыть один факт или сущность, окно брата и имени (memory-forget)
+
+* **Update**: `engineering/memory` — правило «Забыть» один факт или сущность (с историей и повторами, `secure_delete`,
+  чекпойнт WAL; надгробие без значения — сессия, начатая раньше, не возвращает) и раздел «В приложении — забывает»;
+  «ещё не подключено» — без `memory-forget`; `implementation:` += `MemoryForget.swift`. `engineering/session` — окно
+  брата и имени (`TurnWindow`, имена из памяти на пробуждении, через `Conversation`); `implementation:` +=
+  `TurnWindow.swift`, `window.json`. `engineering/safety-below-model` — строка реестра «Брат 1–2 раза, имя только при
+  встрече»: верхние границы держит окно, «хотя бы раз» — персона и замер M42. `engineering/voice-loop` — «Забыть…» в
+  консоли, имена в обе сессии. `ops/child-data` — «Забыть» не оставляет байтов, надгробие без значения.
+  `ops/test-session` — телефонная проверка M41. `product/persona` — имя и брат: гарантию верхних границ даёт окно. `references/repo-map` — «забыть», `TurnWindow`. `engineering/design-demo` — «Забыть…» в общем `ConsoleView` простыми значениями.
+* **Источник**: поставка `memory-forget` (M41, M42 спеки серии памяти, подписанной родителем 2026-10-23).
+## 2026-10-29 — энциклопедия: текст карточки, когда в ответе нет сути (card-fallback)
+
+* **Update**: `engineering/encyclopedia` — правило «текст карточки, когда в ответе нет сути»: ключ карточки судит
+  оставленное контрактом, карточка — тем же контрактом после прозвучавшей первой фразы, заготовка остаётся, след
+  `knowledge.fallback`, ключ проверяется при загрузке; `implementation:` += `CardFallback.swift`; серия и отложенное.
+  `engineering/safety-below-model` — реестр: суть ниже модели исполняется. `engineering/session` — карточка из плана в
+  раннер, `knowledge.fallback` в следе. `engineering/index` — строка энциклопедии. `references/repo-map` —
+  `encyclopedia-replay --said`. `ops/test-session` — P20: текст карточки и `knowledge.fallback`. Замер: перегон P18 на
+  seed 48–50 — 48 из 48, артефактов 0, карточка на 12 ходах из 48.
+* **Источник**: поставка `card-fallback` (решение родителя 2026-10-27 «Слить, чинить сразу после»; примеры P21–P24
+  подписаны 2026-10-29 «Подписываю: фраза + карточка (Рекомендую)»).
+## 2026-10-29 — демо облика на Mac, превью и токены (design-demo)
+
+* **Creation**: `engineering/design-demo` (Runbook) — демо-цель `AllyDemo` в симуляторе одной командой
+  (`scripts/run_demo.sh`), детский режим и сценарий разговора без модели и микрофона, консоль приложения на вымышленных
+  строках, превью Xcode, токены облика (`Look` и `Palette`), оракул границы `check_demo_boundary.sh`, грабли Xcode 27.1
+  (DeviceHub вместо Simulator.app, рантайм iOS 27.1 знает только iPhone Duo, у llama.cpp b10809 нет слайса симулятора).
+* **Update**: `product/look-and-feel` — строка «Токены облика (design-demo)», в демо надписи «при родителе» нет;
+  `implementation:` += `Look.swift`. `engineering/character-rendering` — числа облика взрослых в `Look`, рисунок
+  смотрят на Mac демо и превью. `engineering/voice-loop` — две цели проекта, вид консоли `ConsoleView.swift`;
+  `implementation:` += `ConsoleView.swift`. `references/repo-map` — `App/Demo`, `run_demo.sh`, `ConsoleView`, `Look`.
+  `engineering/index` — строка runbook.
+* **Источник**: поставка `design-demo` (слово родителя 2026-10-29, примеры Y1–Y7 подписаны 2026-10-29; поправки Y4 —
+  по его слову после показа).
+
 ## 2026-10-28 — жидкое стекло и розовое небо (app-glass)
 
 * **Update**: `product/look-and-feel` — правило «жидкое стекло и розовое небо» (слова и цвета на непрозрачной
