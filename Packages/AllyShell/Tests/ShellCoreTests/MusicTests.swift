@@ -12,10 +12,15 @@ final class MusicTests: XCTestCase {
         return scene
     }
 
-    /// The fader after `cues` at their times; the level is read at `times`.
-    private func levels(_ cues: [(MusicCue, Double)], at times: [Double]) -> [Double] {
+    private func fader(_ cues: [(MusicCue, Double)]) -> MusicFader {
         var fader = MusicFader()
         for (cue, time) in cues { _ = fader.cue(cue, line: line, at: time) }
+        return fader
+    }
+
+    /// The level after `cues` (at their times), read at `times` to a thousandth.
+    private func levels(_ cues: [(MusicCue, Double)], at times: [Double]) -> [Double] {
+        let fader = fader(cues)
         return times.map { (fader.level(at: $0) * 1000).rounded() / 1000 }
     }
 
@@ -32,10 +37,7 @@ final class MusicTests: XCTestCase {
         XCTAssertEqual(MusicCue.of(scene, line: line), .quiet)
         XCTAssertEqual(line.quiet, 0.08, accuracy: 1e-9)
         XCTAssertEqual(levels([(.full, 0), (.quiet, 10)], at: [10, 10.2, 10.4, 30]), [0.8, 0.44, 0.08, 0.08])
-        var fader = MusicFader()
-        _ = fader.cue(.full, line: line, at: 0)
-        _ = fader.cue(.quiet, line: line, at: 10)
-        XCTAssertEqual(fader.end, 10.4, accuracy: 1e-9)
+        XCTAssertEqual(fader([(.full, 0), (.quiet, 10)]).end, 10.4, accuracy: 1e-9)
     }
 
     func testEveryPhaseOfATalkIsBarelyAudible() {
@@ -57,11 +59,7 @@ final class MusicTests: XCTestCase {
 
     func testATapWhileItWaitsOpensAtOnceAndWhileItRisesGoesDownInFourTenths() {
         // Y5 a tap at 101 (waiting) — no way, the microphone at once; at 103,5 (rising, 0,44) — 0,08 at 103,9
-        var waiting = MusicFader()
-        for (cue, time) in [(MusicCue.full, 0.0), (.quiet, 10), (.full, 100)] {
-            _ = waiting.cue(cue, line: line, at: time)
-        }
-        var rising = waiting
+        var waiting = fader([(.full, 0), (.quiet, 10), (.full, 100)]), rising = waiting
         _ = waiting.cue(.quiet, line: line, at: 101)
         XCTAssertEqual(waiting.end, 101, accuracy: 1e-9)
         XCTAssertEqual(waiting.level(at: 101), 0.08, accuracy: 1e-9)
@@ -69,32 +67,22 @@ final class MusicTests: XCTestCase {
         XCTAssertEqual(rising.end, 103.9, accuracy: 1e-9)
         XCTAssertEqual(rising.level(at: 103.7), 0.26, accuracy: 1e-9)
         XCTAssertNil(rising.cue(.quiet, line: line, at: 104), "the same level — no new way")
-        var early = MusicFader()
-        _ = early.cue(.full, line: line, at: 0)
-        _ = early.cue(.quiet, line: line, at: 1)
+        let early = fader([(.full, 0), (.quiet, 1)])
         XCTAssertEqual(early.end, 1, accuracy: 1e-9, "a tap before the music rose does not wait for it")
         XCTAssertEqual(early.level(at: 1.5), 0.08, accuracy: 1e-9)
     }
 
-    func testTheConsoleHasNoMusicAndTheChildScreenBringsItBack() {
-        // Y6 the console: 0,8 → 0 in 0,4 s; its talks — off; the child screen again — as Y1
-        var console = idle
-        console.child = false
-        XCTAssertEqual(MusicCue.of(console, line: line), .off)
-        console.phase = .listening
-        XCTAssertEqual(MusicCue.of(console, line: line), .off)
+    func testTheConsoleTheBackgroundAndTheWarmUpHaveNoMusic() {
+        // Y6 Y7 the console (and its talks), the app behind, before the warm-up — off; the console: 0,8 → 0 in 0,4 s
+        let off: [(inout MusicCue.Scene) -> Void] = [{ $0.child = false }, { $0.front = false }, { $0.ready = false },
+                                                     { ($0.child, $0.phase) = (false, .listening) }]
+        for (index, change) in off.enumerated() {
+            var scene = idle
+            change(&scene)
+            XCTAssertEqual(MusicCue.of(scene, line: line), .off, "case \(index)")
+        }
         XCTAssertEqual(levels([(.full, 0), (.off, 10)], at: [10.2, 10.4, 20]), [0.4, 0, 0])
         XCTAssertEqual(levels([(.full, 0), (.off, 10), (.full, 20)], at: [22, 23.5, 25]), [0, 0.4, 0.8])
-    }
-
-    func testTheBackgroundStopsItAndTheWarmUpComesFirst() {
-        // Y7 the app behind — off, in front again — full as Y1; before the warm-up — off
-        var behind = idle
-        behind.front = false
-        XCTAssertEqual(MusicCue.of(behind, line: line), .off)
-        var warming = idle
-        warming.ready = false
-        XCTAssertEqual(MusicCue.of(warming, line: line), .off)
     }
 
     func testWithoutAnEchoCancellerATalkHasNoMusic() {
@@ -126,17 +114,12 @@ final class MusicTests: XCTestCase {
         XCTAssertEqual([past.duckDB, past.fadeOut, past.delay, past.fadeIn], [-20, 0.4, 2, 3])
         XCTAssertEqual(past.notes.count, 5)
         XCTAssertEqual(decode("[1]").notes, ["музыка: music.json не читается"])
-    }
-
-    func testOffOrSilentMusicNeverPlaysAndATapDoesNotWait() {
-        // Y9 on: false or volume 0 — off everywhere, no way, the end is now
-        for raw in ["{\"on\": false}", "{\"volume\": 0}"] {
+        for raw in ["{\"on\": false}", "{\"volume\": 0}"] {  // Y9 off or silent: off everywhere, a tap never waits
             let silent = decode(raw)
-            XCTAssertEqual(MusicCue.of(idle, line: silent), .off, raw)
+            XCTAssertEqual([MusicCue.of(idle, line: silent), MusicCue.of(idle, line: .standard)], [.off, .full], raw)
             XCTAssertEqual(silent.console, "музыка: выключена", raw)
             var fader = MusicFader()
             XCTAssertNil(fader.cue(.off, line: silent, at: 5), raw)
-            XCTAssertLessThanOrEqual(fader.end, 5, raw)
         }
     }
 

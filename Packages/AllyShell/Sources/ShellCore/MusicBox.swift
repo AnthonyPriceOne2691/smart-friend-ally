@@ -1,11 +1,9 @@
 import Foundation
 
-/// «Шкатулка Элли» — the music of the child screen, chosen by the parent by ear 2026-10-29 (background-music): a music
-/// box over a marimba, F major, 88 beats a minute, 16 bars — a seamless loop of 43.6 s made by code, no file. Every
-/// sound is a sum of decaying sines; tails past the loop's end and the room's echo sound at its start. The arithmetic
-/// is the generator's the parent heard, step for step, with plain + − × ÷ only (the sine turns by a step, constants
-/// are series): the same bytes on Linux, the Mac and the phone (Y10). The hot loops are `while` over raw pointers:
-/// the app's debug build renders it at warm-up too, and a range iterator there costs fourteen times as much.
+/// «Шкатулка Элли» (background-music, the parent's pick 2026-10-29): a music box over a marimba, a seamless loop of
+/// 43.6 s made by code — sines that decay, tails and echo wrapping to the start. The arithmetic is the generator's the
+/// parent heard, step for step, plain + − × ÷ only: the same bytes on Linux, the Mac and the phone (Y10). Hot loops are
+/// `while` over raw pointers: the phone's debug build renders it too, and iterators there cost fourteen times as much.
 public enum MusicBox {
     public static let rate = 44_100
     static let beat = 60.0 / 88.0, ln2 = 0.6931471805599453

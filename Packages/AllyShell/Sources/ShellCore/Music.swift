@@ -1,9 +1,8 @@
 import AllyCore
 import Foundation
 
-/// The parent's line for the music, `music.json` (background-music, 2026-10-29; no settings screen — «Пока не делаем»):
-/// on or off, the idle volume, how far it goes down while Ellie talks, and three times. A missing key takes its
-/// standard; a value out of its range or not a number takes the standard and a console line (Y9).
+/// The parent's line, `music.json` (background-music; no settings screen — «Пока не делаем»): on, the idle volume, how
+/// far down while Ellie talks, three times; no key — its standard, a bad value — the standard and a note (Y9).
 public struct MusicLine: Equatable, Sendable {
     public static let standard = MusicLine(on: true, volume: 0.8, duckDB: -20, fadeOut: 0.4, delay: 2, fadeIn: 3)
 
@@ -24,7 +23,7 @@ public struct MusicLine: Equatable, Sendable {
         func take(_ key: Key, _ range: ClosedRange<Double>, _ fallback: Double) -> Double {
             guard let found = raw.numbers[key] else { return fallback }
             if let value = found, range.contains(value) { return value }
-            notes.append("музыка: " + key.word + " вне " + key.range + " — взято " + decimal(fallback))
+            notes.append("музыка: " + key.said.word + " вне " + key.said.range + " — взято " + decimal(fallback))
             return fallback
         }
         let s = standard
@@ -48,14 +47,10 @@ public struct MusicLine: Equatable, Sendable {
     enum Key: String, CodingKey, CaseIterable {
         case on, volume, duckDB = "duck_db", fadeOut = "fade_out", delay, fadeIn = "fade_in"
 
-        var word: String {
-            ["volume": "громкость", "duck_db": "приглушение", "fade_out": "уход", "delay": "ожидание",
-             "fade_in": "возврат"][rawValue] ?? rawValue
-        }
-
-        var range: String {
-            ["volume": "0–1", "duck_db": "−60–0 дБ", "fade_out": "0–5 с", "delay": "0–60 с", "fade_in": "0–30 с"][
-                rawValue] ?? ""
+        /// The console's word and range of a number.
+        var said: (word: String, range: String) {
+            ["volume": ("громкость", "0–1"), "duck_db": ("приглушение", "−60–0 дБ"), "fade_out": ("уход", "0–5 с"),
+             "delay": ("ожидание", "0–60 с"), "fade_in": ("возврат", "0–30 с")][rawValue] ?? (rawValue, "")
         }
     }
 
@@ -79,8 +74,7 @@ public struct MusicLine: Equatable, Sendable {
 public enum MusicCue: Equatable, Sendable {
     case off, quiet, full
 
-    /// What the app knows: the child screen is shown, the app is in front, the warm-up set the audio session, a wake is
-    /// on its way, the shown session's phase, and whether the voice's engine cancels its echo.
+    /// The child screen shown, the app in front, the warm-up done, a wake on its way, the phase, an echo canceller.
     public struct Scene: Equatable, Sendable {
         public var child = false, front = true, ready = false, waking = false, cancelsEcho = true
         public var phase = SessionState.asleep
@@ -95,9 +89,8 @@ public enum MusicCue: Equatable, Sendable {
     }
 }
 
-/// The music's level in time (Y1, Y2, Y4, Y5): down to its cue in `fade_out`, up to full after `delay` in `fade_in`,
-/// from wherever the level is; up to quiet — at once (a tap before the music rose: the node takes the quiet level);
-/// the same level — no way at all.
+/// The music's level in time (Y1, Y2, Y4, Y5): down in `fade_out`, up to full after `delay` in `fade_in`, from wherever
+/// it is; up to quiet — at once (a tap before the music rose: the node takes the quiet level).
 public struct MusicFader: Equatable, Sendable {
     /// A way of the level: `from` until `start`, then straight to `to` in `length` seconds.
     public struct Ramp: Equatable, Sendable {

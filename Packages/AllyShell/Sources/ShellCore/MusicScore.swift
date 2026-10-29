@@ -1,8 +1,7 @@
 import Foundation
 
-/// The score of «Шкатулка Элли» (`MusicBox`): marimba arpeggios in eighths, a soft bass on the bar and the music box's
-/// tune, 16 bars of F – Dm – Bb – C – F – Am – Bb·C – F twice. The order of the notes is the generator's: the sum
-/// is made in it, and floats keep the order.
+/// The score of «Шкатулка Элли»: marimba arpeggios, a soft bass and the box's tune over F – Dm – Bb – C – F – Am –
+/// Bb·C – F twice; the notes come in the generator's order — floats keep the order of a sum.
 enum MusicScore {
     /// A note: when it starts, its instrument (0 marimba, 1 bass, 2 box), its MIDI pitch, gain and pan.
     struct Note {

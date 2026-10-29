@@ -1,13 +1,10 @@
 import AVFoundation
 import ShellCore
 
-/// The child screen's music (background-music, the parent 2026-10-29): «Шкатулка Элли», made by code at warm-up. While
-/// Ellie idles it plays on its own player and the microphone stays closed (screen rule 4); from a tap to her sleep it
-/// is a node on the voice's engine with voice processing, barely audible, so the echo canceller takes it out of the
-/// microphone (rule 14 in the parent's words). The automaton says the level and when (`MusicCue`, `MusicFader`); the
-/// idle player's ramps are the system's, the node keeps the quiet level, and the loop passes between them at that
-/// level from the same place, with 20 ms edges instead of clicks. The audio session is the warm-up's: the music never
-/// sets it (L130).
+/// The child screen's music (background-music): idle — its own player, the microphone closed (screen rule 4); from a
+/// tap to her sleep — a node on the voice's engine, barely audible, taken out of the microphone by the echo canceller.
+/// The automaton says the level and when; the loop passes between the two at that level from the same place, with
+/// 20 ms edges instead of clicks. The audio session is the warm-up's: the music never sets it (L130).
 @MainActor
 final class BackgroundMusic {
     let line: MusicLine
@@ -118,24 +115,16 @@ final class BackgroundMusic {
 
     private var now: Double { ProcessInfo.processInfo.systemUptime }
 
-    /// The loop as a WAV in memory for the idle player: 16-bit stereo, little-endian.
+    /// The loop as a WAV in memory for the idle player: «RIFF», size, «WAVE», «fmt » of PCM 16-bit stereo, «data».
     private static func wave(_ samples: [Int16]) -> Data {
-        var data = Data("RIFF".utf8)
-        func put<T: FixedWidthInteger>(_ value: T) {
-            withUnsafeBytes(of: value.littleEndian) { data.append(contentsOf: $0) }
-        }
         let bytes = UInt32(samples.count * 2), rate = UInt32(MusicBox.rate)
-        put(36 + bytes)
-        data.append(contentsOf: Array("WAVEfmt ".utf8))
-        put(UInt32(16))  // the format chunk: PCM, 2 channels, the rate, bytes a second, 4 bytes a frame, 16 bits
-        put(UInt16(1))
-        put(UInt16(2))
-        put(rate)
-        put(rate * 4)
-        put(UInt16(4))
-        put(UInt16(16))
-        data.append(contentsOf: Array("data".utf8))
-        put(bytes)
+        let fields: [(UInt32, Int)] = [(0x4646_4952, 4), (36 + bytes, 4), (0x4556_4157, 4), (0x2074_6D66, 4), (16, 4),
+                                       (1, 2), (2, 2), (rate, 4), (rate * 4, 4), (4, 2), (16, 2), (0x6174_6164, 4),
+                                       (bytes, 4)]
+        var data = Data()
+        for (value, size) in fields {
+            withUnsafeBytes(of: value.littleEndian) { data.append(contentsOf: $0.prefix(size)) }
+        }
         samples.withUnsafeBytes { data.append(contentsOf: $0) }  // the phone and the Mac are little-endian
         return data
     }

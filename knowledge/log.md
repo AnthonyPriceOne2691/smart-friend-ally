@@ -7,7 +7,7 @@
   строкой `music.json`, микрофон после перехода музыки на движок голоса; `implementation:` += `Music.swift`,
   `MusicBox.swift`, `MusicScore.swift`. `engineering/voice-loop` — музыка в приложении: строка, консоль, проигрыватель
   покоя и узел на движке; `implementation:` += `BackgroundMusic.swift`, `music.json`. `ops/test-session` — музыка под
-  разговором на телефоне.
+  разговором на телефоне. `engineering/safety-below-model` — строка: музыка путь реплики не меняет.
 * **Источник**: поставка `background-music` (слово родителя 2026-10-29; выбор трека на слух; числа Y1–Y11 подписаны
   2026-10-29).
 
