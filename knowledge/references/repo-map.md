@@ -33,7 +33,9 @@ implementation:
   «почему» `Encyclopedia` — основы Snowball, SQLite FTS5 через `AllySQLite`, списки — `Resources/encyclopedia.json`,
   база — `Resources/encyclopedia.ru.jsonl`, подсказка во входе модели — `Knowledge.swift`):
   `swift test --package-path Packages/AllyCore` (тулчейн Xcode: `DEVELOPER_DIR`). Паритет энциклопедии со стендом —
-  `swift run -c release --package-path Packages/AllyCore encyclopedia-replay <база.jsonl> [конфиг.json] < вопросы.jsonl`.
+  `swift run -c release --package-path Packages/AllyCore encyclopedia-replay <база.jsonl> [конфиг.json] < вопросы.jsonl`;
+  с `--said` — что сказала бы Элли на сохранённый ответ модели (`TurnRunner` с откатом на карточку, стенд P18; печатает
+  слова — только открытые наборы).
 - **Детский экран (оболочка)** — `Packages/AllyShell`: `ShellCore` (позы фаз, кадры, движение, раскладка, палитра,
   венок, правило тапа `Tap`, перерыв после лимита `Nap` — Linux) и `ShellUI` (Элли с венком, пузырь и небо `SkyArt` в
   SwiftUI под `#if canImport(SwiftUI)`; экран дочки `ChildShell` с зоной взрослых в стекле; фон консоли `AdultSky` и

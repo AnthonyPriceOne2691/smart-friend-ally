@@ -4,7 +4,7 @@
 **Verifier:** process:ci
 **asserts_reviewed_by:** n/a (все утверждения ведут к примерам спеки — дайджест ниже, asserts_without_example: 0; N1–N10 подписаны родителем 2026-10-29)
 **CI run:** quality — https://github.com/AnthonyPriceOne2691/smart-friend-ally/actions/runs/40943703654; macOS-джоба по метке `macos` — https://github.com/AnthonyPriceOne2691/smart-friend-ally/actions/runs/40944046395
-**Commit:** a41baf8 (спека — e91d0bf, подпись — a3e6c1e, eval-smoke до кода — a99974b, код и знание — 677dbc6, уроки — 1571889, main с design-demo влит — d6268d6)
+**Commit:** слияние main с card-fallback (832849c) поверх 249e8b2; спека — e91d0bf, подпись — a3e6c1e, eval-smoke до кода — a99974b, код и знание — 677dbc6, уроки — 1571889, main с design-demo — d6268d6; macOS-джоба зелёная на коде a41baf8 (после него — только документы и слияния знания)
 
 **Статус: verify, N9 открыт.** Первый ход на Mac родитель перенёс на 2026-10-30 («Потом» — когда Mac не занят отбором
 моделей на GPU): функциональный ход и чистый замер — одним заходом. До него поставка не сдаётся.
@@ -22,7 +22,8 @@
   N8 (две записи одного хода — файл и журнал — совпадают строка в строку)
 
 ## Behavior oracles
-- [x] PASS — `swift test` `AllyCore` на Mac (Xcode 27.1, macOS 27.2, под `nice -n 10`): 143 из 143, из них новые
+- [x] PASS — `swift test` `AllyCore` на Mac (Xcode 27.1, macOS 27.2, под `nice -n 10`): 143 из 143, после слияния main с
+  card-fallback — 154 из 154; из них новые
   `MacImportTests` 5 (N4–N7, N6 — и подменный хэш, и CryptoKit) и `TraceLineTests` 1 (N8). CI на Linux, джоба `swift`
   (run 40943703654): `AllyCore` — 38 файлов `Sources/`, строк 2343 из 2420, 96% (порог 70%, свой каталог — L41);
   `gates` — pre-commit STRICT зелёный, smoke `PASS S9`; `delivery` — зелёный

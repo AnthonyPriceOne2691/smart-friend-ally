@@ -11,6 +11,17 @@
   `engineering/safety-below-model` — путь реплики на Mac тот же; `ops/child-data` — контейнер на Mac и барьер для
   агентов; `references/repo-map` — входные точки на Mac; `engineering/index` — строка решения.
 * **Источник**: поставка `sim-app` (решения родителя 2026-10-29; примеры N1–N10 подписаны 2026-10-29).
+## 2026-10-29 — энциклопедия: текст карточки, когда в ответе нет сути (card-fallback)
+
+* **Update**: `engineering/encyclopedia` — правило «текст карточки, когда в ответе нет сути»: ключ карточки судит
+  оставленное контрактом, карточка — тем же контрактом после прозвучавшей первой фразы, заготовка остаётся, след
+  `knowledge.fallback`, ключ проверяется при загрузке; `implementation:` += `CardFallback.swift`; серия и отложенное.
+  `engineering/safety-below-model` — реестр: суть ниже модели исполняется. `engineering/session` — карточка из плана в
+  раннер, `knowledge.fallback` в следе. `engineering/index` — строка энциклопедии. `references/repo-map` —
+  `encyclopedia-replay --said`. `ops/test-session` — P20: текст карточки и `knowledge.fallback`. Замер: перегон P18 на
+  seed 48–50 — 48 из 48, артефактов 0, карточка на 12 ходах из 48.
+* **Источник**: поставка `card-fallback` (решение родителя 2026-10-27 «Слить, чинить сразу после»; примеры P21–P24
+  подписаны 2026-10-29 «Подписываю: фраза + карточка (Рекомендую)»).
 ## 2026-10-29 — демо облика на Mac, превью и токены (design-demo)
 
 * **Creation**: `engineering/design-demo` (Runbook) — демо-цель `AllyDemo` в симуляторе одной командой
