@@ -27,21 +27,18 @@ enum DemoScript {
     }
 }
 
-/// The made-up session of the demo (Y4): it opens as the app's child mode — Ellie, the label «при родителе» and the
-/// stop sign; the stop sign silences her and opens the adult mode, the app's console on made-up lines, whose «Дочке,
-/// при мне» returns. The phase switcher is for checking the look only and needs a launch argument.
+/// The made-up session of the demo (Y4): it opens as the child mode — Ellie and the stop sign in the corner, no label
+/// (the parent 2026-10-29); the stop sign silences her and opens the adult mode, the app's console on made-up lines,
+/// whose «Дочке, при мне» returns. The phase switcher is for checking the look only and needs a launch argument.
 @MainActor
 final class DemoState: ObservableObject {
     /// The demo's mark in its own binary: the boundary oracle refuses an app for the phone that carries it (Y2).
     static let marker = "ally-demo · не для телефона"
 
     @Published private(set) var phase = SessionState.asleep
-    @Published var label = true
     @Published var console = false
     @Published var panel = false
     @Published private(set) var memory = DemoConsole.memory
-    /// The label's term: three hours on from the demo's start, like a parent's exception for the evening.
-    let until = Date().addingTimeInterval(3 * 3600)
     private var talk: Task<Void, Never>?, step = 0
 
     /// The start: she sleeps on the child screen. For checks only (arguments of `simctl launch` land in the defaults):
@@ -88,13 +85,12 @@ final class DemoState: ObservableObject {
     }
 
     var consoleModel: ConsoleModel {
-        DemoConsole.model(phase: phase, until: label ? until : nil, memory: memory)
+        DemoConsole.model(phase: phase, memory: memory)
     }
 
     var consoleActions: ConsoleActions {
         ConsoleActions(wake: { self.act(.wake) }, done: { self.act(.done) }, bargeIn: { self.act(.bargeIn) },
                        stop: { self.stop() }, handOver: { self.console = false },
-                       closeChildMode: { self.label = false }, eraseMemory: { self.memory = [] },
-                       memoryText: { DemoConsole.memoryText })
+                       eraseMemory: { self.memory = [] }, memoryText: { DemoConsole.memoryText })
     }
 }

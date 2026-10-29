@@ -12,8 +12,7 @@ struct DemoRoot: View {
             if demo.console {
                 ConsoleView(model: demo.consoleModel, actions: demo.consoleActions)
             } else {
-                ChildShell(talk: TalkState(phase: demo.phase), until: demo.label ? demo.until : nil,
-                           onTap: demo.tap, onStop: demo.leaveChild)
+                ChildShell(talk: TalkState(phase: demo.phase), until: nil, onTap: demo.tap, onStop: demo.leaveChild)
             }
             if demo.panel { DemoPanel(demo: demo) }
         }
@@ -22,7 +21,7 @@ struct DemoRoot: View {
     }
 }
 
-/// The checking switcher, a glass card at the bottom: the eight phases, the label, the console, hide. For checking the
+/// The checking switcher, a glass card at the bottom: the eight phases, the console, hide. For checking the
 /// look only — the parent does not see it (the parent's word 2026-10-29); the app's child screen has no words and no
 /// buttons (screen rules 1–3).
 private struct DemoPanel: View {
@@ -37,7 +36,6 @@ private struct DemoPanel: View {
                 }
             }
             HStack(spacing: 6) {
-                chip("Метка", on: demo.label) { demo.label.toggle() }
                 chip(demo.console ? "Экран" : "Консоль", on: demo.console) { demo.console.toggle() }
                 chip("Скрыть", on: false) { demo.panel = false }
             }
