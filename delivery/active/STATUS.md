@@ -11,7 +11,7 @@
 - **verifier:** process:ci
   <!-- запуск и детский экран на телефоне судит родитель в общей сессии теста; на Mac — поставка sim-app; снимков
        экрана телефона нет (L46) -->
-- **human_ok_spec:** no
+- **human_ok_spec:** yes (by=human:anthony, at=2026-10-29, «Подписываю (Рекомендую)» через ведущего: примеры J1–J6 spec.md)
 - **human_ok_plan:** n/a
 - **shape-oracles:** cqg-deployed
 - **behavior-oracles:** tests-present
