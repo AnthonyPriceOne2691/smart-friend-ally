@@ -79,6 +79,7 @@ targets:
     sources:
       - path: Demo
       - path: Sources/ConsoleView.swift  # the app's own console view, the same file
+      - path: Sources/LoadingScreen.swift  # and its loading screen (child-open)
     dependencies:
       - package: AllyCore
       - package: AllyShell

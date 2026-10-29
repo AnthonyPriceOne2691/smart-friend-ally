@@ -106,7 +106,8 @@ implementation:
   (`limit`, `goodbye_word`, `rest`, `parent`, `error`) — у последней записи. Строка извне с кириллицей — `redacted`.
   Этапы слушания приложения (`tail`, `recognize`, `speech_end_to_sound`, `tap_buffer`) приходят через
   `TraceStamp.stages`; на телефоне записи пишет `TraceFile` — строка JSON на запись в `Caches/turns.jsonl`.
-  Признак `audience` — кто говорит: `parent` (консоль, по умолчанию) или `supervised` (детский экран при родителе).
+  Признак `audience` — кто говорит: `parent` (консоль, по умолчанию) или `supervised` (детский экран — открыт всегда с
+  2026-10-29, [Child mode](/product/child-mode.md)); `child` — только по подписанной приёмке R2.
   Поле `knowledge` (`card`, `rules`, `data_hash`) — только у хода, где был поиск (Э2); `Conversation` передаёт
   энциклопедию сессии вместе с остальными частями (L58). Где прозвучал текст карточки, за `knowledge.hint` идёт
   `knowledge.fallback`, источник остаётся `model` (card-fallback).
