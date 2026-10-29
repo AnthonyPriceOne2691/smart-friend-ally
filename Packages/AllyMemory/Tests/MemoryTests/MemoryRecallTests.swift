@@ -20,12 +20,14 @@ final class MemoryRecallTests: StoreTestCase {
         XCTAssertTrue(block.hasPrefix(Fixture.header))
     }
 
-    func testBlockIsOffSoTheSystemTurnIsThePersonaByteForByte() throws {  // M40
+    func testTheBlockOfTheNewFormGoesIntoTheSystemTurn() throws {  // M40
         let store = try makeStore([try Fixture.session("s1", "2026-10-05 18:00", Fixture.first)])
-        XCTAssertFalse(try store.block().text.isEmpty)
-        XCTAssertFalse(MemoryBlock.inConversation)
-        XCTAssertEqual(MemoryBlock.system(persona: Recall.persona, block: try store.block().text), Recall.persona)
-        XCTAssertEqual(MemoryConsole.conversation, "память: в разговор не идёт — блок выключен")
+        let block = try store.block().text
+        XCTAssertTrue(MemoryBlock.inConversation)
+        XCTAssertTrue(block.hasPrefix(Fixture.header))
+        XCTAssertFalse(block.contains("Соня"))
+        XCTAssertEqual(MemoryBlock.system(persona: Recall.persona, block: block), Recall.persona + "\n\n" + block)
+        XCTAssertNil(MemoryConsole.conversation)
     }
 }
 
