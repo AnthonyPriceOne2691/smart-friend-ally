@@ -6,7 +6,7 @@
 - **kind:** feature
 - **repro_test:** n/a reason=не bugfix
 - **diagnosis:** n/a reason=не bugfix
-- **phase:** implement
+- **phase:** handoff
 - **builder:** agent:claude-code
 - **verifier:** process:ci
   <!-- облик судит родитель на глаз в симуляторе и канвасе Xcode на Mac; снимков экрана телефона нет (L46) -->
@@ -32,6 +32,6 @@
 - **canon_drift_waiver:** no
 - **baseline_growth_waiver:** no
 - **observability:** 1
-- **observe_signal:** заполняется на handoff
+- **observe_signal:** Y1–Y3 и Y5 зелёные в каждом PR (проект — хук demo-boundary, собранное — macOS-джоба по метке); Y6 — пробы AllyShell с прежними порогами; на Mac `bash scripts/run_demo.sh` поднимает демо в детском режиме за ≤ 30 с повторно, правка Look.swift или Palette.swift видна в канвасе и симуляторе
 - **observe_until:** 2026-11-30
 - **circuit_breakers:** defaults from AGENT_DELIVERY_HARNESS.md §3.4

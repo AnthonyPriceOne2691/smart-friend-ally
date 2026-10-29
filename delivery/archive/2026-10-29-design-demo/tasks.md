@@ -21,12 +21,12 @@ L127, L128, L129, L131, L132, L133, L134, L135, L136 (причина там же
   `spec.md`, `eval-smoke.md`, `decisions.md`; перезапуск на том же устройстве, доклад ведущему
 
 ## Slice 2 — токены, оракул, CI
-- [ ] T7: `Look.swift`, числа облика из `AdultZone`, `GlassCapsule`, `glassCard`, `ConsoleView`; пробы `ShellUITests`
+- [x] T7: `Look.swift`, числа облика из `AdultZone`, `GlassCapsule`, `glassCard`, `ConsoleView`; пробы `ShellUITests`
   на Mac; мутация «высота 36» (Y6)
-- [ ] T8: `check_demo_boundary.sh` (Y1, Y2, Y3, Y5), pre-commit; мутации «Demo в Ally», «AllyLlama у демо»
-- [ ] T9: `ios.yml` — сборка демо под симулятор и оракул границы; jscpd — `App/Demo`
+- [x] T8: `check_demo_boundary.sh` (Y1, Y2, Y3, Y5), pre-commit; мутации «Demo в Ally», «AllyLlama у демо»
+- [x] T9: `ios.yml` — сборка демо под симулятор и оракул границы; jscpd — `App/Demo`
 
 ## Slice 3 — знание и сдача
-- [ ] T10: runbook демо, `look-and-feel`, ADR `character-rendering`, `voice-loop`, `repo-map`, `log.md`, индексы
-- [ ] T11: свежий main; строгий `delivery_check --require-ci --diff-base origin/main`; пуш, PR, CI, метка `macos`
-- [ ] T12: verify-report, архив в том же PR, строка INDEX (уроки L154–L157), `OBSERVATIONS.md`; доклад ведущему
+- [x] T10: runbook демо, `look-and-feel`, ADR `character-rendering`, `voice-loop`, `repo-map`, `log.md`, индексы
+- [x] T11: свежий main; строгий `delivery_check --require-ci --diff-base origin/main`; пуш, PR, CI, метка `macos`
+- [x] T12: verify-report, архив в том же PR, строка INDEX (уроки L154–L157), `OBSERVATIONS.md`; доклад ведущему
