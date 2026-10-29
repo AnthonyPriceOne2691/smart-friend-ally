@@ -93,7 +93,7 @@ def check_project() -> None:
     for phase in missing:  # Y5
         problems.append(f"Y5: у фазы {phase} нет #Preview в App/Demo/DemoPreviews.swift")
     leak = any(line.startswith("Y2:") for line in problems)
-    print(f"demo-boundary: проект — Ally {'с Demo' if leak else 'без Demo'}, AllyDemo: "
+    print(f"demo-boundary: проект — просмотрено {len(spec)} цели: Ally {'с Demo' if leak else 'без Demo'}, AllyDemo: "
           f"{len(spec.get('AllyDemo', {}).get('deps', []))} зависимости, превью фаз {len(phases) - len(missing)} из "
           f"{len(phases)}")
 
