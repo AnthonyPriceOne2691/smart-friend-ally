@@ -10,7 +10,7 @@
 - **builder:** agent:claude-code
 - **verifier:** process:ci
   <!-- музыку судят тесты автомата и шкатулки (Linux CI и Mac), стенд эхоподавления на Mac (Y11) и уши родителя -->
-- **human_ok_spec:** deferred (reason=поведение изменено словом родителя 2026-10-29 после подписи прежнего вопроса; строку подписи вписывает ведущий, агент by=human не пишет at=2026-10-29)
+- **human_ok_spec:** yes (by=human:anthony, at=2026-10-29, «Подписываю (Рекомендую)» через ведущего: покой 0,8, в разговоре −20 дБ, уход 0,4 с, возврат через 2 с за 3 с, строка music.json, мелодия собирается кодом — примеры Y1–Y11 spec.md)
 - **human_ok_plan:** n/a
 - **shape-oracles:** cqg-deployed
 - **behavior-oracles:** tests-present
