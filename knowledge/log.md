@@ -7,7 +7,8 @@
   `IconScene.swift`. `engineering/character-rendering` — как сделан значок: квадрат 440 pt, конвейер PNG со снятием
   дизеринга, почему не Icon Composer, имя `AppIcon` пресетом XcodeGen; `implementation:` += `IconScene.swift`,
   `scripts/render_app_icon.sh`. `references/repo-map` — `IconScene`, каталоги значка, `render_app_icon.sh`.
-  `engineering/design-demo` — значок демо. `product/index` — строка облика.
+  `engineering/design-demo` — значок демо. `product/index` — строка облика. `ops/test-session` — взгляд на значок
+  в блоке 3.1.
 * **Источник**: поставка `app-icon` (слово родителя 2026-10-29; выбор варианта «В» на странице — 2026-10-29).
 
 ## 2026-10-29 — забыть один факт или сущность, окно брата и имени (memory-forget)
