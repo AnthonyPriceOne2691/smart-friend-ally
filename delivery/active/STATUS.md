@@ -6,7 +6,7 @@
 - **kind:** feature
 - **repro_test:** n/a reason=не bugfix
 - **diagnosis:** n/a reason=не bugfix
-- **phase:** specify
+- **phase:** implement
 - **builder:** agent:claude-code
 - **verifier:** process:ci
 - **human_ok_spec:** deferred (reason=родитель подписывает слова мостиков, слова префикса сказки, пределы и примеры T1, T2, T4 через ведущего 2026-10-31 — вечером 2026-10-30 он закончил день; код до подписи готовится в ворктри по слову ведущего, at=2026-10-30)
