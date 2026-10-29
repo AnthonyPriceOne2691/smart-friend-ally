@@ -1,0 +1,7 @@
+{
+  "_about": "The session's window (memory-forget, M42 of the memory series, signed by the parent 2026-10-23: «на 14 ходах брат звучит 1–2 раза, имя — не больше чем в трети реплик»): past brother_most replies in which Elly raised the brother herself, a sentence about him goes, unless she speaks of him in that turn; her name stays as an address in at most one reply of name_share — the address goes from the rest. brother — the word's stem in any form (брат, братик, брату); her name and a brother's name — the stem with these endings (Соня — Сони, Соне, Соню, Соней). The names come from the memory on the phone, never from git.",
+  "brother": "брат",
+  "endings": ["а", "я", "ы", "и", "е", "у", "ю", "ой", "ей", "ом"],
+  "brother_most": 2,
+  "name_share": 3
+}

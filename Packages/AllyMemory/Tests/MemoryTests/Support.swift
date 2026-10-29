@@ -56,9 +56,12 @@ enum Fixture {
 
     static func lines(_ text: String...) -> String { ([header] + text).joined(separator: "\n") }
 
-    /// How many times the names occur in the files of a folder: UTF-8, as written, lower case, with «е» for «ё».
+    /// How many times the names occur in the files of a folder: UTF-8, as written, lower case, with «е» for «ё» — and
+    /// both, as the value's key is kept.
     static func occurrences(_ names: [String], in folder: URL) throws -> Int {
-        let forms = Set(names.flatMap { [$0, $0.lowercased(), $0.replacingOccurrences(of: "ё", with: "е")] })
+        let forms = Set(names.flatMap { name in
+            [name, name.lowercased()].flatMap { [$0, $0.replacingOccurrences(of: "ё", with: "е")] }
+        })
         var found = 0
         for file in try FileManager.default.contentsOfDirectory(at: folder, includingPropertiesForKeys: nil) {
             let bytes = try Data(contentsOf: file)

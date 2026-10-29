@@ -38,7 +38,7 @@ extension VoiceLoop {
     /// The console's look at the loop: the session, the lock, the acceptance and the break, the memory.
     var console: ConsoleModel {
         ConsoleModel(lines: screen.lines, heard: screen.heard, said: screen.said, ready: screen.ready, talk: talk,
-                     memoryLines: memoryLines, memoryConfirmation: memoryConfirmation,
+                     memoryLines: memoryLines, memoryConfirmation: memoryConfirmation, forgettable: forgettable,
                      lockLines: ReleaseGate.lines(access, zone: .current) + [acceptance, napLine].compactMap { $0 },
                      open: access.open, exception: exception)
     }
@@ -46,6 +46,7 @@ extension VoiceLoop {
     /// The console's buttons on the loop's own actions; what she remembers is read only on the parent's press.
     var consoleActions: ConsoleActions {
         ConsoleActions(wake: wake, done: done, bargeIn: bargeIn, stop: stop, handOver: handOver,
-                       closeChildMode: closeChildMode, eraseMemory: eraseMemory, memoryText: { self.memoryText })
+                       closeChildMode: closeChildMode, eraseMemory: eraseMemory, memoryText: { self.memoryText },
+                       forgetFact: { self.forget(fact: $0) }, forgetEntity: { self.forget(entity: $0) })
     }
 }
