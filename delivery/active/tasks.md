@@ -8,20 +8,20 @@ L120, L125, L126, L127, L128, L129, L132, L133, L134, L135, L136, L137, L138, L1
 поставки — с L171.
 
 ## Slice 0 — спека
-- [ ] T1: документы первым коммитом ветки `feat/child-open`, до кода (L33, L62): STATUS, spec (J1–J6), plan, tasks
-- [ ] T2: вопрос родителю через ведущего — подпись под J1–J6
+- [x] T1: документы первым коммитом ветки `feat/child-open`, до кода (L33, L62): STATUS, spec (J1–J6), plan, tasks
+- [x] T2: вопрос родителю через ведущего — подпись под J1–J6
 
 ## Slice 1 — ядро
-- [ ] T3: свежий main (`design-demo`); `eval-smoke.md` — строки J1–J6 до кода; `phase: implement`
-- [ ] T4: `Launch` (экран после прогрева, строка загрузки), `ReleaseGate.audience`; тесты J2, J3, J4, J6 на Linux
+- [x] T3: свежий main (`design-demo`); `eval-smoke.md` — строки J1–J6 до кода; `phase: implement`
+- [x] T4: `Launch` (экран после прогрева, строка загрузки), `ReleaseGate.audience`; тесты J2, J3, J4, J6 на Linux
 
 ## Slice 2 — приложение
-- [ ] T5: `VoiceLoop` — флаг прогрева, замер этапов, фраза голоса без звука, Элли после прогрева; без сверки доступа
-- [ ] T6: `AllyApp` — загрузка → Элли или консоль; `ChildScreen` без надписи; `LoadingScreen`
-- [ ] T7: `scripts/child_mode.sh` — решение (`decisions.md`); сборка `.app` без подписи и оракул артефакта
+- [x] T5: `VoiceLoop` — флаг прогрева, замер этапов, фраза голоса без звука, Элли после прогрева; без сверки доступа
+- [x] T6: `AllyApp` — загрузка → Элли или консоль; `ChildScreen` без надписи; `LoadingScreen`
+- [x] T7: `scripts/child_mode.sh` — решение (`decisions.md`); сборка `.app` без подписи и оракул артефакта
 
 ## Slice 3 — знание и сдача
-- [ ] T8: Policy `child-mode`, `look-and-feel`, `voice-loop`, `black-box`, `test-session`, `session`,
+- [x] T8: Policy `child-mode`, `look-and-feel`, `voice-loop`, `black-box`, `test-session`, `session`,
   `safety-below-model`, `session-limit`, `child-data`, `repo-map`, индексы, `log.md`
-- [ ] T9: свежий main; строгий `delivery_check --require-ci --diff-base origin/main`; пуш, PR, CI, метка `macos`
-- [ ] T10: verify-report, архив в том же PR, строка INDEX (уроки L171, L172, L173), `OBSERVATIONS.md`; доклад ведущему
+- [x] T9: свежий main; строгий `delivery_check --require-ci --diff-base origin/main`; пуш, PR, CI, метка `macos`
+- [x] T10: verify-report, архив в том же PR, строка INDEX (уроки L171, L172, L173), `OBSERVATIONS.md`; доклад ведущему
