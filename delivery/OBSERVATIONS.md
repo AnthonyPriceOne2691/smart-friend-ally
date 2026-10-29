@@ -78,3 +78,4 @@
 - `card-fallback`
 - `design-demo`
 - `child-open`
+- `memory-block-form`
