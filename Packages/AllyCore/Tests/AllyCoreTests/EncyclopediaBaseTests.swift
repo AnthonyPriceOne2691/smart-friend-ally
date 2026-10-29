@@ -3,7 +3,8 @@ import Discipline
 import XCTest
 
 /// P12, P13 on the bundled base `encyclopedia.ru.jsonl`: the authoring rules of every card, its license and sources;
-/// every phrasing finds its own card with a hint, the router passes every phrasing and answer, no delicate stem.
+/// every phrasing finds its own card with a hint, the router passes every phrasing and answer, no delicate stem. P24:
+/// every card sounds word for word through the contract of `why`, its key read as the runtime reads it.
 final class EncyclopediaBaseTests: XCTestCase {
     /// A card with its authoring fields, as the base's tests read it.
     struct Card: Decodable {
@@ -66,6 +67,36 @@ final class EncyclopediaBaseTests: XCTestCase {
         let kept = ["почему лёд тает на солнышке": "ice-melts", "зачем люди ночью спят": "why-sleep",
                     "почему зимой так холодно на улице": "winter-cold"]
         for (text, card) in kept { XCTAssertEqual(base.lookup(text).record.card, card, text) }
+    }
+
+    /// The card's text in place of a reply without the essence: alone and after a first sentence at the limit of `why`
+    /// (22 words), the contract keeps it word for word and fires no rule; the runtime finds the essence in it.
+    func testEveryCardSoundsWordForWordAfterAFirstSentence() throws {  // P24
+        let first = "Ой, Соня, как же здорово, что ты спросила об этом сегодня утром, пока мы шли вдоль реки к самой "
+            + "большой зелёной горке!"
+        for card in try Self.lines.map({ try JSONDecoder().decode(Card.self, from: Data($0.utf8)) }) {
+            XCTAssertEqual(CardEssence(card.key)?.found(in: [card.answer]), true, card.id)
+            let alone = TurnContract(mode: .why).finish(card.answer)
+            XCTAssertEqual(alone.sentences.joined(separator: " "), card.answer, card.id)
+            XCTAssertEqual(alone.record.rules, [], card.id)
+            let after = TurnContract(mode: .why).finish(first + " " + card.answer)
+            XCTAssertEqual(after.sentences, [first] + alone.sentences, card.id)
+        }
+    }
+
+    /// Fail-closed: a key that does not compile or does not find the card's own answer turns the encyclopedia off.
+    func testABrokenKeyTurnsTheEncyclopediaOff() throws {  // P24
+        let card = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(Self.lines[0].utf8)) as? [String: Any])
+        for key in ["(жир", "кит"] {
+            var broken = card
+            broken["key"] = key
+            let line = try XCTUnwrap(String(bytes: try JSONSerialization.data(withJSONObject: broken), encoding: .utf8))
+            let lines = [line] + Self.lines.dropFirst().map(String.init)
+            let base = Encyclopedia(cards: Data(lines.joined(separator: "\n").utf8))
+            XCTAssertFalse(base.healthy, key)
+            XCTAssertEqual(base.failure, "selftest_failed", key)
+            XCTAssertNil(base.lookup("почему медведь спит всю зиму").hint, key)
+        }
     }
 
     private func source(of id: String, _ source: Card.Source) {
