@@ -1,5 +1,19 @@
 # Knowledge Bundle Update Log
 
+## 2026-10-29 — демо облика на Mac, превью и токены (design-demo)
+
+* **Creation**: `engineering/design-demo` (Runbook) — демо-цель `AllyDemo` в симуляторе одной командой
+  (`scripts/run_demo.sh`), детский режим и сценарий разговора без модели и микрофона, консоль приложения на вымышленных
+  строках, превью Xcode, токены облика (`Look` и `Palette`), оракул границы `check_demo_boundary.sh`, грабли Xcode 27.1
+  (DeviceHub вместо Simulator.app, рантайм iOS 27.1 знает только iPhone Duo, у llama.cpp b10809 нет слайса симулятора).
+* **Update**: `product/look-and-feel` — строка «Токены облика (design-demo)», в демо надписи «при родителе» нет;
+  `implementation:` += `Look.swift`. `engineering/character-rendering` — числа облика взрослых в `Look`, рисунок
+  смотрят на Mac демо и превью. `engineering/voice-loop` — две цели проекта, вид консоли `ConsoleView.swift`;
+  `implementation:` += `ConsoleView.swift`. `references/repo-map` — `App/Demo`, `run_demo.sh`, `ConsoleView`, `Look`.
+  `engineering/index` — строка runbook.
+* **Источник**: поставка `design-demo` (слово родителя 2026-10-29, примеры Y1–Y7 подписаны 2026-10-29; поправки Y4 —
+  по его слову после показа).
+
 ## 2026-10-28 — жидкое стекло и розовое небо (app-glass)
 
 * **Update**: `product/look-and-feel` — правило «жидкое стекло и розовое небо» (слова и цвета на непрозрачной
