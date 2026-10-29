@@ -40,18 +40,22 @@ enum Cut {
 }
 
 /// What a session needs: the model and the voice, the trace sink, the clock, the router hook, the encyclopedia after it
-/// (nil — no lookups), the app's stamp and a watcher of the states (the app opens the microphone by them).
+/// (nil — no lookups), the app's stamp, her family's names from the memory at each wake (M42) and a watcher of the
+/// states (the app opens the microphone by them).
 public struct SessionParts: Sendable {
     public let model: LanguageModel, voice: VoiceOutput, sink: TraceSink, clock: TurnClock, router: TurnRouting
     public let knowledge: Encyclopedia?
-    public let audience: Audience, stamp: @Sendable () -> TraceStamp, onState: @Sendable (SessionState) -> Void
+    public let audience: Audience, stamp: @Sendable () -> TraceStamp, names: @Sendable () -> FamilyNames
+    public let onState: @Sendable (SessionState) -> Void
 
     public init(model: LanguageModel, voice: VoiceOutput, sink: TraceSink, clock: TurnClock = SystemClock(),
                 router: TurnRouting = PassThroughRouting(), knowledge: Encyclopedia? = nil,
                 audience: Audience = .parent, stamp: @escaping @Sendable () -> TraceStamp = { TraceStamp() },
+                names: @escaping @Sendable () -> FamilyNames = { FamilyNames() },
                 onState: @escaping @Sendable (SessionState) -> Void = { _ in }) {
         (self.model, self.voice, self.sink, self.clock, self.router) = (model, voice, sink, clock, router)
-        (self.knowledge, self.audience, self.stamp, self.onState) = (knowledge, audience, stamp, onState)
+        (self.knowledge, self.audience, self.stamp, self.names, self.onState) = (knowledge, audience, stamp, names,
+                                                                                  onState)
     }
 }
 
@@ -64,6 +68,7 @@ public actor Session {
     private let parts: SessionParts, settings: SessionSettings, data = SessionData.shared, kinds = TurnKinds.shared
     private let current = Locked(SessionState.asleep), expecting = Locked(TurnKind.open)
     private var id = "", start = 0.0, count = 0, misses = 0, heard: String?, listening: TurnKind?
+    private var window = WindowCount()  // her name and the brother, counted from the wake (M42)
     private var cancel: (@Sendable () -> Void)?, cut = Cut.parent
     private let speculation: Speculation
 
@@ -124,6 +129,7 @@ public actor Session {
 
     private func greet() async {
         (id, start, count, misses) = (UUID().uuidString, parts.clock.now(), 0, 0)
+        window = WindowCount(names: parts.names())
         if await phrase("greeting", in: .greeting) { move(to: .listening) }
     }
 
@@ -178,6 +184,7 @@ public actor Session {
         // A forgotten utterance never reaches the model: a script sounds as ever, else the contract's canned reply.
         let line = script?.line ?? (route.forget ? "" : nil)
         guard let outcome = await respond(text, plan: plan, line: line, head: head) else { return }
+        window.count(said: outcome.turn.sentences, heard: text)
         await after(outcome, route: route, head: head, last: last)
     }
 
@@ -198,11 +205,11 @@ public actor Session {
             return TurnOutcome(turn: turn, times: TurnTimes(), modelTimeout: false)
         }
         let decision = route.key == nil ? route.decision : .guard(topic: nil), mode = head.mode
-        let prompt = prompt(text, plan), card = plan.card
+        let prompt = prompt(text, plan), card = plan.card, shown = window.window(heard: text)
         let voice = Speaking(parts.voice) { self.move(to: .speaking) }
         return await perform(head) { [parts, speculation] in
             try await TurnRunner(model: speculation, voice: voice, clock: parts.clock, mode: mode)
-                .run(text, decision: decision, prompt: prompt, card: card)
+                .run(text, decision: decision, prompt: prompt, card: card, window: shown)
         }
     }
 

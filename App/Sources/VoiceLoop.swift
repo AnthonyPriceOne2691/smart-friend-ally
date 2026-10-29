@@ -37,6 +37,7 @@ final class VoiceLoop: ObservableObject {
     // memory-recall: the persona, the system turn with the memory's block (M36) and the console's memory lines (M39).
     private var persona = "", system = ""
     @Published private(set) var memoryLines: [String] = []
+    @Published private(set) var forgettable: [ForgetGroup] = []  // M41: what she remembers by entity, for «Забыть…»
     private var encyclopedia: Encyclopedia?  // Э2: loaded at warm-up, both sessions get it
     private var started = false, stages: [(name: String, seconds: Double)] = []  // child-open: the loading's stages
     private static let log = Logger(subsystem: "com.anthonypriceone.ally", category: "launch")
@@ -283,9 +284,10 @@ final class VoiceLoop: ObservableObject {
             return TraceStamp(versions: versions, memory: Self.memory(model), thermal: thermal,
                               stages: ear.takeStages().merging(voice.takeStages()) { $1 }.merging(overlaps) { $1 })
         }
+        let names: @Sendable () -> FamilyNames = { Self.names(memory) }  // her name and the brother, at each wake (M42)
         let parts = { (audience: Audience) in
             SessionParts(model: model, voice: echo, sink: sink, router: RouterRouting(), knowledge: encyclopedia,
-                         audience: audience, stamp: stamp)
+                         audience: audience, stamp: stamp, names: names)
         }
         childMode = ChildMode(personaSHA256: versions["persona"] ?? "", model: versions["weights"] ?? "")
         refreshAccess()
@@ -414,9 +416,16 @@ extension VoiceLoop {
         }
     }
 
-    /// The console's memory lines (M39): knows nothing, N facts, erased at …; waiting; a failed parse.
+    /// The console's memory lines (M39): knows nothing, N facts, erased at …; waiting; a failed parse; what she
+    /// remembers by entity with the parent's questions (M41).
     func refreshMemoryLines() {
         memoryLines = memory.flatMap { try? MemoryConsole.lines($0, zone: .current) } ?? []
+        forgettable = ((try? memory?.remembered()) ?? []).map { who in
+            let items = who.items.map {
+                ForgetGroup.Item(id: $0.fact, text: $0.text, question: MemoryConsole.forgetting($0))
+            }
+            return ForgetGroup(id: who.entity, title: who.title, question: MemoryConsole.forgetting(who), items: items)
+        }
     }
 
     /// «Что помнит Элли»: the block as the model gets it.
@@ -426,14 +435,30 @@ extension VoiceLoop {
     var memoryConfirmation: String { MemoryConsole.confirmation(facts: (try? memory?.facts().count) ?? 0) }
 
     /// «Стереть память» (M39): the parse stops, the files go, the prefix is the persona again.
-    func eraseMemory() {
+    func eraseMemory() { change { _ = try? $0.eraseAll(now: Date()) } }
+
+    /// «Забыть» one fact (M41): with its history, no byte of it left; an older talk does not bring it back.
+    func forget(fact: Int64) { change { _ = try? $0.forget(fact: fact, now: Date()) } }
+
+    /// «Забыть всё про…» one entity (M41).
+    func forget(entity: Int64) { change { _ = try? $0.forget(entity: entity, now: Date()) } }
+
+    /// The parent's change of the memory while she sleeps (M39, M41): the parse stops, the change, the prefix rebuilt
+    /// when the block changed — the memory's one job at the model, so a wake waits for it as for a parse.
+    private func change(_ apply: @escaping @MainActor (MemoryStore) -> Void) {
         guard let memory, let model, talk.phase == .asleep else { return }
         let parse = pauseMemory()
-        occupy { [self] in  // a wake waits for the erase as for a parse: one model, no reply while the prefix is built
+        occupy { [self] in  // one model, no reply while the prefix is built
             await parse?.value
-            _ = try? memory.eraseAll(now: Date())
+            apply(memory)
             await refreshPrefix(model)
             refreshMemoryLines()
         }
+    }
+
+    /// Her name and her brothers' from the memory for the session's window (M42); none without a memory.
+    nonisolated private static func names(_ memory: MemoryStore?) -> FamilyNames {
+        guard let names = try? memory?.names() else { return FamilyNames() }
+        return FamilyNames(her: names.her, brothers: names.brothers)
     }
 }

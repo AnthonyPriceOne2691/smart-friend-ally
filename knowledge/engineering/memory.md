@@ -1,12 +1,12 @@
 ---
 type: Design
 title: Память о ребёнке — факты с опорой на её ход, замена по дате, блок для промпта
-description: Память-портрет в пакете AllyMemory над общим SQLite — что хранится, что не хранится никогда (проверка записи и триггер базы на любом пути), разбор разговора моделью с опорой на её слова, опора и уверенность кодом, замена однозначного по дате, узнавание сущностей, блок ≤ 300 токенов с несокращаемым ядром (в разговор пока не идёт — решение родителя после M40), консоль памяти и «стереть всё» удалением файлов; что из серии ещё не подключено.
+description: Память-портрет в пакете AllyMemory над общим SQLite — что хранится, что не хранится никогда (проверка записи и триггер базы на любом пути), разбор разговора моделью с опорой на её слова, опора и уверенность кодом, замена однозначного по дате, узнавание сущностей, блок ≤ 300 токенов с несокращаемым ядром (в разговор пока не идёт — решение родителя после M40), консоль памяти, «стереть всё» удалением файлов и «забыть» один факт или сущность с надгробием без значения; что из серии ещё не подключено.
 status: draft
 tags: [engineering, memory, privacy, child]
 generated:
   by: claude_code/opus-5.5
-  at: 2026-10-27T23:50:00+03:00
+  at: 2026-10-29T23:00:00+03:00
 implementation:
   - Packages/AllyMemory/Sources/Memory/MemoryStore.swift
   - Packages/AllyMemory/Sources/Memory/Schema.swift
@@ -27,6 +27,7 @@ implementation:
   - Packages/AllyMemory/Sources/Memory/Resources/sense.json
   - Packages/AllyMemory/Sources/Memory/MemoryQueue.swift
   - Packages/AllyMemory/Sources/Memory/MemoryConsole.swift
+  - Packages/AllyMemory/Sources/Memory/MemoryForget.swift
   - Packages/AllyCore/Sources/AllyCore/MemoryTap.swift
   - App/Sources/MemoryLlama.swift
 ---
@@ -39,8 +40,8 @@ implementation:
 профиля — детали 0,75 против 0,13, поправка «Мурка — кошка» 3 из 3 против 0 из 3. Серия подписана родителем 2026-10-23:
 `memory-core` (база и блок) → `memory-guard` (запрет на любом пути) → `memory-extract` (запрос и опора) →
 `memory-sense` (чужое, выдуманное, любимое, отрицание) → `memory-quality` (качество на E4B) → `memory-app` (телефон) →
-`memory-recall` (в разговоре) → `memory-forget`; разрезы — решения ведущего 2026-10-23 и 2026-10-27, содержание
-подписанное.
+`memory-recall` (в разговоре) → `memory-forget` (забыть один, брат и имя); разрезы — решения ведущего 2026-10-23 и
+2026-10-27, содержание подписанное.
 
 # Canonical rules
 
@@ -98,6 +99,13 @@ implementation:
 - **«Стереть всё»:** соединение закрывается, файлы базы и спутников удаляются, база создаётся заново с эпохой стирания;
   сессия, начатая раньше эпохи, не записывается. Спутники базы (`-wal`, `-shm`, `-journal`) — данные ребёнка: их не
   пускает в git гейт `child-data` ([Child data](/ops/child-data.md)).
+- **«Забыть» один факт или сущность** (memory-forget, M41): однозначный признак уходит со всей историей, многозначное
+  значение — со всеми повторами, сущность — со всеми фактами; `secure_delete` затирает строки, чекпойнт `TRUNCATE`
+  опустошает WAL — ни байта в базе, WAL и SHM. **Надгробие** (`forgotten`) — вид и отношение, сущность, признак и слот,
+  момент; значения нет ни открытым, ни хэшем. Кандидат сессии, начатой раньше надгробия (повторный разбор, разговор,
+  ждавший в очереди), не пишется — отказ `forgotten`: по виду и отношению забытой сущности или по признаку живой. Сессия
+  после забывания учит заново, как после «стереть всё»; цена — из старой сессии уходит и соседнее значение того же
+  признака (у забытой сущности — всё о её виде и отношении).
 - **Общий SQLite:** системный модуль `CSQLite` и тонкая обёртка — пакет `Packages/AllySQLite` (решение ведущего
   2026-10-23); энциклопедия стоит на нём же, своего модуля SQLite никто не заводит.
 
@@ -195,11 +203,19 @@ implementation:
   и имя в 74% реплик D1 против 16%. Правило, записанное до прогона, не выдержано; родитель 2026-10-28 — «Слить с
   выключенной (Рекомендую)».
 
+# В приложении — забывает (memory-forget, 2026-10-29)
+
+- **Консоль «Забыть…»** (`remembered()`, слова — `console` в `memory.json`): сущности и их факты словами блока («Брат
+  Тёма»: «Тёма», «восемь лет», «строили замок из подушек»); «Забыть «рыжая»?», «Забыть всё про «Брат Тёма»? (3
+  факта)»; работа — та же очередь у модели, что стирание, префикс пересобирается, если блок изменился. Экран на телефоне
+  — сессия теста.
+- **Имена для окна сессии** (`names()`): её имя и имена братьев из активных фактов — их считает окно брата и имени
+  ([Session](/engineering/session.md), M42); в блок и в разговор имена этим путём не идут.
+
 # Что ещё не подключено (L50)
 
 Блок памяти в разговоре выключен до новой формы (раздел «Отложено: новая форма блока»): Элли копит память, но в
-разговор её не берёт. Забыть один факт («забудь про…») и счётчики брата и имени — `memory-forget`; до неё родитель
-стирает только всё сразу.
+разговор её не берёт. Родитель стирает всё или забывает одно (memory-forget); правка фактов — экран родителя D8.
 
 # Implementation map
 
@@ -210,6 +226,7 @@ implementation:
 | Запрет на любом пути | `Packages/AllyMemory/Sources/Memory/Forbidden.swift`, `Resources/forbidden.json`, триггеры в `Schema.swift` |
 | Разбор разговора | `Packages/AllyMemory/Sources/Memory/Extract.swift`, `ExtractPrompt.swift`, `ModelAnswer.swift`, `Anchors.swift`, `Resources/extract.*` |
 | Не правда о ней, любимое, «больше не люблю» | `Packages/AllyMemory/Sources/Memory/Sense.swift`, `Resources/sense.json`, `Anchors.swift`, снятие в `MemoryStore.swift` |
+| «Забыть» один факт или сущность, надгробие, имена для окна | `Packages/AllyMemory/Sources/Memory/MemoryForget.swift`, `MemoryStore.swift` (`write`, `names`), `Schema.swift` (`forgotten`), `App/Sources/ConsoleView.swift` (`ForgetSheet`, `ForgetGroup`), `App/Sources/VoiceLoop.swift` (`forgettable`) |
 | Блок в префиксе, консоль памяти, стирание из консоли | `Packages/AllyMemory/Sources/Memory/MemoryBlock.swift` (`system`), `MemoryConsole.swift`, `Packages/AllyLlama/Sources/AllyLlama/LlamaModel.swift` (`load(…, system:)`, `rebuildPrefix`), `App/Sources/VoiceLoop.swift`, `App/Sources/AllyApp.swift` |
 | Отбор, очередь, разбор после прощания, хранилище | `Packages/AllyCore/Sources/AllyCore/MemoryTap.swift`, `Packages/AllyMemory/Sources/Memory/MemoryQueue.swift`, `Packages/AllyLlama/Sources/AllyLlama/LlamaModel.swift` (`complete`, `json.gbnf`), `App/Sources/MemoryLlama.swift`, `App/Sources/VoiceLoop.swift` |
 | Общий SQLite | `Packages/AllySQLite` (функция для триггера — `SQLiteConnection.function`) |
@@ -230,4 +247,5 @@ implementation:
 - Поставка `memory-quality` (M32 той же спеки серии; стенд вне git).
 - Поставка `memory-app` (M33–M35, M38 той же спеки серии; разрез — ведущий 2026-10-27).
 - Поставка `memory-recall` (M36, M37, M39, M40 той же спеки серии; стенд M40 вне git).
+- Поставка `memory-forget` (M41, M42 той же спеки серии; стенд M42 вне git).
 - [Memory portrait](/references/research/memory-portrait.md) — замеры варианта B, приёмка M1–M14.
