@@ -10,7 +10,7 @@
 - **builder:** agent:claude-code
 - **verifier:** process:ci
   <!-- облик значка судит родитель на глаз на странице local/checkpoint/app-icon/ (L18); снимков экрана телефона нет (L46) -->
-- **human_ok_spec:** deferred (reason=выбор варианта значка — за родителем через ведущего, страница local/checkpoint/app-icon/index.html at=2026-10-29)
+- **human_ok_spec:** yes (by=human:anthony, at=2026-10-29, «В» через ведущего: вариант значка — мордочка крупно, ночная пара остаётся; вопрос и варианты дословно в spec.md)
   <!-- подпись под выбором вписывает ведущий: агент by=human не пишет -->
 - **human_ok_plan:** n/a
 - **shape-oracles:** cqg-deployed
