@@ -3,8 +3,8 @@
 **Date:** 2026-10-29
 **Verifier:** process:ci
 **asserts_reviewed_by:** n/a (все утверждения ведут к примерам спеки — дайджест ниже, asserts_without_example: 0; N1–N10 подписаны родителем 2026-10-29)
-**CI run:** quality — https://github.com/AnthonyPriceOne2691/smart-friend-ally/actions/runs/40943703654; macOS-джоба по метке `macos` — https://github.com/AnthonyPriceOne2691/smart-friend-ally/actions/runs/40944046395
-**Commit:** слияние main с card-fallback (832849c) поверх 249e8b2; спека — e91d0bf, подпись — a3e6c1e, eval-smoke до кода — a99974b, код и знание — 677dbc6, уроки — 1571889, main с design-demo — d6268d6; macOS-джоба зелёная на коде a41baf8 (после него — только документы и слияния знания)
+**CI run:** quality — https://github.com/AnthonyPriceOne2691/smart-friend-ally/actions/runs/40949719069; macOS-джоба по метке `macos` — https://github.com/AnthonyPriceOne2691/smart-friend-ally/actions/runs/40949732420 (на 02bcdff; первые прогоны — 40943703654 и 40944046395)
+**Commit:** 02bcdff — слияние main с memory-forget; до него card-fallback (832849c) и design-demo (d6268d6); спека — e91d0bf, подпись — a3e6c1e, eval-smoke до кода — a99974b, код и знание — 677dbc6, уроки — 1571889, main с design-demo — d6268d6; macOS-джоба перезапущена меткой на каждом изменении кода приложения
 
 **Статус: verify, N9 открыт.** Первый ход на Mac родитель перенёс на 2026-10-30 («Потом» — когда Mac не занят отбором
 моделей на GPU): функциональный ход и чистый замер — одним заходом. До него поставка не сдаётся.
@@ -94,7 +94,7 @@
 | rework_after_done | 0 (сдача не объявлена) |
 | harness_hardened | yes — `MacImportTests`, `TraceLineTests` (новые оракулы), smoke S9 `mac_files_check.sh` |
 | implement_retries | 4 — `@Published` на двух переменных одной строкой; правило `inline_prompt` (тексты импорта — в ресурс) и длина строк; детектор секретов на хэше «abc»; импорт с `Task.detached` на свою очередь по L143 после слияния card-fallback |
-| verify_fails_before_green | заполняется по прогонам CI |
+| verify_fails_before_green | 0 — все прогоны CI зелёные (quality 40943703654, 40944844520, 40946391728, 40947702920, 40949719069; macOS 40944046395, 40947743060, 40949732420); локально — два отказа pre-commit до коммита (SwiftLint, секреты) и длина тела `VoiceLoop` 301 после слияния memory-forget — свой код вынесен в расширение того же файла |
 | est_token_or_cost | n/a |
 
 ## Assertion digest (ревью ожиданий, не кода)
