@@ -15,7 +15,7 @@ public struct GlassCapsule: ButtonStyle {
         GlassCapsuleBody(label: configuration.label, pressed: configuration.isPressed, prominent: prominent)
     }
 
-    static let main = Glass.regular.tint(Color(Palette.skin, opacity: 0.55)).interactive()
+    static let main = Glass.regular.tint(Look.mainTint).interactive()
     static let plain = Glass.regular.interactive()
 }
 
@@ -24,13 +24,13 @@ private struct GlassCapsuleBody<Label: View>: View {
     @Environment(\.isEnabled) private var enabled
 
     var body: some View {
-        label.font(.system(size: 17, weight: prominent ? .bold : .semibold, design: .rounded))
-            .lineLimit(1).minimumScaleFactor(0.85)  // four in a row fit 440 pt; a narrower phone shrinks the words
-            .foregroundStyle(Color(Palette.plum, opacity: enabled ? 1 : 0.4))
-            .padding(.horizontal, 16).frame(minHeight: 44)
+        label.font(Look.buttonFont(prominent: prominent))
+            .lineLimit(1).minimumScaleFactor(Look.buttonShrink)  // four in a row fit 440 pt; a narrower phone shrinks
+            .foregroundStyle(Look.words.opacity(enabled ? 1 : Look.disabledFade))
+            .padding(.horizontal, Look.buttonPadding).frame(minHeight: Look.buttonHeight)
             .glassEffect(enabled && prominent ? GlassCapsule.main : GlassCapsule.plain, in: .capsule)
-            .scaleEffect(pressed ? 0.96 : 1)
-            .animation(.spring(duration: 0.3), value: pressed)
+            .scaleEffect(pressed ? Look.pressScale : 1)
+            .animation(Look.press, value: pressed)
     }
 }
 #endif
