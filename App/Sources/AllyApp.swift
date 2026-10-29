@@ -16,7 +16,10 @@ struct AllyApp: App {
                 Console(loop: loop)
             }
         }
-        .onChange(of: phase) { _, now in if now == .background { _ = loop.pauseMemory() } }  // M35
+        .onChange(of: phase) { _, now in
+            if now == .background { _ = loop.pauseMemory() }  // M35
+            loop.front(now != .background)  // background-music: behind, the music goes
+        }
     }
 }
 

@@ -15,13 +15,15 @@ import SwiftUI
 final class VoiceLoop: ObservableObject {
     struct Screen { var lines: [String] = [], heard = "", said = "", ready = false }
     @Published private(set) var screen = Screen()
-    @Published private(set) var talk = TalkState()  // the session for a screen: phase, pose, why the last one ended
+    @Published private(set) var talk = TalkState() {  // the session for a screen: phase, pose, why the last one ended
+        didSet { music?.update { $0.phase = talk.phase } }
+    }
     private var conversation: Conversation?
     // The child mode (R, R2): who may talk on the child screen, whether it is shown, an exception in the container, the
     // acceptance's line; its own session (audience `supervised`, or `child` once the acceptance holds) and the last
     // wake, which the next one waits for — one ear for both sessions.
     @Published private(set) var access = ChildAccess.parentOnly([])
-    @Published private(set) var child = false
+    @Published private(set) var child = false { didSet { music?.update { $0.child = child } } }
     @Published private(set) var exception = false
     @Published private(set) var acceptance = ""
     // The break after a goodbye by the limit (Ш3): the parent's key, none by default («Без перерыва», 2026-10-23).
@@ -36,6 +38,8 @@ final class VoiceLoop: ObservableObject {
     private var persona = "", system = ""
     @Published private(set) var memoryLines: [String] = []
     private var encyclopedia: Encyclopedia?  // Э2: loaded at warm-up, both sessions get it
+    // background-music: «Шкатулка Элли» on the child screen; a wake waits for it to go quiet, a second tap — no wake
+    private var music: BackgroundMusic?, waking = false
 
     func start() async {
         guard registry == nil else { return }
@@ -78,7 +82,9 @@ final class VoiceLoop: ObservableObject {
         screen.lines += [listening.line] + [asr.line].compactMap { $0 }
         let encyclopedia = Encyclopedia.bundled()  // Э2: the base and FTS5 on the phone — the self-test says if not
         screen.lines.append(encyclopedia.line(searchP95: encyclopedia.searchP95()))
+        let music = makeMusic(bundle)  // its node joins the session's engine before voice processing (X9)
         let sound = duplex(voice, hearing, models: models, silero: silero)
+        startMusic(music, sound: sound)
         let personaHash = SHA256.hash(data: Data(persona.utf8)).map { String(format: "%02x", $0) }.joined()
         versions = ["ios": UIDevice.current.systemVersion, "llama": settings.runtime.build, "persona": personaHash,
                     "voice": voice.label, "weights": "\(registry.model.file):\(registry.model.bytes)",
@@ -166,16 +172,35 @@ final class VoiceLoop: ObservableObject {
     /// the shown screen wakes after the last one has ended (L60, L69); the microphone is open from its wake to its
     /// sleep (D6.1).
     func wake() {
-        guard let talker = child ? childTalk : conversation, talk.phase == .asleep else { return }
+        guard let talker = child ? childTalk : conversation, talk.phase == .asleep, !waking else { return }
         (screen.heard, screen.said) = ("", "")
-        let previous = running, audio = audio, parse = pauseMemory()
+        let previous = running, audio = audio, parse = pauseMemory(), music = music
+        waking = true
         running = Task {
             await parse?.value  // one model: the parse gives it back first (M35)
             await previous?.value
+            await music?.duck()  // the music quiet and on the voice's engine before the microphone opens (Y2)
             do { try audio.start() } catch { screen.lines.append("микрофон не открылся: \(error)") }
+            music?.join()
             await talker.wake()
+            await music?.release()
             audio.stop()
+            waking = false
         }
+    }
+
+    /// background-music: the parent's line and the music's node on the session's engine.
+    private func makeMusic(_ bundle: URL) -> BackgroundMusic {
+        let line = MusicLine.decode((try? Data(contentsOf: bundle.appendingPathComponent("music.json"))) ?? Data())
+        return BackgroundMusic(line: line, engine: audio.engine)
+    }
+
+    /// The console's music lines and the loop made in the background; no echo canceller (Milena) — no music in a talk.
+    private func startMusic(_ music: BackgroundMusic, sound: String) {
+        screen.lines += [music.line.console] + music.line.notes
+            + (sound == "half" && music.line.on ? ["музыка: в разговоре молчит" + " — нет эхоподавления"] : [])
+        self.music = music
+        Task { await music.load(cancelsEcho: sound != "half") }
     }
 
     /// The microphone and the voice of a session (D6.1): Supertonic — one engine with voice processing, the ring and
@@ -223,6 +248,7 @@ final class VoiceLoop: ObservableObject {
     /// The audio session taken away or given back (a call, Siri, an alarm — D6.2): the shown session pauses and then
     /// listens again.
     private func interrupted(_ began: Bool) {
+        if !began { music?.resume() }
         guard let talker = child ? childTalk : conversation else { return }
         Task { await talker.interruption(began: began) }
     }
@@ -351,6 +377,9 @@ final class VoiceLoop: ObservableObject {
     }
 
     private var uptime: Double { ProcessInfo.processInfo.systemUptime }
+
+    /// The app in front or behind (background-music): behind, the music goes.
+    func front(_ shown: Bool) { music?.update { $0.front = shown } }
 
     private func line(_ stages: [String: Double]) -> String {
         stages.sorted { $0.key < $1.key }.map { "\($0.key) " + String(format: "%.2f с", $0.value) }
