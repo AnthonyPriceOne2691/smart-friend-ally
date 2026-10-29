@@ -54,7 +54,7 @@ L135, L136, L137, L138, L139: звук, сессия, память, подпис
    журнал `turn`); runbook `voice-loop` — раздел «Элли на Mac» и пути в `implementation:`; `ops/child-data` — контейнер
    на Mac; `repo-map` — входные точки; `index.md`, `log.md`.
 
-## Rejected alternatives (§12.2a)
+## Rejected alternatives
 
 - **Симулятор iOS 27** — диктовки нет (ассет без задачи «Dictation»), Metal без apple7/metal3, буфер 256 МБ. Отклонён
   замером и решением родителя.

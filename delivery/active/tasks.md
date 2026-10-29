@@ -9,11 +9,11 @@ L134, L135, L136, L137, L138, L139 (причина там же).
   available», Metal симулятора без apple7 и metal3; доклад ведущему, решение родителя «Приложение для iPhone прямо на Mac»
 - [x] T2: подпись для «My Mac (Designed for iPhone)» — BUILD SUCCEEDED, Mac в профиле до 05.11; запуск вне Xcode убит
   Gatekeeper, контейнер закрыт для оболочки агентов (TCC) — доклад, решение родителя «Кнопка ▶ в Xcode + «Файлы с Mac…»»
-- [ ] T3: документы первым коммитом ветки `feat/sim-app`, до кода (L33, L62): STATUS, spec (N1–N10), plan, tasks,
+- [x] T3: документы первым коммитом ветки `feat/sim-app`, до кода (L33, L62): STATUS, spec (N1–N10), plan, tasks,
   decisions; вопрос подписи под N1–N10 — ведущему
 
 ## Slice 1 — код (после подписи)
-- [ ] T4: `eval-smoke.md` — строки N1–N10 до кода; `phase: implement`
+- [x] T4: `eval-smoke.md` — строки N1–N10 до кода; `phase: implement` (подпись родителя 2026-10-29, `a3e6c1e`)
 - [ ] T5: `scripts/mac_files.py` и smoke S9 (N1–N3); прогон на Mac — `~/models/ally-mac`, `df` до и после
 - [ ] T6: `MacImport` — план и отказы (N4, N5), копия (N6), видимость (N7); `VoiceFile.sha256`; sha256 потоком;
   мутации «копия без сверки хэша», «кнопка видна на телефоне», «чужой путь пропущен»
