@@ -7,7 +7,8 @@
   `knowledge.fallback`, ключ проверяется при загрузке; `implementation:` += `CardFallback.swift`; серия и отложенное.
   `engineering/safety-below-model` — реестр: суть ниже модели исполняется. `engineering/session` — карточка из плана в
   раннер, `knowledge.fallback` в следе. `engineering/index` — строка энциклопедии. `references/repo-map` —
-  `encyclopedia-replay --said`.
+  `encyclopedia-replay --said`. `ops/test-session` — P20: текст карточки и `knowledge.fallback`. Замер: перегон P18 на
+  seed 48–50 — 48 из 48, артефактов 0, карточка на 12 ходах из 48.
 * **Источник**: поставка `card-fallback` (решение родителя 2026-10-27 «Слить, чинить сразу после»; примеры P21–P24
   подписаны 2026-10-29 «Подписываю: фраза + карточка (Рекомендую)»).
 

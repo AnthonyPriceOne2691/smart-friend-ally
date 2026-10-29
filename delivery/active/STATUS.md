@@ -6,7 +6,7 @@
 - **kind:** feature
 - **repro_test:** n/a reason=не bugfix
 - **diagnosis:** n/a reason=не bugfix
-- **phase:** implement
+- **phase:** verify
 - **builder:** agent:claude-code
 - **verifier:** process:ci
 - **human_ok_spec:** yes (by=human:anthony, at=2026-10-29, через ведущего: «Подписываю: фраза + карточка (Рекомендую)» под примером P21–P23 спеки card-fallback; вопрос дословно — spec.md, раздел «Подпись»)
