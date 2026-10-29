@@ -35,6 +35,7 @@ final class VoiceLoop: ObservableObject {
     // memory-recall: the persona, the system turn with the memory's block (M36) and the console's memory lines (M39).
     private var persona = "", system = ""
     @Published private(set) var memoryLines: [String] = []
+    @Published private(set) var forgettable: [ForgetGroup] = []  // M41: what she remembers by entity, for «Забыть…»
     private var encyclopedia: Encyclopedia?  // Э2: loaded at warm-up, both sessions get it
 
     func start() async {
@@ -390,9 +391,16 @@ extension VoiceLoop {
         }
     }
 
-    /// The console's memory lines (M39): knows nothing, N facts, erased at …; waiting; a failed parse.
+    /// The console's memory lines (M39): knows nothing, N facts, erased at …; waiting; a failed parse; what she
+    /// remembers by entity with the parent's questions (M41).
     func refreshMemoryLines() {
         memoryLines = memory.flatMap { try? MemoryConsole.lines($0, zone: .current) } ?? []
+        forgettable = ((try? memory?.remembered()) ?? []).map { who in
+            let items = who.items.map {
+                ForgetGroup.Item(id: $0.fact, text: $0.text, question: MemoryConsole.forgetting($0))
+            }
+            return ForgetGroup(id: who.entity, title: who.title, question: MemoryConsole.forgetting(who), items: items)
+        }
     }
 
     /// «Что помнит Элли»: the block as the model gets it.
@@ -403,9 +411,6 @@ extension VoiceLoop {
 
     /// «Стереть память» (M39): the parse stops, the files go, the prefix is the persona again.
     func eraseMemory() { change { _ = try? $0.eraseAll(now: Date()) } }
-
-    /// What she remembers by entity, for «Забыть» (M41).
-    var remembered: [Remembered] { (try? memory?.remembered()) ?? [] }
 
     /// «Забыть» one fact (M41): with its history, no byte of it left; an older talk does not bring it back.
     func forget(fact: Int64) { change { _ = try? $0.forget(fact: fact, now: Date()) } }

@@ -226,7 +226,7 @@ implementation:
 | Запрет на любом пути | `Packages/AllyMemory/Sources/Memory/Forbidden.swift`, `Resources/forbidden.json`, триггеры в `Schema.swift` |
 | Разбор разговора | `Packages/AllyMemory/Sources/Memory/Extract.swift`, `ExtractPrompt.swift`, `ModelAnswer.swift`, `Anchors.swift`, `Resources/extract.*` |
 | Не правда о ней, любимое, «больше не люблю» | `Packages/AllyMemory/Sources/Memory/Sense.swift`, `Resources/sense.json`, `Anchors.swift`, снятие в `MemoryStore.swift` |
-| «Забыть» один факт или сущность, надгробие, имена для окна | `Packages/AllyMemory/Sources/Memory/MemoryForget.swift`, `MemoryStore.swift` (`write`, `names`), `Schema.swift` (`forgotten`), `App/Sources/AllyApp.swift` (`ForgetSheet`) |
+| «Забыть» один факт или сущность, надгробие, имена для окна | `Packages/AllyMemory/Sources/Memory/MemoryForget.swift`, `MemoryStore.swift` (`write`, `names`), `Schema.swift` (`forgotten`), `App/Sources/ConsoleView.swift` (`ForgetSheet`, `ForgetGroup`), `App/Sources/VoiceLoop.swift` (`forgettable`) |
 | Блок в префиксе, консоль памяти, стирание из консоли | `Packages/AllyMemory/Sources/Memory/MemoryBlock.swift` (`system`), `MemoryConsole.swift`, `Packages/AllyLlama/Sources/AllyLlama/LlamaModel.swift` (`load(…, system:)`, `rebuildPrefix`), `App/Sources/VoiceLoop.swift`, `App/Sources/AllyApp.swift` |
 | Отбор, очередь, разбор после прощания, хранилище | `Packages/AllyCore/Sources/AllyCore/MemoryTap.swift`, `Packages/AllyMemory/Sources/Memory/MemoryQueue.swift`, `Packages/AllyLlama/Sources/AllyLlama/LlamaModel.swift` (`complete`, `json.gbnf`), `App/Sources/MemoryLlama.swift`, `App/Sources/VoiceLoop.swift` |
 | Общий SQLite | `Packages/AllySQLite` (функция для триггера — `SQLiteConnection.function`) |

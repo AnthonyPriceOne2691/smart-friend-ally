@@ -47,5 +47,9 @@
  "check_app_artifact.sh": {
   "path": "App/build/Canary.app/Info.plist",
   "content": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!-- канарейка: ключ ATS в собранном .app — оракул артефакта обязан покраснеть -->\n<plist version=\"1.0\"><dict>\n<key>NSAppTransportSecurity</key><dict><key>NSAllowsArbitraryLoads</key><true/></dict>\n<key>NSMicrophoneUsageDescription</key><string>Слушает фразу</string>\n<key>NSSpeechRecognitionUsageDescription</key><string>Распознаёт на телефоне</string>\n</dict></plist>\n"
+ },
+ "check_demo_boundary.sh": {
+  "path": "App/build-demo/DemoCanary.app/Info.plist",
+  "content": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!-- канарейка: демо с ключом микрофона — граница демо обязана покраснеть -->\n<plist version=\"1.0\"><dict>\n<key>CFBundleIdentifier</key><string>com.anthonypriceone.ally.demo</string>\n<key>CFBundleDisplayName</key><string>Ally Demo</string>\n<key>MinimumOSVersion</key><string>27.0</string>\n<key>NSMicrophoneUsageDescription</key><string>канарейка</string>\n</dict></plist>\n"
  }
 }

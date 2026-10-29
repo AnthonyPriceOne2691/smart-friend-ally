@@ -75,3 +75,4 @@
 - `memory-recall`
 - `app-glass`
 - `memory-forget`
+- `design-demo`
