@@ -17,9 +17,10 @@ public struct LoadingBubble: View {
         }
     }
 
-    /// The bubble's back, the rising bubbles clipped to its water, its film and rim over them.
+    /// The bubble's back, the rising bubbles clipped to its water, its film and rim over them. The bubble takes 0.62
+    /// of the canvas: its soft shadow fades out inside it — cut at the canvas edge, it showed a pale square.
     private func draw(_ ctx: GraphicsContext, _ size: CGSize, time t: Double) {
-        let diameter = min(size.width, size.height) * 0.86
+        let diameter = min(size.width, size.height) * 0.62
         let float = calm ? 0 : sin(t * 2 * .pi / Self.period) * Self.float
         let centre = CGPoint(x: size.width / 2, y: size.height / 2 + float)
         let bubble = Bubble(centre: centre, diameter: diameter)

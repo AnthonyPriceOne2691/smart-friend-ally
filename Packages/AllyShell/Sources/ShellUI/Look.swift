@@ -45,9 +45,9 @@ public enum Look {
     public static let blockSpacing: CGFloat = 12, lineSpacing: CGFloat = 12, pairSpacing: CGFloat = 6
     public static let rowSpacing: CGFloat = 10, heardFade = 0.75
 
-    /// The loading screen (child-open): the bubble's size, the gap to the word, the word and its plate (the plate and
-    /// the glass ring — as the adult's corner).
-    public static let loadingBubble: CGFloat = 220, loadingGap: CGFloat = 28
+    /// The loading screen (child-open): the bubble's canvas (the bubble is 0.62 of it, ≈ 186 pt, with room for its
+    /// shadow), the gap to the word, the word and its plate (the plate and the glass ring — as the adult's corner).
+    public static let loadingBubble: CGFloat = 300, loadingGap: CGFloat = 0
     public static let loadingFont = Font.system(size: 22, weight: .heavy, design: .rounded)
     public static let loadingPadding: CGFloat = 22, loadingHeight: CGFloat = 48
 }
