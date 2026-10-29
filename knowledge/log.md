@@ -1,5 +1,19 @@
 # Knowledge Bundle Update Log
 
+## 2026-10-29 — детский экран открыт всегда, загрузка до Элли (child-open)
+
+* **Update**: `product/child-mode` (Policy) переписана: детский экран открыт всегда, без замка и надписи, — решение
+  родителя дословно (ответы на два вопроса, довод про Face ID и пароль телефона, сказанное ему про 15% при цели 5%);
+  запуск — загрузка, потом Элли (`Launch`), знак стопа — консоль без Face ID, детская сессия `supervised`, приёмка R2 —
+  на будущее; `scripts/child_mode.sh` удалён. `product/look-and-feel` — строка «в коде (child-open)», поправки правил 1,
+  13, 14; `implementation:` += `LoadingBubble.swift`. `engineering/voice-loop` — запуск через загрузку, строки консоли,
+  исключение снято; `implementation:` += `LoadingScreen.swift`. `ops/black-box`, `ops/child-data`, `engineering/session`,
+  `engineering/safety-below-model`, `product/session-limit` — каждая детская сессия, перерыв после перезапуска забыт.
+  `ops/test-session` — шаг подписи и G8, G10 сняты, новые J1, J2, J5. `engineering/design-demo` — загрузка в демо и
+  превью. `references/repo-map`, индексы `product`, `ops`; `KNOWLEDGE.md` — решение 2026-10-29.
+* **Источник**: поставка `child-open` (решение родителя 2026-10-29 через ведущего; примеры J1–J6 подписаны
+  2026-10-29).
+
 ## 2026-10-29 — забыть один факт или сущность, окно брата и имени (memory-forget)
 
 * **Update**: `engineering/memory` — правило «Забыть» один факт или сущность (с историей и повторами, `secure_delete`,

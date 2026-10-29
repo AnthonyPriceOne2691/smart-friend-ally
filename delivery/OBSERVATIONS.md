@@ -77,3 +77,4 @@
 - `memory-forget`
 - `card-fallback`
 - `design-demo`
+- `child-open`
