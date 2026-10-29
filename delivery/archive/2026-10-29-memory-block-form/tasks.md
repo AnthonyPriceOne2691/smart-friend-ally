@@ -10,5 +10,5 @@
 - [x] T4: прогон M40 на Mac (под нагрузкой), слепые судьи живости, вердикт по правилу спеки — числа в eval-smoke
 - [x] T5: по итогу — `escalation.md`, решение родителя «Включить: имя держит код»: `in_conversation: true`, тест `// M40`, окно на D1 (`BlockWindowTests`); знание (`engineering/memory`,
   `engineering/voice-loop`, `engineering/safety-below-model`, `ops/test-session`, лог)
-- [ ] T6: PR, CI, verify-report, строгий `delivery_check`; сдача: архив, строка INDEX с уроками L151–L153,
+- [x] T6: PR, CI, verify-report, строгий `delivery_check`; сдача: архив, строка INDEX с уроками L151–L153,
   `memory-block-form` в `delivery/OBSERVATIONS.md`

@@ -3,8 +3,8 @@
 **Date:** 2026-10-29
 **Verifier:** process:ci
 **asserts_reviewed_by:** n/a (все утверждения ведут к примерам спеки M43, M15, M23, M24, M40 — дайджест ниже, asserts_without_example: 0; новая форма подписана родителем 2026-10-29, M15–M40 — спека серии 2026-10-23; включение — решение родителя 2026-10-29 «Включить: имя держит код»)
-**CI run:** — (после открытия PR)
-**Commit:** — (документы — 27fb759 до кода, код формы — 30de671, заморозка стенда M40 — 695821f до прогона, итог M40 со стопом — 5600099, включение по решению родителя — 4039258)
+**CI run:** https://github.com/AnthonyPriceOne2691/smart-friend-ally/actions/runs/40951806447 (03645d9 — delivery, swift, gates зелёные; PR #92)
+**Commit:** 03645d9 (документы — 27fb759 до кода, код формы — 30de671, заморозка стенда M40 — 695821f до прогона, итог M40 со стопом — 5600099, включение по решению родителя — 4039258; сдача — следующим прогоном PR #92)
 
 ## Shape oracles
 - [x] PASS — pre-commit на коммитах поставки: `file-length`, jscpd — рост 0; SwiftLint — 0 находок (длинные строки
@@ -86,7 +86,7 @@
 | rework_after_done | 0 |
 | harness_hardened | yes — `BlockWindowTests` (окно на ответах M40), M43; стенд M40 v2 (формат B, блок кодом продукта) |
 | implement_retries | 2 — M24 при новом умолчании (бюджет 300 подписанного примера), длины строк фикстуры |
-| verify_fails_before_green | — (после CI) |
+| verify_fails_before_green | 0 — прогон CI 40951806447 зелёный во всех трёх джобах (delivery, swift, gates) |
 | est_token_or_cost | n/a |
 
 ## Assertion digest (ревью ожиданий, не кода)
@@ -128,6 +128,6 @@ M15	XCTAssertEqual(block.tokens, 164)  // M15
 asserts_without_example: 0
 
 ## Verdict
-- [ ] READY FOR HANDOFF (после зелёного CI)
+- [x] READY FOR HANDOFF (M40 — решением родителя 2026-10-29 «Включить: имя держит код»)
 - [ ] NEED CONVERGE (new tasks)
 - [ ] BLOCKED
