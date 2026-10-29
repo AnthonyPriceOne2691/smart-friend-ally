@@ -10,7 +10,7 @@
 - **builder:** agent:claude-code
 - **verifier:** process:ci
   <!-- первый ход на Mac исполняет родитель кнопками (⌘R, «Разбудить»), агент говорит синтетикой и снимает строки журнала -->
-- **human_ok_spec:** no
+- **human_ok_spec:** yes (by=human:anthony, at=2026-10-29, «Подписываю (Рекомендую)» через ведущего: примеры N1–N10 spec.md)
 - **human_ok_plan:** n/a
 - **shape-oracles:** cqg-deployed
 - **behavior-oracles:** tests-present
