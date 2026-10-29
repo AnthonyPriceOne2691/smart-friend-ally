@@ -6,7 +6,7 @@
 - **kind:** feature
 - **repro_test:** n/a reason=не bugfix
 - **diagnosis:** n/a reason=не bugfix
-- **phase:** verify
+- **phase:** handoff
 - **builder:** agent:claude-code
 - **verifier:** process:ci
   <!-- первый ход на Mac исполняет родитель кнопками (⌘R, «Разбудить»), агент говорит синтетикой и снимает строки журнала -->
@@ -32,6 +32,6 @@
 - **canon_drift_waiver:** no
 - **baseline_growth_waiver:** no
 - **observability:** 1
-- **observe_signal:** заполняется на handoff
+- **observe_signal:** N1–N8, N10 зелёные в каждом PR (Linux: smoke S9, тесты AllyCore); на Mac — разговоры при родителе: строки `turn` системного журнала без слов — `audio: half`, `speech_end_to_sound` p50 не выше 2,52 с (замер 2026-10-30) до поставки ускорения; «Файлы с Mac…» после смены файлов — «на месте: 28»
 - **observe_until:** 2026-11-30
 - **circuit_breakers:** defaults from AGENT_DELIVERY_HARNESS.md §3.4
