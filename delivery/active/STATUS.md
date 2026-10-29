@@ -6,11 +6,11 @@
 - **kind:** feature
 - **repro_test:** n/a reason=не bugfix
 - **diagnosis:** n/a reason=не bugfix
-- **phase:** specify
+- **phase:** implement
 - **builder:** agent:claude-code
 - **verifier:** process:ci
   <!-- облик судит родитель на глаз в симуляторе и канвасе Xcode на Mac; снимков экрана телефона нет (L46) -->
-- **human_ok_spec:** no
+- **human_ok_spec:** yes (by=human:anthony, at=2026-10-29, «Подписываю (Рекомендую)» через ведущего: примеры Y1–Y7 spec.md)
 - **human_ok_plan:** n/a
 - **shape-oracles:** cqg-deployed
 - **behavior-oracles:** tests-present
