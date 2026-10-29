@@ -6,7 +6,7 @@
 - **kind:** feature
 - **repro_test:** n/a reason=не bugfix
 - **diagnosis:** n/a reason=не bugfix
-- **phase:** implement
+- **phase:** handoff
 - **builder:** agent:claude-code
 - **verifier:** process:ci
   <!-- запуск и детский экран на телефоне судит родитель в общей сессии теста; на Mac — поставка sim-app; снимков
@@ -36,6 +36,6 @@
 - **canon_drift_waiver:** no
 - **baseline_growth_waiver:** no
 - **observability:** 1
-- **observe_signal:** заполняется на handoff
+- **observe_signal:** J2, J3, J4, J6 зелёные в каждом PR (Linux); в общей сессии теста на телефоне — J1, J2, J5: загрузка, затем Элли без надписи; знак стопа — консоль; строка «загрузка: …» с этапами — замер длительности на iPhone 17 Pro Max; детские сессии в чёрном ящике — `audience: supervised`
 - **observe_until:** 2026-11-30
 - **circuit_breakers:** defaults from AGENT_DELIVERY_HARNESS.md §3.4

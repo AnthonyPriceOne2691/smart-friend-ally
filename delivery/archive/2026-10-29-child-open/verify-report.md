@@ -4,7 +4,7 @@
 **Verifier:** process:ci
 **asserts_reviewed_by:** n/a (все утверждения ведут к примерам спеки — дайджест ниже, asserts_without_example: 0; J1–J6 подписаны родителем 2026-10-29 до кода приложения)
 **CI run:** https://github.com/AnthonyPriceOne2691/smart-friend-ally/actions/runs/40946375782 (gates, delivery, swift — зелёные на 1d6dabd)
-**Commit:** b2966d6 (спека — 5cceb92, подпись — beace0c, eval-smoke до кода — 9e9fa90, ядро — b578e59, знание — 77e9218, приложение — 5ca2ffa, пузырь — 8e3d7bb; main влит до 832849c; метка примера в проверке приёмки — b2966d6, сборки демо вне git — следом); macOS-джоба по метке на образе `xcode-27` — https://github.com/AnthonyPriceOne2691/smart-friend-ally/actions/runs/40946402446; сдача — следующим коммитом, PR #90
+**Commit:** b2966d6 (спека — 5cceb92, подпись — beace0c, eval-smoke до кода — 9e9fa90, ядро — b578e59, знание — 77e9218, приложение — 5ca2ffa, пузырь — 8e3d7bb; main влит до 9cba72e (memory-forget — сложением в консоли и сессии теста); метка примера в проверке приёмки — b2966d6, сборки демо вне git — 141b8a0); macOS-джоба по метке на образе `xcode-27` — https://github.com/AnthonyPriceOne2691/smart-friend-ally/actions/runs/40946402446; сдача — следующим коммитом, PR #90
 
 ## Shape oracles
 - [x] PASS — pre-commit на всех файлах локально (jscpd 4.0.5 через npx) и в CI: `file-length`, jscpd — рост 0;
@@ -28,7 +28,8 @@
 - [x] PASS — macOS-джоба `ios.yml` по метке (https://github.com/AnthonyPriceOne2691/smart-friend-ally/actions/runs/40946402446, образ `xcode-27`): AllyShell — 32 из 32 с
   `LoadingBubble`; `Ally.app` для устройства — BUILD SUCCEEDED (проводка `AllyApp`, `VoiceLoop`, `ChildScreen`,
   `LoadingScreen` собирается), оракул артефакта — OK; `AllyDemo.app` с экраном загрузки — BUILD SUCCEEDED; граница демо
-  — OK на обоих.
+  — OK на обоих. После слияния main до 9cba72e (`VoiceLoop`, `ConsoleView` из `memory-forget`) демо пересобрано на Mac —
+  BUILD SUCCEEDED; macOS-джоба повторена меткой на голове сдачи (PR #90).
 - [x] PASS — мутации в ту же сессию (П30, L64 — по видимому эффекту), 4 из 4 убиты, файл восстановлен:
   - J3 «самопроверка не судится» (`ready ? .child : .console`) — «("child") is not equal to ("console")» дважды;
   - J4 «слушатель всегда `supervised`» — приёмка R2 даёт «("supervised") is not equal to ("child")»;
