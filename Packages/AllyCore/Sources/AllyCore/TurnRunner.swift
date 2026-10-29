@@ -7,10 +7,12 @@ public struct TurnTimes: Equatable, Sendable {
 }
 
 /// What a turn said and how: the contract's turn (sentences, source, record), the stage times, a model timeout; the
-/// model's text before the contract — none for a script or a phrase of the session.
+/// model's text before the contract — none for a script or a phrase of the session; whether the hint's card sounded in
+/// place of the reply's rest (card-fallback).
 public struct TurnOutcome: Sendable {
     public let turn: Turn, times: TurnTimes, modelTimeout: Bool
     public var modelText: String?
+    public var cardSaid = false
 }
 
 /// One turn through the contract: sentence 1 sounds once its boundary is safe and `first` lets it out, the rest goes
@@ -30,10 +32,12 @@ public final class TurnRunner {
     ///   - decision: the router's; with her utterance it reaches the contract (her address is not echoed, a topic's
     ///     adult pointer is kept).
     ///   - prompt: what the model gets when it is not her words alone — with the encyclopedia's hint (Э2).
+    ///   - card: the hint's card: when the reply's kept sentences miss its essence, its text sounds (card-fallback).
     ///   - window: what the session lets this turn say (M42): it reads the model's text before the contract.
     public func run(_ utterance: String, decision: RouterDecision = .pass, prompt: String? = nil,
-                    window: TurnWindow = .open) async throws -> TurnOutcome {
+                    card: HintCard? = nil, window: TurnWindow = .open) async throws -> TurnOutcome {
         let watchdog = Watchdog(), sounded = Sounded()
+        let carded = card.map { CardTurn(card: $0, mode: mode, heard: utterance, decision: decision) }
         let timer = Task { [clock, model, firstSentenceTimeout] in
             try await clock.sleep(seconds: firstSentenceTimeout)
             if watchdog.move(to: .fired) { model.cancel() }
@@ -47,7 +51,7 @@ public final class TurnRunner {
             var state = TurnState(contract: contract, start: clock.now(), sounded: sounded, window: window)
             try await stream(prompt ?? utterance, into: &state, watchdog: watchdog)
             try Task.checkCancellation()
-            return try await finish(&state, timedOut: watchdog.state == .fired)
+            return try await finish(&state, timedOut: watchdog.state == .fired, card: carded)
         } onCancel: { [model, voice] in
             model.cancel()
             voice.stop()
@@ -74,17 +78,21 @@ public final class TurnRunner {
         }
     }
 
-    /// The rest through `finish`: after a spoken sentence 1 the turn's other sentences, else the whole turn.
-    private func finish(_ state: inout TurnState, timedOut: Bool) async throws -> TurnOutcome {
+    /// The rest through `finish`: after a spoken sentence 1 the turn's other sentences, else the whole turn — or, on a
+    /// hinted turn whose kept sentences miss the card's essence, the card's text after what already sounded.
+    private func finish(_ state: inout TurnState, timedOut: Bool, card: CardTurn?) async throws -> TurnOutcome {
         state.times.replyEnd = elapsed(state)
-        let turn = state.contract.finish(timedOut ? "" : state.window.apply(state.text))
+        let kept = state.contract.finish(timedOut ? "" : state.window.apply(state.text))
+        let carded = card?.turn(after: kept, spoken: state.head == .spoken), turn = carded ?? kept
         let rest = state.head == .spoken ? Array(turn.sentences.dropFirst()) : turn.sentences
         (voice as? VoiceLookahead)?.upcoming(rest)  // made ahead while the first sounds (Z25)
         for sentence in rest {
             try Task.checkCancellation()
             try await say(sentence, &state)
         }
-        return TurnOutcome(turn: turn, times: state.times, modelTimeout: timedOut, modelText: state.text)
+        var outcome = TurnOutcome(turn: turn, times: state.times, modelTimeout: timedOut, modelText: state.text)
+        outcome.cardSaid = carded != nil
+        return outcome
     }
 
     private func say(_ sentence: String, _ state: inout TurnState) async throws {

@@ -75,4 +75,5 @@
 - `memory-recall`
 - `app-glass`
 - `memory-forget`
+- `card-fallback`
 - `design-demo`
