@@ -28,7 +28,7 @@ final class LaunchTests: XCTestCase {
             XCTAssertEqual(ReleaseGate.audience(access), .supervised, "\(access)")
         }
         XCTAssertEqual(ReleaseGate.audience(try lock.access(try lock.file())), .supervised)
-        XCTAssertEqual(ReleaseGate.audience(.child), .child)  // the acceptance (R2): the girl alone, no words kept
+        XCTAssertEqual(ReleaseGate.audience(.child), .child)  // J4 — the signed acceptance: no words kept
     }
 
     func testTheLoadingLineSaysTheWholeAndEachStageInTenths() {  // J6
