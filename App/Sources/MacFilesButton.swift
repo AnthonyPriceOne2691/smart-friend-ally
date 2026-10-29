@@ -1,4 +1,6 @@
 import AllyCore
+import Metal
+import os
 import ShellUI
 import SwiftUI
 import UniformTypeIdentifiers
@@ -23,8 +25,9 @@ struct MacFilesButton: View {
         }
     }
 
-    /// The picked folder's files into `support` by the bundle's registries (`MacImport`, N4–N6): the console's line.
-    nonisolated static func copy(_ folder: URL, bundle: URL, support: URL) -> String {
+    /// The picked folder's files into `support` by the bundle's registries (`MacImport`, N4–N6): the console's line and
+    /// whether every file came.
+    nonisolated static func copy(_ folder: URL, bundle: URL, support: URL) -> (String, Bool) {
         let opened = folder.startAccessingSecurityScopedResource()
         defer { if opened { folder.stopAccessingSecurityScopedResource() } }
         let read = { (name: String) in try Data(contentsOf: bundle.appendingPathComponent(name)) }
@@ -32,11 +35,42 @@ struct MacFilesButton: View {
             let list = try Data(contentsOf: folder.appendingPathComponent("manifest.json"))
             let items = try MacImport.plan(manifest: list, model: read("model.json"), hearing: read("hearing.json"),
                                            voice: read("voice.json"))
-            return try MacImport.copy(items, from: folder, into: support, sha256: FileDigest.sha256(of:))
+            return (try MacImport.copy(items, from: folder, into: support, sha256: FileDigest.sha256(of:)), true)
         } catch let refused as MacImport.Refusal {
-            return refused.line
+            return (refused.line, false)
         } catch {
-            return MacImport.texts.nolist
+            return (MacImport.texts.nolist, false)
         }
+    }
+}
+
+// sim-app: the copy behind the button, the GPU line and the trace's line in the system log — the loop's, kept here.
+extension VoiceLoop {
+    /// The picked folder's files into the container on a queue of their own (5.5 GB copied and hashed — not the
+    /// cooperative pool, L143); with every file in place the launch's warm-up runs again (`warmUpAgain`).
+    func importMacFiles(_ folder: URL) {
+        guard !importingMacFiles else { return }
+        importingMacFiles = true
+        let bundle = Bundle.main.bundleURL
+        let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+        Task {
+            let copy = await withCheckedContinuation { (done: CheckedContinuation<(String, Bool), Never>) in
+                DispatchQueue(label: "ally.macfiles", qos: .userInitiated).async {
+                    done.resume(returning: MacFilesButton.copy(folder, bundle: bundle, support: support))
+                }
+            }
+            (macFilesLine, importingMacFiles) = (copy.0, false)
+            if copy.1, !(await warmUpAgain()) { macFilesLine = copy.0 + MacImport.texts.later }
+        }
+    }
+
+    /// The GPU the model's 99 layers are sent to — the console's line and the record's `metal`.
+    static let metal = MTLCreateSystemDefaultDevice()?.name
+    static var metalLine: String { metal.map { "модель: Metal — " + $0 } ?? "модель: CPU — нет Metal" }
+
+    /// The trace's line into the system log (N8): a turn on the Mac is read with `log show --predicate
+    /// 'subsystem == "com.anthonypriceone.ally" AND category == "turn"'`, the container unread; wordless like the file.
+    static let systemLog = TraceLine { line in
+        Logger(subsystem: "com.anthonypriceone.ally", category: "turn").log("\(line, privacy: .public)")
     }
 }

@@ -4,7 +4,6 @@ import AllyLlama
 import AVFoundation
 import CryptoKit
 import Memory
-import Metal
 import os
 import ShellCore
 import SwiftUI
@@ -23,6 +22,8 @@ final class VoiceLoop: ObservableObject {
     // wake, which the next one waits for — one ear for both sessions.
     @Published private(set) var access = ChildAccess.parentOnly([])
     @Published private(set) var child = false
+    /// The loading screen is up while everything for her first answer warms up (child-open); then Ellie or the console.
+    @Published private(set) var warming = true
     @Published private(set) var exception = false
     @Published private(set) var acceptance = ""
     // The break after a goodbye by the limit (Ш3): the parent's key, none by default («Без перерыва», 2026-10-23).
@@ -37,14 +38,33 @@ final class VoiceLoop: ObservableObject {
     private var persona = "", system = ""
     @Published private(set) var memoryLines: [String] = []
     @Published private(set) var forgettable: [ForgetGroup] = []  // M41: what she remembers by entity, for «Забыть…»
-    // sim-app: «Файлы с Mac…» — the line under the button and whether a copy is under way.
-    @Published private(set) var macFilesLine: String?
-    @Published private(set) var importingMacFiles = false
+    // sim-app: «Файлы с Mac…» — the line under the button and whether a copy is under way (`MacFilesButton.swift`).
+    @Published var macFilesLine: String?
+    @Published var importingMacFiles = false
     private var encyclopedia: Encyclopedia?  // Э2: loaded at warm-up, both sessions get it
+    private var started = false, stages: [(name: String, seconds: Double)] = []  // child-open: the loading's stages
+    private static let log = Logger(subsystem: "com.anthonypriceone.ally", category: "launch")
 
+    /// The launch (child-open, J1–J3, J6): the warm-up behind the loading screen, its length on the console and in the
+    /// log, then Ellie at once when she can talk, else the console with the reason.
     func start() async {
-        guard registry == nil else { return }
+        guard !started else { return }
+        started = true
+        let begin = uptime
         do { try await warmUp() } catch { screen.lines.append((error as? LlamaError)?.line ?? "ошибка: \(error)") }
+        let loading = LoadingLine.text(total: uptime - begin, stages: stages)
+        screen.lines.append(loading)
+        Self.log.info("\(loading, privacy: .public)")
+        child = childAllowed
+        if child { talk = childTalk?.state ?? TalkState() }
+        warming = false
+    }
+
+    /// Ellie may be shown (child-open): the warm-up made her ready and the rules below the model passed their self-test
+    /// — no exception and no term (`Launch.after`).
+    var childAllowed: Bool {
+        guard let childMode, conversation != nil else { return false }
+        return Launch.after(ready: screen.ready, build: childMode.build) == .child
     }
 
     private func warmUp() async throws {
@@ -62,6 +82,7 @@ final class VoiceLoop: ObservableObject {
         try (models as NSURL).setResourceValue(true, forKey: .isExcludedFromBackupKey)  // 4.6 GB, not for backups
         if let missing = ModelCheck.check(registry: data, in: models).message { return screen.lines.append(missing) }
         let persona = try String(contentsOf: bundle.appendingPathComponent(registry.persona), encoding: .utf8)
+        let modelStart = uptime
         openMemory()
         let store = memory  // the block by the model's own tokenizer: a new load reads the prefix the last wrote (M36)
         let model = try await LlamaModel.load(weights: models.appendingPathComponent(registry.model.file),
@@ -73,16 +94,19 @@ final class VoiceLoop: ObservableObject {
         let start = uptime
         for try await _ in model.reply(to: "Привет!") {}
         model.newConversation()
-        screen.lines.append("прогрев: " + line(model.warmup.merging(["reply": uptime - start]) { $1 }))
-        let metal = MTLCreateSystemDefaultDevice()?.name  // sim-app: the GPU the model's 99 layers are sent to
-        screen.lines.append(metal.map { "модель: Metal — " + $0 } ?? "модель: CPU — нет Metal")
+        // sim-app: Metal or CPU, beside the warm-up's times
+        screen.lines += ["прогрев: " + line(model.warmup.merging(["reply": uptime - start]) { $1 }), Self.metalLine]
         let rate = ((try? JSONSerialization.jsonObject(with: data)) as? [String: Any])?["voice_rate"] as? Double ?? 0.5
-        let speech = await recognizer.prepare(), voice = makeVoice(registry, rate: rate)
+        let voiceStart = uptime
+        let voice = makeVoice(registry, rate: rate)
+        let earStart = uptime
+        let speech = await recognizer.prepare()
         let microphone = await AudioIO.microphoneAllowed()
         screen.lines += [speech.line, voice.note, "микрофон: " + (microphone ? "да" : "нет — разреши в Настройках")]
         let (silero, listening) = SileroActivity.choose(hearing, models: models)  // D7.2: no Silero — energy
         let asr = GigaAMRecognizer.choose(hearing, models: models)  // D7.3: dictation unless GigaAM is asked and there
         screen.lines += [listening.line] + [asr.line].compactMap { $0 }
+        stages = [("модель", voiceStart - modelStart), ("голос", earStart - voiceStart), ("слух", uptime - earStart)]
         let encyclopedia = Encyclopedia.bundled()  // Э2: the base and FTS5 on the phone — the self-test says if not
         screen.lines.append(encyclopedia.line(searchP95: encyclopedia.searchP95()))
         let sound = duplex(voice, hearing, models: models, silero: silero)
@@ -90,7 +114,7 @@ final class VoiceLoop: ObservableObject {
         versions = ["ios": UIDevice.current.systemVersion, "llama": settings.runtime.build, "persona": personaHash,
                     "voice": voice.label, "weights": "\(registry.model.file):\(registry.model.bytes)",
                     "vad": silero == nil ? "energy" : "silero:\(hearing.vad?.bytes ?? 0)", "asr": asr.label,
-                    "audio": sound, "metal": metal ?? "none"]
+                    "audio": sound, "metal": Self.metal ?? "none"]
         (self.registry, self.model, self.voice, self.encyclopedia) = (registry, model, voice, encyclopedia)
         screen.ready = speech.ready && microphone && voice.ready
         if screen.ready { converse(model, hearing, voice, silero, asr.decode) }
@@ -158,6 +182,7 @@ final class VoiceLoop: ObservableObject {
             let accent = AccentPlacer.load(settings, folder: folder)
             screen.lines.append(accent.line)
             let renderer = try SupertonicRenderer(settings: settings, folder: folder, placer: accent.placer)
+            _ = try renderer.render("Привет!", first: true)  // child-open: one phrase without sound warms her voice
             let audio = audio
             let player = SoundingPlayer(EnginePlayer(engine: audio.engine, rate: renderer.rate),
                                         began: { audio.voiceStarted() }, ended: { audio.voiceEnded(at: $0) })
@@ -255,8 +280,7 @@ final class VoiceLoop: ObservableObject {
             self.refreshMemoryLines()
             self.parseMemory()
         } })
-        let sinks: [TraceSink] = memory == nil ? [journal] : [journal, tap]
-        let sink = TraceFanOut(sinks + [Self.systemLog])  // sim-app: the same wordless line into the system log
+        let sink = TraceFanOut(memory == nil ? [journal, Self.systemLog] : [journal, tap, Self.systemLog])  // sim-app
         let encyclopedia = encyclopedia
         let stamp: @Sendable () -> TraceStamp = {
             let thermal = ["nominal", "fair", "serious", "critical"][ProcessInfo.processInfo.thermalState.rawValue]
@@ -274,7 +298,7 @@ final class VoiceLoop: ObservableObject {
         // The acceptance lies in the bundle and has no term (R2): `child` holds for the whole launch, so the child
         // session's audience is chosen once — the black box keeps only the supervised one.
         let conversation = Conversation(parts(.parent), settings: settings, listener: ear)
-        let childTalk = Conversation(parts(access == .child ? .child : .supervised), settings: settings, listener: ear)
+        let childTalk = Conversation(parts(ReleaseGate.audience(access)), settings: settings, listener: ear)
         (self.conversation, self.childTalk) = (conversation, childTalk)
         audio.whenOverlap { Task { @MainActor in self.bargeIn() } }  // D6.2: her speech over Elly cuts her
         audio.whenInterrupted { began in Task { @MainActor in self.interrupted(began) } }
@@ -285,31 +309,30 @@ final class VoiceLoop: ObservableObject {
         Task { for await state in conversation.updates where !child { talk = state } }
     }
 
-    /// The lock from the container, the bundle and the build (R): at launch, on the console, at the hand-over, at each
-    /// wake on the child screen and when a child session ends.
+    /// The acceptance (R2) and a leftover exception from the container, for the console's lines and the child session's
+    /// listener: at launch, on the console, at the hand-over, at each wake and when a child session ends. Since
+    /// child-open they open nothing — `childAllowed` does.
     func refreshAccess() {
         guard let childMode else { return }
         (access, exception, acceptance) = (childMode.access(), childMode.present, childMode.acceptance)
     }
 
-    /// «Дочке, при мне»: the parent's session stops; the child screen opens while the exception or the acceptance
-    /// holds. The stop sign in its corner returns to this console in both modes (the console's own lock is not R2's).
+    /// «Дочке, при мне»: the parent's session stops and Ellie is back whenever she may be shown (`childAllowed`,
+    /// child-open: no exception, no term); the stop sign in her corner returns to this console.
     func handOver() {
         refreshAccess()
-        guard access.open, let conversation else { return }
+        guard childAllowed, let conversation else { return }
         Task { await conversation.stop() }
         child = true
         talk = childTalk?.state ?? TalkState()
     }
 
     /// A tap on the circle of the child screen: while Elly listens — «я всё» (D7), while she speaks — she is cut
-    /// (D6.2); else she wakes, but past the exception's term she does not and the console returns, and during the break
-    /// after the limit she only stirs.
+    /// (D6.2); else she wakes, and during the break after the limit she only stirs.
     func childWake() {
         if talk.pose == .listens { return done() }
         if talk.pose == .speaks { return bargeIn() }
         refreshAccess()
-        guard access.open else { return leaveChild() }
         guard !nap.holds(at: Date()) else { return }
         wake()
     }
@@ -330,13 +353,12 @@ final class VoiceLoop: ObservableObject {
         if child { childStop() }
     }
 
-    /// A state of the child session; when one ends, the term is checked at this boundary, not in the middle of a talk.
+    /// A state of the child session; when one ends by the limit, the break starts (Ш3).
     private func show(_ state: TalkState) {
         talk = state
         guard state.phase == .asleep, state.ended != nil else { return }
         nap.ended(state, at: Date())
         refreshAccess()
-        if !access.open { leaveChild() }
     }
 
     private func leaveChild() {
@@ -445,30 +467,14 @@ extension VoiceLoop {
     }
 }
 
-// sim-app: Elly on the Mac — the copy from «Файлы с Mac…» and the trace's line in the system log, beside the loop.
+// sim-app: the launch's warm-up once more, for the files «Файлы с Mac…» put in place.
 extension VoiceLoop {
-    /// «Файлы с Mac…» (sim-app): the picked folder's files into the container — the registries, sizes and sha256 decide
-    /// — off the main thread, then the warm-up if it has not run; the line under the button says what came.
-    func importMacFiles(_ folder: URL) {
-        guard !importingMacFiles else { return }
-        importingMacFiles = true
-        let bundle = Bundle.main.bundleURL
-        let support = files.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-        Task {
-            // 5.5 GB copied and hashed: its own queue, not the cooperative pool (L143)
-            let line = await withCheckedContinuation { (done: CheckedContinuation<String, Never>) in
-                DispatchQueue(label: "ally.macfiles", qos: .userInitiated).async {
-                    done.resume(returning: MacFilesButton.copy(folder, bundle: bundle, support: support))
-                }
-            }
-            (macFilesLine, importingMacFiles) = (line + (registry == nil ? "" : MacImport.texts.later), false)
-            await start()
-        }
-    }
-
-    /// The trace's line into the system log (sim-app, N8): a turn on the Mac is read with `log show --predicate
-    /// 'subsystem == "com.anthonypriceone.ally" AND category == "turn"'`, the container unread; wordless like the file.
-    private static let systemLog = TraceLine { line in
-        Logger(subsystem: "com.anthonypriceone.ally", category: "turn").log("\(line, privacy: .public)")
+    /// child-open runs the warm-up once, behind the loading screen; with the Mac's files in the container it runs again
+    /// behind the same screen. A warm loop (the model loaded) is left as it is — new files come with the next ⌘R.
+    func warmUpAgain() async -> Bool {
+        guard registry == nil else { return false }
+        (started, warming, stages) = (false, true, [])
+        await start()
+        return true
     }
 }

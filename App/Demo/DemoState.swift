@@ -38,6 +38,8 @@ final class DemoState: ObservableObject {
     @Published private(set) var phase = SessionState.asleep
     @Published var console = false
     @Published var panel = false
+    /// The app's loading screen first (child-open), three seconds here — on the phone it lasts the warm-up.
+    @Published private(set) var loading = false
     @Published private(set) var memory = DemoConsole.memory
     private var talk: Task<Void, Never>?, step = 0
 
@@ -47,8 +49,15 @@ final class DemoState: ObservableObject {
     func begin(_ defaults: UserDefaults = .standard) {
         panel = defaults.bool(forKey: "demo-panel")
         console = defaults.string(forKey: "demo-screen") == "console"
-        if let raw = defaults.string(forKey: "demo-phase"), let asked = SessionState(rawValue: raw) { pick(asked) }
+        let asked = defaults.string(forKey: "demo-phase").flatMap(SessionState.init(rawValue:))
+        if let asked { pick(asked) }
         if defaults.bool(forKey: "demo-wake") { act(.wake) }
+        guard !panel, !console, asked == nil, !defaults.bool(forKey: "demo-wake") else { return }
+        loading = true
+        Task { [weak self] in
+            try? await Task.sleep(for: .seconds(3))
+            self?.loading = false
+        }
     }
 
     /// A tap on Ellie: what a tap does in this phase in the app (`Tap.action`).
