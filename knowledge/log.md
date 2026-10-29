@@ -9,7 +9,7 @@
   `TurnWindow.swift`, `window.json`. `engineering/safety-below-model` — строка реестра «Брат 1–2 раза, имя только при
   встрече»: верхние границы держит окно, «хотя бы раз» — персона и замер M42. `engineering/voice-loop` — «Забыть…» в
   консоли, имена в обе сессии. `ops/child-data` — «Забыть» не оставляет байтов, надгробие без значения.
-  `ops/test-session` — телефонная проверка M41. `product/persona` — имя и брат: гарантию верхних границ даёт окно. `references/repo-map` — «забыть», `TurnWindow`.
+  `ops/test-session` — телефонная проверка M41. `product/persona` — имя и брат: гарантию верхних границ даёт окно. `references/repo-map` — «забыть», `TurnWindow`. `engineering/design-demo` — «Забыть…» в общем `ConsoleView` простыми значениями.
 * **Источник**: поставка `memory-forget` (M41, M42 спеки серии памяти, подписанной родителем 2026-10-23).
 ## 2026-10-29 — демо облика на Mac, превью и токены (design-demo)
 
