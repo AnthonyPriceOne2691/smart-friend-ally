@@ -1,8 +1,8 @@
 import Foundation
 
 /// The turn mode sets the limits: in `talk` a closing question may come fourth, `why` gives facts more words,
-/// `goodbye` has no question.
-public enum TurnMode: String, CaseIterable, Sendable { case talk, why, goodbye }
+/// `goodbye` has no question, `story` tells up to eight sentences, one by one (story-mode).
+public enum TurnMode: String, CaseIterable, Sendable { case talk, why, goodbye, story }
 
 /// Who speaks: the model's sentences or a canned reply of a kind («generic», «attachment», a hazard script).
 public enum TurnSource: Equatable, Sendable { case model, canned(String) }
@@ -18,10 +18,15 @@ public struct Turn: Equatable, Sendable {
 }
 
 /// What of the reply reaches the voice, one per turn: `contract` of local/spike/discipline/output_filter.py over
-/// `Repair`. `first` lets sentence 1 out at once, `finish` keeps it as spoken; nothing left is a canned reply.
+/// `Repair`. `first` lets sentence 1 out at once, in `story` `more` lets the next ones out as they come, `finish` keeps
+/// what was let out as spoken; nothing left is a canned reply.
 public final class TurnContract {
     private let mode: TurnMode, contract: Contract, disabled: Set<String>, heard: Heard, topic: String?
     private var head: (spoken: String?, violation: Violation?)?
+    private var told: [String] = []  // story: let out by `more` after sentence 1
+
+    /// story: a sentence broke a rule or did not fit, or the reply's beginning changed — `more` lets out nothing more.
+    public private(set) var stopped = false
 
     /// - Parameters:
     ///   - heard: her utterance this turn: her address is not echoed, a surprise for mom keeps a secret unrebuked.
@@ -57,6 +62,19 @@ public final class TurnContract {
         return spoken
     }
 
+    /// story: the reply so far, cut where sentence 1 was, gives the sentences to speak now — after sentence 1 and those
+    /// already let out. The story's choice looks back only, so they are the beginning of what `finish` keeps.
+    public func more(_ text: String) -> [String] {
+        guard mode == .story, let spoken = head?.spoken, !stopped else { return [] }
+        var pass = TurnPass(contract: contract, mode: mode, disabled: disabled, heard: heard, topic: topic)
+        let (clean, violation) = pass.candidates(text), said = [spoken] + told
+        let kept = pass.tell([spoken] + clean.dropFirst())
+        stopped = violation != nil || pass.fired.contains(ContractRule.limits.rawValue) || !kept.starts(with: said)
+        let next = kept.starts(with: said) ? Array(kept.dropFirst(said.count)) : []
+        told += next
+        return next
+    }
+
     /// The whole reply: the sentences to speak (the first as `first` gave it) or a canned reply, with the record.
     public func finish(_ reply: String) -> Turn {
         var pass = TurnPass(contract: contract, mode: mode, disabled: disabled, heard: heard, topic: topic)
@@ -69,8 +87,9 @@ public final class TurnContract {
             clean = head.spoken.map { [$0] + clean.dropFirst() } ?? []
             violation = head.spoken == nil ? head.violation : violation
         }
-        if violation?.rule == .humanClaim { return pass.canned(pass.fallback(violation), after: head?.spoken) }
-        let kept = pass.pointed(pass.select(clean), violation, reply)
+        let said = head?.spoken.map { [$0] + told } ?? []
+        if violation?.rule == .humanClaim { return pass.canned(pass.fallback(violation), after: said) }
+        let kept = pass.pointed(pass.select(clean, said: said), violation, reply)
         guard kept.contains(where: Rules.shared.cyrillicLetter.found(in:)) else {
             return pass.cannedFallback(violation)
         }

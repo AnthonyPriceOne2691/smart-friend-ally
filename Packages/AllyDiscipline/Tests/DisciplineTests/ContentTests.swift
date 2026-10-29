@@ -127,7 +127,8 @@ final class ContentTests: XCTestCase {
             let fallback = pointer.last ?? "", reply = contractData.canned[fallback] ?? contractData.scripts[fallback]
             for text in [pointer.first, reply].compactMap({ $0 }) {
                 XCTAssertEqual(told(text, decision: .guard(topic: topic)), text, topic)
-                XCTAssertEqual(TurnMode.allCases.map { told(text, mode: $0) }, Array(repeating: text, count: 3))
+                XCTAssertEqual(TurnMode.allCases.map { told(text, mode: $0) },
+                               Array(repeating: text, count: TurnMode.allCases.count))
             }
         }
     }

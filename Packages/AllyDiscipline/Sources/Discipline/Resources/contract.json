@@ -1,9 +1,10 @@
 {
-  "_about": "Data of TurnContract (Swift, Packages/AllyDiscipline) and of the Python stand: one copy. Source: local/spike/discipline/output_filter.py (limits by mode, patterns, canned replies) and scripts.ru.json (ready prohibition scripts by hazard); make_fixtures.py checks that they agree. Patterns use the syntax both re and ICU accept; Swift reads \\b and \\w as Python does. selftest: violating probes the contract must catch at load, else it answers only canned replies.",
+  "_about": "Data of TurnContract (Swift, Packages/AllyDiscipline) and of the Python stand: one copy. Source: local/spike/discipline/output_filter.py (limits by mode, patterns, canned replies) and scripts.ru.json (ready prohibition scripts by hazard); make_fixtures.py checks that they agree; the mode story lives only here (story-mode, 2026-10-30): the reference has none. Patterns use the syntax both re and ICU accept; Swift reads \\b and \\w as Python does. selftest: violating probes the contract must catch at load, else it answers only canned replies.",
   "modes": {
     "talk": {"max_sentences": 3, "max_questions": 1, "max_words": 35, "max_sentence_words": 16, "canned": "generic"},
     "why": {"max_sentences": 3, "max_questions": 1, "max_words": 50, "max_sentence_words": 22, "canned": "generic"},
-    "goodbye": {"max_sentences": 3, "max_questions": 0, "max_words": 35, "max_sentence_words": 16, "canned": "attachment"}
+    "goodbye": {"max_sentences": 3, "max_questions": 0, "max_words": 35, "max_sentence_words": 16, "canned": "attachment"},
+    "story": {"max_sentences": 8, "max_questions": 1, "max_words": 100, "max_sentence_words": 20, "canned": "generic"}
   },
   "attachment": {
     "missing": [
@@ -146,6 +147,9 @@
     {"rule": "human_claim", "mode": "talk", "reply": "Конечно, я человек!"},
     {"rule": "pii_echo", "mode": "talk", "reply": "Здорово! Улица Ленина, дом пять!", "heard": "я живу на улице ленина дом пять"},
     {"rule": "pii_request", "mode": "talk", "reply": "Привет! В какой садик ты ходишь?"},
-    {"rule": "promise", "mode": "talk", "reply": "Ура! Это будет наш маленький секрет."}
+    {"rule": "promise", "mode": "talk", "reply": "Ура! Это будет наш маленький секрет."},
+    {"rule": "limits", "mode": "story", "reply": "Жил-был ёжик. Он жил в лесу. Он любил яблоки. Однажды он пошёл гулять. Он нашёл яблоко. Он отнёс его маме. Мама обрадовалась. Они ели яблоко вместе. Потом они легли спать."},
+    {"rule": "last_question", "mode": "story", "reply": "Жил-был ёжик. Что же он нашёл? Большое яблоко! Кому он его отнёс?"},
+    {"rule": "attachment", "mode": "story", "reply": "Жил-был ёжик. Он сказал: я буду ждать тебя."}
   ]
 }

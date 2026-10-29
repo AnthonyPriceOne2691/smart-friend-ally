@@ -20,14 +20,14 @@ typealias Violation = (rule: ContractRule, sentence: String)
 /// One turn through the contract: the mode's limits (narrowed for the statements before a closing question), the
 /// rules switched off, what she said this turn, the topic whose adult pointer the turn keeps, the rule ids fired.
 struct TurnPass {
-    let contract: Contract, disabled: Set<String>, why: Bool, talk: Bool, heard: Heard, topic: String?
+    let contract: Contract, disabled: Set<String>, why: Bool, talk: Bool, story: Bool, heard: Heard, topic: String?
     var limits: ContractData.Limits
     private(set) var fired: [String] = []
 
     init(contract: Contract, mode: TurnMode, disabled: Set<String>, heard: Heard, topic: String?) {
         let mode = disabled.contains(ContractRule.modes.rawValue) ? .talk : mode
         (self.contract, self.disabled, self.heard, self.topic) = (contract, disabled, heard, topic)
-        (limits, why, talk) = (contract.limits(mode), mode == .why, mode == .talk)
+        (limits, why, talk, story) = (contract.limits(mode), mode == .why, mode == .talk, mode == .story)
     }
 
     func isOn(_ rule: ContractRule) -> Bool { !disabled.contains(rule.rawValue) }

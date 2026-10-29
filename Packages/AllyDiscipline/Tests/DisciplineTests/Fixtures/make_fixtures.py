@@ -89,7 +89,9 @@ def check_contract():
               "scripts": {**{k: of.SCRIPTS[k] for _, k in of.HAZARD_SCRIPTS}, **basic},   # the signed stove (4)
               "fallback_of": {{"digits_pii": "phone", "secret": "promise"}.get(k, k): v  # pragma: allowlist secret
                               for k, v in of.FALLBACK_OF.items()}}
-    for name in [k for k, v in want.items() if CONTRACT[k] != v] + [
+    # the mode story lives only in contract.json (story-mode): the reference has no story turn to agree with
+    ours = {**CONTRACT, "modes": {m: v for m, v in CONTRACT["modes"].items() if m != "story"}}
+    for name in [k for k, v in want.items() if ours[k] != v] + [
             k for k, ref in shared.items() if any(CONTRACT[k][key] != ref[key] for key in CONTRACT[k] if key in ref)]:
         sys.exit("contract.json: %s differs from the reference" % name)
 
