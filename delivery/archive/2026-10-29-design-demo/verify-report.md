@@ -93,6 +93,14 @@
 - **Аргументы проверки** `-demo-panel`, `-demo-screen`, `-demo-phase`, `-demo-wake` читаются из defaults только в
   демо-цели; в приложении их нет.
 - **Безопасность ребёнка:** продуктовый детский экран не менялся. Строки консоли демо вымышленные и без имён.
+- **Цепочка гейтов.** Новый свой гейт `scripts/lint/check_demo_boundary.sh` — хук `demo-boundary` в
+  `.pre-commit-config.yaml` (`--project`, бюджет 5 с) и шаг `ios.yml` на собранном. Объявлен в `adapted.json`,
+  канарейка — `canaries.json`. jscpd получил седьмой прогон (`App/Demo`). Канонные скрипты не правились;
+  `gate-coverage` зелёный, доктор — DEAD 0. Риск: хук краснеет на чужих правках `App/project.yml` (поставка `sim-app`)
+  — только если у цели `Ally` появится источник из `App/Demo` или у демо — модель, а это и есть граница.
+- **Транзакция БД — риска нет.** Маячок поднят словом `commit` из `pre-commit` (`.pre-commit-config.yaml`,
+  комментарии `check_demo_boundary.sh`). Базы, транзакций и памяти поставка не трогает: в демо нет `AllyMemory`, а
+  «Стереть память» в консоли демо чистит строки в `DemoState`.
 
 ## Harness metrics (this shipment)
 

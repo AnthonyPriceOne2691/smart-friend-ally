@@ -29,4 +29,4 @@ L127, L128, L129, L131, L132, L133, L134, L135, L136 (причина там же
 ## Slice 3 — знание и сдача
 - [x] T10: runbook демо, `look-and-feel`, ADR `character-rendering`, `voice-loop`, `repo-map`, `log.md`, индексы
 - [x] T11: свежий main; строгий `delivery_check --require-ci --diff-base origin/main`; пуш, PR, CI, метка `macos`
-- [x] T12: verify-report, архив в том же PR, строка INDEX (уроки L154–L157), `OBSERVATIONS.md`; доклад ведущему
+- [x] T12: verify-report, архив в том же PR, строка INDEX (уроки L154, L155, L156, L157), `OBSERVATIONS.md`; доклад ведущему
