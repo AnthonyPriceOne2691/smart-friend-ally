@@ -9,7 +9,9 @@ struct DemoRoot: View {
 
     var body: some View {
         ZStack(alignment: .bottomLeading) {
-            if demo.console {
+            if demo.loading {
+                LoadingScreen()
+            } else if demo.console {
                 ConsoleView(model: demo.consoleModel, actions: demo.consoleActions)
             } else {
                 ChildShell(talk: TalkState(phase: demo.phase), until: nil, onTap: demo.tap, onStop: demo.leaveChild)

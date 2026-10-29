@@ -19,9 +19,9 @@ implementation:
 # Входные точки
 
 - **Приложение** — `App/` (XcodeGen: `cd App && xcodegen generate`, проект в git не лежит); сборка, веса на телефон,
-  переустановка одной командой (`bash scripts/reinstall_app.sh <UDID>`), исключение «при родителе»
-  (`bash scripts/child_mode.sh <UDID> --until <дата>`, ключ родителя — `.github/allowed_signers`), запуск и след хода —
-  runbook [Voice loop](/engineering/voice-loop.md); память — пакет `AllyMemory` в `App/project.yml`: отбор реплик
+  переустановка одной командой (`bash scripts/reinstall_app.sh <UDID>`), запуск — экран загрузки
+  `App/Sources/LoadingScreen.swift`, затем Элли (детский экран открыт всегда, `child-open`; решение — `Launch` в
+  `AllyCore`), след хода — runbook [Voice loop](/engineering/voice-loop.md); память — пакет `AllyMemory` в `App/project.yml`: отбор реплик
   `MemoryTap`, очередь и разбор после прощания (`MemoryLlama`). Модель — пакет `Packages/AllyLlama` (llama.cpp
   b10809; паритет со стендом: `swift test --disable-keychain --package-path Packages/AllyLlama`, веса в `~/models`).
 - **Дисциплина ответа** — пакет `Packages/AllyDiscipline` (ремонт текста, контракт хода, маршрутизатор до модели):
@@ -72,7 +72,7 @@ implementation:
 | `KNOWLEDGE.md` | база исследования и принципы П1–П37 — читать до решения о продукте |
 | `knowledge/` | канон домена (OKF v0.2) |
 | `delivery/` | поставки: `active/` — текущая, `archive/` — завершённые с уроками |
-| `scripts/`, `scripts/lint/` | механика контура; канонные файлы правятся только перевендориванием; продуктовые — `scripts/reinstall_app.sh` (E4), `scripts/child_mode.sh` (R), `scripts/run_demo.sh` (демо в симуляторе) |
+| `scripts/`, `scripts/lint/` | механика контура; канонные файлы правятся только перевендориванием; продуктовые — `scripts/reinstall_app.sh` (E4), `scripts/run_demo.sh` (демо в симуляторе); `scripts/child_mode.sh` удалён с замком (`child-open`) |
 | `docs/canon/` | снимок канонов с самопроверкой — только локально, в git его нет (вариант D с 2026-10-25: репозиторий публичный, канон проприетарный; `.git/info/exclude` и хук `canon-texts-stay-out`); в свежем клоне и новом ворктри каталога нет — снимок раскладывается локально |
 | `App/` | приложение iOS: `project.yml`, `Sources/` (консоль, цикл, звук, распознавание), `Resources/` (персона, реестр); `Demo/` — демо облика для симулятора, своя цель `AllyDemo` без модели, микрофона и голоса, в приложение не попадает (`bash scripts/run_demo.sh`, граница — `scripts/lint/check_demo_boundary.sh`; [Design demo](/engineering/design-demo.md)) |
 | `Packages/` | Swift-пакеты: `AllyDiscipline` (дисциплина ответа), `AllyCore` (ядро хода), `AllyLlama` (модель), `AllyShell` (детский экран), `AllySpeechText` (текст для синтеза), `AllyOnnx` (один ONNX Runtime приложения, sherpa-onnx), `AllyVoice` (движок голоса), `AllyVoiceFX` (PSOLA и эквалайзер), `AllyAccent` (RUAccent на Swift, в приложении — расстановщик), `AllySQLite` (общий SQLite), `AllyMemory` (память о ребёнке), `AllyHearing` (слух: Silero VAD) |
