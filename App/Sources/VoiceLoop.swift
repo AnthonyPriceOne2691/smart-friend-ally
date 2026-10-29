@@ -36,6 +36,7 @@ final class VoiceLoop: ObservableObject {
     // memory-recall: the persona, the system turn with the memory's block (M36) and the console's memory lines (M39).
     private var persona = "", system = ""
     @Published private(set) var memoryLines: [String] = []
+    @Published private(set) var forgettable: [ForgetGroup] = []  // M41: what she remembers by entity, for «Забыть…»
     // sim-app: «Файлы с Mac…» — the line under the button and whether a copy is under way.
     @Published private(set) var macFilesLine: String?
     @Published private(set) var importingMacFiles = false
@@ -94,31 +95,6 @@ final class VoiceLoop: ObservableObject {
         screen.ready = speech.ready && microphone && voice.ready
         if screen.ready { converse(model, hearing, voice, silero, asr.decode) }
         parseMemory()  // what a closed app left in the queue (M34)
-    }
-
-    /// «Файлы с Mac…» (sim-app): the picked folder's files into the container — the registries, sizes and sha256 decide
-    /// — off the main thread, then the warm-up if it has not run; the line under the button says what came.
-    func importMacFiles(_ folder: URL) {
-        guard !importingMacFiles else { return }
-        importingMacFiles = true
-        let bundle = Bundle.main.bundleURL
-        let support = files.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-        Task {
-            // 5.5 GB copied and hashed: its own queue, not the cooperative pool (L143)
-            let line = await withCheckedContinuation { (done: CheckedContinuation<String, Never>) in
-                DispatchQueue(label: "ally.macfiles", qos: .userInitiated).async {
-                    done.resume(returning: MacFilesButton.copy(folder, bundle: bundle, support: support))
-                }
-            }
-            (macFilesLine, importingMacFiles) = (line + (registry == nil ? "" : MacImport.texts.later), false)
-            await start()
-        }
-    }
-
-    /// The trace's line into the system log (sim-app, N8): a turn on the Mac is read with `log show --predicate
-    /// 'subsystem == "com.anthonypriceone.ally" AND category == "turn"'`, the container unread; wordless like the file.
-    private static let systemLog = TraceLine { line in
-        Logger(subsystem: "com.anthonypriceone.ally", category: "turn").log("\(line, privacy: .public)")
     }
 
     /// The memory's base in `Application Support/Memory` (M38): out of the backup as read back, complete protection;
@@ -288,9 +264,10 @@ final class VoiceLoop: ObservableObject {
             return TraceStamp(versions: versions, memory: Self.memory(model), thermal: thermal,
                               stages: ear.takeStages().merging(voice.takeStages()) { $1 }.merging(overlaps) { $1 })
         }
+        let names: @Sendable () -> FamilyNames = { Self.names(memory) }  // her name and the brother, at each wake (M42)
         let parts = { (audience: Audience) in
             SessionParts(model: model, voice: echo, sink: sink, router: RouterRouting(), knowledge: encyclopedia,
-                         audience: audience, stamp: stamp)
+                         audience: audience, stamp: stamp, names: names)
         }
         childMode = ChildMode(personaSHA256: versions["persona"] ?? "", model: versions["weights"] ?? "")
         refreshAccess()
@@ -421,9 +398,16 @@ extension VoiceLoop {
         }
     }
 
-    /// The console's memory lines (M39): knows nothing, N facts, erased at …; waiting; a failed parse.
+    /// The console's memory lines (M39): knows nothing, N facts, erased at …; waiting; a failed parse; what she
+    /// remembers by entity with the parent's questions (M41).
     func refreshMemoryLines() {
         memoryLines = memory.flatMap { try? MemoryConsole.lines($0, zone: .current) } ?? []
+        forgettable = ((try? memory?.remembered()) ?? []).map { who in
+            let items = who.items.map {
+                ForgetGroup.Item(id: $0.fact, text: $0.text, question: MemoryConsole.forgetting($0))
+            }
+            return ForgetGroup(id: who.entity, title: who.title, question: MemoryConsole.forgetting(who), items: items)
+        }
     }
 
     /// «Что помнит Элли»: the block as the model gets it.
@@ -433,14 +417,58 @@ extension VoiceLoop {
     var memoryConfirmation: String { MemoryConsole.confirmation(facts: (try? memory?.facts().count) ?? 0) }
 
     /// «Стереть память» (M39): the parse stops, the files go, the prefix is the persona again.
-    func eraseMemory() {
+    func eraseMemory() { change { _ = try? $0.eraseAll(now: Date()) } }
+
+    /// «Забыть» one fact (M41): with its history, no byte of it left; an older talk does not bring it back.
+    func forget(fact: Int64) { change { _ = try? $0.forget(fact: fact, now: Date()) } }
+
+    /// «Забыть всё про…» one entity (M41).
+    func forget(entity: Int64) { change { _ = try? $0.forget(entity: entity, now: Date()) } }
+
+    /// The parent's change of the memory while she sleeps (M39, M41): the parse stops, the change, the prefix rebuilt
+    /// when the block changed — the memory's one job at the model, so a wake waits for it as for a parse.
+    private func change(_ apply: @escaping @MainActor (MemoryStore) -> Void) {
         guard let memory, let model, talk.phase == .asleep else { return }
         let parse = pauseMemory()
-        occupy { [self] in  // a wake waits for the erase as for a parse: one model, no reply while the prefix is built
+        occupy { [self] in  // one model, no reply while the prefix is built
             await parse?.value
-            _ = try? memory.eraseAll(now: Date())
+            apply(memory)
             await refreshPrefix(model)
             refreshMemoryLines()
         }
+    }
+
+    /// Her name and her brothers' from the memory for the session's window (M42); none without a memory.
+    nonisolated private static func names(_ memory: MemoryStore?) -> FamilyNames {
+        guard let names = try? memory?.names() else { return FamilyNames() }
+        return FamilyNames(her: names.her, brothers: names.brothers)
+    }
+}
+
+// sim-app: Elly on the Mac — the copy from «Файлы с Mac…» and the trace's line in the system log, beside the loop.
+extension VoiceLoop {
+    /// «Файлы с Mac…» (sim-app): the picked folder's files into the container — the registries, sizes and sha256 decide
+    /// — off the main thread, then the warm-up if it has not run; the line under the button says what came.
+    func importMacFiles(_ folder: URL) {
+        guard !importingMacFiles else { return }
+        importingMacFiles = true
+        let bundle = Bundle.main.bundleURL
+        let support = files.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+        Task {
+            // 5.5 GB copied and hashed: its own queue, not the cooperative pool (L143)
+            let line = await withCheckedContinuation { (done: CheckedContinuation<String, Never>) in
+                DispatchQueue(label: "ally.macfiles", qos: .userInitiated).async {
+                    done.resume(returning: MacFilesButton.copy(folder, bundle: bundle, support: support))
+                }
+            }
+            (macFilesLine, importingMacFiles) = (line + (registry == nil ? "" : MacImport.texts.later), false)
+            await start()
+        }
+    }
+
+    /// The trace's line into the system log (sim-app, N8): a turn on the Mac is read with `log show --predicate
+    /// 'subsystem == "com.anthonypriceone.ally" AND category == "turn"'`, the container unread; wordless like the file.
+    private static let systemLog = TraceLine { line in
+        Logger(subsystem: "com.anthonypriceone.ally", category: "turn").log("\(line, privacy: .public)")
     }
 }

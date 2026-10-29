@@ -11,6 +11,17 @@
   `engineering/safety-below-model` — путь реплики на Mac тот же; `ops/child-data` — контейнер на Mac и барьер для
   агентов; `references/repo-map` — входные точки на Mac; `engineering/index` — строка решения.
 * **Источник**: поставка `sim-app` (решения родителя 2026-10-29; примеры N1–N10 подписаны 2026-10-29).
+## 2026-10-29 — забыть один факт или сущность, окно брата и имени (memory-forget)
+
+* **Update**: `engineering/memory` — правило «Забыть» один факт или сущность (с историей и повторами, `secure_delete`,
+  чекпойнт WAL; надгробие без значения — сессия, начатая раньше, не возвращает) и раздел «В приложении — забывает»;
+  «ещё не подключено» — без `memory-forget`; `implementation:` += `MemoryForget.swift`. `engineering/session` — окно
+  брата и имени (`TurnWindow`, имена из памяти на пробуждении, через `Conversation`); `implementation:` +=
+  `TurnWindow.swift`, `window.json`. `engineering/safety-below-model` — строка реестра «Брат 1–2 раза, имя только при
+  встрече»: верхние границы держит окно, «хотя бы раз» — персона и замер M42. `engineering/voice-loop` — «Забыть…» в
+  консоли, имена в обе сессии. `ops/child-data` — «Забыть» не оставляет байтов, надгробие без значения.
+  `ops/test-session` — телефонная проверка M41. `product/persona` — имя и брат: гарантию верхних границ даёт окно. `references/repo-map` — «забыть», `TurnWindow`. `engineering/design-demo` — «Забыть…» в общем `ConsoleView` простыми значениями.
+* **Источник**: поставка `memory-forget` (M41, M42 спеки серии памяти, подписанной родителем 2026-10-23).
 ## 2026-10-29 — энциклопедия: текст карточки, когда в ответе нет сути (card-fallback)
 
 * **Update**: `engineering/encyclopedia` — правило «текст карточки, когда в ответе нет сути»: ключ карточки судит

@@ -23,7 +23,8 @@ public final class MemoryStore: @unchecked Sendable {
     }
 
     /// Writes a session's candidates as one transaction; a session begun before the last erase writes nothing; a value
-    /// under the never-stored list or tainted by her lines is not written and counts by its rule.
+    /// under the never-stored list or tainted by her lines is not written and counts by its rule, as is one that names
+    /// what was forgotten after the session began (`forgotten`).
     @discardableResult
     public func write(_ session: MemorySession) throws -> WriteReport {
         var report = WriteReport()
@@ -34,7 +35,8 @@ public final class MemoryStore: @unchecked Sendable {
         let taint = Taint(heard: session.heard)
         try db.transaction {
             for candidate in session.candidates {
-                if let rule = Forbidden.shared.rule(candidate.value) ?? taint.rule(candidate.value) {
+                if let rule = try Forbidden.shared.rule(candidate.value) ?? taint.rule(candidate.value)
+                    ?? forgotten(candidate, before: session.started) {
                     report.refused[rule, default: 0] += 1
                 } else {
                     try apply(candidate, session, &report)
@@ -84,6 +86,9 @@ public final class MemoryStore: @unchecked Sendable {
             .compactMap(StoredFact.init(row:))
     }
 
+    /// The WAL emptied into the base and truncated: what was deleted leaves no old page behind.
+    func checkpoint() throws { _ = try db.rows("PRAGMA wal_checkpoint(TRUNCATE)") }
+
     /// The prompt block of the active facts.
     public func block(budget: Int = MemoryBlock.budget, count: (String) -> Int = MemoryBlock.estimate) throws
         -> MemoryBlock {
@@ -96,8 +101,30 @@ public final class MemoryStore: @unchecked Sendable {
             .joined(separator: " ")
     }
 
+    /// Her name and her brothers' names now — what the session's window counts (memory-forget, M42).
+    public func names() throws -> (her: String?, brothers: [String]) {
+        let names = try facts().filter { $0.trait == .name }
+        return (names.first { $0.kind == .child }?.value, names.filter { $0.relation == .brother }.map(\.value))
+    }
+
     /// An entity as identity sees it: the keys of its active name and species.
     struct Known { let id: Int64, name: String?, species: String? }
+
+    /// A subject as the entity table sees it: kind and relation, the name and species that identify it.
+    struct Who {
+        let kind: Kind, relation: Relation?, name: String?, species: String?
+
+        init(_ subject: Subject) {
+            switch subject {
+            case .child: (kind, relation, name, species) = (.child, nil, nil, nil)
+            case .person(let who, let called): (kind, relation, name, species) = (.person, who, called, nil)
+            case .pet(let what, let called): (kind, relation, name, species) = (.pet, nil, called, what)
+            case .creation(let what, let called): (kind, relation, name, species) = (.creation, nil, called, what)
+            }
+        }
+
+        var bound: [SQLiteValue] { [.text(kind.rawValue), relation.map { .text($0.rawValue) } ?? .null] }
+    }
 
     /// The entity a subject names: by name, else the only unnamed one (of the species); without a name — the only one
     /// of the species or relation, else the only unnamed one. Nil — a new entity.
@@ -149,20 +176,18 @@ public final class MemoryStore: @unchecked Sendable {
     }
 
     private func resolve(_ subject: Subject) throws -> Int64 {
-        let kind: Kind, relation: Relation?, name: String?, species: String?
-        switch subject {
-        case .child: (kind, relation, name, species) = (.child, nil, nil, nil)
-        case .person(let who, let called): (kind, relation, name, species) = (.person, who, called, nil)
-        case .pet(let what, let called): (kind, relation, name, species) = (.pet, nil, called, what)
-        case .creation(let what, let called): (kind, relation, name, species) = (.creation, nil, called, what)
-        }
-        let bound: [SQLiteValue] = [.text(kind.rawValue), relation.map { .text($0.rawValue) } ?? .null]
-        let known = try db.rows(Schema.selectEntities, bound).map {
+        let who = Who(subject)
+        if let id = try find(who) { return id }
+        try db.run("INSERT INTO entity (kind, relation) VALUES (?, ?)", who.bound)
+        return db.lastInsertID
+    }
+
+    /// The entity a subject names; nil — there is none yet.
+    func find(_ who: Who) throws -> Int64? {
+        let known = try db.rows(Schema.selectEntities, who.bound).map {
             Known(id: $0[0].int ?? 0, name: $0[1].text, species: $0[2].text)
         }
-        if let id = Self.match(known, name: name.map(Self.key), species: species.map(Self.key)) { return id }
-        try db.run("INSERT INTO entity (kind, relation) VALUES (?, ?)", bound)
-        return db.lastInsertID
+        return Self.match(known, name: who.name.map(Self.key), species: who.species.map(Self.key))
     }
 
     /// An active fact as a write sees it.

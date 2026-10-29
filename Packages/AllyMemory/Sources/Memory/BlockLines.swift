@@ -4,7 +4,9 @@ import Foundation
 /// ages in words, line caps, the budget and the Linux estimate of characters per token.
 struct Words: Decodable {
     struct Labels: Decodable { let she, favorite, likes, can, creations, birthday, pet: String }
-    struct Console: Decodable { let nothing, facts, erased, waiting, failed, confirm, off: String, forms: [String] }
+    struct Console: Decodable {
+        let nothing, facts, erased, waiting, failed, confirm, off, forget, forgetAll: String, forms: [String]
+    }
     let header: String, labels: Labels, siblings: [[String]], family: [[String]], slots: [[String]], ages: [String]
     let caps: [String: Int], budget: Int, charsPerToken: Double, inConversation: Bool, console: Console
 
