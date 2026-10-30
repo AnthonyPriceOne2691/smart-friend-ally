@@ -36,6 +36,9 @@ struct Console: View {
 
     var body: some View {
         ConsoleView(model: loop.console, actions: loop.consoleActions)
+            .safeAreaInset(edge: .bottom, alignment: .leading) {  // sim-app: only the iPhone app on a Mac shows it
+                MacFilesButton(loop: loop).padding(.horizontal)
+            }
             .onAppear {
                 UIApplication.shared.isIdleTimerDisabled = true  // a locked phone stops the GPU work
                 loop.refreshAccess()  // the acceptance and a leftover exception file show up when the console does
