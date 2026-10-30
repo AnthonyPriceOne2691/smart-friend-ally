@@ -49,6 +49,7 @@ final class SilenceTrimTests: XCTestCase {
     }
 
     func testABadRateIsAnError() {
+        // G11: a zero rate is an error, not a crash and not an empty sentence
         XCTAssertThrowsError(try trim.apply([0.5], rate: 0)) { XCTAssertEqual($0 as? VoiceFXError, .badRate(0)) }
     }
 }
