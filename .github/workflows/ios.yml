@@ -17,7 +17,9 @@ jobs:
   app:
     # Метка `macos` на PR — тот же ручной запуск до мержа: `workflow_dispatch` видит только файлы ветки по умолчанию.
     if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'macos'
-    runs-on: macos-26
+    # app-glass: цель iOS 27.0 требует SDK iOS 27 — он есть на образе xcode-27 (preview: macOS 27.0.1, Xcode 27.1 по
+    # умолчанию, как на Mac разработки), а на macos-26 только Xcode 26.x; решение ведущего 2026-10-27.
+    runs-on: xcode-27
     # §8.7: предохранитель — сборка пакетов с нуля и приложения ≈ 10 мин; 30 значит «что-то повисло».
     timeout-minutes: 30
     steps:
@@ -49,3 +51,11 @@ jobs:
             -derivedDataPath build CODE_SIGNING_ALLOWED=NO build
       - name: Оракул артефакта (check_app_artifact.sh)
         run: bash scripts/lint/check_app_artifact.sh
+      # design-demo: демо облика под симулятор без подписи (Y1) — свой каталог, оракул артефакта приложения его не видит;
+      # граница демо (Y1–Y3, Y5) судит проект, Ally.app и AllyDemo.app.
+      - name: AllyDemo для симулятора без подписи (Y1)
+        run: |
+          cd App && xcodebuild -project Ally.xcodeproj -scheme AllyDemo -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build-demo CODE_SIGNING_ALLOWED=NO build
+      - name: Граница демо (check_demo_boundary.sh)
+        run: bash scripts/lint/check_demo_boundary.sh

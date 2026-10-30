@@ -1,11 +1,13 @@
 import Foundation
 
-/// `encyclopedia.json`, one copy: the word lists of the research stand (own text), the field weights and the limits.
+/// `encyclopedia.json`, one copy: the word lists of the research stand (own text), the field weights and the limits;
+/// the hint's frame and its place — after her words (format B of Э2; format A, before them, is refused).
 struct EncyclopediaConfig: Decodable, Sendable {
     let stopWords: Set<String>, frameVerbs: Set<String>, questionWords: [String], personalWords: Set<String>
     let delicatePrefixes: [String], synonyms: [String: String]
     let fieldWeights: [Double], boost: Double, limit: Int, tokenizer: String
     let questionsPerCard: [Int], answerMaxChars: Int, answerMaxSentences: Int, oneMissingFrom: Int
+    let hintFrame: String, hintPlace: String
 
     /// The bundled copy's bytes; a missing resource gives empty bytes, and the encyclopedia fails its self-test.
     static let bundled: Data = Bundle.module.url(forResource: "encyclopedia", withExtension: "json")
@@ -17,7 +19,8 @@ struct EncyclopediaConfig: Decodable, Sendable {
         let config = try decoder.decode(EncyclopediaConfig.self, from: bytes)
         guard config.fieldWeights.count == 3, config.fieldWeights.allSatisfy({ $0 > 0 }), config.limit > 0,
               config.questionsPerCard.count == 2, (1...config.questionsPerCard[1]).contains(config.questionsPerCard[0]),
-              config.answerMaxChars > 0 else { throw EncyclopediaError.config }
+              config.answerMaxChars > 0, !config.hintFrame.isEmpty, config.hintPlace == "after"
+        else { throw EncyclopediaError.config }
         return config
     }
 }
@@ -71,6 +74,11 @@ struct EncyclopediaText: Sendable {
     func synonyms(of word: String) -> [String] {
         (config.synonyms[word] ?? synonymsByStem[RussianStemmer.stem(word)])
             .map { $0.split(separator: " ").map(String.init) } ?? []
+    }
+
+    /// The stems that stand for a word: its own and those of its synonyms («котик» → «котик», «кошк», «кот»).
+    func standsFor(_ word: String) -> Set<String> {
+        Set([RussianStemmer.stem(word)] + synonyms(of: word).flatMap(Self.words).map(RussianStemmer.stem))
     }
 
     func asked(_ words: [String]) -> Bool {

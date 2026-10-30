@@ -3,7 +3,7 @@ import Foundation
 /// Her speech over Elly's voice, counted only (D6.1): a run of her speech of at least `minSpeech` while the voice
 /// sounds, or within `afterVoice` after it, is one overlap; a shorter run, or one once the voice has been silent
 /// longer, is none. An activity whose flag already holds back short speech (Silero's own minimum) counts from the
-/// flag's rise. Nothing is stopped: the barge-in that acts on it is D6.2.
+/// flag's rise. The frame that makes an overlap says so: the app cuts Elly there (D6.2).
 public struct OverlapCounter: Sendable {
     private let minimum: Double, afterVoice: Double
     private var sounding = false, voiceEnd: Double?, runStart: Double?, counted = false, count = 0
@@ -20,16 +20,19 @@ public struct OverlapCounter: Sendable {
     /// The voice's last sample sounded at `time`.
     public mutating func voiceEnded(at time: Double) { (sounding, voiceEnd) = (false, time) }
 
-    /// One frame heard from `time` for `length` seconds: her speech as the activity flags it (nil — no say yet).
-    public mutating func frame(speech: Bool?, at time: Double, length: Double) {
+    /// One frame heard from `time` for `length` seconds: her speech as the activity flags it (nil — no say yet). True
+    /// on the frame that makes an overlap — the moment her speech cuts Elly (D6.2); a shorter run never says so.
+    @discardableResult
+    public mutating func frame(speech: Bool?, at time: Double, length: Double) -> Bool {
         guard speech == true, inWindow(time) else {
             (runStart, counted) = (nil, false)
-            return
+            return false
         }
         let start = runStart ?? time
         runStart = start
-        guard !counted, time + length - start >= minimum - 1e-9 else { return }
+        guard !counted, time + length - start >= minimum - 1e-9 else { return false }
         (counted, count) = (true, count + 1)
+        return true
     }
 
     /// The overlaps since the last call — for the record of the answer they came over.

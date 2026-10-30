@@ -4,7 +4,10 @@
 # Свой гейт проекта. Сборка — не оракул (KNOWLEDGE.md П24): права, ключи Info и сетевые символы роняют процесс на
 # телефоне или открывают сеть при зелёной сборке, поэтому проверяется то, что уедет на телефон:
 #   1. Info.plist — нет ключей сети (ATS, локальная сеть, Bonjour); ключи микрофона и распознавания непустые, по-русски;
-#      `CADisableMinimumFrameDurationOnPhone` = true (оболочка Ш3: без него ProMotion держит экран на 60 Гц).
+#      `CADisableMinimumFrameDurationOnPhone` = true (оболочка Ш3: без него ProMotion держит экран на 60 Гц);
+#      `MinimumOSVersion` = 27.0 (app-glass, F5: жидкое стекло «под iOS 27», телефон — iOS 27);
+#      значок — `CFBundleIcons` → `CFBundlePrimaryIcon` → `CFBundleIconName` = AppIcon и `Assets.car` в бандле
+#      (app-icon, I6: имя даёт пресет XcodeGen, ключ пишет actool из каталога — доказывает только собранное).
 #   2. Бинарь, dylib корня и встроенные фреймворки (macOS, xcrun) — в `nm -u` нет URLSession/NSURLSession, `_nw_*`, `_socket`,
 #      `_connect`, `_getaddrinfo`; в `otool -L` нет Network, WebKit, CFNetwork, CloudKit. `NSURL` для файлов допустим.
 #   3. Права подписанной сборки — сверх подписи (application-identifier, team-identifier, get-task-allow) ровно
@@ -37,7 +40,7 @@ for app in "${apps[@]}"; do
   [[ -d "$app" ]] || { printf '%sapp-artifact: нет каталога %s%s\n' "$red" "$app" "$reset"; fail=1; continue; }
   # 1. Info.plist: plistlib читает и XML, и бинарный формат — проверка одна и на Mac, и на Linux.
   if ! python3 - "$app/Info.plist" <<'PY'
-import plistlib, re, sys
+import os, plistlib, re, sys
 try:
     info = plistlib.load(open(sys.argv[1], "rb"))
 except (OSError, ValueError) as exc:
@@ -52,7 +55,14 @@ for k in weak:
 fast = info.get("CADisableMinimumFrameDurationOnPhone") is True
 if not fast:
     print("  нет ключа CADisableMinimumFrameDurationOnPhone = true: детский экран не получит 120 Гц")
-sys.exit(1 if bad or weak or not fast else 0)
+minimum = str(info.get("MinimumOSVersion", ""))  # F5
+if minimum != "27.0":
+    print(f"  MinimumOSVersion {minimum or 'нет'} вместо 27.0: цель сборки — iOS 27 (app-glass)")
+icon = ((info.get("CFBundleIcons") or {}).get("CFBundlePrimaryIcon") or {}).get("CFBundleIconName")  # I6
+car = os.path.isfile(os.path.join(os.path.dirname(sys.argv[1]), "Assets.car"))
+if icon != "AppIcon" or not car:
+    print(f"  значка нет: CFBundleIconName {icon or 'нет'}, Assets.car {'есть' if car else 'нет'} (app-icon)")
+sys.exit(1 if bad or weak or not fast or minimum != "27.0" or icon != "AppIcon" or not car else 0)
 PY
   then fail=1; fi
 
@@ -98,7 +108,8 @@ sys.exit(1 if extra or not memory else 0)'; then fail=1; fi
 done
 
 if [[ "$fail" -ne 0 ]]; then
-  printf '%sERROR%s: артефакт приложения нарушает границу (сеть, ключи Info или права) — см. строки выше.\n' "$red" "$reset"
+  printf '%sERROR%s: артефакт приложения нарушает границу (сеть, ключи Info, значок или права) — см. строки выше.\n' \
+    "$red" "$reset"
   exit 1
 fi
 printf '%sapp-artifact: OK%s — просмотрено приложений: %d\n' "$green" "$reset" "${#apps[@]}"

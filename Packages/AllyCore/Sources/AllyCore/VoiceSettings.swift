@@ -66,12 +66,14 @@ public struct VoicePresetLine: Decodable, Sendable, Equatable {
 }
 
 /// A file of the voice folder: its path there, its size, its group — `voice` (Supertonic) or `accent` (RUAccent, the
-/// placer; without it the voice speaks with the pinned words and names only).
+/// placer; without it the voice speaks with the pinned words and names only) — and its sha256, which the copy from the
+/// Mac checks (sim-app).
 public struct VoiceFile: Decodable, Sendable, Equatable {
     public let path: String, bytes: Int64, group: String
+    public let sha256: String?
 
     private enum CodingKeys: String, CodingKey {
-        case path = "to", bytes, group
+        case path = "to", bytes, group, sha256
     }
 }
 

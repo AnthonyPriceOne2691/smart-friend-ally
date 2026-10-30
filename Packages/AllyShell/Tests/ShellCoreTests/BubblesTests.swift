@@ -29,7 +29,8 @@ final class BubblesTests: XCTestCase {
         let fields = film([(0, .listening)], for: 60, seed: 3).map(\.frame.bubbles)
         let backs = rises(fields, sky: true).filter(\.back)
         XCTAssertFalse(backs.isEmpty)
-        let below = 956 + 20 - 1e-6...956 + 100 + 1e-6
+        let screen: Double = 956  // literals in one range took 256 ms to type-check on Swift 6.3 — typed steps
+        let below: ClosedRange<Double> = (screen + 20 - 1e-6)...(screen + 100 + 1e-6)
         XCTAssertTrue(backs.allSatisfy { $0.from < -24 + 9 * step && below.contains($0.to) })
         XCTAssertTrue(fields[0].water.allSatisfy { (3.2...7).contains($0.radius) && (8...18).contains($0.speed) })
         let wraps = rises(fields, sky: false).filter(\.back)

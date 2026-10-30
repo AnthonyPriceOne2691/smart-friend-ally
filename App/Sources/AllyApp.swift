@@ -1,98 +1,67 @@
 import AllyCore
 import SwiftUI
 
-/// Ally: the adult console only — the girl gets her screen with the child lock (R) and the shell (E2).
+/// Ally, a child's app (child-open, the parent 2026-10-29): the loading screen while everything for her first answer
+/// warms up, then Ellie at once — no lock, no label; her stop sign leads to the console, which also says why she is not
+/// shown when she cannot talk. The screen stays on from the launch: the child screen comes first now (L130).
 @main
 struct AllyApp: App {
     @StateObject private var loop = VoiceLoop()
+    @Environment(\.scenePhase) private var phase
 
     var body: some Scene {
         WindowGroup {
-            if loop.child {
-                ChildScreen(talk: loop.talk, until: loop.access.until, onWake: loop.childWake, onStop: loop.childStop)
-            } else {
-                Console(loop: loop)
+            Group {
+                if loop.warming {
+                    LoadingScreen()
+                } else if loop.child {
+                    ChildScreen(talk: loop.talk, onWake: loop.childWake, onStop: loop.childStop)
+                } else {
+                    Console(loop: loop)
+                }
+            }
+            .task {
+                UIApplication.shared.isIdleTimerDisabled = true  // a locked phone stops the GPU work
+                await loop.start()
             }
         }
+        .onChange(of: phase) { _, now in if now == .background { _ = loop.pauseMemory() } }  // M35
     }
 }
 
-/// «Для взрослых» (A12): readiness, signing days, the session's state and limit; what was heard and said stays on
-/// this screen. «Разбудить» starts a session, «Я всё» ends the utterance while she listens (D7), «Стоп» silences her
-/// at once (D2.2); the black box's line and «Стереть чёрный ящик» with the parent's yes, only while she sleeps
-/// (D3.2, B17).
+/// The console of the app (A12): the view is `ConsoleView` (design-demo: the demo shows the same one on made-up lines),
+/// the loop gives it the session and the buttons; the warm-up starts with the app (child-open), the screen stays on.
 struct Console: View {
     @ObservedObject var loop: VoiceLoop
-    @State private var asking: (sessions: Int, bytes: Int)?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Для взрослых").font(.title2.bold()).accessibilityIdentifier("console.adultsOnly")
-            ScrollView {  // 20 turn lines overflowed the screen and pushed the button off it (phone, 2026-10-22)
-                VStack(alignment: .leading, spacing: 12) {
-                    ForEach(Array(loop.screen.lines.enumerated()), id: \.offset) {
-                        Text($0.element).font(.caption.monospaced())
-                    }
-                }.frame(maxWidth: .infinity, alignment: .leading)
+        ConsoleView(model: loop.console, actions: loop.consoleActions)
+            .safeAreaInset(edge: .bottom, alignment: .leading) {  // sim-app: only the iPhone app on a Mac shows it
+                MacFilesButton(loop: loop).padding(.horizontal)
             }
-            Text(loop.screen.heard).foregroundStyle(.secondary)
-            Text(loop.screen.said).bold()
-            Text("Элли: " + Self.word(loop.talk.phase)).accessibilityIdentifier("console.phase")
-            ForEach(ReleaseGate.lines(loop.access, zone: .current) + [loop.acceptance, loop.napLine].compactMap { $0 },
-                    id: \.self) {
-                Text($0).font(.caption)
+            .onAppear {
+                UIApplication.shared.isIdleTimerDisabled = true  // a locked phone stops the GPU work
+                loop.refreshAccess()  // the acceptance and a leftover exception file show up when the console does
             }
-            .accessibilityIdentifier("console.lock")
-            Text(loop.screen.box).font(.caption.monospaced()).accessibilityIdentifier("console.blackbox")
-            HStack {
-                Button("Разбудить", action: loop.wake).buttonStyle(.borderedProminent)
-                    .disabled(!loop.screen.ready || loop.talk.phase != .asleep).accessibilityIdentifier("console.wake")
-                Button("Я всё", action: loop.done).buttonStyle(.bordered)
-                    .disabled(loop.talk.pose != .listens).accessibilityIdentifier("console.done")
-                Button("Стоп", action: loop.stop).buttonStyle(.bordered)
-                    .disabled(loop.talk.phase == .asleep).accessibilityIdentifier("console.stop")
-            }
-            HStack {
-                Button("Дочке, при мне", action: loop.handOver).buttonStyle(.bordered)
-                    .disabled(!loop.access.open || loop.talk.phase != .asleep)
-                    .accessibilityIdentifier("console.handOver")
-                Button("Закрыть детский режим", action: loop.closeChildMode).buttonStyle(.bordered)
-                    .disabled(!loop.exception).accessibilityIdentifier("console.closeChildMode")
-            }
-            Button("Стереть чёрный ящик") { asking = loop.boxHeld() }.buttonStyle(.bordered)
-                .disabled(loop.talk.phase != .asleep).accessibilityIdentifier("console.erase")
-        }
-        .padding()
-        .alert(Self.question(asking), isPresented: Binding(get: { asking != nil }, set: { if !$0 { asking = nil } })) {
-            Button("Стереть", role: .destructive, action: loop.eraseBox)
-            Button("Отмена", role: .cancel) {}
-        } message: {
-            Text("Сначала выгрузи на Mac.")
-        }
-        .task { await loop.start() }
-        .onAppear {
-            UIApplication.shared.isIdleTimerDisabled = true  // a locked phone stops the GPU work
-            loop.refreshAccess()  // an exception copied while the app runs shows up when the console does
-        }
+    }
+}
+
+extension VoiceLoop {
+    /// The console's look at the loop: the session, the open child screen, the acceptance, the break and the black
+    /// box's line, the memory.
+    var console: ConsoleModel {
+        ConsoleModel(lines: screen.lines, heard: screen.heard, said: screen.said, ready: screen.ready, talk: talk,
+                     memoryLines: memoryLines, memoryConfirmation: memoryConfirmation, forgettable: forgettable,
+                     lockLines: (["детский экран: открыт всегда", acceptance, napLine, boxLine].compactMap { $0 })
+                         .filter { !$0.isEmpty },
+                     open: childAllowed, exception: exception)
     }
 
-    /// «Стереть 5 сессий (41 МБ)?» — what the box holds before the parent's yes.
-    private static func question(_ held: (sessions: Int, bytes: Int)?) -> String {
-        let n = held?.sessions ?? 0, mb = Int((Double(held?.bytes ?? 0) / 1_048_576).rounded())
-        let tail = n % 100 / 10 == 1 ? 5 : n % 10
-        let w = tail == 1 ? "сессию" : (2...4).contains(tail) ? "сессии" : "сессий"
-        return "Стереть \(n) \(w) (\(mb) МБ)?"
-    }
-
-    private static func word(_ phase: SessionState) -> String {
-        switch phase {
-        case .asleep: "спит"
-        case .greeting: "здоровается"
-        case .listening: "слушает"
-        case .thinking: "думает"
-        case .speaking: "говорит"
-        case .windingDown: "дослушивает"
-        case .goodbye: "прощается"
-        }
+    /// The console's buttons on the loop's own actions; what she remembers is read only on the parent's press.
+    var consoleActions: ConsoleActions {
+        ConsoleActions(wake: wake, done: done, bargeIn: bargeIn, stop: stop, handOver: handOver,
+                       closeChildMode: closeChildMode, eraseMemory: eraseMemory, memoryText: { self.memoryText },
+                       forgetFact: { self.forget(fact: $0) }, forgetEntity: { self.forget(entity: $0) },
+                       boxHeld: boxHeld, eraseBox: eraseBox)
     }
 }

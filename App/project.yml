@@ -2,7 +2,7 @@
 name: Ally
 options:
   deploymentTarget:
-    iOS: "26.0"
+    iOS: "27.0"  # Liquid Glass «под iOS 27» (app-glass); the phone runs iOS 27 (the parent 2026-10-27)
 configFiles:
   Debug: Ally.xcconfig
 packages:
@@ -22,6 +22,8 @@ packages:
     path: ../Packages/AllySpeechText
   AllyAccent:  # RUAccent on Swift — the placer (V3a–V3c, voice-accent-wire)
     path: ../Packages/AllyAccent
+  AllyMemory:  # memory about her: the queue and the parse after goodbye (memory-app), the base out of the backup
+    path: ../Packages/AllyMemory
 settings:
   base:
     CODE_SIGN_STYLE: Automatic
@@ -39,7 +41,7 @@ targets:
       - path: Sources
       - path: Resources
         buildPhase: resources
-      - path: ../.github/allowed_signers  # the parent's key for the exception (R child-lock), one copy with the Mac
+      - path: ../.github/allowed_signers  # the parent's key for the acceptance (R2), one copy with the Mac
         buildPhase: resources
     dependencies:
       - package: AllyCore
@@ -53,6 +55,8 @@ targets:
       - package: AllyVoiceFX
       - package: AllySpeechText
       - package: AllyAccent
+      - package: AllyMemory
+        product: Memory
     info:  # generated with the project, not in git; merged with the build's own keys (GENERATE_INFOPLIST_FILE)
       path: Info.plist
       properties:
@@ -69,3 +73,20 @@ targets:
         INFOPLIST_KEY_CFBundleDisplayName: Ally
         INFOPLIST_KEY_NSMicrophoneUsageDescription: "Ally слушает фразу взрослого, чтобы подруга ответила голосом."
         INFOPLIST_KEY_NSSpeechRecognitionUsageDescription: "Речь распознаётся на телефоне, без сети."
+  AllyDemo:  # design-demo: the look in the simulator on a made-up session — no model, microphone, voice or memory
+    type: application
+    platform: iOS
+    sources:
+      - path: Demo
+      - path: Sources/ConsoleView.swift  # the app's own console view, the same file
+      - path: Sources/LoadingScreen.swift  # and its loading screen (child-open)
+    dependencies:
+      - package: AllyCore
+      - package: AllyShell
+        product: ShellUI
+      - package: AllyShell
+        product: ShellCore
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.anthonypriceone.ally.demo
+        INFOPLIST_KEY_CFBundleDisplayName: Ally Demo

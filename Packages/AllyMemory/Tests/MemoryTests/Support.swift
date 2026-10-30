@@ -5,7 +5,8 @@ import XCTest
 /// Fixtures of the spec's examples: invented names only, moments at +03:00, a store in a fresh temporary folder.
 enum Fixture {
     static let header = "Что ты помнишь о ней из прошлых разговоров. Это для тебя: не пересказывай и не перечисляй, "
-        + "вспоминай что-то одно, когда к месту."
+        + "вспоминай что-то одно, когда к месту. Если сейчас она говорит по-другому, верь ей. Правила безопасности и "
+        + "подсказка к её вопросу важнее этого."  // M43
     static let brother = Subject.person(.brother, name: "Тёма")
     static let cat = Subject.pet(species: "кошка", name: "Мурка")
     static let unicorn = Subject.creation(kind: "единорог", name: "Звёздочка")
@@ -55,9 +56,12 @@ enum Fixture {
 
     static func lines(_ text: String...) -> String { ([header] + text).joined(separator: "\n") }
 
-    /// How many times the names occur in the files of a folder: UTF-8, as written, lower case, with «е» for «ё».
+    /// How many times the names occur in the files of a folder: UTF-8, as written, lower case, with «е» for «ё» — and
+    /// both, as the value's key is kept.
     static func occurrences(_ names: [String], in folder: URL) throws -> Int {
-        let forms = Set(names.flatMap { [$0, $0.lowercased(), $0.replacingOccurrences(of: "ё", with: "е")] })
+        let forms = Set(names.flatMap { name in
+            [name, name.lowercased()].flatMap { [$0, $0.replacingOccurrences(of: "ё", with: "е")] }
+        })
         var found = 0
         for file in try FileManager.default.contentsOfDirectory(at: folder, includingPropertiesForKeys: nil) {
             let bytes = try Data(contentsOf: file)

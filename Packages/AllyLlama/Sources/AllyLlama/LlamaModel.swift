@@ -8,7 +8,7 @@ import llama
 public final class LlamaModel: LanguageModel, @unchecked Sendable {
     /// Warm-up seconds (A24): `weights`, `context`, then `prefix_file` (read from its state file) or `prefix_build`.
     public private(set) var warmup: [String: Double] = [:]
-    private let model: OpaquePointer, ctx: OpaquePointer, vocab: OpaquePointer, settings: LlamaSettings
+    private let model: OpaquePointer, ctx: OpaquePointer, vocab: OpaquePointer, settings: LlamaSettings, weights: URL
     private let queue: DispatchQueue, current = Locked<StopFlag?>(nil), prompt = Locked(0)
     private var batch: llama_batch, prefixCount: Int32 = 0, position: Int32 = 0, fresh = true, open = false
     /// The last turn in sequence 1: `commit` and `retract` rewrite it (D5: the model remembers only what sounded).
@@ -17,18 +17,7 @@ public final class LlamaModel: LanguageModel, @unchecked Sendable {
     /// Weights, context and the persona prefix, on the model's queue; `cache` holds the prefix state file.
     public static func load(weights: URL, persona: String, settings: LlamaSettings,
                             cache: URL) async throws -> LlamaModel {
-        // seq_rm of a tail longer than the sliding window is exact only with the full SWA cache (stand 2026-10-19)
-        guard settings.runtime.swaFull else { throw LlamaError.swaFullOff }
-        let queue = DispatchQueue(label: "ally.llama", qos: .userInitiated)
-        return try await withCheckedThrowingContinuation { done in
-            queue.async {
-                done.resume(with: Result {
-                    let model = try LlamaModel(weights: weights, settings: settings, queue: queue)
-                    try model.preparePrefix(persona, weights: weights, cache: cache)
-                    return model
-                })
-            }
-        }
+        try await load(weights: weights, settings: settings, cache: cache) { _ in persona }
     }
 
     private init(weights: URL, settings: LlamaSettings, queue: DispatchQueue) throws {
@@ -47,6 +36,7 @@ public final class LlamaModel: LanguageModel, @unchecked Sendable {
         }
         (self.model, self.ctx, self.vocab) = (model, ctx, llama_model_get_vocab(model))
         (self.settings, self.queue, batch) = (settings, queue, llama_batch_init(Int32(runtime.nBatch), 0, 1))
+        self.weights = weights
         warmup = ["weights": loaded - start, "context": ProcessInfo.processInfo.systemUptime - loaded]
         llama_set_abort_callback(ctx, { data in  // a raised stop aborts a decode in flight, not only the next token
             guard let data else { return false }
@@ -62,6 +52,37 @@ public final class LlamaModel: LanguageModel, @unchecked Sendable {
 
     /// Tokens of the conversation when the last reply started: the persona prefix, earlier turns, this user turn.
     public var promptTokens: Int { prompt { $0 } }
+
+    /// The last `complete`: tokens in and out, seconds (the memory's journal, M35).
+    public var completionStats: CompletionStats { stats { $0 } }
+    private let stats = Locked(CompletionStats())
+
+    /// The JSON grammar of llama.cpp (`json.gbnf`): any object, as the memory's parse asks.
+    public static let jsonGrammar: String = {
+        guard let url = Bundle.module.url(forResource: "json", withExtension: "gbnf"),
+              let text = try? String(contentsOf: url, encoding: .utf8) else { fatalError("AllyLlama: json.gbnf") }
+        return text
+    }()
+
+    /// One answer without the persona (the memory's parse, M35): the messages into sequence 2 from zero, the chain
+    /// grammar → temperature → dist(seed), up to the end of turn or `maxTokens`. The task's cancellation raises the
+    /// stop flag, which aborts a decode in flight; the conversation in sequence 1 is cleared only when both would not
+    /// fit.
+    public func complete(_ messages: [(role: String, text: String)], temperature: Float, seed: UInt32,
+                         grammar: String?, maxTokens: Int = 1100) async throws -> String {
+        let stop = StopFlag()
+        current { $0 = stop }
+        return try await withTaskCancellationHandler {
+            try await withCheckedThrowingContinuation { done in
+                queue.async { [self] in
+                    done.resume(with: Result {
+                        try completion(messages, Sampling(temperature: temperature, seed: seed, grammar: grammar,
+                                                          maxTokens: maxTokens), stop: stop)
+                    })
+                }
+            }
+        } onCancel: { stop.raise() }
+    }
 
     /// The next reply starts a new conversation from a fresh copy of the persona prefix.
     public func newConversation() { queue.async { self.fresh = true } }
@@ -136,28 +157,34 @@ public final class LlamaModel: LanguageModel, @unchecked Sendable {
 
     /// Sequence 0 ← the persona's system turn (trimmed, as the chat template renders it): read from the state file
     /// keyed by persona, weights, build and runtime, else built and written there — the only prefix file in `cache`.
+    /// Both go into sequence 3 first: a failed read or build leaves sequence 0 and its count as they were (M36).
     private func preparePrefix(_ persona: String, weights: URL, cache: URL) throws {
-        let start = ProcessInfo.processInfo.systemUptime, files = FileManager.default
+        let start = ProcessInfo.processInfo.systemUptime, files = FileManager.default, memory = llama_get_memory(ctx)
         let trimmed = persona.trimmingCharacters(in: .whitespacesAndNewlines)
         let system = try tokenize("<|turn>system\n" + trimmed + "<turn|>\n", special: true)
         let size = ((try? files.attributesOfItem(atPath: weights.path))?[.size] as? NSNumber)?.int64Value ?? 0
         let key = SHA256.hash(data: Data("\(trimmed)|\(weights.lastPathComponent)|\(size)|\(settings.runtime)".utf8))
         let file = cache.appendingPathComponent("persona-" + key.prefix(8).map { String(format: "%02x", $0) }.joined())
-        prefixCount = Int32(system.count)
-        if files.fileExists(atPath: file.path) {
-            var read = [llama_token](repeating: 0, count: system.count + 1), count = 0
-            if llama_state_seq_load_file(ctx, file.path, 0, &read, read.count, &count) > 0,
-               Array(read.prefix(count)) == system {
-                warmup["prefix_file"] = ProcessInfo.processInfo.systemUptime - start
-                return
-            }
+        var read = [llama_token](repeating: 0, count: system.count + 1), count = 0
+        llama_memory_seq_rm(memory, 3, -1, -1)
+        defer { llama_memory_seq_rm(memory, 3, -1, -1) }
+        if files.fileExists(atPath: file.path),
+           llama_state_seq_load_file(ctx, file.path, 3, &read, read.count, &count) > 0,
+           Array(read.prefix(count)) == system {
+            warmup["prefix_file"] = ProcessInfo.processInfo.systemUptime - start
+        } else {
+            llama_memory_seq_rm(memory, 3, -1, -1)
+            try decode(system, seq: 3, from: 0)
+            let old = (try? files.contentsOfDirectory(at: cache, includingPropertiesForKeys: nil)) ?? []
+            for stale in old where stale.lastPathComponent.hasPrefix("persona-") { try? files.removeItem(at: stale) }
+            _ = llama_state_seq_save_file(ctx, file.path, 3, system, system.count)
+            // the block in it is her memory: the protection class of the memory's base (memory-app, question 7)
+            try? files.setAttributes([.protectionKey: FileProtectionType.complete], ofItemAtPath: file.path)
+            warmup["prefix_build"] = ProcessInfo.processInfo.systemUptime - start
         }
-        llama_memory_seq_rm(llama_get_memory(ctx), 0, -1, -1)
-        try decode(system, seq: 0, from: 0)
-        let old = (try? files.contentsOfDirectory(at: cache, includingPropertiesForKeys: nil)) ?? []
-        for stale in old where stale.lastPathComponent.hasPrefix("persona-") { try? files.removeItem(at: stale) }
-        _ = llama_state_seq_save_file(ctx, file.path, 0, system, system.count)
-        warmup["prefix_build"] = ProcessInfo.processInfo.systemUptime - start
+        llama_memory_seq_rm(memory, 0, -1, -1)
+        llama_memory_seq_cp(memory, 3, 0, -1, -1)
+        prefixCount = Int32(system.count)
     }
 
     /// One turn in sequence 1: the user turn closes the previous model turn, the reply grows token by token to the end
@@ -211,6 +238,54 @@ public final class LlamaModel: LanguageModel, @unchecked Sendable {
         position += Int32(tokens.count)
     }
 
+    private func completion(_ messages: [(role: String, text: String)], _ sampling: Sampling,
+                            stop: StopFlag) throws -> String {
+        let start = ProcessInfo.processInfo.systemUptime, memory = llama_get_memory(ctx)
+        var tokens: [llama_token] = []
+        for message in messages {
+            let role = message.role == "assistant" ? "model" : message.role
+            tokens += try tokenize("<|turn>" + role + "\n", special: true)
+            tokens += try tokenize(message.text.trimmingCharacters(in: .whitespacesAndNewlines), special: false)
+            tokens += try tokenize("<turn|>\n", special: true)
+        }
+        tokens += try tokenize("<|turn>model\n", special: true)
+        if Int(position) + tokens.count + sampling.maxTokens > Int(settings.runtime.nCtx) {
+            llama_memory_seq_rm(memory, 1, -1, -1)
+            fresh = true
+        }
+        llama_memory_seq_rm(memory, 2, -1, -1)
+        defer { llama_memory_seq_rm(memory, 2, -1, -1) }
+        try decode(tokens, seq: 2, from: 0)
+        guard let chain = llama_sampler_chain_init(llama_sampler_chain_default_params()) else {
+            throw LlamaError.context
+        }
+        defer { llama_sampler_free(chain) }
+        if let grammar = sampling.grammar, let rule = llama_sampler_init_grammar(vocab, grammar, "root") {
+            llama_sampler_chain_add(chain, rule)
+        }
+        llama_sampler_chain_add(chain, llama_sampler_init_temp(sampling.temperature))
+        llama_sampler_chain_add(chain, llama_sampler_init_dist(sampling.seed))
+        var bytes: [UInt8] = [], made = 0
+        while made < sampling.maxTokens {
+            guard !stop.isRaised else { throw LlamaError.stopped }
+            let token = llama_sampler_sample(chain, ctx, -1)
+            if llama_vocab_is_eog(vocab, token) { break }
+            bytes += piece(token)
+            try decode([token], seq: 2, from: Int32(tokens.count + made))
+            made += 1
+        }
+        stats { $0 = CompletionStats(prompt: tokens.count, output: made,
+                                    seconds: ProcessInfo.processInfo.systemUptime - start) }
+        return Self.complete(bytes)
+    }
+
+    /// The bytes of one token's text.
+    private func piece(_ token: llama_token) -> [UInt8] {
+        var piece = [CChar](repeating: 0, count: 256)
+        let count = llama_token_to_piece(vocab, token, &piece, Int32(piece.count), 0, false)
+        return piece.prefix(Int(max(count, 0))).map { UInt8(bitPattern: $0) }
+    }
+
     /// Sequence 1 from `position` on leaves the KV.
     private func forget(after position: Int32) {
         llama_memory_seq_rm(llama_get_memory(ctx), 1, position, -1)
@@ -237,9 +312,7 @@ public final class LlamaModel: LanguageModel, @unchecked Sendable {
             guard !stop.isRaised else { throw LlamaError.stopped }
             let token = llama_sampler_sample(chain, ctx, -1)
             if llama_vocab_is_eog(vocab, token) { return }
-            var piece = [CChar](repeating: 0, count: 256)
-            let count = llama_token_to_piece(vocab, token, &piece, Int32(piece.count), 0, false)
-            bytes += piece.prefix(Int(max(count, 0))).map { UInt8(bitPattern: $0) }
+            bytes += piece(token)
             output.yield(Self.complete(bytes))
             try decode([token], seq: 1, from: position)
             position += 1
@@ -283,7 +356,60 @@ public final class LlamaModel: LanguageModel, @unchecked Sendable {
     }
 }
 
+/// The system turn with the memory's block (M36, M39): counted by the model's own tokenizer at load, rebuilt after a
+/// parse or an erase.
+extension LlamaModel {
+    /// Weights, context and the system turn `system(count)` on the model's queue — `count` is the model's tokenizer, so
+    /// a new load gives the key of the block the last session wrote and reads that prefix from its file.
+    public static func load(weights: URL, settings: LlamaSettings, cache: URL,
+                            system: @escaping @Sendable ((String) -> Int) -> String) async throws -> LlamaModel {
+        // seq_rm of a tail longer than the sliding window is exact only with the full SWA cache (stand 2026-10-19)
+        guard settings.runtime.swaFull else { throw LlamaError.swaFullOff }
+        let queue = DispatchQueue(label: "ally.llama", qos: .userInitiated)
+        return try await withCheckedThrowingContinuation { done in
+            queue.async {
+                done.resume(with: Result {
+                    let model = try LlamaModel(weights: weights, settings: settings, queue: queue)
+                    try model.preparePrefix(system(model.tokenCount), weights: weights, cache: cache)
+                    return model
+                })
+            }
+        }
+    }
+
+    /// Tokens of a text as the model counts them — the memory block's budget (M36).
+    public func tokenCount(_ text: String) -> Int { (try? tokenize(text, special: false).count) ?? 0 }
+
+    /// Tokens in sequence 0 now — the prefix the next conversation copies (M36: a failed rebuild keeps it).
+    var prefixInKV: Int { queue.sync { Int(llama_memory_seq_pos_max(llama_get_memory(ctx), 0)) + 1 } }
+
+    /// A new system turn (M36, M39): the conversation ends and frees its cells, a stopped reply's raised flag lets go,
+    /// the prefix is read or built aside — a failure keeps the old one; the next reply starts from the prefix.
+    public func rebuildPrefix(_ system: String, cache: URL) async throws {
+        try await withCheckedThrowingContinuation { (done: CheckedContinuation<Void, Error>) in
+            queue.async { [self] in
+                done.resume(with: Result {
+                    release()
+                    llama_memory_seq_rm(llama_get_memory(ctx), 1, -1, -1)
+                    (fresh, last) = (true, nil)
+                    try preparePrefix(system, weights: weights, cache: cache)
+                })
+            }
+        }
+    }
+}
+
 /// A turn in sequence 1: where it began (before her line), where the reply began, whether a model turn was open before.
 struct LastTurn {
     let start: Int32, reply: Int32, wasOpen: Bool
+}
+
+/// What the memory's parse samples with: temperature, seed, a GBNF grammar, the token limit.
+struct Sampling {
+    let temperature: Float, seed: UInt32, grammar: String?, maxTokens: Int
+}
+
+/// The last parse of the model: tokens in and out, seconds.
+public struct CompletionStats: Equatable, Sendable {
+    public var prompt = 0, output = 0, seconds = 0.0
 }

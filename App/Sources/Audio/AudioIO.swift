@@ -5,7 +5,8 @@ import AVFoundation
 /// player and the system's voice processing — echo cancellation, AGC by the hearing registry — and the microphone stays
 /// open while Elly speaks: a ring keeps the last seconds for the next listening, a counter counts her speech over the
 /// voice. With Milena, whose voice goes past the engine, it is half-duplex as before: what comes outside a listening is
-/// dropped. The engine runs from the session's wake to its sleep; all its state lives on one serial queue.
+/// dropped. The engine runs from the session's wake to its sleep; all its state lives on one serial queue. Her speech
+/// over the voice cuts Elly (`onOverlap`, D6.2); the audio session taken away and given back reaches the session too.
 final class AudioIO: @unchecked Sendable {
     typealias End = (voiced: Double, ended: Double)
 
@@ -15,6 +16,7 @@ final class AudioIO: @unchecked Sendable {
     private(set) var bufferSeconds = 0.0
     private let queue = DispatchQueue(label: "ally.audio", qos: .userInitiated)
     private var running = false, listening: Listening?, duplex: Duplex?, overVoice: Double?
+    private var onOverlap: (@Sendable () -> Void)?, interruptions: NSObjectProtocol?
 
     static func microphoneAllowed() async -> Bool { await AVAudioApplication.requestRecordPermission() }
 
@@ -23,7 +25,9 @@ final class AudioIO: @unchecked Sendable {
     /// registry has no `overlap`, and the microphone stays half-duplex.
     func goDuplex(_ hearing: Hearing, activity: VoiceActivity, feed: ((AVAudioPCMBuffer) -> Void)?,
                   flagMinimum: Double) throws -> String? {
-        guard let overlap = hearing.overlap else { return nil }
+        // sim-app: the iPhone app on a Mac gets no voice processing — macOS runs it at 24 kHz under the engine's
+        // formats: the voice played fast and the microphone reached Silero unheard (2026-10-30). Half-duplex there.
+        guard let overlap = hearing.overlap, !ProcessInfo.processInfo.isiOSAppOnMac else { return nil }
         let session = AVAudioSession.sharedInstance()
         try session.setCategory(.playAndRecord, mode: .voiceChat, options: [.defaultToSpeaker])
         try session.setPreferredIOBufferDuration(0.02)
@@ -74,6 +78,28 @@ final class AudioIO: @unchecked Sendable {
             running = false
             duplex?.ring.clear()
             finish(nil)
+        }
+    }
+
+    /// Her speech over the voice made an overlap — the app cuts Elly (D6.2); called on the audio queue.
+    func whenOverlap(_ handler: @escaping @Sendable () -> Void) { queue.sync { onOverlap = handler } }
+
+    /// The audio session taken away (a call, Siri, an alarm) and given back (D6.2): a listening in flight ends with no
+    /// speech, and when it is back the engine runs again before the handler hears of it.
+    func whenInterrupted(_ handler: @escaping @Sendable (Bool) -> Void) {
+        let center = NotificationCenter.default, session = AVAudioSession.sharedInstance()
+        interruptions = center.addObserver(forName: AVAudioSession.interruptionNotification, object: session,
+                                           queue: nil) { [weak self] note in
+            guard let self, let raw = note.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt,
+                  let kind = AVAudioSession.InterruptionType(rawValue: raw) else { return }
+            let began = kind == .began
+            queue.async {
+                if began { return self.finish(nil) }
+                guard self.running, !self.engine.isRunning else { return }
+                try? AVAudioSession.sharedInstance().setActive(true)
+                try? self.engine.start()
+            }
+            queue.async { handler(began) }
         }
     }
 
@@ -137,7 +163,8 @@ final class AudioIO: @unchecked Sendable {
         var speech = false
         for (frame, time) in Self.frames(buffer, from: start) {
             let loud = state.activity.loud(frame)
-            state.counter.frame(speech: loud, at: time, length: Double(frame.count) / buffer.format.sampleRate)
+            let length = Double(frame.count) / buffer.format.sampleRate
+            if state.counter.frame(speech: loud, at: time, length: length) { onOverlap?() }
             speech = speech || loud == true
         }
         state.ring.add(Piece(buffer: buffer, time: start), at: start, speech: speech)

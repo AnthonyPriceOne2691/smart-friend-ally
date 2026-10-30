@@ -69,3 +69,16 @@
 - `duplex-audio`
 - `voice-accent-wire`
 - `app-black-box`
+- `memory-app`
+- `barge-in`
+- `child-shell-mouth`
+- `app-encyclopedia`
+- `memory-recall`
+- `app-glass`
+- `memory-forget`
+- `card-fallback`
+- `design-demo`
+- `child-open`
+- `app-icon`
+- `memory-block-form`
+- `sim-app`

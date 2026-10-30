@@ -7,20 +7,21 @@ let goodbye = ["Я так наболталась, что уже засыпаю!"
 let misheard = "Ой, повтори, пожалуйста, я не расслышала."
 
 /// A session over doubles: replies from a queue, a voice that records and takes `seconds` of virtual time a sentence
-/// (`hold` — from the first sentence after the greeting), a router table (or a given router), a recording sink, a state
-/// log.
+/// (`hold` — from the first sentence after the greeting), a router table (or a given router), an encyclopedia if given,
+/// a recording sink, a state log.
 struct Rig {
     let clock: TestClock, sink: RecordingSink, states: StateLog, model: ReplyQueue, voice: RecordingVoice
     let session: Session
 
     init(replies: [String] = [], routes: [String: Route] = [:], router: TurnRouting? = nil, limit: String? = nil,
-         seconds: Double = 0, hold: Bool = false, fails: Bool = false, stamp: TraceStamp = TraceStamp()) {
+         seconds: Double = 0, hold: Bool = false, fails: Bool = false, stamp: TraceStamp = TraceStamp(),
+         knowledge: Encyclopedia? = nil, names: FamilyNames = FamilyNames()) {
         let clock = TestClock(), sink = RecordingSink(), states = StateLog()
         let voice = RecordingVoice(hold: hold, from: greeting.count) { clock.advance(by: seconds) }
         let model = ReplyQueue(replies, fails: fails)
         let parts = SessionParts(model: model, voice: voice, sink: sink, clock: clock,
-                                 router: router ?? TableRouter(table: routes), stamp: { stamp },
-                                 onState: { states.record($0) })
+                                 router: router ?? TableRouter(table: routes), knowledge: knowledge, stamp: { stamp },
+                                 names: { names }, onState: { states.record($0) })
         (self.clock, self.sink, self.states, self.model, self.voice) = (clock, sink, states, model, voice)
         session = Session(parts, settings: SessionSettings(limitMinutes: limit))
     }

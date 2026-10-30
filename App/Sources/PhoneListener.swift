@@ -33,7 +33,8 @@ final class PhoneListener: Listener, @unchecked Sendable {
         let fed = Locked<(samples: [Int16], rate: Int)>(([], 16_000))
         let phrase = try await makePhrase { samples, rate in
             fed { (now: inout (samples: [Int16], rate: Int)) in
-                (now.samples, now.rate) = (now.samples + samples, rate)
+                now.samples += samples
+                now.rate = rate
             }
         }
         let (pauses, feed) = AsyncStream.makeStream(of: TurnEvent.self, bufferingPolicy: .bufferingOldest(128))

@@ -123,7 +123,10 @@ final class SnapshotTests: XCTestCase {
         }
         let strip = CGRect(x: 0, y: 0, width: 440, height: 40)
         XCTAssertLessThanOrEqual(try XCTUnwrap(probes["night"]).mean(in: strip, luminance), 0.70)
-        XCTAssertGreaterThanOrEqual(try XCTUnwrap(probes["listening"]).mean(in: strip, luminance), 0.85)
+        // The day's bound follows the pink sky signed 2026-10-27: its top #DCEEFF alone is 0.836, with the sky-blue
+        // and lilac lights the strip is 0.773, so 0.85 (computed for the old sky, 0.94) became 0.75; the night is
+        // 0.277 — V36
+        XCTAssertGreaterThanOrEqual(try XCTUnwrap(probes["listening"]).mean(in: strip, luminance), 0.75)
         let moon = CGRect(x: 290, y: 380, width: 72, height: 90), moonTone = { (rgb: [Int]) in near(rgb, 0xFFF1B8, 16) }
         XCTAssertGreaterThanOrEqual(try XCTUnwrap(probes["night"]).area(in: moon, where: moonTone), 150)
         XCTAssertLessThanOrEqual(try XCTUnwrap(probes["listening"]).area(in: moon, where: moonTone), 10)
@@ -152,6 +155,17 @@ final class SnapshotTests: XCTestCase {
         }
     }
 
+    /// The pink sky (app-glass): by day sky blue over the top strip and peach over the bottom one; the night keeps its
+    /// veil. Thresholds from the stand before the code (217, 227, 254 and 254, 213, 197; at night 143, 136, 196).
+    func testThePinkSky() throws {  // F2
+        let day = try pixels(frames([(0, .greeting), (1, .listening)], at: [4.9])[0])
+        let night = try pixels(frames([(0, .asleep)], at: [2])[0])
+        let top = CGRect(x: 0, y: 0, width: 440, height: 40), low = CGRect(x: 0, y: 900, width: 440, height: 56)
+        XCTAssertGreaterThanOrEqual(day.mean(in: top) { Double($0[2] - $0[0]) }, 20)
+        XCTAssertGreaterThanOrEqual(day.mean(in: low) { Double($0[0] - $0[2]) }, 30)
+        XCTAssertLessThanOrEqual(night.mean(in: top, luminance), 0.70)
+    }
+
     private func pixels(_ frame: Frame) throws -> Pixels {
         try XCTUnwrap(Pixels(try XCTUnwrap(render(ShellScene(frame: frame, safeTop: 62, safeBottom: 34)))))
     }
@@ -170,35 +184,36 @@ final class SnapshotTests: XCTestCase {
         return moments.map { shots[max(Int(($0 / step).rounded()) - 1, 0)] }
     }
 
-    /// `local/shell-snapshots/<sub>` in the repository (outside git), created if missing.
-    private func snapshots(_ sub: String) throws -> URL {
-        let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
-            .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
-        let folder = root.appendingPathComponent("local/shell-snapshots").appendingPathComponent(sub)
-        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-        return folder
-    }
-
     private func render(_ scene: some View) -> CGImage? {
         let renderer = ImageRenderer(content: scene.frame(width: phone.width, height: phone.height))
         renderer.scale = 3
         return renderer.cgImage
     }
-
-    private func save(_ image: CGImage, to url: URL) throws {
-        let png = UTType.png.identifier as CFString
-        let target = try XCTUnwrap(CGImageDestinationCreateWithURL(url as CFURL, png, 1, nil))
-        CGImageDestinationAddImage(target, image, nil)
-        XCTAssertTrue(CGImageDestinationFinalize(target))
-    }
 }
 
-/// The rendered frame as RGBA bytes, read in points of the 3× image.
-private struct Pixels {
-    let width: Int, bytes: [UInt8]
+/// `local/shell-snapshots/<sub>` in the repository (outside git), created if missing.
+func snapshots(_ sub: String) throws -> URL {
+    let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+        .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+    let folder = root.appendingPathComponent("local/shell-snapshots").appendingPathComponent(sub)
+    try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+    return folder
+}
 
-    init?(_ image: CGImage) {
-        width = image.width
+func save(_ image: CGImage, to url: URL) throws {
+    let png = UTType.png.identifier as CFString
+    let target = try XCTUnwrap(CGImageDestinationCreateWithURL(url as CFURL, png, 1, nil))
+    CGImageDestinationAddImage(target, image, nil)
+    XCTAssertTrue(CGImageDestinationFinalize(target))
+}
+
+/// The rendered frame as RGBA bytes, read in points of an image at `scale` (3× by `ImageRenderer`; a window snapshot —
+/// the screen's own, `GlassSnapshotTests`).
+struct Pixels {
+    let width: Int, scale: Double, bytes: [UInt8]
+
+    init?(_ image: CGImage, scale: Double = 3) {
+        (width, self.scale) = (image.width, scale)
         var buffer = [UInt8](repeating: 0, count: image.width * image.height * 4)
         guard let space = CGColorSpace(name: CGColorSpace.sRGB),
               let ctx = CGContext(data: &buffer, width: image.width, height: image.height, bitsPerComponent: 8,
@@ -208,24 +223,30 @@ private struct Pixels {
         bytes = buffer
     }
 
-    func colour(x: Double, y: Double) -> [Int] {
-        let index = (Int(y * 3) * width + Int(x * 3)) * 4
-        return [Int(bytes[index]), Int(bytes[index + 1]), Int(bytes[index + 2])]
+    func colour(x: Double, y: Double) -> [Int] { pixel(at: (Int(y * scale) * width + Int(x * scale)) * 4) }
+
+    /// Red, green and blue of the pixel whose bytes start at `index` — in steps with explicit types: one expression
+    /// over a closure did not type-check in time on the macOS runner of CI.
+    func pixel(at index: Int) -> [Int] {
+        let red: UInt8 = bytes[index], green: UInt8 = bytes[index + 1], blue: UInt8 = bytes[index + 2]
+        return [Int(red), Int(green), Int(blue)]
     }
 
     /// Area in pt² of the pixels of the whole frame that pass the test.
     func area(where test: ([Int]) -> Bool) -> Double {
-        let count = stride(from: 0, to: bytes.count, by: 4).filter { test([Int(bytes[$0]), Int(bytes[$0 + 1]),
-                                                                          Int(bytes[$0 + 2])]) }.count
-        return Double(count) / 9
+        var count = 0
+        for index in stride(from: 0, to: bytes.count, by: 4) where test(pixel(at: index)) {
+            count += 1
+        }
+        return Double(count) / (scale * scale)
     }
 
     /// The mean of a value over the pixels inside the box.
     func mean(in box: CGRect, _ value: ([Int]) -> Double) -> Double {
         var (sum, count) = (0.0, 0)
-        for y in Int(box.minY * 3)..<Int(box.maxY * 3) {
-            for x in Int(box.minX * 3)..<Int(box.maxX * 3) {
-                sum += value(colour(x: Double(x) / 3, y: Double(y) / 3))
+        for y in Int(box.minY * scale)..<Int(box.maxY * scale) {
+            for x in Int(box.minX * scale)..<Int(box.maxX * scale) {
+                sum += value(colour(x: Double(x) / scale, y: Double(y) / scale))
                 count += 1
             }
         }
@@ -236,28 +257,31 @@ private struct Pixels {
     func ring(centre: CGPoint, from inner: Double, to outer: Double, where test: ([Int]) -> Bool) -> Double {
         let box = CGRect(x: centre.x - outer, y: centre.y - outer, width: outer * 2, height: outer * 2)
         var count = 0
-        for y in Int(max(box.minY, 0) * 3)..<Int(box.maxY * 3) {
-            for x in Int(max(box.minX, 0) * 3)..<Int(min(box.maxX, Double(width) / 3) * 3) {
-                let distance = hypot(Double(x) / 3 - centre.x, Double(y) / 3 - centre.y)
-                if distance >= inner, distance <= outer, test(colour(x: Double(x) / 3, y: Double(y) / 3)) { count += 1 }
+        for y in Int(max(box.minY, 0) * scale)..<Int(box.maxY * scale) {
+            for x in Int(max(box.minX, 0) * scale)..<Int(min(box.maxX, Double(width) / scale) * scale) {
+                let distance = hypot(Double(x) / scale - centre.x, Double(y) / scale - centre.y)
+                if distance >= inner, distance <= outer, test(colour(x: Double(x) / scale, y: Double(y) / scale)) {
+                    count += 1
+                }
             }
         }
-        return Double(count) / 9
+        return Double(count) / (scale * scale)
     }
 
     /// Area in pt² of the pixels inside the box that pass the test.
     func area(in box: CGRect, where test: ([Int]) -> Bool) -> Double {
         var count = 0
-        for y in Int(box.minY * 3)..<Int(box.maxY * 3) {
-            for x in Int(box.minX * 3)..<Int(box.maxX * 3) where test(colour(x: Double(x) / 3, y: Double(y) / 3)) {
+        for y in Int(box.minY * scale)..<Int(box.maxY * scale) {
+            for x in Int(box.minX * scale)..<Int(box.maxX * scale)
+            where test(colour(x: Double(x) / scale, y: Double(y) / scale)) {
                 count += 1
             }
         }
-        return Double(count) / 9
+        return Double(count) / (scale * scale)
     }
 }
 
-private func near(_ rgb: [Int], _ hex: UInt32, _ tolerance: Int) -> Bool {
+func near(_ rgb: [Int], _ hex: UInt32, _ tolerance: Int) -> Bool {
     let target = [Int((hex >> 16) & 0xFF), Int((hex >> 8) & 0xFF), Int(hex & 0xFF)]
     return zip(rgb, target).allSatisfy { abs($0 - $1) <= tolerance }
 }
@@ -284,6 +308,10 @@ final class SnapshotTests: XCTestCase {
 
     func testNightThinkingAndListeningLight() throws {  // V36
         throw XCTSkip("свет и пузырьки — только на Mac")
+    }
+
+    func testThePinkSky() throws {  // F2
+        throw XCTSkip("небо — только на Mac")
     }
 }
 #endif

@@ -42,6 +42,7 @@ xcuserdata/
 # App: проект и права генерирует XcodeGen из App/project.yml; команда разработчика — свойство Mac, не продукта
 *.xcodeproj/
 App/build/
+App/build-demo/
 App/Ally.entitlements
 App/Info.plist
 App/Local.xcconfig

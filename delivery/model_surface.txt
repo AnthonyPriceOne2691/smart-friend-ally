@@ -1,10 +1,22 @@
 # Снимок поверхности модели (Delivery §14.1), поставка app-voice-loop: путь или ключ<TAB>sha256.
+# Поставка app-encyclopedia (Э2): база карточек, конфиг поиска и подсказки, правило решения и сборка входа модели.
+# Поставка card-fallback: движок читает и проверяет ключ карточки (Encyclopedia.swift); строка LlamaModel.swift —
+# до текущего main: файл менял memory-recall (7b9aa9e), снимок тогда не обновлялся.
 # Персона, реестр (вес, рантайм, сэмплинг), пакет модели (формат хода Gemma 4, мастер-префикс, цепочка сэмплера);
 # вес — по ключу реестра «файл:байты»; рантайм — релизный xcframework по url и checksum из Package.swift.
+# Поставка memory-block-form: блок памяти новой формы идёт в системный ход (решение родителя 2026-10-29) — шапка,
+# бюджет и строки блока (memory.json), его сборка (MemoryBlock.swift, BlockLines.swift).
 App/Resources/persona.v2.4.ru.md	329790cc6d2f04760c977744d5a1aacd2eb6bf6c2de6198b60b711542e23f722
 App/Resources/model.json	5240c360e1994042048d0fccc3d0504e7cb73937d9b75b4b8bddb385e981cc47
 Packages/AllyLlama/Package.swift	69092644cd98f8d31a8f8265af344692969796837b825d6b3aa32d9ca55b8c2a
-Packages/AllyLlama/Sources/AllyLlama/LlamaModel.swift	678d77db9958cc7b2f9480cdd5ba384b24359d2454c2d4b087edb3b52061a9b9
+Packages/AllyLlama/Sources/AllyLlama/LlamaModel.swift	7e304d20022a428378bbcf824c1007a6a6036314346b748f7fc850db8bd996ca
 Packages/AllyLlama/Sources/AllyLlama/LlamaSettings.swift	f4c9f1076a4d801253f9c2dd1fe3dd1dd71063070f48d76bd7086bd1f829ef44
 weights:gemma-4-E4B-it-Q4_K_M.gguf:4977171584	85a896a047553e842f25297ee5b031d64ff30147d9c4af17b1e4b394cd1fab87
 llama.cpp:b10809:llama-b10809-xcframework.zip	d6813b3b6c73728a19f0bc0d1d7cea04ccdb07f9583c1d930c0b38af2377606d
+Packages/AllyCore/Sources/AllyCore/Resources/encyclopedia.ru.jsonl	def710e5ee7493b111486d96a527899ebb74a4ee489c6a4a940882c5d1cf40b7
+Packages/AllyCore/Sources/AllyCore/Resources/encyclopedia.json	2f76cb1d5aee86072201fa60aa2dcfb9cc6a62993cec7fc3cbc1f251440d9774
+Packages/AllyCore/Sources/AllyCore/Knowledge.swift	9c4eeed51a7e6bccee080597695bf8723aced807a081ebdf807c0ee2ce74fac8
+Packages/AllyCore/Sources/AllyCore/Encyclopedia.swift	2412495f6780253eaef9782bdad23a2cb6db5538deafa5acdee7613a5d08f6a6
+Packages/AllyMemory/Sources/Memory/Resources/memory.json	1b711b3bafe63ee404c176f009b6ffce9300623b52d03e604ace76581211fac9
+Packages/AllyMemory/Sources/Memory/MemoryBlock.swift	d6d0765bb0370d2edb57487d138f72adf9ef811399acab2c6f90fe7e09204574
+Packages/AllyMemory/Sources/Memory/BlockLines.swift	444564aeec64624d5a6eb21445b01fff916d8219abd73a9270d3d145bd02ce3f

@@ -28,7 +28,7 @@
 ## Approach
 
 1. **Порядок.** Документы → `eval-smoke.md` → код срезами → сборка для устройства и оракул артефакта на Mac → verify
-   → PR и CI. Телефонные B13–B19 — после мержа R при родителе; подпись поверхности стирания — палец родителя.
+   → PR и CI. Телефонные B13–B19 — в общей сессии теста; подпись поверхности стирания — касание родителя.
 2. **`PhoneDisk`** (`App/Sources/BlackBox/`). Корень `Application Support/BlackBox`: создаётся с
    `FileProtectionType.complete`, класс ставится и существующему каталогу; `isExcludedFromBackup` ставится и читается
    обратно со свежего URL (кэш значений сброшен); `isPrivate` — пометка и класс прочитаны. `write` — каталог сессии с тем
@@ -50,7 +50,7 @@
    (`git check-ignore`, iCloud), телефон на связи, листинг `devicectl … info files --json-output`, копирование новых
    сессий во временную папку, сверка заголовка, байт и FNV-1a, перенос сверенного в `local/blackbox/<дата>/<сессия>/`;
    `erase` — `pull`, затем `devicectl … copy to --remove-existing-content true` пустой папкой только для сверенных.
-   Смоук S9 `delivery/evals/smoke/blackbox_pull.sh` — семь случаев на двойнике `xcrun`.
+   Смоук S10 `delivery/evals/smoke/blackbox_pull.sh` — семь случаев на двойнике `xcrun`.
 8. **Знание.** `ops/black-box`, `engineering/voice-loop` (команды выгрузки и стирания), `ops/child-data`; `knowledge/log.md`.
 
 ## Stack / boundaries
@@ -71,9 +71,10 @@
 | `Packages/AllyCore/Tests/AllyCoreTests/BlackBoxTests.swift` (B17) | 12 |
 | `scripts/blackbox.py` | 200 |
 | стык с GigaAM 2026-10-27: `BatchPhrase.swift`, `Hearing/RecognitionPhrase.swift`, тест `// B14` | 27 |
-| **итого, 11 файлов** | **≈ 382** |
+| консоль после design-demo 2026-10-30: `ConsoleView.swift`, `BlackBox/BoxConsole.swift`, `ChildMode.swift` и `project.yml` (комментарии) | 60 |
+| **итого, 15 файлов** | **≈ 440** |
 
-Вне предохранителя: смоук S9, `knowledge/`, `delivery/`. Выше 780 — стоп и `escalation.md`.
+Вне предохранителя: смоук S10, `knowledge/`, `delivery/`. Выше 780 — стоп и `escalation.md`.
 
 ## Rejected alternatives
 
@@ -99,6 +100,6 @@
 
 ## Test / eval strategy
 
-- `// B17` — `BlackBoxTests` (`held()`, стирание, строка); B15, B16 — смоук S9 (`# B15`, `# B16`); B13–B19 — исполнение
+- `// B17` — `BlackBoxTests` (`held()`, стирание, строка); B15, B16 — смоук S10 (`# B15`, `# B16`); B13–B19 — исполнение
   на телефоне в verify-report «Исполнение рисковых путей». Сборка `.app` для устройства и оракул артефакта — на Mac.
 - Мутации: `held()` не считает папки (B17); смоук — сторож git снят (B15), стирание без сверки (B16).

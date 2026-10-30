@@ -3,7 +3,8 @@ import Foundation
 
 /// The break after a goodbye by the limit (answer 6 to the series; its length is the parent's key, and 2026-10-23 he
 /// chose «Без перерыва» — none by default). With a break set, a tap on the sleeping Ellie does not wake her until it
-/// ends, and the console says until when. It lives in the app's memory: a relaunch opens the console, not her screen.
+/// ends, and the console says until when. It lives in the app's memory: a relaunch opens the loading and her screen
+/// again, the break forgotten (child-open).
 public struct Nap: Equatable, Sendable {
     public static let key = "rest_after_limit_minutes", range = 0...180, standard = 0
 

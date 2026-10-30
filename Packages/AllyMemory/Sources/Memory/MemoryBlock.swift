@@ -1,11 +1,22 @@
 import Foundation
 
 /// The prompt block (П11, П13): built once a session from the active facts — lines in a fixed order, items by first
-/// appearance, capped per line, cut by rank to the budget; the core (her name and age, siblings, pets) is never cut.
+/// appearance, capped per line, cut by rank to the budget; the core (her age, siblings, pets) is never cut. Her name is
+/// not in the block (memory-block-form, the parent 2026-10-29).
 public struct MemoryBlock: Equatable, Sendable {
     public let text: String, tokens: Int, trimmed: [String]
 
     public static var budget: Int { Words.shared.budget }
+
+    /// Whether the block goes into the conversation (`in_conversation`): off — the parent 2026-10-28 after M40
+    /// («Слить с выключенной»); the console, the erase and the prefix rebuild work either way.
+    public static var inConversation: Bool { Words.shared.inConversation }
+
+    /// The system turn of a conversation (M36): the persona as it is when memory is empty or the block is off — the
+    /// prefix of today byte for byte — else the persona, an empty line and the block.
+    public static func system(persona: String, block: String, on: Bool = inConversation) -> String {
+        block.isEmpty || !on ? persona : persona + "\n\n" + block
+    }
 
     /// The counter on Linux: ⌈Unicode scalars / 2.7⌉, a margin to the model's tokenizer; the app passes the tokenizer.
     public static func estimate(_ text: String) -> Int {

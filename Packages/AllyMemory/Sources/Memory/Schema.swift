@@ -3,6 +3,8 @@ import AllySQLite
 /// The memory database, schema 1. The closed lists are CHECKs: neither the model nor a bug adds a category. A fact
 /// keeps the sessions that said it (`seen`), so a confirmation counts once per session in any order of writing. A value
 /// under the never-stored list is refused by the triggers on any path of writing (`forbidden`, `Forbidden.install`).
+/// A tombstone (`forgotten`, memory-forget) holds who, what and when — never a value; an older base gets the table at
+/// its next open.
 enum Schema {
     static let version: Int64 = 1
 
@@ -41,6 +43,14 @@ enum Schema {
           session TEXT NOT NULL, started REAL NOT NULL, turn INTEGER NOT NULL, value TEXT NOT NULL,
           anchor REAL NOT NULL, PRIMARY KEY (fact_id, session));
         CREATE INDEX IF NOT EXISTS fact_entity ON fact (entity_id, trait, status);
+        CREATE TABLE IF NOT EXISTS queue (session TEXT PRIMARY KEY, started REAL NOT NULL,
+          attempts INTEGER NOT NULL DEFAULT 0);
+        CREATE TABLE IF NOT EXISTS pending (
+          session TEXT NOT NULL REFERENCES queue (session) ON DELETE CASCADE, turn INTEGER NOT NULL,
+          her TEXT NOT NULL, elly TEXT NOT NULL, PRIMARY KEY (session, turn));
+        CREATE TABLE IF NOT EXISTS forgotten (
+          kind TEXT NOT NULL CHECK (kind IN ('child', 'person', 'pet', 'creation')), relation TEXT,
+          entity_id INTEGER, trait TEXT, slot TEXT, moment REAL NOT NULL);
         CREATE TRIGGER IF NOT EXISTS fact_insert_forbidden BEFORE INSERT ON fact
           WHEN forbidden(NEW.value) OR forbidden(NEW.value_key) BEGIN SELECT RAISE(ABORT, 'forbidden value'); END;
         CREATE TRIGGER IF NOT EXISTS fact_update_forbidden BEFORE UPDATE OF value, value_key ON fact
