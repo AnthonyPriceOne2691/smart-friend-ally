@@ -6,7 +6,7 @@
 - **kind:** feature
 - **repro_test:** n/a reason=не bugfix
 - **diagnosis:** n/a reason=не bugfix
-- **phase:** implement
+- **phase:** verify
 - **builder:** agent:claude-code
 - **verifier:** process:ci
 - **human_ok_spec:** yes (by=human:anthony, at=2026-10-30, «Подписываю: три мостика по кругу (Рекомендую)» через ведущего: мостики, слова префикса сказки, пределы и примеры T1, T2, T4 spec.md)

@@ -17,6 +17,6 @@
 - [x] 9: знание — `engineering/session.md`, `engineering/safety-below-model.md`, `product/persona.md`, `log.md`, индексы
 - [x] 10: подпись родителя через ведущего (2026-10-30, «Подписываю: три мостика по кругу (Рекомендую)», 8b99056) — строка `human_ok_spec`, дословный вопрос и ответ в спеке и `decisions.md`;
   правки слов по ответу — до PR
-- [ ] 11: слияние свежего main, `swift test` Discipline и AllyCore, строгий
+- [x] 11: слияние свежего main, `swift test` Discipline и AllyCore, строгий
   `delivery_check --require-ci --diff-base origin/main`, verify-report, PR, CI зелёный
 - [ ] 12: сдача — архив, INDEX (уроки L177–L180), строка `delivery/OBSERVATIONS.md`, доклад «готово к мержу»
