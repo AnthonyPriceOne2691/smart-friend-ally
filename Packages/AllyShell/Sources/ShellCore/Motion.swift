@@ -45,7 +45,7 @@ public final class Motion {
         settle(dt)
         let talking = TalkState(phase: phase).pose == .speaks && sound
         let rhythm = syllables.step(dt, at: phases.time + dt, speaking: talking && voice == nil)
-        voiceLevel = talking ? voice ?? rhythm : max(rhythm, voiceLevel - Syllables.closing * dt)
+        voiceLevel = talking && voice == nil ? rhythm : eased(talking ? voice ?? 0 : 0, dt)
         let pose = blended(voice: voiceLevel, mic: mic, calm: calm)
         phases.advance(dt, pose, calm: calm)
         wobble(dt)
@@ -55,6 +55,12 @@ public final class Motion {
                             dozing: phases.time - dozingSince, rise: rise, calm: calm)
         (frame.light, frame.bubbles) = (glow.step(dt, clocks), bubbles.step(dt, clocks))
         return frame
+    }
+
+    /// A level passed in goes as is, and out of the sound the mouth closes — at the mouth's own pace, never a jump.
+    private func eased(_ level: Double, _ dt: Double) -> Double {
+        let reach = Syllables.closing * dt
+        return voiceLevel + min(max(level - voiceLevel, -reach), reach)
     }
 
     /// A tap on the sleeping Ellie: a kick to the squash spring — 1, with Reduce Motion 0.5 (prototype v3, `giggle`) —

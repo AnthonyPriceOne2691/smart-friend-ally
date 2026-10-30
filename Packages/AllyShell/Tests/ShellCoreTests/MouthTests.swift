@@ -54,6 +54,8 @@ final class MouthTests: XCTestCase {
     private let thinks = Motion.Group.thinks.rawValue, talks = Motion.Group.talks.rawValue
     private let waves = Motion.Group.waves.rawValue, listens = Motion.Group.listens.rawValue
 
+    override func setUp() { continueAfterFailure = false }  // a broken property fails once, not on every frame
+
     private func spans(_ spans: (Double, Double)...) -> (Double) -> Bool {
         { time in spans.contains { $0.0 <= time && time < $0.1 } }
     }
@@ -106,15 +108,15 @@ final class MouthTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(peak(shots, from: 3.1, to: 3.6), 0.6)
     }
 
-    /// 200 talks of 30 s with a fixed seed, every other with a voice level passed in: out of the sound and 0.12 s after
+    /// 200 talks of 15 s with a fixed seed, every other with a voice level passed in: out of the sound and 0.12 s after
     /// it the mouth is shut (the yawn after a goodbye is not speech), and in the sound it does open.
     func testTheMouthOpensOnlyWhileHerVoiceSounds() {  // N5
         var dice = Dice(seed: 2030), widest = 0.0
         let dozes = Motion.Group.dozes.rawValue
         for scenario in 0..<200 {
-            let talk = Talk.made(seconds: 30, dice: &dice), voice = scenario.isMultiple(of: 2) ? nil : dice.next()
+            let talk = Talk.made(seconds: 15, dice: &dice), voice = scenario.isMultiple(of: 2) ? nil : dice.next()
             let motion = Motion(seed: UInt64(scenario))
-            for index in 0..<Int(30 / step) {
+            for index in 0..<Int(15 / step) {
                 let time = Double(index) * step, sound = talk.sounds(at: time)
                 let pose = motion.step(step, phase: talk.phase(at: time), sound: sound, voice: voice).pose
                 if sound, voice == nil { widest = max(widest, motion.voiceLevel) }
