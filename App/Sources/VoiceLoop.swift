@@ -45,6 +45,9 @@ final class VoiceLoop: ObservableObject {
     @Published var macFilesLine: String?
     @Published var importingMacFiles = false
     private var encyclopedia: Encyclopedia?  // Э2: loaded at warm-up, both sessions get it
+    // The black box (D3.2, `BoxConsole.swift`): it keeps the child sessions; its line for the console and the journal.
+    var box: BlackBox?
+    @Published var boxLine = ""
     private var started = false, stages: [(name: String, seconds: Double)] = []  // child-open: the loading's stages
     private static let log = Logger(subsystem: "com.anthonypriceone.ally", category: "launch")
 
@@ -274,9 +277,10 @@ final class VoiceLoop: ObservableObject {
     private func converse(_ model: LlamaModel, _ hearing: Hearing, _ voice: any HerVoice, _ silero: SileroActivity?,
                           _ decode: (@Sendable ([Float]) -> String)?) {
         let heard: @Sendable (String) -> Void = { text in Task { @MainActor in self.screen.heard = text } }
+        let disk = PhoneDisk(), box = BlackBox(disk: disk)
         let ear = PhoneListener(recognizer: recognizer, audio: audio, hearing: hearing,
                                 resetSound: { voice.resetFirstSound() }, firstSound: { voice.firstSound }, heard: heard,
-                                activity: silero, decode: decode)
+                                activity: silero, decode: decode, keep: { box.heard($0) })
         let echo = EchoVoice(voice) { sentence in Task { @MainActor in self.screen.said += sentence + " " } }
         let settings = SessionSettings(limitMinutes: UserDefaults.standard.object(forKey: SessionSettings.key)
             .map { "\($0)" })
@@ -289,7 +293,8 @@ final class VoiceLoop: ObservableObject {
             self.refreshMemoryLines()
             self.parseMemory()
         } })
-        let sink = TraceFanOut(memory == nil ? [journal, Self.systemLog] : [journal, tap, Self.systemLog])  // sim-app
+        // sim-app; the black box beside the wordless journal (D3.2)
+        let sink = TraceFanOut(memory == nil ? [journal, box, Self.systemLog] : [journal, box, tap, Self.systemLog])
         let encyclopedia = encyclopedia
         let stamp: @Sendable () -> TraceStamp = {
             let thermal = ["nominal", "fair", "serious", "critical"][ProcessInfo.processInfo.thermalState.rawValue]
@@ -308,10 +313,11 @@ final class VoiceLoop: ObservableObject {
         // session's audience is chosen once — the black box keeps only the supervised one.
         let conversation = Conversation(parts(.parent), settings: settings, listener: ear)
         let childTalk = Conversation(parts(ReleaseGate.audience(access)), settings: settings, listener: ear)
-        (self.conversation, self.childTalk) = (conversation, childTalk)
+        (self.conversation, self.childTalk, self.box) = (conversation, childTalk, box)
         audio.whenOverlap { Task { @MainActor in self.bargeIn() } }  // D6.2: her speech over Elly cuts her
         audio.whenInterrupted { began in Task { @MainActor in self.interrupted(began) } }
-        Task { for await state in childTalk.updates where child { show(state) } }
+        screen.lines.append(noteBox(disk))
+        follow(childTalk)
         screen.lines.append(settings.note ?? "лимит: \(Int(settings.limit / 60)) мин")
         if let note = nap.note { screen.lines.append(note) }
         if !RouterRouting.healthy { screen.lines.append("маршрутизатор: самопроверка не прошла") }
@@ -363,7 +369,7 @@ final class VoiceLoop: ObservableObject {
     }
 
     /// A state of the child session; when one ends by the limit, the break starts (Ш3).
-    private func show(_ state: TalkState) {
+    func show(_ state: TalkState) {
         talk = state
         guard state.phase == .asleep, state.ended != nil else { return }
         nap.ended(state, at: Date())

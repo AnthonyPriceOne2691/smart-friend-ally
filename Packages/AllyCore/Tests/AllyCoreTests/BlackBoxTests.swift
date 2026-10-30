@@ -249,6 +249,19 @@ final class BlackBoxTests: XCTestCase {
         XCTAssertEqual(busy.disk.paths.count, 4)
     }
 
+    func testConsoleAsksWithWhatTheBoxHoldsThenErases() async throws {  // B17
+        let mib = 1 << 20, old = ["A/0001.allybox": 20 * mib, "A/0001-child.wav": 1 * mib, "B/0001.allybox": 20 * mib]
+        let rig = BoxRig(replies: ["Ага."], disk: MemoryDisk(preload: old))
+        let held = try rig.box.held()
+        XCTAssertEqual([held.sessions, held.bytes], [2, 41 * mib])
+        await rig.session.handle(.wake)
+        XCTAssertEqual(try rig.box.eraseAll(), .busy)
+        await rig.say("Пока!", nil)
+        let before = try rig.disk.files().values.reduce(0, +)
+        XCTAssertEqual(try rig.box.eraseAll(), .erased(sessions: 3, bytes: before))
+        XCTAssertEqual([try rig.box.held().sessions, try rig.box.held().bytes], [0, 0])
+    }
+
     func testOneRecordPerTraceRecordThroughTheRealSession() async throws {  // B10
         let rig = BoxRig(replies: ["Какая пушистая Мурка!", "Красивое имя!", "Рыжая — это здорово!"],
                          routes: scriptRoutes)
@@ -292,6 +305,24 @@ final class BlackBoxTests: XCTestCase {
     }
 
     /// On seeded random sessions, the black box keeps exactly the trace's records, the numbers matching.
+    /// B14 with GigaAM: the box keeps every sample the batch recognizer was fed, bit for bit and in order, and the
+    /// recognizer decodes the tail of those very samples — from the pre-roll before her start.
+    func testGigaAMHandsTheBoxTheSamplesItDecodesFrom() {  // B14
+        let box = Locked<(samples: [Int16], rates: Set<Int>)>(([], [])), decoded = Locked<[Int16]>([])
+        let phrase = BatchPhrase(preRoll: 1.5, decode: { samples in
+            decoded { $0 = samples }
+            return ""
+        }, onFed: { samples, rate in box { ($0.samples, $0.rates) = ($0.samples + samples, $0.rates.union([rate])) } })
+        let silence = (0..<64_000).map { Int16($0 % 7) }, speech = (0..<32_000).map { Int16(900 + $0 % 13) }
+        phrase.feed(silence)
+        phrase.started()
+        phrase.feed(speech)
+        _ = phrase.finish()
+        XCTAssertEqual(box { $0.samples }, silence + speech)
+        XCTAssertEqual(box { $0.rates }, [16_000])
+        XCTAssertEqual(decoded { $0 }, Array((silence + speech)[(64_000 - 24_000)...]))
+    }
+
     func testRecordsMatchTheTraceOnSeededSessions() async throws {  // B10
         var random = SeededGenerator(seed: 7)
         for _ in 0..<20 {

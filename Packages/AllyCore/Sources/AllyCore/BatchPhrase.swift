@@ -6,12 +6,19 @@ import Foundation
 public final class BatchPhrase: @unchecked Sendable {
     private struct State { var samples: [Int16] = [], started: Int?, tentative: String?, decodes = 0 }
     private let rate: Double, preRoll: Double, decode: @Sendable ([Int16]) -> String, state = Locked(State())
+    private let onFed: @Sendable ([Int16], Int) -> Void
 
-    public init(rate: Double = 16_000, preRoll: Double, decode: @escaping @Sendable ([Int16]) -> String) {
-        (self.rate, self.preRoll, self.decode) = (rate, preRoll, decode)
+    /// - Parameter onFed: every fed chunk as it came — the black box keeps the very samples this recognizer decodes
+    ///   from (D3.2).
+    public init(rate: Double = 16_000, preRoll: Double, decode: @escaping @Sendable ([Int16]) -> String,
+                onFed: @escaping @Sendable ([Int16], Int) -> Void = { _, _ in }) {
+        (self.rate, self.preRoll, self.decode, self.onFed) = (rate, preRoll, decode, onFed)
     }
 
-    public func feed(_ samples: [Int16]) { state { $0.samples += samples } }
+    public func feed(_ samples: [Int16]) {
+        state { $0.samples += samples }
+        onFed(samples, Int(rate))
+    }
 
     /// The flag of her speech rose: it marks the samples heard so far — the flag comes after the speech, the pre-roll
     /// covers that.

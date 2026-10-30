@@ -18,17 +18,18 @@ extension Phrase: RecognitionPhrase {
     func resumed() {}
 }
 
-/// GigaAM's utterance: the tap's buffers as 16 kHz Int16 mono — the black box's format — into `BatchPhrase`; decoding
-/// runs off the audio thread, the text goes to the screen as dictation's does.
+/// GigaAM's utterance: the tap's buffers as 16 kHz Int16 mono — the black box's format — into `BatchPhrase`, which
+/// hands the same samples to the box (`onFed`, D3.2); decoding runs off the audio thread, the text goes to the screen
+/// as dictation's does.
 final class GigaAMPhrase: RecognitionPhrase, @unchecked Sendable {
     private let batch: BatchPhrase, onText: @Sendable (String) -> Void
     private let format = AVAudioFormat(commonFormat: .pcmFormatInt16, sampleRate: 16_000, channels: 1,
                                        interleaved: false)
     private var converter: AVAudioConverter?  // the tap's thread only
 
-    init(preRoll: Double, decode: @escaping @Sendable ([Float]) -> String,
-         onText: @escaping @Sendable (String) -> Void) {
-        batch = BatchPhrase(preRoll: preRoll) { decode(BatchPhrase.floats($0)) }
+    init(preRoll: Double, decode: @escaping @Sendable ([Float]) -> String, onText: @escaping @Sendable (String) -> Void,
+         onFed: @escaping @Sendable ([Int16], Int) -> Void = { _, _ in }) {
+        batch = BatchPhrase(preRoll: preRoll, decode: { decode(BatchPhrase.floats($0)) }, onFed: onFed)
         self.onText = onText
     }
 

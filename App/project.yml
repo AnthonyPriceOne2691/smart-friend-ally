@@ -41,7 +41,7 @@ targets:
       - path: Sources
       - path: Resources
         buildPhase: resources
-      - path: ../.github/allowed_signers  # the parent's key for the exception (R child-lock), one copy with the Mac
+      - path: ../.github/allowed_signers  # the parent's key for the acceptance (R2), one copy with the Mac
         buildPhase: resources
     dependencies:
       - package: AllyCore

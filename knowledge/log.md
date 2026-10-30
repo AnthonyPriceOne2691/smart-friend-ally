@@ -1,5 +1,16 @@
 # Knowledge Bundle Update Log
 
+## 2026-10-30 — чёрный ящик в приложении: хранилище на телефоне, её звук у распознавателя, выгрузка и стирание
+
+* **Update**: `ops/black-box` — D3.2 сделана в коде: `PhoneDisk` (класс `Complete`, пометка «не в бэкап» с чтением
+  обратно), её звук у распознавателя — крючок в `Phrase.feed` диктовки и в `GigaAMPhrase.feed` (те же
+  16 кГц Int16, что идут в `BatchPhrase`), реплика из `PhoneListener`, строка ящика и «Стереть чёрный ящик» в консоли,
+  команда `scripts/blackbox.py pull|erase`; пауза до её речи пуста, пока аудиопуть не отдаёт начало речи;
+  `implementation:` — `PhoneDisk.swift`, `scripts/blackbox.py`. `ops/child-data` — сторожа выгрузки (git, iCloud) и
+  стирание только сверенного — в механике. `engineering/voice-loop` — данные ящика и команды выгрузки и стирания.
+  `engineering/turn-detector` — `BatchPhrase` отдаёт ящику те же отсчёты. `product/child-mode`, `ops/test-session` — ключ
+  родителя не держит ни детский экран, ни запись: он для подписи необратимого и приёмки R2.
+* **Источник**: поставка `app-black-box` (D3.2; примеры B13–B19 подписаны родителем 2026-10-22 в спеке серии).
 ## 2026-10-30 — рот Элли только при звуке (mouth-sync)
 
 * **Update**: `product/look-and-feel` — строка «в коде (mouth-sync)». `engineering/character-rendering` — как сделано:

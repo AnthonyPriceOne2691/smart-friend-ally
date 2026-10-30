@@ -12,7 +12,7 @@ struct ConsoleModel {
     var memoryLines: [String] = [], memoryConfirmation = ""
     /// M41: what she remembers by entity, for «Забыть…».
     var forgettable: [ForgetGroup] = []
-    /// The lock, the acceptance and the break, one line each (R, R2, Ш3).
+    /// The lock, the acceptance, the break and the black box, one line each (R, R2, Ш3, D3.2).
     var lockLines: [String] = []
     /// The child mode may be handed over (the access is open), an exception lies in the container.
     var open = false, exception = false
@@ -27,6 +27,8 @@ struct ConsoleActions {
     var memoryText: @MainActor () -> String = { "" }
     /// M41: forget one fact, or everything about one entity — by the ids of `ForgetGroup`.
     var forgetFact: @MainActor (Int64) -> Void = { _ in }, forgetEntity: @MainActor (Int64) -> Void = { _ in }
+    /// B17: what the black box holds, for the question before its erase, and the erase after the parent's yes.
+    var boxHeld: @MainActor () -> (sessions: Int, bytes: Int)? = { nil }, eraseBox: @MainActor () -> Void = {}
 }
 
 /// M41: an entity of her memory as the console shows it — the title, the facts in the block's words — with the parent's
@@ -45,6 +47,7 @@ struct ConsoleView: View {
     @State private var remembered: String?
     @State private var erasing = false
     @State private var forgetting = false
+    @State private var asking: (sessions: Int, bytes: Int)?
 
     var body: some View {
         AdultSky {
@@ -72,6 +75,7 @@ struct ConsoleView: View {
                 .accessibilityIdentifier("console.lock")
                 buttons
                 memoryButtons
+                boxButton
             }
             .padding()
         }
@@ -126,6 +130,27 @@ struct ConsoleView: View {
         } message: {
             Text(remembered.map { $0.isEmpty ? model.memoryLines.first ?? "" : $0 } ?? "")
         }
+    }
+
+    /// B17: the black box's erase — the parent's yes on what it holds, only while she sleeps.
+    private var boxButton: some View {
+        Button("Стереть чёрный ящик", role: .destructive) { asking = actions.boxHeld() }.buttonStyle(GlassCapsule())
+            .disabled(model.talk.phase != .asleep).accessibilityIdentifier("console.erase")
+            .alert(Self.question(asking), isPresented: Binding(get: { asking != nil },
+                                                               set: { if !$0 { asking = nil } })) {
+                Button("Стереть", role: .destructive, action: actions.eraseBox)
+                Button("Отмена", role: .cancel) {}
+            } message: {
+                Text("Сначала выгрузи на Mac.")
+            }
+    }
+
+    /// «Стереть 5 сессий (41 МБ)?» — what the box holds before the parent's yes.
+    private static func question(_ held: (sessions: Int, bytes: Int)?) -> String {
+        let n = held?.sessions ?? 0, mb = Int((Double(held?.bytes ?? 0) / 1_048_576).rounded())
+        let tail = n % 100 / 10 == 1 ? 5 : n % 10
+        let w = tail == 1 ? "сессию" : (2...4).contains(tail) ? "сессии" : "сессий"
+        return "Стереть \(n) \(w) (\(mb) МБ)?"
     }
 
     /// The phase in the console's words (the demo's switcher names its chips with them too).

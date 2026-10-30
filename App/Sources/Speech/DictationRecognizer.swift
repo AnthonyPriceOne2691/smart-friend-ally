@@ -15,13 +15,22 @@ final class DictationRecognizer: @unchecked Sendable {
         else { return (false, "нет русской модели диктовки") }
         locale = russian
         format = await SpeechAnalyzer.bestAvailableAudioFormat(compatibleWith: [Self.module(russian)])
-        return (format != nil, "диктовка \(russian.identifier(.bcp47)): " + (format == nil ? "нет формата" : "готова"))
+        let ready = "диктовка \(russian.identifier(.bcp47)): " + (format == nil ? "нет формата" : "готова")
+        return (format != nil, ready + (format.map { " · " + Self.kind($0) } ?? ""))
     }
 
-    /// One phrase: opened before the speech starts, so setup overlaps the speaking; `onText` gets the running text.
-    func phrase(onText: @escaping @Sendable (String) -> Void) async throws -> Phrase {
+    /// One phrase: opened before the speech starts, so setup overlaps the speaking; `onText` gets the running text,
+    /// `onFed` — the samples of every buffer that went into the analyzer, when it takes PCM16 mono (black box, D3.2).
+    func phrase(onText: @escaping @Sendable (String) -> Void,
+                onFed: @escaping @Sendable ([Int16], Int) -> Void = { _, _ in }) async throws -> Phrase {
         guard let locale, let format else { throw CocoaError(.featureUnsupported) }
-        return try await Phrase(module: Self.module(locale), format: format, onText: onText)
+        return try await Phrase(module: Self.module(locale), format: format, onText: onText, onFed: onFed)
+    }
+
+    /// The analyzer's format for the console (B14): her sound is kept only as PCM16 mono, bit for bit (L23).
+    private static func kind(_ format: AVAudioFormat) -> String {
+        let pcm16 = format.commonFormat == .pcmFormatInt16 && format.channelCount == 1
+        return "\(Int(format.sampleRate)) Гц, " + (pcm16 ? "Int16, моно" : "не PCM16 моно — её звук не пишется")
     }
 
     private static func module(_ locale: Locale) -> DictationTranscriber {
@@ -33,16 +42,17 @@ final class DictationRecognizer: @unchecked Sendable {
 /// The analyzer of one phrase: buffers in (converted to its format), the text out at the end.
 final class Phrase: @unchecked Sendable {
     private let analyzer: SpeechAnalyzer, input: AsyncStream<AnalyzerInput>.Continuation, text: Task<String, Error>
-    private let format: AVAudioFormat, collected = Locked(TranscriptCollector())
+    private let format: AVAudioFormat, onFed: @Sendable ([Int16], Int) -> Void
+    private let collected = Locked(TranscriptCollector())
     private var converter: AVAudioConverter?  // the tap's thread only
 
-    fileprivate init(module: DictationTranscriber, format: AVAudioFormat,
-                     onText: @escaping @Sendable (String) -> Void) async throws {
+    fileprivate init(module: DictationTranscriber, format: AVAudioFormat, onText: @escaping @Sendable (String) -> Void,
+                     onFed: @escaping @Sendable ([Int16], Int) -> Void) async throws {
         let options = SpeechAnalyzer.Options(priority: .userInitiated, modelRetention: .processLifetime)
         analyzer = SpeechAnalyzer(modules: [module], options: options)
         // Bounded by the longest turn: 20 s is ~940 tap buffers of 1024 frames at 48 kHz.
         let (stream, input) = AsyncStream<AnalyzerInput>.makeStream(bufferingPolicy: .bufferingOldest(2_048))
-        (self.input, self.format) = (input, format)
+        (self.input, self.format, self.onFed) = (input, format, onFed)
         text = Task { [collected] in
             for try await result in module.results {
                 onText(collected { $0.add(String(result.text.characters), isFinal: result.isFinal) })
@@ -54,7 +64,12 @@ final class Phrase: @unchecked Sendable {
     }
 
     func feed(_ buffer: AVAudioPCMBuffer) {
-        if let converted = convert(buffer) { input.yield(AnalyzerInput(buffer: converted)) }
+        guard let converted = convert(buffer) else { return }
+        input.yield(AnalyzerInput(buffer: converted))
+        // The very buffer the analyzer got, as samples — only PCM16 mono is kept bit for bit (B14).
+        guard format.commonFormat == .pcmFormatInt16, format.channelCount == 1,
+              let channel = converted.int16ChannelData?[0] else { return }
+        onFed(Array(UnsafeBufferPointer(start: channel, count: Int(converted.frameLength))), Int(format.sampleRate))
     }
 
     /// Her tentative end (D7.1): everything fed so far is finalized and the input stays open; the text so far

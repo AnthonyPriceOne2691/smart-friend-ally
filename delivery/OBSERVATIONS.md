@@ -68,6 +68,7 @@
 - `memory-quality`
 - `duplex-audio`
 - `voice-accent-wire`
+- `app-black-box`
 - `memory-app`
 - `barge-in`
 - `child-shell-mouth`

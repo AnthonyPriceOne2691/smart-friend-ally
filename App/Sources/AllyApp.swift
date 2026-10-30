@@ -48,11 +48,13 @@ struct Console: View {
 }
 
 extension VoiceLoop {
-    /// The console's look at the loop: the session, the open child screen, the acceptance and the break, the memory.
+    /// The console's look at the loop: the session, the open child screen, the acceptance, the break and the black
+    /// box's line, the memory.
     var console: ConsoleModel {
         ConsoleModel(lines: screen.lines, heard: screen.heard, said: screen.said, ready: screen.ready, talk: talk,
                      memoryLines: memoryLines, memoryConfirmation: memoryConfirmation, forgettable: forgettable,
-                     lockLines: ["детский экран: открыт всегда"] + [acceptance, napLine].compactMap { $0 },
+                     lockLines: (["детский экран: открыт всегда", acceptance, napLine, boxLine].compactMap { $0 })
+                         .filter { !$0.isEmpty },
                      open: childAllowed, exception: exception)
     }
 
@@ -60,6 +62,7 @@ extension VoiceLoop {
     var consoleActions: ConsoleActions {
         ConsoleActions(wake: wake, done: done, bargeIn: bargeIn, stop: stop, handOver: handOver,
                        closeChildMode: closeChildMode, eraseMemory: eraseMemory, memoryText: { self.memoryText },
-                       forgetFact: { self.forget(fact: $0) }, forgetEntity: { self.forget(entity: $0) })
+                       forgetFact: { self.forget(fact: $0) }, forgetEntity: { self.forget(entity: $0) },
+                       boxHeld: boxHeld, eraseBox: eraseBox)
     }
 }

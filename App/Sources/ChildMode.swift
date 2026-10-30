@@ -2,9 +2,9 @@ import AllyCore
 import Foundation
 
 /// The child mode on the phone (R, R2): the parent's key from the bundle (`allowed_signers`), his acceptance from the
-/// bundle (`release-gate.json` and `.sig`, R2 — none until the goals are met), his exception and its signature from
-/// the container (`Application Support/Ally/child-mode.json` and `.sig`, copied by `scripts/child_mode.sh`), the
-/// build's surface — and who may talk on the child screen.
+/// bundle (`release-gate.json` and `.sig`, R2 — none until the goals are met), an exception and its signature left in
+/// the container by a build before child-open (`Application Support/Ally/child-mode.json` and `.sig`), the build's
+/// surface — and who may talk on the child screen.
 struct ChildMode {
     let build: ReleaseGate.Build
     private let signer: String?, folder: URL, release: SignedFile?
