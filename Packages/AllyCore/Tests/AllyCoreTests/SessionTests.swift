@@ -15,15 +15,16 @@ struct Rig {
 
     init(replies: [String] = [], routes: [String: Route] = [:], router: TurnRouting? = nil, limit: String? = nil,
          seconds: Double = 0, hold: Bool = false, fails: Bool = false, stamp: TraceStamp = TraceStamp(),
-         knowledge: Encyclopedia? = nil, names: FamilyNames = FamilyNames()) {
-        let clock = TestClock(), sink = RecordingSink(), states = StateLog()
+         knowledge: Encyclopedia? = nil, names: FamilyNames = FamilyNames(), story: StoryModel? = nil,
+         clock: TestClock = TestClock(), intent: StoryIntent = .shared) {
+        let sink = RecordingSink(), states = StateLog()
         let voice = RecordingVoice(hold: hold, from: greeting.count) { clock.advance(by: seconds) }
         let model = ReplyQueue(replies, fails: fails)
         let parts = SessionParts(model: model, voice: voice, sink: sink, clock: clock,
-                                 router: router ?? TableRouter(table: routes), knowledge: knowledge, stamp: { stamp },
-                                 names: { names }, onState: { states.record($0) })
+                                 router: router ?? TableRouter(table: routes), knowledge: knowledge, story: story,
+                                 stamp: { stamp }, names: { names }, onState: { states.record($0) })
         (self.clock, self.sink, self.states, self.model, self.voice) = (clock, sink, states, model, voice)
-        session = Session(parts, settings: SessionSettings(limitMinutes: limit))
+        session = Session(parts, settings: SessionSettings(limitMinutes: limit), intent: intent)
     }
 
     /// What she heard after the greeting.

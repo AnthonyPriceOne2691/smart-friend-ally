@@ -40,22 +40,23 @@ enum Cut {
 }
 
 /// What a session needs: the model and the voice, the trace sink, the clock, the router hook, the encyclopedia after it
-/// (nil — no lookups), the app's stamp, her family's names from the memory at each wake (M42) and a watcher of the
-/// states (the app opens the microphone by them).
+/// (nil — no lookups), the model of tales (nil — no story turns), the app's stamp, her family's names from the memory
+/// at each wake (M42) and a watcher of the states (the app opens the microphone by them).
 public struct SessionParts: Sendable {
     public let model: LanguageModel, voice: VoiceOutput, sink: TraceSink, clock: TurnClock, router: TurnRouting
-    public let knowledge: Encyclopedia?
+    public let knowledge: Encyclopedia?, story: StoryModel?
     public let audience: Audience, stamp: @Sendable () -> TraceStamp, names: @Sendable () -> FamilyNames
     public let onState: @Sendable (SessionState) -> Void
 
     public init(model: LanguageModel, voice: VoiceOutput, sink: TraceSink, clock: TurnClock = SystemClock(),
                 router: TurnRouting = PassThroughRouting(), knowledge: Encyclopedia? = nil,
+                story: StoryModel? = nil,
                 audience: Audience = .parent, stamp: @escaping @Sendable () -> TraceStamp = { TraceStamp() },
                 names: @escaping @Sendable () -> FamilyNames = { FamilyNames() },
                 onState: @escaping @Sendable (SessionState) -> Void = { _ in }) {
         (self.model, self.voice, self.sink, self.clock, self.router) = (model, voice, sink, clock, router)
-        (self.knowledge, self.audience, self.stamp, self.names, self.onState) = (knowledge, audience, stamp, names,
-                                                                                  onState)
+        (self.knowledge, self.story, self.audience) = (knowledge, story, audience)
+        (self.stamp, self.names, self.onState) = (stamp, names, onState)
     }
 }
 
@@ -69,14 +70,15 @@ public actor Session {
     private let current = Locked(SessionState.asleep), expecting = Locked(TurnKind.open)
     private var id = "", start = 0.0, count = 0, misses = 0, heard: String?, listening: TurnKind?
     private var window = WindowCount()  // her name and the brother, counted from the wake (M42)
+    private var bridges: [StoryKind: Int] = [:], exchanges: [Exchange] = []  // story turns: both from the wake
     private var cancel: (@Sendable () -> Void)?, cut = Cut.parent
-    private let speculation: Speculation
+    private let speculation: Speculation, intent: StoryIntent
 
     /// The answer begun in her pause has been written to its end (a test waits for it before her speech comes back).
     nonisolated var begunAnswerFinished: Bool { speculation.finished }
 
-    public init(_ parts: SessionParts, settings: SessionSettings = SessionSettings()) {
-        (self.parts, self.settings) = (parts, settings)
+    public init(_ parts: SessionParts, settings: SessionSettings = SessionSettings(), intent: StoryIntent = .shared) {
+        (self.parts, self.settings, self.intent) = (parts, settings, intent)
         speculation = Speculation(parts.model, clock: parts.clock)
     }
 
@@ -129,7 +131,7 @@ public actor Session {
 
     private func greet() async {
         (id, start, count, misses) = (UUID().uuidString, parts.clock.now(), 0, 0)
-        window = WindowCount(names: parts.names())
+        (window, bridges, exchanges) = (WindowCount(names: parts.names()), [:], [])
         if await phrase("greeting", in: .greeting) { move(to: .listening) }
     }
 
@@ -143,13 +145,17 @@ public actor Session {
 
     /// Where her utterance goes: the router's decision, her goodbye, a script line, the encyclopedia's lookup — one
     /// answer for the turn and for the answer begun in her pause; the model gets only the rest. The encyclopedia is
-    /// asked only on a «pass» that is neither her goodbye nor forgotten: a script and a guard never reach it (Э2).
+    /// asked only on a «pass» that is neither her goodbye nor forgotten: a script and a guard never reach it (Э2). A
+    /// story turn takes only a clean «pass», before the encyclopedia and never as the last turn; the conversation's
+    /// model does not start it in her pause.
     private struct Plan {
-        let route: Route, goodbye: Bool, script: (key: String, line: String)?, lookup: Lookup?
-        var toModel: Bool { !goodbye && script == nil && !route.forget }
+        let route: Route, goodbye: Bool, script: (key: String, line: String)?, lookup: Lookup?, story: StoryKind?
+        var toModel: Bool { !goodbye && script == nil && !route.forget && story == nil }
 
         /// A hint gives the turn `why`; the last turn stays `goodbye` — its rules close the session.
-        func mode(last: Bool) -> TurnMode { last ? .goodbye : lookup?.hint == nil ? .talk : .why }
+        func mode(last: Bool) -> TurnMode {
+            last ? .goodbye : story != nil ? .story : lookup?.hint == nil ? .talk : .why
+        }
 
         /// The hint's card when it has a key: its text sounds if the reply misses the essence (card-fallback).
         var card: HintCard? {
@@ -163,8 +169,13 @@ public actor Session {
         let script = route.key.flatMap { key in Router.script(for: key).map { (key: key, line: $0) } }
         let goodbye = route.decision == .pass && data.isGoodbye(text)
         let asks = route.decision == .pass && !goodbye && !route.forget
-        return Plan(route: route, goodbye: goodbye, script: script, lookup: asks ? parts.knowledge?.lookup(text) : nil)
+        let tells = asks && route.rules.isEmpty && parts.story != nil && intent.healthy && !finishing
+        let story = tells ? intent.kind(of: text) : nil
+        return Plan(route: route, goodbye: goodbye, script: script,
+                    lookup: asks && story == nil ? parts.knowledge?.lookup(text) : nil, story: story)
     }
+
+    private var finishing: Bool { state == .windingDown || late }
 
     /// What the model gets: her words, with the hint's line when the encyclopedia gave one (`Knowledge.swift`).
     private func prompt(_ text: String, _ plan: Plan) -> String {
@@ -175,16 +186,17 @@ public actor Session {
         heard = text  // her words go with the next record, whatever it is (D3)
         guard text.contains(where: \.isLetter) else { return await missed() }
         misses = 0
-        let plan = plan(text), route = plan.route, script = plan.script, last = state == .windingDown || late
+        let plan = plan(text), route = plan.route, script = plan.script, last = finishing
         if !plan.toModel { speculation.drop() }
         if plan.goodbye { return await close("goodbye", end: "goodbye_word") }
         let head = head(script.map { "script:" + $0.key }, mode: plan.mode(last: last), route: route,
-                        knowledge: plan.lookup?.record)
+                        knowledge: plan.lookup?.record, story: plan.story.flatMap(bridge))
         move(to: .thinking)
         // A forgotten utterance never reaches the model: a script sounds as ever, else the contract's canned reply.
         let line = script?.line ?? (route.forget ? "" : nil)
         guard let outcome = await respond(text, plan: plan, line: line, head: head) else { return }
         window.count(said: outcome.turn.sentences, heard: text)
+        if !route.forget { record(heard: text, outcome) }
         await after(outcome, route: route, head: head, last: last)
     }
 
@@ -207,6 +219,16 @@ public actor Session {
         let decision = route.key == nil ? route.decision : .guard(topic: nil), mode = head.mode
         let prompt = prompt(text, plan), card = plan.card, shown = window.window(heard: text)
         let voice = Speaking(parts.voice) { self.move(to: .speaking) }
+        if let bridge = head.story, let story = parts.story {
+            let request = StoryRequest(recent: exchanges, utterance: text, bridge: bridge.text)
+            let model = StoryTurn(story, request, memory: speculation)
+            var outcome = await perform(head) { [parts] in
+                try await TurnRunner(model: model, voice: voice, clock: parts.clock, mode: mode)
+                    .run(text, decision: decision, window: shown, bridge: bridge.text)
+            }
+            outcome?.told = story.lastTold
+            return outcome
+        }
         return await perform(head) { [parts, speculation] in
             try await TurnRunner(model: speculation, voice: voice, clock: parts.clock, mode: mode)
                 .run(text, decision: decision, prompt: prompt, card: card, window: shown)
@@ -225,6 +247,18 @@ public actor Session {
         write(head, outcome, end: said ? "limit" : nil)
         if said { return move(to: .asleep) }
         await close("goodbye", end: "limit")
+    }
+
+    /// A finished turn as the model of tales will read it; a forgotten utterance never gets here.
+    private func record(heard text: String, _ outcome: TurnOutcome) {
+        let exchange = Exchange(heard: text, said: outcome.said.joined(separator: " "))
+        exchanges = Array((exchanges + [exchange]).suffix(intent.exchanges))
+    }
+
+    /// The bridge of this story turn: by its kind, from the wake, in a circle.
+    private func bridge(_ kind: StoryKind) -> StoryBridge? {
+        defer { bridges[kind, default: 0] += 1 }
+        return intent.bridge(kind, turn: bridges[kind, default: 0])
     }
 
     private func missed() async {
@@ -307,11 +341,11 @@ public actor Session {
         return nil
     }
 
-    private func head(_ source: String?, mode: TurnMode, route: Route?, knowledge: KnowledgeRecord? = nil)
-        -> TraceHead {
+    private func head(_ source: String?, mode: TurnMode, route: Route?, knowledge: KnowledgeRecord? = nil,
+                      story: StoryBridge? = nil) -> TraceHead {
         count += 1
         return TraceHead(session: id, turn: count, phase: state, mode: mode, source: source, route: route,
-                         knowledge: knowledge, elapsed: parts.clock.now() - start, limit: settings.limit,
+                         knowledge: knowledge, story: story, elapsed: parts.clock.now() - start, limit: settings.limit,
                          audience: parts.audience, turnKind: listening)
     }
 
@@ -320,7 +354,7 @@ public actor Session {
         let app = parts.stamp(), elapsed = parts.clock.now() - start
         let stages = app.stages.merging(speculation.takeStages()) { $1 }.merging(marks) { $1 }
         let stamp = TraceStamp(versions: app.versions, memory: app.memory, thermal: app.thermal, stages: stages)
-        let words = TurnWords(heard: heard, modelText: outcome?.modelText, said: outcome?.turn.sentences,
+        let words = TurnWords(heard: heard, modelText: outcome?.modelText, said: outcome?.said,
                               elapsed: elapsed)
         heard = nil
         parts.sink.write(TurnTrace(head, outcome: outcome, stamp: stamp, cancelled: cancelled, error: error, end: end),

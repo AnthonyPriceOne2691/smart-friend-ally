@@ -47,8 +47,8 @@ public actor Conversation {
     public init(_ parts: SessionParts, settings: SessionSettings = SessionSettings(), listener: Listener) {
         let board = Board(), sink = EndWatch(sink: parts.sink, board: board)
         let watched = SessionParts(model: parts.model, voice: parts.voice, sink: sink, clock: parts.clock,
-                                   router: parts.router, knowledge: parts.knowledge, audience: parts.audience,
-                                   stamp: parts.stamp, names: parts.names) { state in
+                                   router: parts.router, knowledge: parts.knowledge, story: parts.story,
+                                   audience: parts.audience, stamp: parts.stamp, names: parts.names) { state in
             parts.onState(state)
             board.move(to: state)
         }

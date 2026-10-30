@@ -9,12 +9,13 @@ struct Talk {
     let states: StateLog, conversation: Conversation
 
     init(_ answers: [ScriptedEar.Answer], replies: [String] = [], limit: String? = nil, seconds: Double = 0,
-         holdVoice: Bool = false, knowledge: Encyclopedia? = nil, names: FamilyNames = FamilyNames()) {
+         holdVoice: Bool = false, knowledge: Encyclopedia? = nil, names: FamilyNames = FamilyNames(),
+         story: StoryModel? = nil) {
         let clock = TestClock(), sink = RecordingSink(), states = StateLog()
         let voice = RecordingVoice(hold: holdVoice) { clock.advance(by: seconds) }, model = ReplyQueue(replies)
         let ear = ScriptedEar(answers, clock: clock, voice: voice)
         let parts = SessionParts(model: model, voice: voice, sink: sink, clock: clock, knowledge: knowledge,
-                                 names: { names }, onState: { states.record($0) })
+                                 story: story, names: { names }, onState: { states.record($0) })
         conversation = Conversation(parts, settings: SessionSettings(limitMinutes: limit), listener: ear)
         ear.watch(conversation)
         (self.clock, self.sink, self.model, self.voice) = (clock, sink, model, voice)
