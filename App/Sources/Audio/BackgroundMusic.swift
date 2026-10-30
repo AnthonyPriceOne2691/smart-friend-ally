@@ -13,23 +13,17 @@ final class BackgroundMusic {
     private var player: AVAudioPlayer?, loop: AVAudioPCMBuffer?, fader = MusicFader(), scene = MusicCue.Scene()
     private var way: Task<Void, Never>?, onEngine = false, wired = false, start: AVAudioFramePosition = 0
 
-    /// The node joins the engine's graph here — before voice processing goes on (X9).
-    init(line: MusicLine, engine: AVAudioEngine) {
-        (self.line, self.engine) = (line, engine)
+    /// The parent's line from the bundle; the node joins the engine's graph here, before voice processing (X9).
+    init(_ bundle: URL, engine: AVAudioEngine) {
+        let url = bundle.appendingPathComponent("music.json")
+        (line, self.engine) = (MusicLine.decode((try? Data(contentsOf: url)) ?? Data()), engine)
         guard line.on, line.volume > 0 else { return }
         engine.attach(node)
         let format = AVAudioFormat(standardFormatWithSampleRate: Double(MusicBox.rate), channels: 2)
         wired = (try? engine.connectNode(node, to: engine.mainMixerNode, format: format)) != nil  // the iOS 27 call
     }
 
-    /// With the parent's line from the bundle; no file — the standard and a note.
-    convenience init(_ bundle: URL, engine: AVAudioEngine) {
-        let url = bundle.appendingPathComponent("music.json")
-        self.init(line: MusicLine.decode((try? Data(contentsOf: url)) ?? Data()), engine: engine)
-    }
-
-    /// The sound's mode is known: the loop in the background; no echo canceller (Milena, the Mac) — no music in a talk.
-    /// The console's lines.
+    /// The sound's mode known: the loop in the background, no music in a talk without an echo canceller; console lines.
     func begin(sound: String) -> [String] {
         Task { await load(cancelsEcho: sound != "half") }
         let silent = sound == "half" && line.on ? ["музыка: в разговоре молчит" + " — нет эхоподавления"] : []
