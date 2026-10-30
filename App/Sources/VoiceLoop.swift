@@ -186,7 +186,7 @@ final class VoiceLoop: ObservableObject {
             let audio = audio
             let player = SoundingPlayer(EnginePlayer(engine: audio.engine, rate: renderer.rate),
                                         began: { audio.voiceStarted() }, ended: { audio.voiceEnded(at: $0) })
-            let spoken = SpokenVoice(renderer: renderer, player: player, gap: 0.45 / settings.preset.speed)
+            let spoken = SpokenVoice(renderer: renderer, player: player, gap: settings.preset.gap)
             return SupertonicVoice(spoken, preset: settings.preset)
         } catch {
             screen.lines.append("голос не загрузился: " + "\(error)")
@@ -266,8 +266,8 @@ final class VoiceLoop: ObservableObject {
                           _ decode: (@Sendable ([Float]) -> String)?) {
         let heard: @Sendable (String) -> Void = { text in Task { @MainActor in self.screen.heard = text } }
         let ear = PhoneListener(recognizer: recognizer, audio: audio, hearing: hearing,
-                                resetSound: { voice.resetFirstSound() }, firstSound: { voice.firstSound }, heard: heard,
-                                activity: silero, decode: decode)
+                                resetSound: { voice.resetFirstSound() }, firstSound: { voice.firstSound },
+                                settle: { try await voice.settle($0) }, heard: heard, activity: silero, decode: decode)
         let echo = EchoVoice(voice) { sentence in Task { @MainActor in self.screen.said += sentence + " " } }
         let settings = SessionSettings(limitMinutes: UserDefaults.standard.object(forKey: SessionSettings.key)
             .map { "\($0)" })

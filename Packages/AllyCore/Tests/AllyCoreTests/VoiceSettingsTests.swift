@@ -49,6 +49,22 @@ final class VoiceSettingsTests: XCTestCase {
         XCTAssertEqual(floor.preset.speed, 0.85)
     }
 
+    func testThePauseBetweenSentencesComesFromTheLine() throws {
+        // G6: no key — the default; the key — the line decides, not code; a negative pause — an error of the line
+        XCTAssertEqual(try settings().preset.gap, VoicePresetLine.defaultGap)
+        let edited = line.replacingOccurrences(of: #""steps": 8"#, with: #""steps": 8, "gap": 0.6"#)
+        XCTAssertEqual(try settings(preset: edited).preset.gap, 0.6)
+        let negative = line.replacingOccurrences(of: #""steps": 8"#, with: #""steps": 8, "gap": -0.1"#)
+        XCTAssertThrowsError(try settings(preset: negative))
+    }
+
+    func testTheDefaultPauseStaysInsideTheOverlapWindow() throws {
+        // G7: a pause past `after_voice` would leave a hole where her speech over the voice does not count
+        let hearing = try Hearing.decode(Data(contentsOf: shipped.deletingLastPathComponent()
+            .appendingPathComponent("hearing.json")))
+        XCTAssertLessThanOrEqual(VoicePresetLine.defaultGap, hearing.overlap?.afterVoice ?? 0)
+    }
+
     func testTheFirstSentenceStepsComeFromTheLine() throws {
         // Z22: the first sentence's steps — absent, the same as steps, and fewer — the line decides, not code
         XCTAssertEqual(try settings().preset.firstSteps, 8)

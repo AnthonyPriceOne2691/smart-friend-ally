@@ -5,11 +5,13 @@ import Foundation
 /// - Sentences are `gap` seconds apart from the end of the previous sound; `upcoming` makes them ahead (Z25).
 /// - `stop` silences the player at once; a sentence still in synthesis does not sound; the next turn does (Z24).
 /// - What sounded goes to the port, with a cut sign on a stop (Z23).
+/// - `settle` holds the next listening until the room has gone quiet after her last sound (voice-tuning).
 public final class SpokenVoice: VoiceOutput, VoiceLookahead, @unchecked Sendable {
     private typealias Sound = RenderedLater
     private struct State {
         var generation = 0, firstOfTurn = true, firstSound: Double?, stages: [String: Double] = [:], lastEnd: Double?
         var lead = 0.0  // the player's start latency last measured: the pause is counted between sounds
+        var quietSince: Double?  // the end of a sound that played out; a cut leaves nothing to wait for
         var ready: [String: Sound] = [:]
     }
     private struct Order { let generation: Int, first: Bool, sound: Sound }
@@ -62,6 +64,7 @@ public final class SpokenVoice: VoiceOutput, VoiceLookahead, @unchecked Sendable
         let played = await player.play(sound.samples, rate: sound.rate)
         state { (s: inout State) in
             s.lastEnd = clock.now()
+            s.quietSince = played.cut ? nil : s.lastEnd
             s.lead = played.started.map { $0 - asked } ?? s.lead
             guard first else { return }
             s.firstSound = played.started
@@ -78,6 +81,14 @@ public final class SpokenVoice: VoiceOutput, VoiceLookahead, @unchecked Sendable
             s.ready.removeAll()
         }
         player.stop()
+    }
+
+    /// Returns when `seconds` have passed since her last sound played out: the ear opens on a quiet room, as it did
+    /// when each sentence still carried the synthesis's 0.7 s of silence. After a stop her speech is what cut the
+    /// voice, so nothing waits.
+    public func settle(_ seconds: Double) async throws {
+        guard let end = state({ $0.quietSince }), end + seconds > clock.now() else { return }
+        try await clock.sleep(seconds: end + seconds - clock.now())
     }
 
     /// The pause after the previous sentence's sound, its start latency counted; false when a stop came since the

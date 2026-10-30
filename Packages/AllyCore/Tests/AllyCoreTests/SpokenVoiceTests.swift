@@ -110,6 +110,34 @@ final class SpokenVoiceTests: XCTestCase {
         XCTAssertEqual(voice.takeStages(), [:])
     }
 
+    func testTheEarWaitsForAQuietRoomAfterHerLastSound() async throws {
+        // G8: the listening opens `settle` seconds after the sound played out, not at once; a second call waits no more
+        let player = ClockPlayer(clock: clock)
+        let voice = SpokenVoice(renderer: ToneRenderer(), player: player, gap: 0.5, clock: clock)
+        try await drive { try await voice.speak("Раз.") }
+        let end = clock.now()
+        try await drive { try await voice.settle(0.8) }
+        XCTAssertEqual(clock.now() - end, 0.8, accuracy: 1e-9)
+        try await drive { try await voice.settle(0.8) }
+        XCTAssertEqual(clock.now() - end, 0.8, accuracy: 1e-9)
+    }
+
+    func testNothingWaitsBeforeTheFirstSoundOrAfterACut() async throws {
+        // G9: no sound yet — no wait; a stop cut the voice — her speech cut it, the ear opens at once
+        let player = ClockPlayer(clock: clock)
+        let voice = SpokenVoice(renderer: ToneRenderer(), player: player, gap: 0.5, clock: clock)
+        try await drive { try await voice.settle(0.8) }
+        XCTAssertEqual(clock.now(), 0)
+        let long = Task { try await voice.speak("Очень длинная фраза.") }
+        await eventually { player.calls.count == 1 && self.clock.sleeping > 0 }
+        clock.advance(by: 0.5)
+        voice.stop()
+        try await settle(long)
+        let cut = clock.now()
+        try await drive { try await voice.settle(0.8) }
+        XCTAssertEqual(clock.now(), cut)
+    }
+
     func testThePortGetsWhatSoundedInOrderAndACutOnStop() async throws {
         // Z23: the sound after processing in order, its length as it sounded; a stop mid-sentence — part and a cut
         let player = ClockPlayer(clock: clock), port = SoundLog()

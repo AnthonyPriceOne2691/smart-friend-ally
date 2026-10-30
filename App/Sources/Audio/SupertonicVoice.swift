@@ -30,9 +30,11 @@ final class SupertonicVoice: HerVoice, VoiceLookahead, @unchecked Sendable {
     func speak(_ sentence: String) async throws { try await spoken.speak(sentence) }
     func stop() { spoken.stop() }
     func upcoming(_ sentences: [String]) { spoken.upcoming(sentences) }
+    func settle(_ seconds: Double) async throws { try await spoken.settle(seconds) }
 }
 
-/// One sentence made sound: the engine's text, the synthesis trimmed to its predicted length, the processing.
+/// One sentence made sound: the engine's text, the synthesis trimmed to its predicted length and to its speech, the
+/// processing.
 struct SupertonicRenderer: SentenceRenderer {
     let text: SpeechTextPipeline, synth: SupertonicEngine, preset: VoicePresetLine, fx: VoiceFX
     var rate: Int { synth.sampleRate }
@@ -52,7 +54,8 @@ struct SupertonicRenderer: SentenceRenderer {
         let steps = first ? preset.firstSteps : preset.steps
         let audio = try synth.synthesize(line, voice: VoicePreset(style: preset.style, speed: preset.speed,
                                                                   steps: steps))
-        let samples = Array(audio.samples.prefix(Int(audio.duration * Double(audio.rate))))
+        let predicted = Array(audio.samples.prefix(Int(audio.duration * Double(audio.rate))))
+        let samples = try SilenceTrim.standard.apply(predicted, rate: audio.rate)
         let synthesized = uptime
         let processed = try fx.process(samples, rate: audio.rate)
         return RenderedSentence(samples: processed, rate: audio.rate,

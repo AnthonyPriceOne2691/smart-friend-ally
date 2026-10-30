@@ -1,5 +1,11 @@
 # Knowledge Bundle Update Log
 
+## 2026-10-30 — голос: обрезка тишины и пауза из строки (voice-tuning)
+
+* **Update**: `engineering/voice-fx` — `SilenceTrim`: тишина синтеза снимается до обработки, порог −45 дБ, поля 30 и 80 мс;
+  `engineering/voice-engine` — ключ `gap` строки пресета вместо 0,45 / скорость, `SpokenVoice.settle`;
+  `engineering/voice-loop` — слушание ждёт тихую комнату; `engineering/index` — строки голоса.
+
 ## 2026-10-29 — Элли на Mac: приложение для iPhone прямо на Mac (sim-app)
 
 * **Creation**: `engineering/mac-run` — ADR: разговоры на Mac — приложение для iPhone («My Mac (Designed for
