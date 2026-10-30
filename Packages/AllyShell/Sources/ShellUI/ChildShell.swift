@@ -9,11 +9,13 @@ import SwiftUI
 /// her utterance («я всё»), speaking it cuts her (D6.2), otherwise nothing. No words for the girl; the status bar and
 /// the home bar are hidden and the system gestures wait for a second swipe (screen rules 1–3, 15).
 public struct ChildShell: View {
-    let talk: TalkState, until: Date?, onTap: () -> Void, onStop: () -> Void
+    let talk: TalkState, sounding: Bool, until: Date?, onTap: () -> Void, onStop: () -> Void
     @State private var pokes = 0
 
-    public init(talk: TalkState, until: Date?, onTap: @escaping () -> Void, onStop: @escaping () -> Void) {
-        (self.talk, self.until, self.onTap, self.onStop) = (talk, until, onTap, onStop)
+    /// `sounding` — her voice sounds now: the phase says what she does, the sound — when her mouth moves (mouth-sync).
+    public init(talk: TalkState, sounding: Bool, until: Date?, onTap: @escaping () -> Void,
+                onStop: @escaping () -> Void) {
+        (self.talk, self.sounding, self.until, self.onTap, self.onStop) = (talk, sounding, until, onTap, onStop)
     }
 
     public var body: some View {
@@ -23,7 +25,8 @@ public struct ChildShell: View {
                                           height: proxy.size.height + insets.top + insets.bottom,
                                           safeTop: insets.top, safeBottom: insets.bottom)
             ZStack(alignment: .topLeading) {
-                LiveScene(phase: talk.phase, pokes: pokes, safeTop: insets.top, safeBottom: insets.bottom)
+                LiveScene(phase: talk.phase, sounding: sounding, pokes: pokes, safeTop: insets.top,
+                          safeBottom: insets.bottom)
                     .contentShape(Rectangle())
                     .onTapGesture(coordinateSpace: .global) { tap($0, on: layout) }
                     .accessibilityIdentifier("child.circle")

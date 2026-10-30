@@ -3,9 +3,9 @@
 **Date:** 2026-10-30
 **Verifier:** process:ci
 **asserts_reviewed_by:** n/a (все утверждения ведут к примерам спеки — дайджест ниже, asserts_without_example: 0; B13–B19 подписаны родителем 2026-10-22 в спеке серии)
-**CI run:** прогон головы PR #43 после слияния main `f9bcc32` — номер в докладе ведущему, при сдаче строка обновится
-(до слияния: 40569824784 на `ab68040`, 40568435684 на `e4c2a3d`, 39998831491 на `37c1d7e`, 39995408177 на `8c194d0` — зелёные)
-**Commit:** 699f91c — слияние main `f9bcc32` сложением; до него слияния `8fe4bf2` (ab68040) и `8ef99ea` со стыком GigaAM (12d68e8), документы — 8b5ad57, eval-smoke — 4bea6b6, приложение и ядро — cb8c1c3, команда на Mac и знание — 00c1f25, финальный черновик команды — 5ebc365; PR #43
+**CI run:** прогон головы PR #43 после слияния main `2a8a39f` — номер в докладе ведущему, при сдаче строка обновится
+(до слияния: 41105390703 на `a9d6068`, 40569824784 на `ab68040`, 40568435684 на `e4c2a3d`, 39998831491 на `37c1d7e`, 39995408177 на `8c194d0` — зелёные)
+**Commit:** слияние main `2a8a39f` (mouth-sync) поверх 699f91c — слияния `f9bcc32`; до него слияния `8fe4bf2` (ab68040) и `8ef99ea` со стыком GigaAM (12d68e8), документы — 8b5ad57, eval-smoke — 4bea6b6, приложение и ядро — cb8c1c3, команда на Mac и знание — 00c1f25, финальный черновик команды — 5ebc365; PR #43
 
 ## Shape oracles
 - [x] PASS — pre-commit на коммитах поставки: SwiftLint 0 находок (App и пакеты), `file-length`, jscpd, секреты, данные
@@ -17,7 +17,7 @@
 - [x] PASS — `okf_validate.py` 0/0 (54 файла); `okf_sync_gate.py --base origin/main` — OK (20 концептов): `ops/black-box`,
   `ops/child-data`, `engineering/voice-loop` (`VoiceLoop`, `PhoneListener`, `AllyApp`, `DictationRecognizer`,
   `RecognitionPhrase`), `engineering/turn-detector` (`BatchPhrase`), `product/child-mode` (`ChildMode`), `safety-below-model` (`VoiceLoop`)
-- [x] PASS — строгий `delivery_check --require-ci --diff-base origin/main` после слияния main `f9bcc32`: 0 ошибок;
+- [x] PASS — строгий `delivery_check --require-ci --diff-base origin/main` после слияния main `2a8a39f`: 0 ошибок;
   предохранитель — 15 файлов, net 538 из 800 (+584/−46); рисковых путей 2 по исключению родителя. Предупреждения: поверхность стирания
   объявлена и ждёт подписи пальцем до сдачи (выбор «подписать» — ответ 6 родителя в спеке серии); реляционного оракула
   детектор не видит — свойства ящика держат тесты D3

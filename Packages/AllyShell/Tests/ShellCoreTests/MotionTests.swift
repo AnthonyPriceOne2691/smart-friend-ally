@@ -2,22 +2,24 @@ import AllyCore
 import ShellCore
 import XCTest
 
-/// One recorded frame of a motion: when, what was drawn, the weights of the groups.
+/// One recorded frame of a motion: when, what was drawn, the weights of the groups, her voice's level.
 struct Shot {
-    let time: Double, frame: Frame, weights: [Double]
+    let time: Double, frame: Frame, weights: [Double], level: Double
 }
 
 let step = 1.0 / 120
 
-/// Steps a motion at 1/120 s along a script of (from second, phase) and records every frame.
+/// Steps a motion at 1/120 s along a script of (from second, phase) and records every frame. Unless `sound` says when
+/// her voice sounds, it sounds all through her phases of speech.
 func film(_ script: [(at: Double, phase: SessionState)], for seconds: Double, seed: UInt64 = 1, voice: Double? = nil,
-          mic: Double? = nil, calm: Bool = false) -> [Shot] {
+          mic: Double? = nil, calm: Bool = false, sound: ((Double) -> Bool)? = nil) -> [Shot] {
     let motion = Motion(seed: seed)
     return (0..<Int((seconds / step).rounded())).map { index in
         let start = Double(index) * step
         let phase = script.last { $0.at <= start + 1e-9 }?.phase ?? .asleep
-        let frame = motion.step(step, phase: phase, voice: voice, mic: mic, calm: calm)
-        return Shot(time: start + step, frame: frame, weights: motion.weights)
+        let sounds = sound?(start) ?? (TalkState(phase: phase).pose == .speaks)
+        let frame = motion.step(step, phase: phase, sound: sounds, voice: voice, mic: mic, calm: calm)
+        return Shot(time: start + step, frame: frame, weights: motion.weights, level: motion.voiceLevel)
     }
 }
 
@@ -55,21 +57,15 @@ final class MotionTests: XCTestCase {
         }
     }
 
-    /// 100 scripts of 20 s with a fixed seed — phases in random order, switches every 0.2–3 s, levels 0…1 (every
-    /// other script has no voice level: the mouth goes by syllables, Ш2в); fails at the first pair of frames where a
-    /// jump, as a share of its bound, is over 1.
+    /// 100 talks of 20 s with a fixed seed (`Talk`: phases in random order, half the phases of speech never sound),
+    /// levels 0…1 (every other talk has no voice level: the mouth goes by syllables, Ш2в); fails at the first pair of
+    /// frames where a jump, as a share of its bound, is over 1.
     private func worstJumps(_ shares: (Frame, Frame) -> [Double]) {
         var dice = Dice(seed: 2026)
-        let phases: [SessionState] = [.asleep, .greeting, .listening, .thinking, .speaking, .windingDown, .goodbye]
         for scenario in 0..<100 {
-            var script: [(at: Double, phase: SessionState)] = [], start = 0.0
-            while start < 20 {
-                script.append((start, phases[Int(dice.next() * 7) % 7]))
-                start += 0.2 + 2.8 * dice.next()
-            }
-            let voice = dice.next()
-            let shots = film(script, for: 20, seed: UInt64(scenario), voice: scenario.isMultiple(of: 2) ? nil : voice,
-                             mic: dice.next())
+            let talk = Talk.made(seconds: 20, dice: &dice), voice = dice.next()
+            let shots = film(talk.script, for: 20, seed: UInt64(scenario),
+                             voice: scenario.isMultiple(of: 2) ? nil : voice, mic: dice.next(), sound: talk.sounds)
             for (before, after) in zip(shots, shots.dropFirst()) {
                 let jumps = shares(before.frame, after.frame)
                 if let worst = jumps.max(), worst > 1 {

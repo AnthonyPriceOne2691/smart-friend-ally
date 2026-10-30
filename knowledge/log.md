@@ -11,6 +11,15 @@
   `engineering/turn-detector` — `BatchPhrase` отдаёт ящику те же отсчёты. `product/child-mode`, `ops/test-session` — ключ
   родителя не держит ни детский экран, ни запись: он для подписи необратимого и приёмки R2.
 * **Источник**: поставка `app-black-box` (D3.2; примеры B13–B19 подписаны родителем 2026-10-22 в спеке серии).
+## 2026-10-30 — рот Элли только при звуке (mouth-sync)
+
+* **Update**: `product/look-and-feel` — строка «в коде (mouth-sync)». `engineering/character-rendering` — как сделано:
+  вход `sound` у `Motion`, удержание позы до первого звука, закрытие рта в `Syllables`. `engineering/voice-loop` — признак
+  `VoiceLoop.sounding`. `engineering/design-demo` — звук сценария по таймеру. `ops/test-session` — N6 на телефоне.
+  `product/child-mode` — рот на детском экране; `engineering/safety-below-model` — признак только для экрана.
+* **Источник**: поставка `mouth-sync` (слово родителя 2026-10-30 после первого разговора на Mac; примеры N1–N6 подписаны
+  2026-10-30).
+
 ## 2026-10-29 — Элли на Mac: приложение для iPhone прямо на Mac (sim-app)
 
 * **Creation**: `engineering/mac-run` — ADR: разговоры на Mac — приложение для iPhone («My Mac (Designed for
