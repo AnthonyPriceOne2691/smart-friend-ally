@@ -6,6 +6,9 @@ import Foundation
 /// blinks on a seeded schedule and, after a goodbye, the yawn and sleep of `poseBye`. Speaking has two groups — talking
 /// and waving (greeting, goodbye) — and sleep two — plain and after a goodbye (dozing) — so every switch is a spring
 /// between groups whose own poses run on without a break. The light and the bubbles of the screen step with her (Ш2б).
+/// Her mouth and her talking pose go by her voice's sound, not by the phase (mouth-sync, the parent 2026-10-30): the
+/// session says «speaking» while the first phrase is still being made, and until it sounds she holds the pose she was
+/// in.
 public final class Motion {
     public static let stiffness = 11.0
     /// The squash of a tap on the sleeping Ellie (prototype v3, `giggle` asleep): a soft spring that wobbles back.
@@ -20,7 +23,7 @@ public final class Motion {
     /// The weight of each group in the frame, in the order of `Group`.
     public private(set) var weights = [1.0, 0, 0, 0, 0, 0]
     private var speeds = [0.0, 0, 0, 0, 0, 0], phases = Phases(), random: Random
-    private var phase = SessionState.asleep, group = Group.sleeps, dozingSince = 0.0
+    private var phase = SessionState.asleep, group = Group.sleeps, dozingSince = 0.0, voiced = false
     private var blinkAt = 2.2, doubleBlink = false, squash = 0.0, squashSpeed = 0.0
     private var glow = Glow(), bubbles: Bubbles, sleepingSince = 0.0, rise = 0.0, syllables: Syllables
     /// Her voice's level in the frame (0…1): the level passed in, or the rhythm of syllables while she speaks (Ш2в).
@@ -32,15 +35,17 @@ public final class Motion {
 
     public func weight(of group: Group) -> Double { weights[group.rawValue] }
 
-    /// One step of `dt` seconds (at most 0.05 — a stalled frame does not leap) towards the pose of `phase`.
-    public func step(_ dt: Double, phase next: SessionState, voice: Double? = nil, mic: Double? = nil,
-                     calm: Bool = false) -> Frame {
+    /// One step of `dt` seconds (at most 0.05 — a stalled frame does not leap) towards the pose of `phase`. `sound` —
+    /// her voice sounds now: without it the mouth closes, and a phase of speech holds the pose she was in.
+    public func step(_ dt: Double, phase next: SessionState, sound: Bool = false, voice: Double? = nil,
+                     mic: Double? = nil, calm: Bool = false) -> Frame {
         let dt = min(max(dt, 0), 0.05)
         enter(next)
+        hear(sound)
         settle(dt)
-        let speaking = TalkState(phase: phase).pose == .speaks && voice == nil
-        let rhythm = syllables.step(dt, at: phases.time + dt, speaking: speaking)
-        voiceLevel = voice ?? rhythm
+        let talking = TalkState(phase: phase).pose == .speaks && sound
+        let rhythm = syllables.step(dt, at: phases.time + dt, speaking: talking && voice == nil)
+        voiceLevel = talking && voice == nil ? rhythm : eased(talking ? voice ?? 0 : 0, dt)
         let pose = blended(voice: voiceLevel, mic: mic, calm: calm)
         phases.advance(dt, pose, calm: calm)
         wobble(dt)
@@ -50,6 +55,12 @@ public final class Motion {
                             dozing: phases.time - dozingSince, rise: rise, calm: calm)
         (frame.light, frame.bubbles) = (glow.step(dt, clocks), bubbles.step(dt, clocks))
         return frame
+    }
+
+    /// A level passed in goes as is, and out of the sound the mouth closes — at the mouth's own pace, never a jump.
+    private func eased(_ level: Double, _ dt: Double) -> Double {
+        let reach = Syllables.closing * dt
+        return voiceLevel + min(max(level - voiceLevel, -reach), reach)
     }
 
     /// A tap on the sleeping Ellie: a kick to the squash spring — 1, with Reduce Motion 0.5 (prototype v3, `giggle`) —
@@ -73,12 +84,24 @@ public final class Motion {
     /// waking up restarts the blinks (the first one 2.2 s later).
     private func enter(_ next: SessionState) {
         guard next != phase else { return }
+        let before = group
         group = Motion.group(of: next, after: phase)
         if group == .dozes, weight(of: .dozes) < 0.01 { dozingSince = phases.time }
         if group == .sleeps, weight(of: .sleeps) < 0.01 { sleepingSince = phases.time }
         if phase == .asleep { (blinkAt, doubleBlink) = (phases.time + 2.2, false) }
-        phase = next
+        (phase, voiced) = (next, false)
+        if TalkState(phase: next).pose == .speaks { group = Motion.held(before) }
     }
+
+    /// The first sound of a phase of speech lets its talking or waving pose in; the pauses between phrases keep it.
+    private func hear(_ sound: Bool) {
+        guard sound, !voiced, TalkState(phase: phase).pose == .speaks else { return }
+        voiced = true
+        group = Motion.group(of: phase, after: phase)
+    }
+
+    /// The pose she holds while the first phrase is made: the one she was in; out of sleep — awake and listening.
+    static func held(_ group: Group) -> Group { group == .sleeps || group == .dozes ? .listens : group }
 
     static func group(of phase: SessionState, after previous: SessionState) -> Group {
         switch TalkState(phase: phase).pose {

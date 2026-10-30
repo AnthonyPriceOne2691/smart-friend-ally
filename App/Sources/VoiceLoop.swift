@@ -17,6 +17,9 @@ final class VoiceLoop: ObservableObject {
     @Published private(set) var screen = Screen()
     // the session for a screen: phase, pose, why the last one ended; the music follows its phase (background-music)
     @Published private(set) var talk = TalkState() { didSet { music?.update { $0.phase = talk.phase } } }
+    /// Her voice sounds now, from a phrase's start to its end (mouth-sync): the child screen's mouth goes by this — the
+    /// session says «speaking» while the first phrase is still being made.
+    @Published private(set) var sounding = false
     private var conversation: Conversation?
     // The child mode (R, R2): who may talk on the child screen, whether it is shown, an exception in the container, the
     // acceptance's line; its own session (audience `supervised`, or `child` once the acceptance holds) and the last
@@ -167,7 +170,8 @@ final class VoiceLoop: ObservableObject {
 
     /// Her voice: Supertonic when the files of voice.json are on the phone (V4b2), else Milena — the console says why.
     private func makeVoice(_ registry: ModelRegistry, rate: Double) -> any HerVoice {
-        let milena = SystemVoice(identifier: registry.voice, rate: Float(rate))
+        let sounds: @Sendable (Bool) -> Void = { [weak self] now in Task { @MainActor in self?.sounding = now } }
+        let milena = SystemVoice(identifier: registry.voice, rate: Float(rate), sounds: sounds)
         do {
             let settings = try VoiceSettings.decode(Data(contentsOf: Bundle.main.bundleURL
                 .appendingPathComponent("voice.json")))
@@ -186,9 +190,14 @@ final class VoiceLoop: ObservableObject {
             let renderer = try SupertonicRenderer(settings: settings, folder: folder, placer: accent.placer)
             _ = try renderer.render("Привет!", first: true)  // child-open: one phrase without sound warms her voice
             let audio = audio
-            let player = SoundingPlayer(EnginePlayer(engine: audio.engine, rate: renderer.rate),
-                                        began: { audio.voiceStarted() }, ended: { audio.voiceEnded(at: $0) })
-            let spoken = SpokenVoice(renderer: renderer, player: player, gap: 0.45 / settings.preset.speed)
+            let player = SoundingPlayer(EnginePlayer(engine: audio.engine, rate: renderer.rate), began: {
+                audio.voiceStarted()
+                sounds(true)
+            }, ended: {
+                audio.voiceEnded(at: $0)
+                sounds(false)
+            })
+            let spoken = SpokenVoice(renderer: renderer, player: player, gap: settings.preset.gap)
             return SupertonicVoice(spoken, preset: settings.preset)
         } catch {
             screen.lines.append("голос не загрузился: " + "\(error)")
@@ -253,8 +262,8 @@ final class VoiceLoop: ObservableObject {
                           _ decode: (@Sendable ([Float]) -> String)?) {
         let heard: @Sendable (String) -> Void = { text in Task { @MainActor in self.screen.heard = text } }
         let ear = PhoneListener(recognizer: recognizer, audio: audio, hearing: hearing,
-                                resetSound: { voice.resetFirstSound() }, firstSound: { voice.firstSound }, heard: heard,
-                                activity: silero, decode: decode)
+                                resetSound: { voice.resetFirstSound() }, firstSound: { voice.firstSound },
+                                settle: { try await voice.settle($0) }, heard: heard, activity: silero, decode: decode)
         let echo = EchoVoice(voice) { sentence in Task { @MainActor in self.screen.said += sentence + " " } }
         let settings = SessionSettings(limitMinutes: UserDefaults.standard.object(forKey: SessionSettings.key)
             .map { "\($0)" })
@@ -353,27 +362,6 @@ final class VoiceLoop: ObservableObject {
         talk = conversation?.state ?? TalkState()
     }
 
-    /// What the iOS memory limit counts (L22): footprint now and its lifetime peak, headroom left; conversation tokens.
-    nonisolated private static func memory(_ model: LlamaModel) -> [String: Int] {
-        var info = task_vm_info_data_t()
-        var count = mach_msg_type_number_t(MemoryLayout<task_vm_info_data_t>.size / MemoryLayout<natural_t>.size)
-        let status = withUnsafeMutablePointer(to: &info) {
-            $0.withMemoryRebound(to: integer_t.self, capacity: Int(count)) {
-                task_info(mach_task_self_, task_flavor_t(TASK_VM_INFO), $0, &count)
-            }
-        }
-        let base = ["available_mb": os_proc_available_memory() >> 20, "context_tokens": model.promptTokens]
-        guard status == KERN_SUCCESS else { return base }
-        return base.merging(["footprint_mb": Int(info.phys_footprint >> 20),
-                             "footprint_peak_mb": Int(info.ledger_phys_footprint_peak >> 20)]) { $1 }
-    }
-
-    private var uptime: Double { ProcessInfo.processInfo.systemUptime }
-
-    private func line(_ stages: [String: Double]) -> String {
-        stages.sorted { $0.key < $1.key }.map { "\($0.key) " + String(format: "%.2f с", $0.value) }
-            .joined(separator: " · ")
-    }
 }
 
 /// The memory in the conversation (memory-recall): the prefix with the block, the console's lines, the parent's erase.

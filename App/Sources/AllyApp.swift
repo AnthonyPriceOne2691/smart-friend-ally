@@ -15,7 +15,8 @@ struct AllyApp: App {
                 if loop.warming {
                     LoadingScreen()
                 } else if loop.child {
-                    ChildScreen(talk: loop.talk, onWake: loop.childWake, onStop: loop.childStop)
+                    ChildScreen(talk: loop.talk, sounding: loop.sounding, onWake: loop.childWake,
+                                onStop: loop.childStop)
                 } else {
                     Console(loop: loop)
                 }

@@ -46,6 +46,29 @@ final class SpeechTextTests: XCTestCase {
         XCTAssertEqual(hello.shown, "Привет, я Элли!")
     }
 
+    func testPinnedWordsOverTheErrorsOfThePlacer() throws {
+        // T1–T5: то, что расстановщик отдаёт на настоящих фразах Элли, — таблица поверх него
+        let table = try SpeechTextTable.bundled()
+        XCTAssertEqual(try spoken("н+ёбо", table), "не́бо")
+        XCTAssertEqual(try spoken("Н+ёбо", table), "Не́бо")
+        XCTAssertEqual(try spoken("н+ёбе", table), "не́бе")
+        XCTAssertEqual(try spoken("н+ёбу", table), "не́бу")
+        XCTAssertEqual(try spoken("н+ёбом", table), "не́бом")
+        XCTAssertEqual(try spoken("н+ёба", table), "не́ба")
+        XCTAssertEqual(try spoken("само+ё", table), "са́мое")
+        XCTAssertEqual(try spoken("смел+ая", table), "сме́лая")
+        XCTAssertEqual(try spoken("тв+о+ей", table), "твое́й")
+        XCTAssertEqual(try spoken("Ж+ила", table), "Жила́")
+    }
+
+    func testPinnedWordsAtTheStartOfASentence() throws {
+        // T6–T8: омографы на заглавной первой букве: строчными эти слова модель читает верно
+        let table = try SpeechTextTable.bundled()
+        XCTAssertEqual(try spoken("К+акая", table), "Кака́я")
+        XCTAssertEqual(try spoken("П+ора", table), "Пора́")
+        XCTAssertEqual(try spoken("Зубк+и", table), "Зу́бки")
+    }
+
     func testReadingRulesWithExceptions() throws {
         // Z10: таблица пакета — проверенные строки второго круга, по утверждению на строку
         let table = try SpeechTextTable.bundled()

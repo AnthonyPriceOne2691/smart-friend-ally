@@ -4,8 +4,12 @@ import Foundation
 /// syllables of 0.16–0.22 s with peaks 0.62–1.0 under a sin^0.75 envelope, a word's pause of 0.06 s after 1–4
 /// syllables, a phrase's of 0.36 s after 8–14; the level follows the envelope at 26 a second up and 16 down
 /// (prototype `speechRaw`, without its noise flutter: with it a frame's step reaches 0.094 at the bound 0.09).
-/// Chance comes from its own seeded generator, like the blinks.
+/// Chance comes from its own seeded generator, like the blinks. Out of speech the mouth closes (mouth-sync).
 public struct Syllables: Sendable {
+    /// How fast the level falls once the sound has ended or was cut, per second: from 1 to 0 in 0.1 s — at once for the
+    /// eye, and a frame's step stays under the bound 0.09 of speech.
+    public static let closing = 10.0
+
     /// One syllable: when it starts and ends (s) and how far it opens the mouth.
     public struct Syllable: Equatable, Sendable {
         public let start: Double, end: Double, peak: Double
@@ -17,12 +21,16 @@ public struct Syllables: Sendable {
 
     public init(seed: UInt64) { random = Random(seed: seed ^ 0x5111_AB1E) }
 
-    /// One step to the moment `t`: a new speech starts its first syllable 0.08 s later; out of speech the level fades.
+    /// One step to the moment `t`: a new speech starts its first syllable 0.08 s later; out of speech the level closes.
     public mutating func step(_ dt: Double, at t: Double, speaking now: Bool) -> Double {
         if now, !speaking { begin(at: t) }
         speaking = now
+        guard now else {
+            level = max(level - Syllables.closing * dt, 0)
+            return level
+        }
         var raw = 0.0
-        if now, var syllable = current {
+        if var syllable = current {
             while t > syllable.end { syllable = next(after: syllable) }
             current = syllable
             if t >= syllable.start {

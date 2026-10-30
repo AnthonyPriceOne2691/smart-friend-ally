@@ -10,6 +10,20 @@
   разговором на телефоне. `engineering/safety-below-model` — строка: музыка путь реплики не меняет.
 * **Источник**: поставка `background-music` (слово родителя 2026-10-29; выбор трека на слух; числа Y1–Y11 подписаны
   2026-10-29).
+## 2026-10-30 — голос: обрезка тишины и пауза из строки (voice-tuning)
+
+* **Update**: `engineering/voice-fx` — вариант 6 родителя, растяжка и интонация, `SilenceTrim`: тишина синтеза снимается до
+  обработки, порог −45 дБ, поля 30 и 80 мс; `engineering/voice-engine` — ключи `stretch`, `range`, `gap` строки пресета,
+  `SpokenVoice.settle`; `engineering/speech-text` — строки `stress` и две причины ошибок RUAccent; `engineering/voice-loop` —
+  слушание ждёт тихую комнату; `engineering/session`, `ops/test-session`, `product/persona`, `engineering/index` — голос.
+## 2026-10-30 — рот Элли только при звуке (mouth-sync)
+
+* **Update**: `product/look-and-feel` — строка «в коде (mouth-sync)». `engineering/character-rendering` — как сделано:
+  вход `sound` у `Motion`, удержание позы до первого звука, закрытие рта в `Syllables`. `engineering/voice-loop` — признак
+  `VoiceLoop.sounding`. `engineering/design-demo` — звук сценария по таймеру. `ops/test-session` — N6 на телефоне.
+  `product/child-mode` — рот на детском экране; `engineering/safety-below-model` — признак только для экрана.
+* **Источник**: поставка `mouth-sync` (слово родителя 2026-10-30 после первого разговора на Mac; примеры N1–N6 подписаны
+  2026-10-30).
 
 ## 2026-10-29 — Элли на Mac: приложение для iPhone прямо на Mac (sim-app)
 
