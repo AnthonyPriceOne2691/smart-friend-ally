@@ -162,6 +162,11 @@ final class StoryTests: XCTestCase {
         let teller = Teller([(1...9).map { .say("Ёжик пошёл домой \($0) раз. ") } + [.say("Ещё"), .hang]])
         let (rig, _) = rig([], teller: teller)
         await rig.session.handle(.wake)
+        let limit = Task { // a model that is not stopped hangs: red, not a stuck job
+            try await Task.sleep(nanoseconds: 30_000_000_000)
+            await rig.session.handle(.stop)
+        }
+        defer { limit.cancel() }
         await rig.hear("Расскажи сказку!")
         XCTAssertEqual(rig.said.count, 9)
         XCTAssertTrue(teller.cancelled)
