@@ -13,14 +13,15 @@ public struct VoiceSettings: Sendable, Equatable {
     public static func decode(_ data: Data) throws -> VoiceSettings {
         let raw = try JSONDecoder().decode(Raw.self, from: data)
         let floor = VoicePresetLine.minSpeed, asked = raw.preset.speed
-        guard raw.preset.gap >= 0 else {
-            throw DecodingError.dataCorrupted(.init(codingPath: [], debugDescription: "пауза \(raw.preset.gap)"))
+        guard raw.preset.gap >= 0, raw.preset.stretch > 0, raw.preset.range > 0 else {
+            throw DecodingError.dataCorrupted(.init(codingPath: [], debugDescription: "пауза, растяжка или интонация"))
         }
         let note = asked < floor
             ? "скорость " + decimal(asked) + " ниже " + decimal(floor) + " — взято " + decimal(floor) : nil
         let preset = VoicePresetLine(style: raw.preset.style, speed: max(asked, floor), steps: raw.preset.steps,
                                      pitch: raw.preset.pitch, formant: raw.preset.formant, eq: raw.preset.eq,
-                                     firstStepsAsked: raw.preset.firstStepsAsked, gapAsked: raw.preset.gapAsked)
+                                     firstStepsAsked: raw.preset.firstStepsAsked, gapAsked: raw.preset.gapAsked,
+                                     stretchAsked: raw.preset.stretchAsked, rangeAsked: raw.preset.rangeAsked)
         return VoiceSettings(preset: preset, folder: raw.folder, files: raw.files, note: note)
     }
 
@@ -34,7 +35,8 @@ public struct VoiceSettings: Sendable, Equatable {
 }
 
 /// The preset line: style or mix of the synthesis («F2», «F2+F5:0.3»), its speed and denoising steps, then the
-/// processing — pitch and formant shifts in semitones and the EQ bands — and the pause between sentences.
+/// processing — pitch and formant shifts in semitones, the time stretch, the intonation span and the EQ bands — and the
+/// pause between sentences.
 public struct VoicePresetLine: Decodable, Sendable, Equatable {
     /// Below it Supertonic repeats words (voice-engine): the line may ask, the voice takes the floor.
     public static let minSpeed = 0.85
@@ -43,7 +45,7 @@ public struct VoicePresetLine: Decodable, Sendable, Equatable {
     public static let defaultGap = 0.8
 
     public let style: String, speed: Double, steps: Int, pitch: Double, formant: Double, eq: [Band]
-    fileprivate let firstStepsAsked: Int?, gapAsked: Double?
+    fileprivate let firstStepsAsked: Int?, gapAsked: Double?, stretchAsked: Double?, rangeAsked: Double?
 
     /// Steps of a turn's first sentence: the line's `first_steps`, else `steps` — answer 4 of the series' signature
     /// (8 when p95 of the first sound stays within 2.5 s, else 5) is a number in the line, not code (V4b2).
@@ -52,8 +54,15 @@ public struct VoicePresetLine: Decodable, Sendable, Equatable {
     /// Seconds from one sentence's sound to the next's: the line's `gap`, else `defaultGap`.
     public var gap: Double { gapAsked ?? Self.defaultGap }
 
+    /// The sound's length over the synthesis's: Supertonic repeats words below `minSpeed`, the processing does not.
+    public var stretch: Double { stretchAsked ?? 1 }
+
+    /// The F0 span around the sentence's median over the synthesis's: above 1 the intonation is wider.
+    public var range: Double { rangeAsked ?? 1 }
+
     private enum CodingKeys: String, CodingKey {
         case style, speed, steps, pitch, formant, eq, firstStepsAsked = "first_steps", gapAsked = "gap"
+        case stretchAsked = "stretch", rangeAsked = "range"
     }
 
     /// One band as the line writes it: `["lowshelf" | "peak" | "highshelf", Hz, dB, Q]`.

@@ -7,10 +7,10 @@ import AllyVoiceFX
 import Foundation
 import os
 
-/// Her voice (voice series V4b2): Supertonic by the preset line, then PSOLA and the EQ — «Совсем малышка» by default —
-/// with «Э́льли» and the reading rules of speech-text.json. The app assembles the `SpokenVoice` itself — the renderer
-/// and the player on the session's engine — so D6.1 can wrap the player (its `SoundingPlayer`) and hold one
-/// AVAudioEngine for the microphone and the voice; this class adds the console line and the version.
+/// Her voice (voice series V4b2): Supertonic by the preset line, then PSOLA and the EQ — the parent's choice in
+/// voice.json — with «Э́льли» and the reading rules of speech-text.json. The app assembles the `SpokenVoice` itself —
+/// the renderer and the player on the session's engine — so D6.1 can wrap the player (its `SoundingPlayer`) and hold
+/// one AVAudioEngine for the microphone and the voice; this class adds the console line and the version.
 final class SupertonicVoice: HerVoice, VoiceLookahead, @unchecked Sendable {
     let note: String, label: String
     let ready = true
@@ -21,7 +21,7 @@ final class SupertonicVoice: HerVoice, VoiceLookahead, @unchecked Sendable {
         let shifts = "\(Int(preset.pitch))/\(Int(preset.formant))"
         note = "голос: " + "Supertonic \(preset.style) · \(shifts) · ORT \(OnnxRuntime.version)"
         label = "supertonic-3 \(preset.style) \(preset.speed) \(preset.firstSteps)/\(preset.steps) \(shifts) "
-            + "eq\(preset.eq.count) ort\(OnnxRuntime.version)"
+            + "x\(preset.stretch) r\(preset.range) eq\(preset.eq.count) ort\(OnnxRuntime.version)"
     }
 
     var firstSound: Double? { spoken.firstSound }
@@ -120,6 +120,7 @@ extension VoiceFX {
             guard let kind = kinds[band.kind] else { throw UnknownBand(kind: band.kind) }
             return EQBand(kind, frequency: band.frequency, gainDB: band.gainDB, q: band.q)
         }
-        self.init(pitch: preset.pitch, formant: preset.formant, eq: VoiceEQ(bands: bands))
+        self.init(pitch: preset.pitch, formant: preset.formant, stretch: preset.stretch, range: preset.range,
+                  eq: VoiceEQ(bands: bands))
     }
 }

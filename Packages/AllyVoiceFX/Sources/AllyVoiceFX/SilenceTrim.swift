@@ -1,4 +1,4 @@
-import Foundation
+import CVoiceFX
 
 /// The synthesis's own silence off a sentence's ends (voice-tuning). Supertonic wraps a sentence in about 0.6 s of
 /// silence before the speech and 0.7 s after it, so the mouth would move over silence and the pause between sentences
@@ -22,15 +22,10 @@ public struct SilenceTrim: Equatable, Sendable {
     /// The sentence between its margins; the whole of it when no frame rises above the floor.
     public func span(_ samples: [Float], rate: Int) throws -> Range<Int> {
         guard rate > 0 else { throw VoiceFXError.badRate(rate) }
-        let frame = max(rate / 100, 1), frames = samples.count / frame
-        let peak = samples.reduce(0) { max($0, abs($1)) }
-        let floor = Double(peak) * pow(10, floorDB / 20)
-        let loud = (0..<frames).filter { index in
-            let piece = samples[(index * frame)..<((index + 1) * frame)]
-            return sqrt(piece.reduce(0) { $0 + Double($1) * Double($1) } / Double(frame)) > floor
+        var start: Int32 = 0, end = Int32(samples.count)
+        samples.withUnsafeBufferPointer {
+            ally_speech_span($0.baseAddress, Int32($0.count), Int32(rate), floorDB, head, tail, &start, &end)
         }
-        guard let first = loud.first, let last = loud.last else { return 0..<samples.count }
-        return max(first * frame - Int(head * Double(rate)), 0)
-            ..< min((last + 1) * frame + Int(tail * Double(rate)), samples.count)
+        return Int(start)..<Int(end)
     }
 }

@@ -1,7 +1,8 @@
 // TD-PSOLA of the voice-samples-2 stand (scripts/dsp.py, round 3): analysis marks on the dominant-polarity peaks of
 // the 900 Hz low-passed signal, two-period Hann grains laid out at the target period, 5 ms grains in unvoiced
 // stretches. Formants move by resampling first (8-tap windowed sinc of the stand's psola_c); PSOLA then sets the
-// pitch and restores the duration. Then the EQ cascade (eq.c) and the stand's 0.97 peak guard.
+// pitch, widens the F0 span around the sentence's median and sets the duration: the input's, or stretched (voice-tuning).
+// Then the EQ cascade (eq.c) and the stand's 0.97 peak guard.
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
@@ -16,6 +17,7 @@ typedef struct { int pos, per, voiced; } Mark;
 typedef struct {
     const float *x;
     int n, sr, nm, cap;
+    double range;       // the F0 span's factor around the median; 1 leaves the contour alone
     float *fi;          // F0 at every sample, Hz
     unsigned char *vm;  // voiced at every sample
     Mark *m;
@@ -159,11 +161,30 @@ static const Mark *nearest_mark(const Track *tr, double ta, int *j) {
     return &tr->m[k];
 }
 
+static int ascending(const void *a, const void *b) {
+    float x = *(const float *)a, y = *(const float *)b;
+    return (x > y) - (x < y);
+}
+
+// Median F0 of the voiced samples, every 40th read; 200 Hz with none voiced, 0 when memory runs out.
+static double median_f0(const Track *tr) {
+    float *v = malloc(sizeof(float) * (size_t)(tr->n / 40 + 1));
+    int m = 0;
+    if (!v) return 0;
+    for (int k = 0; k < tr->n; k += 40)
+        if (tr->vm[k]) v[m++] = tr->fi[k];
+    qsort(v, (size_t)m, sizeof(float), ascending);
+    double median = m ? v[m / 2] : 200.0;
+    free(v);
+    return median;
+}
+
 // pf: F0 multiplier, tf: output / input duration. Returns no = round(n * tf) samples.
 static float *overlap_add(const Track *tr, double pf, double tf, int *nout) {
     int no = (int)lround(tr->n * tf), pad = tr->sr / 25, ny = no + 2 * pad, uv = uv_step(tr->sr), j = 0;
     float *y = calloc((size_t)ny, sizeof(float)), *ws = calloc((size_t)ny, sizeof(float));
-    if (!y || !ws) {
+    double fm = tr->range != 1.0 ? median_f0(tr) : 1.0;
+    if (!y || !ws || fm == 0) {
         free(y);
         free(ws);
         return NULL;
@@ -174,7 +195,7 @@ static float *overlap_add(const Track *tr, double pf, double tf, int *nout) {
         int half = uv, c = (int)lround(ts / tf);
         if (mk->voiced) {
             double fh = tr->fi[mk->pos] > 0 ? tr->fi[mk->pos] : (double)tr->sr / mk->per;
-            pout = tr->sr / (pf * fh);
+            pout = tr->sr / (tr->range != 1.0 ? pf * fm * pow(fh / fm, tr->range) : pf * fh);
             half = (int)fmin(mk->per, pout) > 8 ? (int)fmin(mk->per, pout) : 8;
             c = mk->pos;
         }
@@ -187,8 +208,8 @@ static float *overlap_add(const Track *tr, double pf, double tf, int *nout) {
     return y;
 }
 
-static float *psola(const float *x, int n, int sr, double pf, double tf, int *nout) {
-    Track tr = {.x = x, .n = n, .sr = sr};
+static float *psola(const float *x, int n, int sr, double pf, double tf, double range, int *nout) {
+    Track tr = {.x = x, .n = n, .sr = sr, .range = range};
     float *y = malloc(sizeof(float) * (size_t)n), *out = NULL;
     if (y && track_init(&tr) == 0) {
         memcpy(y, x, sizeof(float) * (size_t)n);
@@ -208,21 +229,23 @@ static void peak_guard(float *x, int n) {
     for (int k = 0; m > 0.97f && k < n; k++) x[k] *= 0.97f / m;
 }
 
-int ally_fx_process(const float *x, int n, int sr, double pitch_st, double formant_st,
+int ally_fx_length(int n, double stretch) { return (int)lround(n * stretch); }
+
+int ally_fx_process(const float *x, int n, int sr, double pitch_st, double formant_st, double stretch, double range,
                     const AllyEQBand *bands, int nbands, float *out) {
-    if (sr <= 0 || n < 0) return -1;
+    if (sr <= 0 || n < 0 || stretch <= 0 || range <= 0) return -1;
     if (n == 0) return 0;
     double beta = pow(2.0, pitch_st / 12), alpha = pow(2.0, formant_st / 12);
-    int nr = n, no = 0;
+    int nr = n, no = 0, want = ally_fx_length(n, stretch);
     float *xr = alpha != 1.0 ? resample(x, n, alpha, &nr) : NULL;
-    float *y = (alpha == 1.0 || xr) ? psola(xr ? xr : x, nr, sr, beta / alpha, alpha, &no) : NULL;
+    float *y = (alpha == 1.0 || xr) ? psola(xr ? xr : x, nr, sr, beta / alpha, alpha * stretch, range, &no) : NULL;
     free(xr);
     if (!y) return -1;
-    int keep = no < n ? no : n;
+    int keep = no < want ? no : want;
     memcpy(out, y, sizeof(float) * (size_t)keep);
-    memset(out + keep, 0, sizeof(float) * (size_t)(n - keep));
+    memset(out + keep, 0, sizeof(float) * (size_t)(want - keep));
     free(y);
-    ally_eq(out, n, sr, bands, nbands);
-    peak_guard(out, n);
+    ally_eq(out, want, sr, bands, nbands);
+    peak_guard(out, want);
     return 0;
 }

@@ -17,6 +17,18 @@ enum Signals {
         return x.map { Float(0.5 * $0 / top) }
     }
 
+    /// A 1 s glide 180 → 260 Hz, second harmonic twice the fundamental.
+    static func glide() -> [Float] {
+        let amps: [Double] = [0.5, 1.0, 0.6, 0.3, 0.2, 0.1]
+        var signal = [Float](repeating: 0, count: rate), phase = 0.0
+        for i in 0..<rate {
+            phase += 2 * Double.pi * (180 + 80 * Double(i) / Double(rate)) / Double(rate)
+            let sum = amps.enumerated().reduce(0.0) { $0 + $1.element * sin(Double($1.offset + 1) * phase) }
+            signal[i] = Float(0.2 * sum)
+        }
+        return signal
+    }
+
     /// F0 of the middle 50 ms by normalized autocorrelation: the first local maximum within 0.9 of the best lag in
     /// 70–700 Hz, refined by a parabola.
     static func f0(_ x: [Float]) -> Double {
