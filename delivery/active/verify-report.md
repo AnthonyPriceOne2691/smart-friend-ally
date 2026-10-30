@@ -1,28 +1,29 @@
 # Verify report
 
-**Date:** 2026-10-27
+**Date:** 2026-10-30
 **Verifier:** process:ci
 **asserts_reviewed_by:** n/a (все утверждения ведут к примерам спеки — дайджест ниже, asserts_without_example: 0; B13–B19 подписаны родителем 2026-10-22 в спеке серии)
-**CI run:** прогон головы PR #43 после слияния main `8ef99ea` — номер в докладе ведущему, при сдаче строка обновится
-(до слияния: 39998831491 на `37c1d7e` и 39995408177 на `8c194d0` — зелёные)
-**Commit:** 12d68e8 — слияние main `8ef99ea` сложением и стык с GigaAM (до него: документы — 8b5ad57, eval-smoke — 4bea6b6, приложение и ядро — cb8c1c3, команда на Mac и знание — 00c1f25, финальный черновик команды — 5ebc365, слияние main — b76d0b7, отчёт — 37c1d7e, сдача без архива — 99f6e6a); PR #43
+**CI run:** прогон головы PR #43 после слияния main `f9bcc32` — номер в докладе ведущему, при сдаче строка обновится
+(до слияния: 40569824784 на `ab68040`, 40568435684 на `e4c2a3d`, 39998831491 на `37c1d7e`, 39995408177 на `8c194d0` — зелёные)
+**Commit:** 699f91c — слияние main `f9bcc32` сложением; до него слияния `8fe4bf2` (ab68040) и `8ef99ea` со стыком GigaAM (12d68e8), документы — 8b5ad57, eval-smoke — 4bea6b6, приложение и ядро — cb8c1c3, команда на Mac и знание — 00c1f25, финальный черновик команды — 5ebc365; PR #43
 
 ## Shape oracles
 - [x] PASS — pre-commit на коммитах поставки: SwiftLint 0 находок (App и пакеты), `file-length`, jscpd, секреты, данные
   ребёнка, `gate-coverage`
-- [x] PASS — сборка `.app` для устройства без подписи после слияния main 2026-10-27 (`xcodegen generate`, `xcodebuild
+- [x] PASS — сборка `.app` для устройства и `AllyDemo` для симулятора без подписи после слияния main 2026-10-30
+  (`xcodegen generate`, `xcodebuild
   -destination 'generic/platform=iOS' CODE_SIGNING_ALLOWED=NO build`) — BUILD SUCCEEDED; оракул артефакта
-  `check_app_artifact.sh` — OK (Info, бинарей 6; права — на подписанной сборке)
-- [x] PASS — `okf_validate.py` 0/0 (52 файла); `okf_sync_gate.py --base origin/main` — OK (18 концептов): `ops/black-box`,
+  `check_app_artifact.sh` — OK (Info, бинарей 6; права — на подписанной сборке); `check_demo_boundary.sh` — OK
+- [x] PASS — `okf_validate.py` 0/0 (54 файла); `okf_sync_gate.py --base origin/main` — OK (20 концептов): `ops/black-box`,
   `ops/child-data`, `engineering/voice-loop` (`VoiceLoop`, `PhoneListener`, `AllyApp`, `DictationRecognizer`,
-  `RecognitionPhrase`), `engineering/turn-detector` (`BatchPhrase`), `safety-below-model` (`VoiceLoop`)
-- [x] PASS — строгий `delivery_check --require-ci --diff-base origin/main` после слияния main `8ef99ea`: 0 ошибок;
-  предохранитель — 10 файлов, net 503 из 800 (+538/−35); рисковых путей 2 по исключению родителя. Предупреждения: поверхность стирания
+  `RecognitionPhrase`), `engineering/turn-detector` (`BatchPhrase`), `product/child-mode` (`ChildMode`), `safety-below-model` (`VoiceLoop`)
+- [x] PASS — строгий `delivery_check --require-ci --diff-base origin/main` после слияния main `f9bcc32`: 0 ошибок;
+  предохранитель — 15 файлов, net 538 из 800 (+584/−46); рисковых путей 2 по исключению родителя. Предупреждения: поверхность стирания
   объявлена и ждёт подписи пальцем до сдачи (выбор «подписать» — ответ 6 родителя в спеке серии); реляционного оракула
   детектор не видит — свойства ящика держат тесты D3
 
 ## Behavior oracles
-- [x] PASS — `swift test` AllyCore после слияния main: 120 из 120; свои — B17 (`held()`, отказ стирания во время сессии,
+- [x] PASS — `swift test` AllyCore после слияния main `f9bcc32`: 165 из 165; свои — B17 (`held()`, отказ стирания во время сессии,
   стирание с ответом) и B14 с GigaAM (ящик получает от `BatchPhrase` те же отсчёты, бит в бит, 16 кГц; расшифровка —
   хвост тех же отсчётов с предзаписи); U25, U26 D7.3 — зелёные без правок; покрытие — в CI (джоба `swift`, порог 70%)
 - [x] PASS — смоук S10 `blackbox_pull.sh`: 13 случаев из 13 на двойнике `xcrun` — две сессии выгружены и сверены (и при
@@ -52,10 +53,10 @@
 
 - `App/Sources/BlackBox/` — на Mac исполнена сборка для устройства и оракул артефакта (`xcodebuild … CODE_SIGNING_ALLOWED=NO
   build`, `check_app_artifact.sh`, повтор после слияния main); класс защиты и пометка «не в бэкап» на телефоне НЕ
-  исполнены — отнесены в общую сессию теста решением родителя 2026-10-23, waiver в STATUS (B13). at=2026-10-27
+  исполнены — отнесены в общую сессию теста решением родителя 2026-10-23, waiver в STATUS (B13). at=2026-10-30
 - `App/Sources/Speech/` — на Mac исполнена та же сборка; формат распознавателя и счёт отсчётов на телефоне НЕ исполнены
   (B14) — общая сессия теста, тот же waiver; путь GigaAM (`Hearing/RecognitionPhrase.swift`) только передаёт `onFed` в
-  `BatchPhrase`, сам отвод судит тест `// B14` на Linux. at=2026-10-27
+  `BatchPhrase`, сам отвод судит тест `// B14` на Linux. at=2026-10-30
 
 ## Spec coverage gaps
 - **B13–B19 на телефоне** — общая сессия теста с родителем (его решение 2026-10-23, waiver в STATUS).
@@ -82,8 +83,8 @@
 
 | Metric | Value |
 |---|---|
-| files_touched / loc_diff | 10 code / +538/−35 (net +503) после слияния main и стыка с GigaAM |
-| commits | 10 до сдачи (из них два слияния main) |
+| files_touched / loc_diff | 15 code / +584/−46 (net +538) после слияния main `f9bcc32` |
+| commits | 13 до сдачи (из них три слияния main после D3) |
 | time_to_accepted_spec | 0h (примеры подписаны в спеке серии) |
 | rework_after_done | 0 |
 | harness_hardened | yes — смоук S10 `blackbox_pull.sh` (13 случаев), тесты B17 и B14 (GigaAM), мутации |
