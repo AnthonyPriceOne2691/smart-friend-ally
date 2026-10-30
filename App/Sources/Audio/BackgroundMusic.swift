@@ -22,8 +22,22 @@ final class BackgroundMusic {
         wired = (try? engine.connectNode(node, to: engine.mainMixerNode, format: format)) != nil  // the iOS 27 call
     }
 
+    /// With the parent's line from the bundle; no file — the standard and a note.
+    convenience init(_ bundle: URL, engine: AVAudioEngine) {
+        let url = bundle.appendingPathComponent("music.json")
+        self.init(line: MusicLine.decode((try? Data(contentsOf: url)) ?? Data()), engine: engine)
+    }
+
+    /// The sound's mode is known: the loop in the background; no echo canceller (Milena, the Mac) — no music in a talk.
+    /// The console's lines.
+    func begin(sound: String) -> [String] {
+        Task { await load(cancelsEcho: sound != "half") }
+        let silent = sound == "half" && line.on ? ["музыка: в разговоре молчит" + " — нет эхоподавления"] : []
+        return [line.console] + line.notes + silent
+    }
+
     /// The loop from code, off the main actor; then the music follows the scene.
-    func load(cancelsEcho: Bool) async {
+    private func load(cancelsEcho: Bool) async {
         guard line.on, line.volume > 0 else { return }
         let samples = await Task.detached(priority: .utility) { MusicBox.render() }.value
         player = try? AVAudioPlayer(data: Self.wave(samples), fileTypeHint: AVFileType.wav.rawValue)

@@ -11,6 +11,17 @@
 * **Источник**: поставка `background-music` (слово родителя 2026-10-29; выбор трека на слух; числа Y1–Y11 подписаны
   2026-10-29).
 
+## 2026-10-29 — Элли на Mac: приложение для iPhone прямо на Mac (sim-app)
+
+* **Creation**: `engineering/mac-run` — ADR: разговоры на Mac — приложение для iPhone («My Mac (Designed for
+  iPhone)»), запуск ⌘R в Xcode, файлы через кнопку «Файлы с Mac…» (`MacImport`: только пути реестров, размер и
+  sha256 копии), ход строкой без слов в системном журнале (`TraceLine`); симулятор отклонён замером зонда — в нём нет
+  диктовки, Metal без apple7 и metal3; запуск вне Xcode убивает Gatekeeper, контейнер закрыт для агентов (TCC).
+* **Update**: `engineering/voice-loop` — раздел «Элли на Mac» (`mac_files.py`, `mac_app.sh`, кнопка, журнал `turn`,
+  строка «модель: Metal — …»); `engineering/voice-engine` — `VoiceFile.sha256` для сверки копии;
+  `engineering/safety-below-model` — путь реплики на Mac тот же; `ops/child-data` — контейнер на Mac и барьер для
+  агентов; `references/repo-map` — входные точки на Mac; `engineering/index` — строка решения.
+* **Источник**: поставка `sim-app` (решения родителя 2026-10-29; примеры N1–N10 подписаны 2026-10-29).
 ## 2026-10-29 — значок приложения из рисунка Элли (app-icon)
 
 * **Update**: `product/look-and-feel` — правило «значок приложения — та же Элли» (выбор родителя «В»: мордочка крупно в

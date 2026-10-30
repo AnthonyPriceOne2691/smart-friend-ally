@@ -80,3 +80,4 @@
 - `child-open`
 - `app-icon`
 - `memory-block-form`
+- `sim-app`

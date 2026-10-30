@@ -25,7 +25,9 @@ final class AudioIO: @unchecked Sendable {
     /// registry has no `overlap`, and the microphone stays half-duplex.
     func goDuplex(_ hearing: Hearing, activity: VoiceActivity, feed: ((AVAudioPCMBuffer) -> Void)?,
                   flagMinimum: Double) throws -> String? {
-        guard let overlap = hearing.overlap else { return nil }
+        // sim-app: the iPhone app on a Mac gets no voice processing — macOS runs it at 24 kHz under the engine's
+        // formats: the voice played fast and the microphone reached Silero unheard (2026-10-30). Half-duplex there.
+        guard let overlap = hearing.overlap, !ProcessInfo.processInfo.isiOSAppOnMac else { return nil }
         let session = AVAudioSession.sharedInstance()
         try session.setCategory(.playAndRecord, mode: .voiceChat, options: [.defaultToSpeaker])
         try session.setPreferredIOBufferDuration(0.02)
