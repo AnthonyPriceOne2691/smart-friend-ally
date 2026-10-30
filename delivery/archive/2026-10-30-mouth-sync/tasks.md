@@ -20,5 +20,5 @@ L133, L134, L135, L136, L137, L138, L139, L144, L148, L149, L150, L158, L160, L1
   `LiveScene`; демо со звуком по таймеру, превью «говорит» — со звуком (N6)
 
 ## Slice 3 — знание и сдача
-- [ ] T5: ADR `character-rendering`, `look-and-feel`, `log.md`; свежий main; строгий гейт; PR, CI, метка `macos`;
+- [x] T5: ADR `character-rendering`, `look-and-feel`, `log.md`; свежий main; строгий гейт; PR, CI, метка `macos`;
   verify-report, архив, INDEX (L185–L187), доклад ведущему
