@@ -6,7 +6,7 @@
 - **kind:** feature
 - **repro_test:** n/a reason=не bugfix
 - **diagnosis:** n/a reason=не bugfix
-- **phase:** specify
+- **phase:** implement
 - **builder:** agent:claude-code
 - **verifier:** process:ci
   <!-- рот по звуку судят тесты ядра на Linux и Mac; на телефоне — общая сессия теста; снимков экрана телефона нет (L46) -->
