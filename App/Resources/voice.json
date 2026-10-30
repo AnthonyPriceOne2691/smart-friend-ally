@@ -1,5 +1,5 @@
 {
-  "preset": {"style": "F2", "speed": 0.9, "steps": 8, "pitch": 9, "formant": 5, "eq": [["lowshelf", 250, -3, 0.7], ["peak", 4000, 2.5, 0.9]]},
+  "preset": {"style": "F2+F5:0.3", "speed": 0.85, "steps": 8, "pitch": 9, "formant": 4, "stretch": 1.12, "range": 1.3, "gap": 0.8, "eq": [["lowshelf", 250, -1, 0.7], ["peak", 4000, 1, 0.9], ["highshelf", 6500, -3, 0.7]]},
   "folder": "Voice",
   "files": [
     {"to": "supertonic/onnx/tts.json", "bytes": 8253, "group": "voice", "from": "supertonic-3-ext/onnx/tts.json", "sha256": "42078d3aef1cd43ab43021f3c54f47d2d75ceb4e75f627f118890128b06a0d09", "note": "// pragma: allowlist secret"},

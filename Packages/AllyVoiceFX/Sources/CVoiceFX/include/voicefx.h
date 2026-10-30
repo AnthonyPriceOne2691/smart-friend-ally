@@ -12,13 +12,21 @@ typedef struct {
     double q;
 } AllyEQBand;
 
-/// Pitch and formant shift in semitones, then the EQ cascade and the stand's 0.97 peak guard. Writes n samples to out.
-/// Returns 0, or -1 when memory runs out or sr is not positive.
-int ally_fx_process(const float *x, int n, int sr, double pitch_st, double formant_st,
+/// Samples ally_fx_process writes for n input samples at this stretch.
+int ally_fx_length(int n, double stretch);
+
+/// Pitch and formant shift in semitones, the duration times `stretch`, the F0 span around the sentence's median times
+/// `range` (both positive, VoiceFX refuses others), then the EQ cascade and the stand's 0.97 peak guard. Writes
+/// ally_fx_length(n, stretch) samples to out. Returns 0, or -1 when memory runs out or sr is not positive.
+int ally_fx_process(const float *x, int n, int sr, double pitch_st, double formant_st, double stretch, double range,
                     const AllyEQBand *bands, int nbands, float *out);
 
 /// The EQ cascade in place.
 void ally_eq(float *x, int n, int sr, const AllyEQBand *bands, int nbands);
+
+/// The speech between the sentence's ends: 10 ms frames above floor_db of the peak, head and tail seconds of margin.
+/// [*start, *end) is the whole of it when no frame rises above the floor.
+void ally_speech_span(const float *x, int n, int sr, double floor_db, double head, double tail, int *start, int *end);
 
 /// Frames of the pitch track for n samples at sr: one per 5 ms.
 int ally_pitch_frames(int n, int sr);

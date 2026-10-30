@@ -9,6 +9,7 @@ import Foundation
 final class PhoneListener: Listener, @unchecked Sendable {
     private let recognizer: DictationRecognizer, audio: AudioIO, hearing: Hearing
     private let resetSound: @Sendable () -> Void, firstSound: @Sendable () -> Double?, heard: @Sendable (String) -> Void
+    private let settle: @Sendable (Double) async throws -> Void  // the wait for a quiet room after her voice
     private let activity: SileroActivity?  // D7.2: Silero tells speech from silence; nil — energy
     private let last = Locked<(stages: [String: Double], voiced: Double?)>(([:], nil))
     private let ending = Locked<TurnEnding?>(nil), decode: (@Sendable ([Float]) -> String)?
@@ -16,11 +17,12 @@ final class PhoneListener: Listener, @unchecked Sendable {
     /// - Parameter decode: GigaAM's decoder when the registry chose it (D7.3); nil — dictation.
     init(recognizer: DictationRecognizer, audio: AudioIO, hearing: Hearing,
          resetSound: @escaping @Sendable () -> Void, firstSound: @escaping @Sendable () -> Double?,
-         heard: @escaping @Sendable (String) -> Void, activity: SileroActivity? = nil,
+         settle: @escaping @Sendable (Double) async throws -> Void, heard: @escaping @Sendable (String) -> Void,
+         activity: SileroActivity? = nil,
          decode: (@Sendable ([Float]) -> String)? = nil) {
         (self.recognizer, self.audio, self.hearing, self.activity) = (recognizer, audio, hearing, activity)
         self.decode = decode
-        (self.resetSound, self.firstSound, self.heard) = (resetSound, firstSound, heard)
+        (self.resetSound, self.firstSound, self.settle, self.heard) = (resetSound, firstSound, settle, heard)
     }
 
     func endTurn() { ending { $0 }?.ask() }
@@ -34,6 +36,8 @@ final class PhoneListener: Listener, @unchecked Sendable {
         ending { $0 = turnEnding }
         defer { ending { $0 = nil } }
         let detector = TurnDetector(kind: kind, timing: hearing.turn, ending: turnEnding, activity: activity)
+        // The ring keeps her speech meanwhile; half-duplex drops it, as it did over the synthesis's silence.
+        try await settle(hearing.overlap?.afterVoice ?? 0)
         let end = try await audio.listen(detector, timeout: hearing.listenTimeout) { [activity] buffer in
             phrase.feed(buffer)
             activity?.feed(buffer)  // the same tap buffers, before the detector's frames of them (D7.2)

@@ -9,6 +9,12 @@
   `story.json`. `product/persona` — «Связность». `engineering/index` — строка сессии.
 * **Источник**: поставка `story-mode` (подпись родителя 2026-10-30 «Подписываю: три мостика по кругу (Рекомендую)»,
   примеры T1–T14). Вторая поставка той же спеки — `story-model`: E4B, приложение, прогон на Mac.
+## 2026-10-30 — голос: обрезка тишины и пауза из строки (voice-tuning)
+
+* **Update**: `engineering/voice-fx` — вариант 6 родителя, растяжка и интонация, `SilenceTrim`: тишина синтеза снимается до
+  обработки, порог −45 дБ, поля 30 и 80 мс; `engineering/voice-engine` — ключи `stretch`, `range`, `gap` строки пресета,
+  `SpokenVoice.settle`; `engineering/speech-text` — строки `stress` и две причины ошибок RUAccent; `engineering/voice-loop` —
+  слушание ждёт тихую комнату; `engineering/session`, `ops/test-session`, `product/persona`, `engineering/index` — голос.
 ## 2026-10-30 — рот Элли только при звуке (mouth-sync)
 
 * **Update**: `product/look-and-feel` — строка «в коде (mouth-sync)». `engineering/character-rendering` — как сделано:

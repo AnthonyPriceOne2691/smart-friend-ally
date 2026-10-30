@@ -7,10 +7,10 @@ import AllyVoiceFX
 import Foundation
 import os
 
-/// Her voice (voice series V4b2): Supertonic by the preset line, then PSOLA and the EQ — «Совсем малышка» by default —
-/// with «Э́льли» and the reading rules of speech-text.json. The app assembles the `SpokenVoice` itself — the renderer
-/// and the player on the session's engine — so D6.1 can wrap the player (its `SoundingPlayer`) and hold one
-/// AVAudioEngine for the microphone and the voice; this class adds the console line and the version.
+/// Her voice (voice series V4b2): Supertonic by the preset line, then PSOLA and the EQ — the parent's choice in
+/// voice.json — with «Э́льли» and the reading rules of speech-text.json. The app assembles the `SpokenVoice` itself —
+/// the renderer and the player on the session's engine — so D6.1 can wrap the player (its `SoundingPlayer`) and hold
+/// one AVAudioEngine for the microphone and the voice; this class adds the console line and the version.
 final class SupertonicVoice: HerVoice, VoiceLookahead, @unchecked Sendable {
     let note: String, label: String
     let ready = true
@@ -21,7 +21,7 @@ final class SupertonicVoice: HerVoice, VoiceLookahead, @unchecked Sendable {
         let shifts = "\(Int(preset.pitch))/\(Int(preset.formant))"
         note = "голос: " + "Supertonic \(preset.style) · \(shifts) · ORT \(OnnxRuntime.version)"
         label = "supertonic-3 \(preset.style) \(preset.speed) \(preset.firstSteps)/\(preset.steps) \(shifts) "
-            + "eq\(preset.eq.count) ort\(OnnxRuntime.version)"
+            + "x\(preset.stretch) r\(preset.range) eq\(preset.eq.count) ort\(OnnxRuntime.version)"
     }
 
     var firstSound: Double? { spoken.firstSound }
@@ -30,9 +30,11 @@ final class SupertonicVoice: HerVoice, VoiceLookahead, @unchecked Sendable {
     func speak(_ sentence: String) async throws { try await spoken.speak(sentence) }
     func stop() { spoken.stop() }
     func upcoming(_ sentences: [String]) { spoken.upcoming(sentences) }
+    func settle(_ seconds: Double) async throws { try await spoken.settle(seconds) }
 }
 
-/// One sentence made sound: the engine's text, the synthesis trimmed to its predicted length, the processing.
+/// One sentence made sound: the engine's text, the synthesis trimmed to its predicted length and to its speech, the
+/// processing.
 struct SupertonicRenderer: SentenceRenderer {
     let text: SpeechTextPipeline, synth: SupertonicEngine, preset: VoicePresetLine, fx: VoiceFX
     var rate: Int { synth.sampleRate }
@@ -52,7 +54,8 @@ struct SupertonicRenderer: SentenceRenderer {
         let steps = first ? preset.firstSteps : preset.steps
         let audio = try synth.synthesize(line, voice: VoicePreset(style: preset.style, speed: preset.speed,
                                                                   steps: steps))
-        let samples = Array(audio.samples.prefix(Int(audio.duration * Double(audio.rate))))
+        let predicted = Array(audio.samples.prefix(Int(audio.duration * Double(audio.rate))))
+        let samples = try SilenceTrim.standard.apply(predicted, rate: audio.rate)
         let synthesized = uptime
         let processed = try fx.process(samples, rate: audio.rate)
         return RenderedSentence(samples: processed, rate: audio.rate,
@@ -117,6 +120,7 @@ extension VoiceFX {
             guard let kind = kinds[band.kind] else { throw UnknownBand(kind: band.kind) }
             return EQBand(kind, frequency: band.frequency, gainDB: band.gainDB, q: band.q)
         }
-        self.init(pitch: preset.pitch, formant: preset.formant, eq: VoiceEQ(bands: bands))
+        self.init(pitch: preset.pitch, formant: preset.formant, stretch: preset.stretch, range: preset.range,
+                  eq: VoiceEQ(bands: bands))
     }
 }

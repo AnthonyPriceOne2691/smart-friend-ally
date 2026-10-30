@@ -37,14 +37,8 @@ final class VoiceFXTests: XCTestCase {
 
     func testTrackerFollowsAGlideWithAWeakFundamental() throws {
         // Z31: second harmonic twice the fundamental, F0 180 → 260 Hz over 1 s, then 0.3 s of silence
-        let rate = Signals.rate, amps: [Double] = [0.5, 1.0, 0.6, 0.3, 0.2, 0.1]
-        var signal = [Float](repeating: 0, count: rate + rate * 3 / 10), phase = 0.0
-        for i in 0..<rate {
-            phase += 2 * Double.pi * (180 + 80 * Double(i) / Double(rate)) / Double(rate)
-            let sum = amps.enumerated().reduce(0.0) { $0 + $1.element * sin(Double($1.offset + 1) * phase) }
-            signal[i] = Float(0.2 * sum)
-        }
-        let track = try PitchTrack(signal, rate: rate)
+        let signal = Signals.glide() + [Float](repeating: 0, count: Signals.rate * 3 / 10)
+        let track = try PitchTrack(signal, rate: Signals.rate)
         let half = 1.5 / 70
         var worst = 0.0, voicedInSilence = 0, checked = 0
         for (i, f0) in track.f0.enumerated() {
@@ -59,5 +53,67 @@ final class VoiceFXTests: XCTestCase {
         XCTAssertGreaterThan(checked, 150)
         XCTAssertLessThanOrEqual(worst, 0.02)
         XCTAssertEqual(voicedInSilence, 0)
+    }
+
+    func testStretchLengthensTheSoundAndKeepsThePitchAndTheTimbre() throws {
+        // S1: a 1 s vowel at 1.12 → 1.12 s ± 1%, F0 ± 2%, the strongest harmonic ± 5%
+        let x = Signals.vowel()
+        let y = try VoiceFX(pitch: 0, formant: 0, stretch: 1.12).process(x, rate: Signals.rate)
+        XCTAssertEqual(y.count, Int((Double(x.count) * 1.12).rounded()))
+        XCTAssertEqual(Signals.activeSeconds(y), 1.12, accuracy: 0.0112)
+        XCTAssertEqual(Signals.f0(y), Signals.f0(x), accuracy: Signals.f0(x) * 0.02)
+        XCTAssertEqual(Signals.strongest(y), Signals.strongest(x), accuracy: Signals.strongest(x) * 0.05)
+    }
+
+    func testStretchWorksOverTheShifts() throws {
+        // S1 as a relation: the length follows the stretch and F0 the pitch for seeded settings, the formants aside
+        var rng = SplitMix(seed: 12)
+        let x = Signals.vowel(f0: 180, seconds: 0.5)
+        let before = Signals.f0(x)
+        for _ in 0..<3 {
+            let pitch = rng.next(in: 0...10), formant = rng.next(in: 0...6), stretch = rng.next(in: 0.9...1.3)
+            let y = try VoiceFX(pitch: pitch, formant: formant, stretch: stretch).process(x, rate: Signals.rate)
+            XCTAssertEqual(y.count, Int((Double(x.count) * stretch).rounded()), "stretch \(stretch)")
+            XCTAssertEqual(Signals.activeSeconds(y), 0.5 * stretch, accuracy: 0.5 * stretch * 0.02, "\(stretch)")
+            let ratio = pow(2, pitch / 12)
+            XCTAssertEqual(Signals.f0(y) / before, ratio, accuracy: ratio * 0.02, "pitch \(pitch) stretch \(stretch)")
+        }
+    }
+
+    func testRangeWidensTheIntonationAroundTheMedian() throws {
+        // S2: glides 180 → 260 and 300 → 430 Hz at 1.3: the span in semitones × 1.3 ± 15%, the median in place ± 3%
+        for x in [Signals.glide(), Signals.glide(from: 300, to: 430)] {
+            let before = try Contour(x), after = try Contour(VoiceFX(pitch: 0, formant: 0, range: 1.3)
+                .process(x, rate: Signals.rate))
+            XCTAssertEqual(after.span / before.span, 1.3, accuracy: 1.3 * 0.15)
+            XCTAssertEqual(after.median, before.median, accuracy: before.median * 0.03)
+        }
+    }
+
+    func testPlainStretchAndRangeAreTheChainWithoutThem() throws {
+        // S3: 1 and 1 change nothing, sample for sample
+        let x = Signals.glide(), plain = VoiceFX(pitch: 9, formant: 4, eq: VoiceEQ())
+        XCTAssertEqual(try plain.process(x, rate: Signals.rate),
+                       try VoiceFX(pitch: 9, formant: 4, stretch: 1, range: 1).process(x, rate: Signals.rate))
+    }
+
+    func testAStretchOrARangeNotAboveZeroIsAnError() {
+        // S4: the line refuses them; the chain does not crash on them either
+        for fx in [VoiceFX(pitch: 0, formant: 0, stretch: 0), VoiceFX(pitch: 0, formant: 0, range: -1)] {
+            XCTAssertThrowsError(try fx.process([0.5], rate: Signals.rate)) {
+                XCTAssertEqual($0 as? VoiceFXError, .badShape)
+            }
+        }
+    }
+}
+
+/// Voiced F0 of a sound by the package's tracker: its median and the p10–p90 span in semitones.
+private struct Contour {
+    let median: Double, span: Double
+
+    init(_ samples: [Float]) throws {
+        let voiced = try PitchTrack(samples, rate: Signals.rate).f0.filter { $0 > 0 }.map(Double.init).sorted()
+        median = voiced[voiced.count / 2]
+        span = 12 * log2(voiced[voiced.count * 9 / 10] / voiced[voiced.count / 10])
     }
 }
