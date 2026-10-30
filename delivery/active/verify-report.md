@@ -89,7 +89,7 @@
 | rework_after_done | 0 |
 | harness_hardened | yes — смоук S10 `blackbox_pull.sh` (13 случаев), тесты B17 и B14 (GigaAM), мутации |
 | implement_retries | 2 — ожидаемое B17 считалось после стирания (порядок аргументов); 5 находок SwiftLint (`inline_prompt`, длина строки) исправлены до коммита |
-| verify_fails_before_green | 0 — первый прогон CI 39995408177 на `8c194d0` зелёный во всех трёх джобах (swift, delivery, gates); PR #43 `MERGEABLE`, `CLEAN` (L35) |
+| verify_fails_before_green | 1 — прогон 41100746991 на `fceb948`: `okf_sync_gate` в джобе delivery, `ConsoleView.swift` и `project.yml` — концепты `design-demo` и `repo-map` не тронуты; локально он гонялся до коммита слияния и видел старый дифф; первый прогон 39995408177 на `8c194d0` был зелёным |
 | est_token_or_cost | n/a |
 
 ## Assertion digest (ревью ожиданий, не кода)
