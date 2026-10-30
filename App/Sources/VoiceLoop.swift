@@ -15,7 +15,8 @@ import SwiftUI
 final class VoiceLoop: ObservableObject {
     struct Screen { var lines: [String] = [], heard = "", said = "", ready = false }
     @Published private(set) var screen = Screen()
-    @Published private(set) var talk = TalkState()  // the session for a screen: phase, pose, why the last one ended
+    // the session for a screen: phase, pose, why the last one ended; the music follows its phase (background-music)
+    @Published private(set) var talk = TalkState() { didSet { music?.update { $0.phase = talk.phase } } }
     /// Her voice sounds now, from a phrase's start to its end (mouth-sync): the child screen's mouth goes by this — the
     /// session says «speaking» while the first phrase is still being made.
     @Published private(set) var sounding = false
@@ -24,7 +25,7 @@ final class VoiceLoop: ObservableObject {
     // acceptance's line; its own session (audience `supervised`, or `child` once the acceptance holds) and the last
     // wake, which the next one waits for — one ear for both sessions.
     @Published private(set) var access = ChildAccess.parentOnly([])
-    @Published private(set) var child = false
+    @Published private(set) var child = false { didSet { music?.update { $0.child = child } } }
     /// The loading screen is up while everything for her first answer warms up (child-open); then Ellie or the console.
     @Published private(set) var warming = true
     @Published private(set) var exception = false
@@ -45,6 +46,7 @@ final class VoiceLoop: ObservableObject {
     @Published var macFilesLine: String?
     @Published var importingMacFiles = false
     private var encyclopedia: Encyclopedia?  // Э2: loaded at warm-up, both sessions get it
+    private var music: BackgroundMusic?, waking = false  // background-music: a second tap meanwhile is no second wake
     private var started = false, stages: [(name: String, seconds: Double)] = []  // child-open: the loading's stages
     private static let log = Logger(subsystem: "com.anthonypriceone.ally", category: "launch")
 
@@ -112,7 +114,7 @@ final class VoiceLoop: ObservableObject {
         stages = [("модель", voiceStart - modelStart), ("голос", earStart - voiceStart), ("слух", uptime - earStart)]
         let encyclopedia = Encyclopedia.bundled()  // Э2: the base and FTS5 on the phone — the self-test says if not
         screen.lines.append(encyclopedia.line(searchP95: encyclopedia.searchP95()))
-        let sound = duplex(voice, hearing, models: models, silero: silero)
+        let sound = withMusic(bundle) { duplex(voice, hearing, models: models, silero: silero) }
         let personaHash = SHA256.hash(data: Data(persona.utf8)).map { String(format: "%02x", $0) }.joined()
         versions = ["ios": UIDevice.current.systemVersion, "llama": settings.runtime.build, "persona": personaHash,
                     "voice": voice.label, "weights": "\(registry.model.file):\(registry.model.bytes)",
@@ -203,22 +205,6 @@ final class VoiceLoop: ObservableObject {
         }
     }
 
-    /// A tap on the sleeping friend: she greets and then talks without buttons until the session sleeps. The session of
-    /// the shown screen wakes after the last one has ended (L60, L69); the microphone is open from its wake to its
-    /// sleep (D6.1).
-    func wake() {
-        guard let talker = child ? childTalk : conversation, talk.phase == .asleep else { return }
-        (screen.heard, screen.said) = ("", "")
-        let previous = running, audio = audio, parse = pauseMemory()
-        running = Task {
-            await parse?.value  // one model: the parse gives it back first (M35)
-            await previous?.value
-            do { try audio.start() } catch { screen.lines.append("микрофон не открылся: \(error)") }
-            await talker.wake()
-            audio.stop()
-        }
-    }
-
     /// The microphone and the voice of a session (D6.1): Supertonic — one engine with voice processing, the ring and
     /// the counter outside a listening; Milena — half-duplex. The journal's `audio`: `vp+agc`, `vp` or `half`.
     private func duplex(_ voice: any HerVoice, _ hearing: Hearing, models: URL, silero: SileroActivity?) -> String {
@@ -264,6 +250,7 @@ final class VoiceLoop: ObservableObject {
     /// The audio session taken away or given back (a call, Siri, an alarm — D6.2): the shown session pauses and then
     /// listens again.
     private func interrupted(_ began: Bool) {
+        if !began { music?.resume() }
         guard let talker = child ? childTalk : conversation else { return }
         Task { await talker.interruption(began: began) }
     }
@@ -377,31 +364,6 @@ final class VoiceLoop: ObservableObject {
 
 }
 
-/// The record's and the console's small helpers, out of the class body (its limit is 300 lines).
-extension VoiceLoop {
-    /// What the iOS memory limit counts (L22): footprint now and its lifetime peak, headroom left; conversation tokens.
-    nonisolated private static func memory(_ model: LlamaModel) -> [String: Int] {
-        var info = task_vm_info_data_t()
-        var count = mach_msg_type_number_t(MemoryLayout<task_vm_info_data_t>.size / MemoryLayout<natural_t>.size)
-        let status = withUnsafeMutablePointer(to: &info) {
-            $0.withMemoryRebound(to: integer_t.self, capacity: Int(count)) {
-                task_info(mach_task_self_, task_flavor_t(TASK_VM_INFO), $0, &count)
-            }
-        }
-        let base = ["available_mb": os_proc_available_memory() >> 20, "context_tokens": model.promptTokens]
-        guard status == KERN_SUCCESS else { return base }
-        return base.merging(["footprint_mb": Int(info.phys_footprint >> 20),
-                             "footprint_peak_mb": Int(info.ledger_phys_footprint_peak >> 20)]) { $1 }
-    }
-
-    private var uptime: Double { ProcessInfo.processInfo.systemUptime }
-
-    private func line(_ stages: [String: Double]) -> String {
-        stages.sorted { $0.key < $1.key }.map { "\($0.key) " + String(format: "%.2f с", $0.value) }
-            .joined(separator: " · ")
-    }
-}
-
 /// The memory in the conversation (memory-recall): the prefix with the block, the console's lines, the parent's erase.
 extension VoiceLoop {
     /// The memory's one job at the model (M35): a wake waits for it, the background stops it; its end frees the slot
@@ -478,6 +440,39 @@ extension VoiceLoop {
         guard let names = try? memory?.names() else { return FamilyNames() }
         return FamilyNames(her: names.her, brothers: names.brothers)
     }
+}
+
+// background-music: the wake waits for the music to go quiet before the microphone opens; the music's set-up and front.
+extension VoiceLoop {
+    /// A tap on the sleeping friend: she greets and then talks without buttons until the session sleeps. The session of
+    /// the shown screen wakes after the last one has ended (L60, L69); the microphone is open from its wake to its
+    /// sleep (D6.1).
+    func wake() {
+        guard let talker = child ? childTalk : conversation, talk.phase == .asleep, !waking else { return }
+        (screen.heard, screen.said) = ("", "")
+        let previous = running, audio = audio, parse = pauseMemory(), music = music
+        waking = true
+        running = Task {
+            await parse?.value  // one model: the parse gives it back first (M35)
+            await previous?.value
+            await music?.duck()  // the music quiet and on the voice's engine before the microphone opens (Y2)
+            do { try audio.start() } catch { screen.lines.append("микрофон не открылся: \(error)") }
+            music?.join()
+            await talker.wake()
+            await music?.release()
+            audio.stop()
+            waking = false
+        }
+    }
+
+    /// The music's node joins the session's engine before `duplex` turns voice processing on (X9). The sound's mode.
+    private func withMusic(_ bundle: URL, duplex: () -> String) -> String {
+        let music = BackgroundMusic(bundle, engine: audio.engine), sound = duplex()
+        (self.music, screen.lines) = (music, screen.lines + music.begin(sound: sound))
+        return sound
+    }
+
+    func front(_ shown: Bool) { music?.update { $0.front = shown } }  // the app behind: the music goes
 }
 
 // sim-app: the launch's warm-up once more, for the files «Файлы с Mac…» put in place.
