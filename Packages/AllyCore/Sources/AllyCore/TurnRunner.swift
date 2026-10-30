@@ -10,12 +10,12 @@ public struct TurnTimes: Equatable, Sendable {
 
 /// What a turn said and how: the contract's turn (sentences, source, record), the stage times, a model timeout; the
 /// model's text before the contract — none for a script or a phrase of the session; whether the hint's card sounded in
-/// place of the reply's rest (card-fallback); the bridge of a story turn and the telling's record.
+/// place of the reply's rest (card-fallback); the bridge of a story turn.
 public struct TurnOutcome: Sendable {
     public let turn: Turn, times: TurnTimes, modelTimeout: Bool
     public var modelText: String?
     public var cardSaid = false
-    public var bridge: String?, told: StoryStats?
+    public var bridge: String?
 
     /// What Elly said: the bridge, then the turn's sentences.
     public var said: [String] { (bridge.map { [$0] } ?? []) + turn.sentences }
@@ -104,17 +104,10 @@ public final class TurnRunner {
         -> TurnOutcome {
         let reply = model.reply(to: input)
         let (sentences, hand) = AsyncStream<String>.makeStream(bufferingPolicy: .bufferingOldest(32))
-        let marks = StoryMarks(clock: clock, start: state.start)
+        let hands = StoryHand(voice: voice, sounded: state.sounded, clock: clock, start: state.start)
         hand.yield(bridge)
         return try await withThrowingTaskGroup(of: Void.self) { saying in
-            saying.addTask { [voice, sounded = state.sounded] in
-                for await sentence in sentences {
-                    try Task.checkCancellation()
-                    marks.begins()
-                    try await sounded.say(sentence, voice)
-                    marks.ended()
-                }
-            }
+            saying.addTask { try await hands.say(sentences) }
             var over = false
             for try await text in reply where !over { over = letOut(text, &state, hand, watchdog: watchdog) }
             try Task.checkCancellation()
@@ -123,7 +116,9 @@ public final class TurnRunner {
             give(Array(turn.sentences.dropFirst(state.said)), hand)
             hand.finish()
             try await saying.waitForAll()
-            marks.stamp(&state.times)
+            let sounds = hands.times { $0 }
+            (state.times.firstSound, state.times.bridgeEnd, state.times.storySound) =
+                (sounds.firstSound, sounds.bridgeEnd, sounds.storySound)
             var outcome = TurnOutcome(turn: turn, times: state.times, modelTimeout: watchdog.state == .fired,
                                       modelText: state.text)
             outcome.bridge = bridge
@@ -194,31 +189,21 @@ struct TurnState {
 /// What the reply so far means for sentence 1.
 enum Reading { case wait, over, say(String) }
 
-/// A story's sounds as the voice's hand meets them: the bridge's start and end, the start of the next sentence.
-final class StoryMarks: Sendable {
-    private struct Marks { var said = 0, first: Double?, end: Double?, story: Double? }
-    private let clock: TurnClock, start: Double, marks = Locked(Marks())
+/// story: the voice's hand — the sentences in order, the bridge first; when they sound goes to `times`.
+struct StoryHand: Sendable {
+    let voice: VoiceOutput, sounded: Sounded, clock: TurnClock, start: Double, times = Locked(TurnTimes())
 
-    init(clock: TurnClock, start: Double) { (self.clock, self.start) = (clock, start) }
-
-    func begins() {
-        let now = clock.now() - start
-        marks { (m: inout Marks) in
-            if m.said == 0 { m.first = m.first ?? now }
-            if m.said == 1 { m.story = m.story ?? now }
+    func say(_ sentences: AsyncStream<String>) async throws {
+        var number = 0
+        for await sentence in sentences {
+            try Task.checkCancellation()
+            let begun = clock.now() - start, first = number == 0, second = number == 1
+            times { if first { $0.firstSound = begun } else if second { $0.storySound = begun } }
+            try await sounded.say(sentence, voice)
+            let ended = clock.now() - start
+            if first { times { $0.bridgeEnd = ended } }
+            number += 1
         }
-    }
-
-    func ended() {
-        let now = clock.now() - start
-        marks { (m: inout Marks) in
-            if m.said == 0 { m.end = now }
-            m.said += 1
-        }
-    }
-
-    func stamp(_ times: inout TurnTimes) {
-        (times.firstSound, times.bridgeEnd, times.storySound) = marks { ($0.first, $0.end, $0.story) }
     }
 }
 

@@ -42,8 +42,8 @@ public struct TurnTrace: Encodable, Sendable {
     /// The encyclopedia's record of the turn — card id, rule ids, data hash; absent when it was not asked (Э2).
     /// `knowledge.fallback` follows `knowledge.hint` when the card's text sounded (card-fallback).
     public let knowledge: KnowledgeRecord?
-    /// A story turn: `story` or `invent`, the bridge's number, whether the conversation began anew to make room.
-    public let story: StoryRecord?
+    /// A story turn: `intent` — story or invent — and the number of its bridge.
+    public let story: StoryBridge?
     public let rules: [String], contractHash: String?, modelTimeout: Bool, cancelled: Bool, error: String?
     public let elapsed: Double, limit: Double, stages: [String: Double], end: String?
     public let versions: [String: String], memory: [String: Int], thermal: String, audience: String
@@ -63,9 +63,7 @@ public struct TurnTrace: Encodable, Sendable {
             return KnowledgeRecord(card: record.card, rules: record.rules + ["knowledge.fallback"],
                                    dataHash: record.dataHash)
         }
-        story = head.story.map {
-            StoryRecord(intent: $0.kind.rawValue, bridge: $0.number, fresh: outcome?.told?.fresh ?? false)
-        }
+        story = head.story
         (rules, contractHash, modelTimeout) = (log?.rules ?? [], log?.contractHash, log?.modelTimeout ?? false)
         (self.cancelled, self.error, self.end) = (cancelled, error.map(TurnLog.wordless), end)
         (elapsed, limit, stages) = (head.elapsed, head.limit, log?.stages ?? stamp.stages)
@@ -76,9 +74,4 @@ public struct TurnTrace: Encodable, Sendable {
 
     /// The record line: JSON with sorted snake_case keys; nil only if encoding fails.
     public func jsonLine() -> String? { journalLine(self) }
-
-    /// The story turn's part of a record, by code words only.
-    public struct StoryRecord: Encodable, Sendable {
-        public let intent: String, bridge: Int, fresh: Bool
-    }
 }

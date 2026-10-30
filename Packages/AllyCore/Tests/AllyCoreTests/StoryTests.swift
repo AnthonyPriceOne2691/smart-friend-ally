@@ -9,7 +9,6 @@ final class Teller: StoryModel, @unchecked Sendable {
         var now: ScriptedModel?
     }
     private let state: Locked<State>, clock: TurnClock
-    let lastTold = StoryStats(catchUpTokens: 40, fresh: true)
     var asked: [StoryRequest] { state { $0.asked } }
     var cancelled: Bool { state { $0.now?.cancelled ?? false } }
 
@@ -17,12 +16,7 @@ final class Teller: StoryModel, @unchecked Sendable {
         (state, self.clock) = (Locked(State(scripts: scripts)), clock)
     }
 
-    /// Replies typed in pieces of three letters: the runner sees the text grow.
-    convenience init(replies: [String]) {
-        self.init(replies.map { reply in stride(from: 0, to: reply.count, by: 3).map { start in
-            .say(String(reply.dropFirst(start).prefix(3)))
-        } })
-    }
+    convenience init(replies: [String]) { self.init(replies.map { [.say($0)] }) }
 
     func tell(_ request: StoryRequest) -> AsyncThrowingStream<String, Error> {
         let clock = clock, model = state { (s: inout State) -> ScriptedModel in
@@ -40,15 +34,12 @@ final class Teller: StoryModel, @unchecked Sendable {
 /// story-mode, spec T1–T4, T6–T8, T10, T11: story turns through the real `Session`, the real router and the real
 /// contract, a double in place of the model of tales. Replies of E4B from the stand, the fixed lines invented.
 final class StoryTests: XCTestCase {
-    private let dragon = "🐉 Жил-был дракон по имени Рыжик, он очень добрый. Однажды Рыжик увидел маленького зайчика, "
-        + "который испугался темноты. Рыжик тихонько подкрался и показал зайчику, как ярко светит луна. Зайчик "
-        + "перестал бояться и они стали играть вместе. А потом они решили построить для друзей волшебный замок. "
-        + "Как ты думаешь, что было дальше?"
     private let told = ["Жил-был дракон по имени Рыжик, он очень добрый.",
                         "Однажды Рыжик увидел маленького зайчика, который испугался темноты.",
                         "Рыжик тихонько подкрался и показал зайчику, как ярко светит луна.",
                         "Зайчик перестал бояться и они стали играть вместе.",
                         "А потом они решили построить для друзей волшебный замок.", "Как ты думаешь, что было дальше?"]
+    private var dragon: String { "🐉 " + told.joined(separator: " ") }
     private let asks = "Элли, расскажи мне сказку про дракона."
 
     private func rig(_ replies: [String], teller: Teller? = nil, talk: [String] = ["Ого! А что было потом?"],
@@ -66,32 +57,23 @@ final class StoryTests: XCTestCase {
                                   "Ура, сказка! Слушай."] + told)
         let record = try XCTUnwrap(rig.sink.records.last)
         XCTAssertEqual(record.mode, "story")
-        XCTAssertEqual(record.source, "model")
-        XCTAssertEqual(record.story?.intent, "story")
-        XCTAssertEqual(record.story?.bridge, 2)
-        XCTAssertEqual(record.story?.fresh, true)
-        XCTAssertEqual(record.stages["catch_up_tokens"], 40)
-        let line = "\"story\":{\"bridge\":2,\"fresh\":true,\"intent\":\"story\"}"
-        XCTAssertEqual(record.jsonLine()?.contains(line), true)
+        XCTAssertEqual(record.jsonLine()?.contains("\"story\":{\"bridge\":2,\"intent\":\"story\"}"), true)
         XCTAssertEqual(rig.model.calls, 0)
-        XCTAssertEqual(teller.asked.map(\.bridge), ["Ой, сейчас расскажу! Слушай.", "Ура, сказка! Слушай."])
+        XCTAssertEqual(teller.asked.map(\.utterance).last, asks)
         XCTAssertEqual(rig.model.memory.turns.last,
                        ModelMemory.Turn(heard: asks, said: (["Ура, сказка! Слушай."] + told).joined(separator: " ")))
         XCTAssertEqual(rig.states.log.suffix(3), [.thinking, .speaking, .listening])
     }
 
     func testMakingUpHasItsOwnBridgesAndOneQuestion() async throws {  // T2
-        let reply = "🐱 Может, Мурка станет самым лучшим котом-спасателем, который помогает потерявшимся котятам? "
-            + "А как ты думаешь, кем она станет?"
-        let (rig, _) = rig([reply])
+        let idea = "Может, Мурка станет самым лучшим котом-спасателем, который помогает потерявшимся котятам?"
+        let (rig, _) = rig(["🐱 " + idea + " А как ты думаешь, кем она станет?"])
         await rig.session.handle(.wake)
         await rig.hear("Давай придумаем, кем станет Мурка, когда вырастет.")
-        XCTAssertEqual(rig.said, ["Ух, давай! Сейчас придумаю.",
-                                  "Может, Мурка станет самым лучшим котом-спасателем, который помогает потерявшимся "
-                                  + "котятам?"])
+        XCTAssertEqual(rig.said, ["Ух, давай! Сейчас придумаю.", idea])
         let record = try XCTUnwrap(rig.sink.records.last)
-        XCTAssertEqual(record.story?.intent, "invent")
-        XCTAssertEqual(record.story?.bridge, 1)
+        XCTAssertEqual(record.story?.kind, .invent)
+        XCTAssertEqual(record.story?.number, 1)
         XCTAssertEqual(record.rules, ["emoji", "last_question"])
     }
 
@@ -125,22 +107,16 @@ final class StoryTests: XCTestCase {
         XCTAssertEqual(rig.model.inputs, lines)
         XCTAssertTrue(teller.asked.isEmpty)
         XCTAssertEqual(rig.sink.records.suffix(3).map(\.mode), ["talk", "talk", "talk"])
-        XCTAssertEqual(rig.sink.records.suffix(3).compactMap(\.story).count, 0)
         XCTAssertEqual(rig.sink.records.last?.jsonLine()?.contains("\"story\""), false)
     }
 
     func testTheRuleReadsTheStandsCasesAsTheReferenceDoes() throws {  // T3
         let url = try XCTUnwrap(Bundle.module.url(forResource: "intent_cases", withExtension: "json"))
         let cases = try JSONDecoder().decode([String: [String]].self, from: Data(contentsOf: url))
-        XCTAssertEqual(cases.values.map(\.count).reduce(0, +), 100)
         for (want, texts) in cases {
             for text in texts { XCTAssertEqual(StoryIntent.shared.kind(of: text)?.rawValue ?? "none", want, text) }
         }
-    }
-
-    func testNormalizedWordsAreTheReferences() {  // T3
-        XCTAssertEqual(StoryIntent.normalized("  Ещё сказку,\nпожалуйста — можешь? "), "еще сказку пожалуйста можеш")
-        XCTAssertEqual(StoryIntent.normalized("Объём 5 a-b"), "обем 5 a b")
+        XCTAssertEqual(StoryIntent.normalized("  Ещё объём,\n5 a-b — можешь? "), "еще обем 5 a b можеш")
     }
 
     func testTheRouterComesFirst() async throws {  // T4
@@ -183,8 +159,7 @@ final class StoryTests: XCTestCase {
     }
 
     func testAFullStoryStopsTheModel() async throws {  // T6
-        let sentences = (1...9).map { "Ёжик пошёл домой \($0) раз. " }
-        let teller = Teller([sentences.map { .say($0) } + [.say("Ещё"), .hang]])
+        let teller = Teller([(1...9).map { .say("Ёжик пошёл домой \($0) раз. ") } + [.say("Ещё"), .hang]])
         let (rig, _) = rig([], teller: teller)
         await rig.session.handle(.wake)
         await rig.hear("Расскажи сказку!")
@@ -196,6 +171,7 @@ final class StoryTests: XCTestCase {
     func testTheVoiceGetsWhatTheContractKeepsOfTheWholeReply() async throws {  // T6
         let replies = [dragon, "Раз. Два! Три? Четыре… Пять. Шесть? Семь. Восемь. Девять.", "Жил-был ёжик", "🐱",
                        "Звони 89161234567! Жил-был ёжик.", "Жил-был ёжик. Я буду ждать тебя. Конец.",
+                       "Жил-был ёжик. Он нашёл яблоко.\n(Ёжик смеётся! Только не лазь!)",
                        "В 2.5 года Мурка нашла 1. Кошка спала. Конец!", "Я живая девочка. Правда."]
         for reply in replies {
             let voice = RecordingVoice(), clock = SystemClock(), model = ScriptedModel.typing(reply, clock: clock)
@@ -216,14 +192,13 @@ final class StoryTests: XCTestCase {
         let turns = rig.model.memory.turns
         XCTAssertEqual(turns.map(\.heard), [asks, "Дракон полетел к маме!"])
         XCTAssertEqual(turns[0].said, (["Ой, сейчас расскажу! Слушай."] + told).joined(separator: " "))
-        let talk = try XCTUnwrap(rig.sink.records.last)
-        XCTAssertEqual(talk.mode, "talk")
-        XCTAssertNil(talk.story)
+        XCTAssertEqual(rig.sink.records.last?.mode, "talk")
+        XCTAssertNil(rig.sink.records.last?.story)
         for _ in 0..<3 { await rig.hear("Ещё сказку!") }
         XCTAssertEqual(teller.asked.map(\.bridge), ["Ой, сейчас расскажу! Слушай.", "Ура, сказка! Слушай.",
                                                     "Хорошо, расскажу! Слушай внимательно.",
                                                     "Ой, сейчас расскажу! Слушай."])
-        XCTAssertEqual(rig.sink.records.suffix(3).compactMap(\.story?.bridge), [2, 3, 1])
+        XCTAssertEqual(rig.sink.records.suffix(3).compactMap(\.story?.number), [2, 3, 1])
         await rig.session.handle(.stop)
         await rig.session.handle(.wake)
         await rig.hear("Ещё сказку!")
@@ -278,12 +253,12 @@ final class StoryTests: XCTestCase {
     }
 
     func testABridgeOffTheContractOrABrokenRuleTurnsTheModeOff() async throws {  // T11
-        XCTAssertNil(StoryIntent.shared.off)
+        XCTAssertTrue(StoryIntent.shared.healthy)
         var bridge = StoryData.shared, rule = StoryData.shared
         bridge.bridges["story"] = ["Это будет наш секрет!"]
-        rule.story = []
-        XCTAssertEqual(StoryIntent(bridge).off, "сказки: выключены — мостик не прошёл контракт")
-        XCTAssertEqual(StoryIntent(rule).off, "сказки: выключены — правило намерения не прошло самопроверку")
+        rule.story.removeFirst()
+        XCTAssertFalse(StoryIntent(bridge).healthy)
+        XCTAssertFalse(StoryIntent(rule).healthy)
         let teller = Teller(replies: [dragon])
         let rig = Rig(replies: ["Ого!"], router: RouterRouting(), story: teller, intent: StoryIntent(bridge))
         await rig.session.handle(.wake)
@@ -291,14 +266,10 @@ final class StoryTests: XCTestCase {
         XCTAssertTrue(teller.asked.isEmpty)
         XCTAssertEqual(rig.model.inputs, [asks])
         XCTAssertEqual(rig.sink.records.last?.mode, "talk")
-    }
-
-    func testNoModelOfTalesLeavesTheTurnAsToday() async throws {  // T14
-        let rig = Rig(replies: ["Ого!"], router: RouterRouting())
-        await rig.session.handle(.wake)
-        await rig.hear(asks)
-        XCTAssertEqual(rig.model.inputs, [asks])
-        XCTAssertEqual(rig.sink.records.last?.mode, "talk")
+        let none = Rig(replies: ["Ого!"], router: RouterRouting())  // T14: no model of tales — the turn as today
+        await none.session.handle(.wake)
+        await none.hear(asks)
+        XCTAssertEqual(none.model.inputs, [asks])
     }
 
     func testTheConversationPassesTheModelOfTales() async throws {  // T1

@@ -219,19 +219,12 @@ public actor Session {
         let decision = route.key == nil ? route.decision : .guard(topic: nil), mode = head.mode
         let prompt = prompt(text, plan), card = plan.card, shown = window.window(heard: text)
         let voice = Speaking(parts.voice) { self.move(to: .speaking) }
-        if let bridge = head.story, let story = parts.story {
-            let request = StoryRequest(recent: exchanges, utterance: text, bridge: bridge.text)
-            let model = StoryTurn(story, request, memory: speculation)
-            var outcome = await perform(head) { [parts] in
-                try await TurnRunner(model: model, voice: voice, clock: parts.clock, mode: mode)
-                    .run(text, decision: decision, window: shown, bridge: bridge.text)
-            }
-            outcome?.told = story.lastTold
-            return outcome
+        let bridge = head.story?.text, teller = parts.story.flatMap { story in
+            bridge.map { StoryTurn(story, .init(recent: exchanges, utterance: text, bridge: $0), memory: speculation) }
         }
         return await perform(head) { [parts, speculation] in
-            try await TurnRunner(model: speculation, voice: voice, clock: parts.clock, mode: mode)
-                .run(text, decision: decision, prompt: prompt, card: card, window: shown)
+            try await TurnRunner(model: teller ?? speculation, voice: voice, clock: parts.clock, mode: mode)
+                .run(text, decision: decision, prompt: prompt, card: card, window: shown, bridge: bridge)
         }
     }
 

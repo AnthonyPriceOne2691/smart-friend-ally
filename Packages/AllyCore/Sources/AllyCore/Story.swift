@@ -3,26 +3,11 @@ import Foundation
 /// One finished exchange of the session as it sounded: her words and what Elly said.
 public struct Exchange: Equatable, Sendable {
     public let heard: String, said: String
-
-    public init(heard: String, said: String) { (self.heard, self.said) = (heard, said) }
 }
 
 /// What a story turn gives the model of tales: the last exchanges, her words, the bridge its reply starts with.
 public struct StoryRequest: Equatable, Sendable {
     public let recent: [Exchange], utterance: String, bridge: String
-
-    public init(recent: [Exchange], utterance: String, bridge: String) {
-        (self.recent, self.utterance, self.bridge) = (recent, utterance, bridge)
-    }
-}
-
-/// The record of a telling: the tokens of the exchanges it read; whether the conversation began anew to make room.
-public struct StoryStats: Equatable, Sendable {
-    public var catchUpTokens = 0, fresh = false
-
-    public init(catchUpTokens: Int = 0, fresh: Bool = false) {
-        (self.catchUpTokens, self.fresh) = (catchUpTokens, fresh)
-    }
 }
 
 /// The model of tales (story-mode): the reply's accumulated text after the bridge. Today E4B with the story prefix;
@@ -30,8 +15,6 @@ public struct StoryStats: Equatable, Sendable {
 public protocol StoryModel: AnyObject, Sendable {
     func tell(_ request: StoryRequest) -> AsyncThrowingStream<String, Error>
     func cancel()
-    /// The last telling's record, read after the turn.
-    var lastTold: StoryStats { get }
 }
 
 /// A story turn as `TurnRunner` sees a model: it asks the model of tales; what sounded goes into the memory of the

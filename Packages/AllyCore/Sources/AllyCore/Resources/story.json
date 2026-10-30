@@ -1,5 +1,5 @@
 {
-  "_about": "The story turn (story-mode, signed by the parent 2026-10-30): the rule of her words — intent.py of bake-off 2, its story and invent branches, over her words normalized (lower case, «ё» as «е», no ъ and ь, marks as spaces): {ask} and {object} are put into the patterns; invent goes first, a game in it stays the game's; bridges — the signed phrases by kind, in a circle from the wake; exchanges — how many last turns the model of tales reads; selftest — probes of the rule (want: story, invent, or none); off — the console line when the mode is off.",
+  "_about": "The story turn (story-mode, signed by the parent 2026-10-30): the rule of her words — intent.py of bake-off 2, its story and invent branches, over her words normalized (lower case, «ё» as «е», no ъ and ь, marks as spaces): {ask} and {object} are put into the patterns; invent goes first, a game in it stays the game's; bridges — the signed phrases by kind, in a circle from the wake; exchanges — how many last turns the model of tales reads; selftest — probes of the rule by what it must say, one for each pattern.",
   "ask": "(?:[рл]асс?ка[жз]\\w*|[рл]асказ\\w*|почитай|прочитай|почитаеш|давай|давай\\w*|можеш\\w*|можно|хочу|хоцу|ещ[еоё]|[пр]?[рл]?идума\\w*|сочин\\w*|спой|включи|скажи)",
   "object": "(?:сказк\\w*|сказочк\\w*|сказоцк\\w*|скаск\\w*|скасочк\\w*|истори\\w*)",
   "story": ["\\b{ask}\\b.{0,40}\\b{object}", "\\b{object}\\b.{0,25}\\b{ask}\\b", "^(?:а |ну |и )?(?:ещ[её] )?{object}\\b(?: про| о| об|$)"],
@@ -11,13 +11,9 @@
     "invent": ["Ух, давай! Сейчас придумаю.", "Давай! Я уже придумываю.", "Ой, как интересно! Сейчас придумаю."]
   },
   "exchanges": 4,
-  "selftest": [
-    {"text": "Элли, расскажи мне сказку про дракона.", "want": "story"},
-    {"text": "ещё сказку!", "want": "story"},
-    {"text": "Давай придумаем свою сказку!", "want": "invent"},
-    {"text": "Мама вчера читала мне сказку про колобка.", "want": "none"},
-    {"text": "А ты знаешь сказку про репку?", "want": "none"},
-    {"text": "Давай придумаем загадку!", "want": "none"}
-  ],
-  "off": {"line": "сказки: выключены — {reason}", "bridge": "мостик не прошёл контракт", "rule": "правило намерения не прошло самопроверку"}
+  "selftest": {
+    "story": ["Элли, расскажи мне сказку про дракона.", "Сказку про принцессу расскажи.", "ещё сказку!"],
+    "invent": ["Давай придумаем свою сказку!", "Придумай стишок про кошку.", "Давай как будто мы на Луне."],
+    "none": ["Мама вчера читала мне сказку про колобка.", "А ты знаешь сказку про репку?", "Давай придумаем загадку!"]
+  }
 }

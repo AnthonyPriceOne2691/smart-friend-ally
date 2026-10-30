@@ -14,11 +14,19 @@ public enum SentenceStream {
     }
 
     /// The reply up to the last sentence the next one has begun after, if that goes past `after` characters: what the
-    /// contract of a story reads (story-mode). Repair runs only on what is new, it would be too much on every token.
+    /// contract of a story reads (story-mode). Not inside an aside still open — repair takes a closed one away whole.
+    /// Repair runs only on what is new, it would be too much on every token.
     public static func complete(in text: String, after: Int = 0) -> String? {
         let chars = Array(text)
-        return ends(chars).reversed().prefix { $0 + 1 > after }.first { safeHead(String(chars[...$0])) != nil }
-            .map { String(chars[...$0]) }
+        return ends(chars).reversed().prefix { $0 + 1 > after }.first { end in
+            !openAside(chars[...end]) && safeHead(String(chars[...end])) != nil
+        }.map { String(chars[...$0]) }
+    }
+
+    private static func openAside(_ head: ArraySlice<Character>) -> Bool {
+        [("(", ")"), ("[", "]"), ("{", "}")].contains { open, close in
+            head.filter { $0 == open }.count > head.filter { $0 == close }.count
+        }
     }
 
     /// Where a sentence may end: the last of its end marks, whitespace and a letter after them, not after a digit.
