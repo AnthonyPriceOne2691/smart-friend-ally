@@ -9,10 +9,10 @@
   `intent.py` на 100 кейсах (фикстура)
 - [x] 5: AllyCore — порт `StoryModel`, `StoryRequest`, `Exchange`, адаптер `StoryTurn`; `SessionParts.story`,
   `Conversation`
-- [ ] 6: AllyCore — раннер (мостик, отпуск по предложениям, остаток, этапы), сессия (план, счёт мостиков, обмены, ветка
+- [x] 6: AllyCore — раннер (мостик, отпуск по предложениям, остаток, этапы), сессия (план, счёт мостиков, обмены, ветка
   сказки), след (`story`, этапы, `said`); тесты T1–T4, T6–T8, T10, T11; мутации
-- [ ] 7: подсчёт объёма `delivery_check` после ядра; порог переноса `stream` — по `plan.md`
-- [ ] 8: `discipline-replay stream` и сверка на Mac без модели: открытый корпус стендов, `talk`, `why`, `goodbye` до и
+- [x] 7: подсчёт объёма `delivery_check` после ядра; порог переноса `stream` — по `plan.md`
+- [x] 8: сверка на Mac без модели (`stream` не понадобился: временная фикстура корпуса для T6 и `discipline-replay` main и ветки для T14): открытый корпус стендов, `talk`, `why`, `goodbye` до и
   после — байт в байт, «по одному = целое» в `story`
 - [x] 9: знание — `engineering/session.md`, `engineering/safety-below-model.md`, `product/persona.md`, `log.md`, индексы
 - [x] 10: подпись родителя через ведущего (2026-10-30, «Подписываю: три мостика по кругу (Рекомендую)», 8b99056) — строка `human_ok_spec`, дословный вопрос и ответ в спеке и `decisions.md`;

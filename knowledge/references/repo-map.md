@@ -30,7 +30,7 @@ implementation:
 - **Ядро голосового цикла** — `Packages/AllyCore` (ход через контракт, конец реплики, журнал хода без слов, реестр
   модели, сессия с мягким лимитом и крючком маршрутизатора, драйвер сессии со слухом `Conversation`, маршрутизатор на
   живом ходе `RouterRouting`, след хода и его файл `TraceFile`; тексты сессии — `Resources/session.json`; окно брата и
-  имени `TurnWindow` — `Resources/window.json`; энциклопедия
+  имени `TurnWindow` — `Resources/window.json`; ход сказки — `StoryIntent`, `Story`, `Resources/story.json`; энциклопедия
   «почему» `Encyclopedia` — основы Snowball, SQLite FTS5 через `AllySQLite`, списки — `Resources/encyclopedia.json`,
   база — `Resources/encyclopedia.ru.jsonl`, подсказка во входе модели — `Knowledge.swift`):
   `swift test --package-path Packages/AllyCore` (тулчейн Xcode: `DEVELOPER_DIR`). Паритет энциклопедии со стендом —
