@@ -58,13 +58,38 @@ extension TurnPass {
         return !contract.qword.found(in: rest) && !contract.verb.found(in: rest)
     }
 
-    /// select: narrow, keep — in talk with the closing question's slot; a referral the model made and the cut lost
-    /// comes back as the pointer script.
-    mutating func select(_ cands: [String]) -> [String] {
-        let cands = narrow(cands)
-        var out = closing(cands) ?? keep(cands)
+    /// select: narrow, keep — in talk with the closing question's slot, in story `tell` (what `more` let out stays —
+    /// a reply whose beginning changed keeps only that); a referral the model made and the cut lost comes back as the
+    /// pointer script.
+    mutating func select(_ cands: [String], said: [String] = []) -> [String] {
+        let cands = story ? cands : narrow(cands)
+        var out = story ? tell(cands) : closing(cands) ?? keep(cands)
+        if story, !out.starts(with: said) { out = said }
         if isOn(.actionReferral), cands.contains(where: referral), !out.contains(where: referral) {
             rescue(&out, as: .actionReferral)
+        }
+        return out
+    }
+
+    /// story (story-mode): in order, looking back only — the first question stays, a later one or one after a
+    /// prohibition is skipped and the statements go on (a connective after a skip goes); the first misfit ends the
+    /// story. So the choice for a reply's beginning is the beginning of the choice for the whole.
+    mutating func tell(_ cands: [String]) -> [String] {
+        let blocked = blockedQuestions(cands)
+        var out: [String] = [], skipped = false
+        for (index, sentence) in cands.enumerated() {
+            let extra = isOn(.lastQuestion) && out.contains(where: isQuestion)
+            if index > 0, isQuestion(sentence), blocked.contains(index) || extra {
+                log(blocked.contains(index) ? .afterProhibition : .lastQuestion)
+                skipped = true
+                continue
+            }
+            let next = skipped && isOn(.connective) ? connective(sentence) : sentence
+            guard fits(out + [next]) else {
+                log(.limits)
+                break
+            }
+            (out, skipped) = (out + [next], false)
         }
         return out
     }
@@ -125,10 +150,11 @@ extension TurnPass {
 
     func pick(_ cands: [String], _ indices: [Int]) -> [String] { indices.sorted().map { cands[$0] } }
 
-    /// The script after the kept sentences or in place of the last one — never invented: the model said it.
+    /// The script after the kept sentences or in place of the last one — never invented: the model said it. In story
+    /// only after them: the last one may have sounded already.
     mutating func rescue(_ out: inout [String], as rule: ContractRule) {
         let added = out + [contract.data.pointerScript], swapped = out.dropLast() + [contract.data.pointerScript]
-        guard fits(added) || out.count > 1 && fits(Array(swapped)) else { return }
+        guard fits(added) || !story && out.count > 1 && fits(Array(swapped)) else { return }
         out = fits(added) ? added : Array(swapped)
         log(rule)
     }
@@ -177,9 +203,9 @@ extension TurnPass {
         return turn(pointed(split(cannedText(kind)), nil, ""), source: .canned(kind))
     }
 
-    /// A canned reply of the kind, after the sentence `first` already let out.
-    func canned(_ kind: String, after spoken: String? = nil) -> Turn {
-        turn((spoken.map { [$0] } ?? []) + split(cannedText(kind)), source: .canned(kind))
+    /// A canned reply of the kind, after the sentences `first` (and in story `more`) already let out.
+    func canned(_ kind: String, after spoken: [String] = []) -> Turn {
+        turn(spoken + split(cannedText(kind)), source: .canned(kind))
     }
 
     func cannedText(_ kind: String) -> String { contract.data.canned[kind] ?? contract.data.scripts[kind] ?? "" }

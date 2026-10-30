@@ -14,7 +14,8 @@ public struct TurnLog: Encodable, Sendable {
         (rules, contractHash, modelTimeout) = (record.rules, record.contractHash, outcome.modelTimeout)
         if case .canned(let kind) = record.source { source = "canned:" + kind } else { source = "model" }
         let measured = ["first_text": times.firstText, "first_sentence": times.firstSentence,
-                        "first_sound": times.firstSound, "reply_end": times.replyEnd].compactMapValues { $0 }
+                        "first_sound": times.firstSound, "reply_end": times.replyEnd, "bridge_end": times.bridgeEnd,
+                        "story_first_sound": times.storySound].compactMapValues { $0 }
         self.stages = stages.merging(measured) { given, _ in given }
         self.versions = versions.mapValues(TurnLog.wordless)
         (self.memory, self.thermal) = (memory, TurnLog.wordless(thermal))

@@ -16,7 +16,8 @@ let package = Package(
         .executableTarget(name: "EncyclopediaReplay", dependencies: ["AllyCore"]),
         .testTarget(
             name: "AllyCoreTests",
-            dependencies: ["AllyCore", .product(name: "Discipline", package: "AllyDiscipline")]
+            dependencies: ["AllyCore", .product(name: "Discipline", package: "AllyDiscipline")],
+            resources: [.copy("Fixtures/intent_cases.json")]
         )
     ]
 )

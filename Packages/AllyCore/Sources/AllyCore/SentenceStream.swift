@@ -10,7 +10,28 @@ public enum SentenceStream {
 
     public static func first(in text: String) -> String? {
         let chars = Array(text)
-        var index = 0
+        return ends(chars).lazy.compactMap { safeHead(String(chars[...$0])) }.first
+    }
+
+    /// The reply up to the last sentence the next one has begun after, if that goes past `after` characters: what the
+    /// contract of a story reads (story-mode). Not inside an aside still open — repair takes a closed one away whole.
+    /// Repair runs only on what is new, it would be too much on every token.
+    public static func complete(in text: String, after: Int = 0) -> String? {
+        let chars = Array(text)
+        return ends(chars).reversed().prefix { $0 + 1 > after }.first { end in
+            !openAside(chars[...end]) && safeHead(String(chars[...end])) != nil
+        }.map { String(chars[...$0]) }
+    }
+
+    private static func openAside(_ head: ArraySlice<Character>) -> Bool {
+        [("(", ")"), ("[", "]"), ("{", "}")].contains { open, close in
+            head.filter { $0 == open }.count > head.filter { $0 == close }.count
+        }
+    }
+
+    /// Where a sentence may end: the last of its end marks, whitespace and a letter after them, not after a digit.
+    private static func ends(_ chars: [Character]) -> [Int] {
+        var index = 0, found: [Int] = []
         while index < chars.count {
             guard marks.contains(chars[index]) else {
                 index += 1
@@ -19,13 +40,12 @@ public enum SentenceStream {
             var end = index, next = index + 1
             while next < chars.count, marks.contains(chars[next]) { (end, next) = (next, next + 1) }
             while next < chars.count, chars[next].isWhitespace { next += 1 }
-            if next > end + 1, next < chars.count, chars[next].isLetter, index == 0 || !chars[index - 1].isNumber,
-               let head = safeHead(String(chars[...end])) {
-                return head
+            if next > end + 1, next < chars.count, chars[next].isLetter, index == 0 || !chars[index - 1].isNumber {
+                found.append(end)
             }
             index = end + 1
         }
-        return nil
+        return found
     }
 
     static func safeHead(_ head: String) -> String? {

@@ -23,11 +23,11 @@ public protocol TraceSink: Sendable {
 
 /// The session's part of a record, known before the turn's work: whose session, which turn, in what state and mode,
 /// by whose word (`nil` — the source of the turn's outcome), the router's decision, the encyclopedia's (`nil` — no
-/// lookup) and the kind the ear listened with for the utterance or silence it answers (`nil` — no listening, as for
-/// the greeting).
+/// lookup), the bridge of a story turn and the kind the ear listened with for the utterance or silence it answers
+/// (`nil` — no listening, as for the greeting).
 struct TraceHead: Sendable {
     let session: String, turn: Int, phase: SessionState, mode: TurnMode, source: String?, route: Route?
-    let knowledge: KnowledgeRecord?
+    let knowledge: KnowledgeRecord?, story: StoryBridge?
     let elapsed: Double, limit: Double, audience: Audience, turnKind: TurnKind?
 }
 
@@ -42,6 +42,8 @@ public struct TurnTrace: Encodable, Sendable {
     /// The encyclopedia's record of the turn — card id, rule ids, data hash; absent when it was not asked (Э2).
     /// `knowledge.fallback` follows `knowledge.hint` when the card's text sounded (card-fallback).
     public let knowledge: KnowledgeRecord?
+    /// A story turn: `intent` — story or invent — and the number of its bridge.
+    public let story: StoryBridge?
     public let rules: [String], contractHash: String?, modelTimeout: Bool, cancelled: Bool, error: String?
     public let elapsed: Double, limit: Double, stages: [String: Double], end: String?
     public let versions: [String: String], memory: [String: Int], thermal: String, audience: String
@@ -61,6 +63,7 @@ public struct TurnTrace: Encodable, Sendable {
             return KnowledgeRecord(card: record.card, rules: record.rules + ["knowledge.fallback"],
                                    dataHash: record.dataHash)
         }
+        story = head.story
         (rules, contractHash, modelTimeout) = (log?.rules ?? [], log?.contractHash, log?.modelTimeout ?? false)
         (self.cancelled, self.error, self.end) = (cancelled, error.map(TurnLog.wordless), end)
         (elapsed, limit, stages) = (head.elapsed, head.limit, log?.stages ?? stamp.stages)

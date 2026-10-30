@@ -1,5 +1,14 @@
 # Knowledge Bundle Update Log
 
+## 2026-10-30 — режим сказки: ядро (story-mode)
+
+* **Update**: `engineering/session` — ход сказки: когда включается, мостик, порт модели сказки, две руки раннера,
+  возврат в разговор, выключение, след; `implementation:` += `TurnRunner.swift`, `Story.swift`, `StoryIntent.swift`,
+  `story.json`. `engineering/safety-below-model` — цель 4 на ходе сказки, две строки реестра, раздел о режиме `story`
+  (отбор по порядку, `more`, `rescue` только в конец, замер пределов); `implementation:` += `StoryIntent.swift`,
+  `story.json`. `product/persona` — «Связность». `engineering/index` — строка сессии.
+* **Источник**: поставка `story-mode` (подпись родителя 2026-10-30 «Подписываю: три мостика по кругу (Рекомендую)»,
+  примеры T1–T14). Вторая поставка той же спеки — `story-model`: E4B, приложение, прогон на Mac.
 ## 2026-10-30 — голос: обрезка тишины и пауза из строки (voice-tuning)
 
 * **Update**: `engineering/voice-fx` — вариант 6 родителя, растяжка и интонация, `SilenceTrim`: тишина синтеза снимается до
