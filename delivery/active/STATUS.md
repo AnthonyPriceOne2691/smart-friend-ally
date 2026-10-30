@@ -10,7 +10,7 @@
 - **builder:** agent:claude-code
 - **verifier:** process:ci
   <!-- рот по звуку судят тесты ядра на Linux и Mac; на телефоне — общая сессия теста; снимков экрана телефона нет (L46) -->
-- **human_ok_spec:** no
+- **human_ok_spec:** yes (by=human:anthony, at=2026-10-30, «Подписываю (Рекомендую)» через ведущего: рот только пока звучит голос, поза до звука, закрытие за десятые доли секунды — примеры N1–N6 spec.md)
 - **human_ok_plan:** n/a
 - **shape-oracles:** cqg-deployed
 - **behavior-oracles:** tests-present
