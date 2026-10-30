@@ -2,14 +2,15 @@ import AllyCore
 import AVFoundation
 
 /// The temporary voice: the system Russian voice by identifier, not by language (П23) — no enhanced voice, the compact
-/// one with a console note; the rate set on every utterance (П17); `speak` returns once sounded or stopped.
+/// one with a console note; the rate set on every utterance (П17); `speak` returns once sounded or stopped. `sounds`
+/// says when an utterance starts and stops sounding: the child screen's mouth goes by it (mouth-sync).
 final class SystemVoice: NSObject, VoiceOutput, AVSpeechSynthesizerDelegate, @unchecked Sendable {
     let voice: AVSpeechSynthesisVoice?, note: String
     private let synth = AVSpeechSynthesizer(), rate: Float
     private let waiting = Locked<[ObjectIdentifier: CheckedContinuation<Void, Never>]>([:])
-    private let started = Locked<Double?>(nil)
+    private let started = Locked<Double?>(nil), sounds: @Sendable (Bool) -> Void
 
-    init(identifier: String, rate: Float) {
+    init(identifier: String, rate: Float, sounds: @escaping @Sendable (Bool) -> Void) {
         let compactId = identifier.replacingOccurrences(of: "enhanced", with: "compact")
         let compact = AVSpeechSynthesisVoice(identifier: compactId)
         if let enhanced = AVSpeechSynthesisVoice(identifier: identifier) {
@@ -17,7 +18,7 @@ final class SystemVoice: NSObject, VoiceOutput, AVSpeechSynthesizerDelegate, @un
         } else {
             (voice, note) = (compact, compact.map { "нет enhanced, голос \($0.identifier)" } ?? "нет голоса")
         }
-        self.rate = rate
+        (self.rate, self.sounds) = (rate, sounds)
         super.init()
         synth.delegate = self
     }
@@ -40,11 +41,13 @@ final class SystemVoice: NSObject, VoiceOutput, AVSpeechSynthesizerDelegate, @un
     func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didStart utterance: AVSpeechUtterance) {
         let now = ProcessInfo.processInfo.systemUptime
         started { $0 = $0 ?? now }
+        sounds(true)
     }
 
     func speechSynthesizer(_ s: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) { done(utterance) }
     func speechSynthesizer(_ s: AVSpeechSynthesizer, didCancel utterance: AVSpeechUtterance) { done(utterance) }
     private func done(_ utterance: AVSpeechUtterance) {
+        sounds(false)
         waiting { $0.removeValue(forKey: ObjectIdentifier(utterance)) }?.resume()
     }
 }

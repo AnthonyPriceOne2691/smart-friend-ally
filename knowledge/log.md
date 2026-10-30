@@ -9,6 +9,14 @@
   `story.json`. `product/persona` — «Связность». `engineering/index` — строка сессии.
 * **Источник**: поставка `story-mode` (подпись родителя 2026-10-30 «Подписываю: три мостика по кругу (Рекомендую)»,
   примеры T1–T14). Вторая поставка той же спеки — `story-model`: E4B, приложение, прогон на Mac.
+## 2026-10-30 — рот Элли только при звуке (mouth-sync)
+
+* **Update**: `product/look-and-feel` — строка «в коде (mouth-sync)». `engineering/character-rendering` — как сделано:
+  вход `sound` у `Motion`, удержание позы до первого звука, закрытие рта в `Syllables`. `engineering/voice-loop` — признак
+  `VoiceLoop.sounding`. `engineering/design-demo` — звук сценария по таймеру. `ops/test-session` — N6 на телефоне.
+  `product/child-mode` — рот на детском экране; `engineering/safety-below-model` — признак только для экрана.
+* **Источник**: поставка `mouth-sync` (слово родителя 2026-10-30 после первого разговора на Mac; примеры N1–N6 подписаны
+  2026-10-30).
 
 ## 2026-10-29 — Элли на Mac: приложение для iPhone прямо на Mac (sim-app)
 
