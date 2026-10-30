@@ -6,7 +6,7 @@
 - **kind:** feature
 - **repro_test:** n/a reason=не bugfix
 - **diagnosis:** n/a reason=не bugfix
-- **phase:** implement
+- **phase:** verify
 - **builder:** agent:claude-code
 - **verifier:** process:ci
   <!-- голос судит родитель на слух на странице local/checkpoint/voice-tuning/ (вне git); темп и чёткость — стенд local/spike/voice-tuning/ -->
@@ -26,7 +26,7 @@
   <!-- выбор родителя 2026-10-30: вариант 6, пауза около секунды; подпись ниже вписал ведущий -->
 - **waivers:** none
 - **new_dependency:** none
-- **runtime_paths:** App/Sources/Audio/,App/Sources/PhoneListener.swift
+- **runtime_paths:** App/Sources/
   <!-- §12.6: обрезка, растяжка и ожидание тихой комнаты на настоящем звуке; живая проверка — Mac кнопкой родителя и общая
        сессия теста -->
 - **irreversible_surfaces:** none reason=продукт офлайн; поставка не добавляет ни отправки, ни трат, ни выкатки, ни публикации
