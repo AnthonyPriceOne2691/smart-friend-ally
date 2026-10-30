@@ -233,7 +233,7 @@ int ally_fx_length(int n, double stretch) { return (int)lround(n * stretch); }
 
 int ally_fx_process(const float *x, int n, int sr, double pitch_st, double formant_st, double stretch, double range,
                     const AllyEQBand *bands, int nbands, float *out) {
-    if (sr <= 0 || n < 0 || stretch <= 0 || range <= 0) return -1;
+    if (sr <= 0 || n < 0) return -1;
     if (n == 0) return 0;
     double beta = pow(2.0, pitch_st / 12), alpha = pow(2.0, formant_st / 12);
     int nr = n, no = 0, want = ally_fx_length(n, stretch);

@@ -16,8 +16,8 @@ typedef struct {
 int ally_fx_length(int n, double stretch);
 
 /// Pitch and formant shift in semitones, the duration times `stretch`, the F0 span around the sentence's median times
-/// `range`, then the EQ cascade and the stand's 0.97 peak guard. Writes ally_fx_length(n, stretch) samples to out.
-/// Returns 0, or -1 when memory runs out or sr, stretch or range is not positive.
+/// `range` (both positive, VoiceFX refuses others), then the EQ cascade and the stand's 0.97 peak guard. Writes
+/// ally_fx_length(n, stretch) samples to out. Returns 0, or -1 when memory runs out or sr is not positive.
 int ally_fx_process(const float *x, int n, int sr, double pitch_st, double formant_st, double stretch, double range,
                     const AllyEQBand *bands, int nbands, float *out);
 

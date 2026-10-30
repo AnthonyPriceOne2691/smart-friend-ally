@@ -17,12 +17,12 @@ enum Signals {
         return x.map { Float(0.5 * $0 / top) }
     }
 
-    /// A 1 s glide 180 → 260 Hz, second harmonic twice the fundamental.
-    static func glide() -> [Float] {
+    /// A 1 s glide `from` → `to` Hz, second harmonic twice the fundamental.
+    static func glide(from: Double = 180, to: Double = 260) -> [Float] {
         let amps: [Double] = [0.5, 1.0, 0.6, 0.3, 0.2, 0.1]
         var signal = [Float](repeating: 0, count: rate), phase = 0.0
         for i in 0..<rate {
-            phase += 2 * Double.pi * (180 + 80 * Double(i) / Double(rate)) / Double(rate)
+            phase += 2 * Double.pi * (from + (to - from) * Double(i) / Double(rate)) / Double(rate)
             let sum = amps.enumerated().reduce(0.0) { $0 + $1.element * sin(Double($1.offset + 1) * phase) }
             signal[i] = Float(0.2 * sum)
         }

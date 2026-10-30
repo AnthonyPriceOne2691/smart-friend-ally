@@ -81,12 +81,13 @@ final class VoiceFXTests: XCTestCase {
     }
 
     func testRangeWidensTheIntonationAroundTheMedian() throws {
-        // S2: a glide 180 → 260 Hz at 1.3: the span in semitones × 1.3 ± 15%, the median in place ± 3%
-        let x = Signals.glide()
-        let before = try Contour(x), after = try Contour(VoiceFX(pitch: 0, formant: 0, range: 1.3)
-            .process(x, rate: Signals.rate))
-        XCTAssertEqual(after.span / before.span, 1.3, accuracy: 1.3 * 0.15)
-        XCTAssertEqual(after.median, before.median, accuracy: before.median * 0.03)
+        // S2: glides 180 → 260 and 300 → 430 Hz at 1.3: the span in semitones × 1.3 ± 15%, the median in place ± 3%
+        for x in [Signals.glide(), Signals.glide(from: 300, to: 430)] {
+            let before = try Contour(x), after = try Contour(VoiceFX(pitch: 0, formant: 0, range: 1.3)
+                .process(x, rate: Signals.rate))
+            XCTAssertEqual(after.span / before.span, 1.3, accuracy: 1.3 * 0.15)
+            XCTAssertEqual(after.median, before.median, accuracy: before.median * 0.03)
+        }
     }
 
     func testPlainStretchAndRangeAreTheChainWithoutThem() throws {
