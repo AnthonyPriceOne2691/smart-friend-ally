@@ -38,6 +38,9 @@ final class VoiceLoop: ObservableObject {
     private var persona = "", system = ""
     @Published private(set) var memoryLines: [String] = []
     @Published private(set) var forgettable: [ForgetGroup] = []  // M41: what she remembers by entity, for «Забыть…»
+    // sim-app: «Файлы с Mac…» — the line under the button and whether a copy is under way (`MacFilesButton.swift`).
+    @Published var macFilesLine: String?
+    @Published var importingMacFiles = false
     private var encyclopedia: Encyclopedia?  // Э2: loaded at warm-up, both sessions get it
     private var started = false, stages: [(name: String, seconds: Double)] = []  // child-open: the loading's stages
     private static let log = Logger(subsystem: "com.anthonypriceone.ally", category: "launch")
@@ -91,7 +94,8 @@ final class VoiceLoop: ObservableObject {
         let start = uptime
         for try await _ in model.reply(to: "Привет!") {}
         model.newConversation()
-        screen.lines.append("прогрев: " + line(model.warmup.merging(["reply": uptime - start]) { $1 }))
+        // sim-app: Metal or CPU, beside the warm-up's times
+        screen.lines += ["прогрев: " + line(model.warmup.merging(["reply": uptime - start]) { $1 }), Self.metalLine]
         let rate = ((try? JSONSerialization.jsonObject(with: data)) as? [String: Any])?["voice_rate"] as? Double ?? 0.5
         let voiceStart = uptime
         let voice = makeVoice(registry, rate: rate)
@@ -110,7 +114,7 @@ final class VoiceLoop: ObservableObject {
         versions = ["ios": UIDevice.current.systemVersion, "llama": settings.runtime.build, "persona": personaHash,
                     "voice": voice.label, "weights": "\(registry.model.file):\(registry.model.bytes)",
                     "vad": silero == nil ? "energy" : "silero:\(hearing.vad?.bytes ?? 0)", "asr": asr.label,
-                    "audio": sound]
+                    "audio": sound, "metal": Self.metal ?? "none"]
         (self.registry, self.model, self.voice, self.encyclopedia) = (registry, model, voice, encyclopedia)
         screen.ready = speech.ready && microphone && voice.ready
         if screen.ready { converse(model, hearing, voice, silero, asr.decode) }
@@ -276,7 +280,7 @@ final class VoiceLoop: ObservableObject {
             self.refreshMemoryLines()
             self.parseMemory()
         } })
-        let sink = TraceFanOut(memory == nil ? [journal] : [journal, tap])
+        let sink = TraceFanOut(memory == nil ? [journal, Self.systemLog] : [journal, tap, Self.systemLog])  // sim-app
         let encyclopedia = encyclopedia
         let stamp: @Sendable () -> TraceStamp = {
             let thermal = ["nominal", "fair", "serious", "critical"][ProcessInfo.processInfo.thermalState.rawValue]
@@ -460,5 +464,17 @@ extension VoiceLoop {
     nonisolated private static func names(_ memory: MemoryStore?) -> FamilyNames {
         guard let names = try? memory?.names() else { return FamilyNames() }
         return FamilyNames(her: names.her, brothers: names.brothers)
+    }
+}
+
+// sim-app: the launch's warm-up once more, for the files «Файлы с Mac…» put in place.
+extension VoiceLoop {
+    /// child-open runs the warm-up once, behind the loading screen; with the Mac's files in the container it runs again
+    /// behind the same screen. A warm loop (the model loaded) is left as it is — new files come with the next ⌘R.
+    func warmUpAgain() async -> Bool {
+        guard registry == nil else { return false }
+        (started, warming, stages) = (false, true, [])
+        await start()
+        return true
     }
 }

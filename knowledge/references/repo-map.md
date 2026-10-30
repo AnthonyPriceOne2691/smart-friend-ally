@@ -21,7 +21,8 @@ implementation:
 - **Приложение** — `App/` (XcodeGen: `cd App && xcodegen generate`, проект в git не лежит); сборка, веса на телефон,
   переустановка одной командой (`bash scripts/reinstall_app.sh <UDID>`), запуск — экран загрузки
   `App/Sources/LoadingScreen.swift`, затем Элли (детский экран открыт всегда, `child-open`; решение — `Launch` в
-  `AllyCore`), след хода — runbook [Voice loop](/engineering/voice-loop.md); память — пакет `AllyMemory` в `App/project.yml`: отбор реплик
+  `AllyCore`), след хода — runbook [Voice loop](/engineering/voice-loop.md); на Mac — `python3 scripts/mac_files.py` (папка файлов) и
+  `bash scripts/mac_app.sh` (проект в Xcode, запуск — ⌘R родителя; [Mac run](/engineering/mac-run.md)); память — пакет `AllyMemory` в `App/project.yml`: отбор реплик
   `MemoryTap`, очередь и разбор после прощания (`MemoryLlama`). Модель — пакет `Packages/AllyLlama` (llama.cpp
   b10809; паритет со стендом: `swift test --disable-keychain --package-path Packages/AllyLlama`, веса в `~/models`).
 - **Дисциплина ответа** — пакет `Packages/AllyDiscipline` (ремонт текста, контракт хода, маршрутизатор до модели):
