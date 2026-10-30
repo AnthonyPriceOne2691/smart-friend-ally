@@ -7,7 +7,8 @@ import SwiftUI
 /// a run (scheme AllyDemo).
 enum DemoPreviews {
     static func child(_ phase: SessionState) -> some View {
-        ChildShell(talk: TalkState(phase: phase), until: nil, onTap: {}, onStop: {})
+        ChildShell(talk: TalkState(phase: phase), sounding: TalkState(phase: phase).pose == .speaks, until: nil,
+                   onTap: {}, onStop: {})
     }
 
     static func console(_ phase: SessionState) -> some View {

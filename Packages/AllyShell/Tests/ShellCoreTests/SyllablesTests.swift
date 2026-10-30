@@ -32,7 +32,8 @@ final class SyllablesTests: XCTestCase {
     }
 
     /// In `Motion` the rhythm — the generator above with the same seed — leads her mouth, head, hands and gills while
-    /// she greets, speaks and says goodbye, and fades to 0 in the other phases; a voice level passed in goes as is.
+    /// her voice sounds as she greets, speaks and says goodbye, and closes in the other phases; a voice level passed in
+    /// goes as is.
     func testTheRhythmLeadsHerOnlyWhileSheSpeaks() {  // V34
         let motion = Motion(seed: 1)
         var rhythm = Syllables(seed: 1), time = 0.0
@@ -40,7 +41,7 @@ final class SyllablesTests: XCTestCase {
             let speaks = [.greeting, .speaking, .goodbye].contains(phase)
             for index in 1...360 {
                 time += step
-                let pose = motion.step(step, phase: phase).pose, level = motion.voiceLevel
+                let pose = motion.step(step, phase: phase, sound: speaks).pose, level = motion.voiceLevel
                 XCTAssertEqual(level, rhythm.step(step, at: time, speaking: speaks), accuracy: 1e-12, "\(phase)")
                 guard index > 120 else { continue }
                 guard speaks else {
@@ -53,9 +54,10 @@ final class SyllablesTests: XCTestCase {
                 XCTAssertTrue(level < 0.1 || (8.9...30.1).contains((pose.armLeft - 24) / level), "\(phase)")
             }
         }
-        for _ in 1...120 { _ = motion.step(step, phase: .speaking, voice: 0.3) }
+        for _ in 1...120 { _ = motion.step(step, phase: .speaking, sound: true, voice: 0.3) }
         XCTAssertEqual(motion.voiceLevel, 0.3)
-        XCTAssertEqual(motion.step(step, phase: .speaking, voice: 0.3).pose.mouthOpen, 0.335, accuracy: 0.01)
+        let held = motion.step(step, phase: .speaking, sound: true, voice: 0.3)
+        XCTAssertEqual(held.pose.mouthOpen, 0.335, accuracy: 0.01)
     }
 
     /// Lengths of the runs of syllables between gaps longer than `pause`; the last one may be cut by the end.

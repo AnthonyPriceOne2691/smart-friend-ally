@@ -15,6 +15,14 @@ enum DemoScript {
         .asleep, .greeting, .listening, .thinking, .speaking, .windingDown, .goodbye, .paused
     ]
 
+    /// How a step goes in beats of silence and sound (mouth-sync): a step of speech makes its first phrase for 0.8 s
+    /// with her mouth shut, then it sounds; a long one says two phrases with the pause of 0.45 s between them.
+    static func beats(_ phase: SessionState, _ seconds: Double) -> [(silence: Double, sound: Double)] {
+        guard TalkState(phase: phase).pose == .speaks else { return [(seconds, 0)] }
+        let rest = seconds - 0.8
+        return rest < 3 ? [(0.8, rest)] : [(0.8, (rest - 0.45) / 2), (0.45, (rest - 0.45) / 2)]
+    }
+
     /// The step a tap sends the talk to from step `index`, as in the app (`Tap`): a wake starts it, «я всё» ends the
     /// listening, a barge-in cuts her to the next listening; nil — the tap does nothing.
     static func next(after tap: Tap, at index: Int) -> Int? {
@@ -36,6 +44,8 @@ final class DemoState: ObservableObject {
     static let marker = "ally-demo · не для телефона"
 
     @Published private(set) var phase = SessionState.asleep
+    /// Her made-up voice sounds now: the mouth goes by this, as in the app (mouth-sync).
+    @Published private(set) var sounding = false
     @Published var console = false
     @Published var panel = false
     /// The app's loading screen first (child-open), three seconds here — on the phone it lasts the warm-up.
@@ -67,14 +77,27 @@ final class DemoState: ObservableObject {
     func act(_ tap: Tap) {
         guard let start = DemoScript.next(after: tap, at: step) else { return }
         talk?.cancel()
+        sounding = false
         talk = Task { [weak self] in
             for index in start..<DemoScript.steps.count {
                 guard let self, !Task.isCancelled else { return }
                 (self.step, self.phase) = (index, DemoScript.steps[index].phase)
-                try? await Task.sleep(for: .seconds(DemoScript.steps[index].seconds))
+                await self.play(DemoScript.steps[index])
             }
             guard let self, !Task.isCancelled else { return }
             (self.step, self.phase) = (0, .asleep)
+        }
+    }
+
+    /// One step of the talk: its beats of silence and sound; a cancelled talk leaves her silent.
+    private func play(_ step: (phase: SessionState, seconds: Double)) async {
+        for beat in DemoScript.beats(step.phase, step.seconds) {
+            try? await Task.sleep(for: .seconds(beat.silence))
+            guard !Task.isCancelled else { return }
+            sounding = beat.sound > 0
+            try? await Task.sleep(for: .seconds(beat.sound))
+            guard !Task.isCancelled else { return }
+            sounding = false
         }
     }
 
@@ -90,7 +113,7 @@ final class DemoState: ObservableObject {
     /// A phase held by hand (the checking switcher, `-demo-phase`): the talk stops.
     func pick(_ next: SessionState) {
         talk?.cancel()
-        (talk, step, phase) = (nil, 0, next)
+        (talk, step, phase, sounding) = (nil, 0, next, TalkState(phase: next).pose == .speaks)
     }
 
     var consoleModel: ConsoleModel {

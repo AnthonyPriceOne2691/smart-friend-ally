@@ -14,7 +14,8 @@ struct DemoRoot: View {
             } else if demo.console {
                 ConsoleView(model: demo.consoleModel, actions: demo.consoleActions)
             } else {
-                ChildShell(talk: TalkState(phase: demo.phase), until: nil, onTap: demo.tap, onStop: demo.leaveChild)
+                ChildShell(talk: TalkState(phase: demo.phase), sounding: demo.sounding, until: nil, onTap: demo.tap,
+                           onStop: demo.leaveChild)
             }
             if demo.panel { DemoPanel(demo: demo) }
         }
