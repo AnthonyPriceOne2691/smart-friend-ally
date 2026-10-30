@@ -82,3 +82,4 @@
 - `memory-block-form`
 - `sim-app`
 - `mouth-sync`
+- `voice-tuning`

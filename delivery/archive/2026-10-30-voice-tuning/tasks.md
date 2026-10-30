@@ -19,5 +19,5 @@
 
 ## Slice 3 — знание и сдача
 - [x] T10: концепты, `knowledge/log.md`
-- [ ] T11: слить свежий `origin/main`; строгий `delivery_check --require-ci --diff-base origin/main`; пуш, PR, CI
-- [ ] T12: verify-report, архив в том же PR, строка INDEX (уроки L181–L184), slug — в конец `delivery/OBSERVATIONS.md`
+- [x] T11: слить свежий `origin/main`; строгий `delivery_check --require-ci --diff-base origin/main`; пуш, PR, CI
+- [x] T12: verify-report, архив в том же PR, строка INDEX (уроки L181–L184), slug — в конец `delivery/OBSERVATIONS.md`

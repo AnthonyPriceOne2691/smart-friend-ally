@@ -6,7 +6,7 @@
 - **kind:** feature
 - **repro_test:** n/a reason=не bugfix
 - **diagnosis:** n/a reason=не bugfix
-- **phase:** verify
+- **phase:** handoff
 - **builder:** agent:claude-code
 - **verifier:** process:ci
   <!-- голос судит родитель на слух на странице local/checkpoint/voice-tuning/ (вне git); темп и чёткость — стенд local/spike/voice-tuning/ -->
@@ -36,6 +36,6 @@
 - **canon_drift_waiver:** no
 - **baseline_growth_waiver:** no
 - **observability:** 1
-- **observe_signal:** в общей сессии теста родитель и дочь слышат выбранный голос; темп и чёткость выбранного варианта записаны на стенде и в концепте voice-fx
+- **observe_signal:** G1–G11, S1–S4, T1–T8 и V1 зелёные в каждом PR (Linux); в общей сессии теста — Z26: голос варианта 6 на телефоне, пауза около секунды, рот только над звуком, слух не ловит её голос; первый звук по журналу — на 0,55 с раньше
 - **observe_until:** 2026-11-30
 - **circuit_breakers:** defaults from AGENT_DELIVERY_HARNESS.md §3.4
