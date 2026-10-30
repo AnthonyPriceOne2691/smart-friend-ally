@@ -6,7 +6,7 @@
 - **kind:** feature
 - **repro_test:** n/a reason=не bugfix
 - **diagnosis:** n/a reason=не bugfix
-- **phase:** spec
+- **phase:** implement
 - **builder:** agent:claude-code
 - **verifier:** process:ci
   <!-- голос судит родитель на слух на странице local/checkpoint/voice-tuning/ (вне git); темп и чёткость — стенд local/spike/voice-tuning/ -->
@@ -23,13 +23,12 @@
        Рядом работают background-music, story-mode, mouth-sync: правки минимальные, перед пушем сдачи слить свежий main -->
 - **hooks:** not-deployed
 - **blockers:** none
-  <!-- в main и в пресет voice.json — только после выбора родителя: «сначала нужно прослушать и выбрать» (2026-10-30);
-       обрезку и паузу ведущий поручил готовить в ветке, подпись — вместе с выбором варианта -->
+  <!-- выбор родителя 2026-10-30: вариант 6, пауза около секунды; подпись ниже вписал ведущий -->
 - **waivers:** none
 - **new_dependency:** none
 - **runtime_paths:** App/Sources/Audio/,App/Sources/PhoneListener.swift
-  <!-- §12.6: обрезка и ожидание тихой комнаты на настоящем звуке; ветка не вливается до выбора родителя, живая проверка —
-       Mac кнопкой родителя и общая сессия теста -->
+  <!-- §12.6: обрезка, растяжка и ожидание тихой комнаты на настоящем звуке; живая проверка — Mac кнопкой родителя и общая
+       сессия теста -->
 - **irreversible_surfaces:** none reason=продукт офлайн; поставка не добавляет ни отправки, ни трат, ни выкатки, ни публикации
 - **model_surface:** App/Resources/persona.v2.4.ru.md,App/Resources/model.json,Packages/AllyLlama/
   <!-- настройка голоса поверхность языковой модели не трогает -->
