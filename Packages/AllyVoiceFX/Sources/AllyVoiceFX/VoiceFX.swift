@@ -42,30 +42,37 @@ public struct VoiceEQ: Equatable, Sendable {
 
 public enum VoiceFXError: Error, Equatable {
     case badRate(Int)
+    case badShape
     case outOfMemory
 }
 
-/// Voice processing after synthesis (voice series V4a, V4b1): TD-PSOLA pitch and formant shift in semitones, the EQ and
-/// the 0.97 peak guard — the round-3 stand chain the parent chose. The output keeps the input's length.
+/// Voice processing after synthesis (voice series V4a, V4b1, voice-tuning): TD-PSOLA pitch and formant shift in
+/// semitones, the duration times `stretch`, the F0 span around the sentence's median times `range`, the EQ and the 0.97
+/// peak guard — the stand chain the parent chose. At `stretch` 1 the output keeps the input's length.
 public struct VoiceFX: Equatable, Sendable {
     public let pitch: Double
     public let formant: Double
+    public let stretch: Double
+    public let range: Double
     public let eq: VoiceEQ
 
-    public init(pitch: Double, formant: Double, eq: VoiceEQ = VoiceEQ()) {
+    public init(pitch: Double, formant: Double, stretch: Double = 1, range: Double = 1, eq: VoiceEQ = VoiceEQ()) {
         self.pitch = pitch
         self.formant = formant
+        self.stretch = stretch
+        self.range = range
         self.eq = eq
     }
 
     public func process(_ samples: [Float], rate: Int) throws -> [Float] {
         guard rate > 0 else { throw VoiceFXError.badRate(rate) }
-        var out = [Float](repeating: 0, count: samples.count)
+        guard stretch > 0, range > 0 else { throw VoiceFXError.badShape }
+        var out = [Float](repeating: 0, count: Int(ally_fx_length(Int32(samples.count), stretch)))
         let raw = eq.bands.map(\.raw)
         let status = samples.withUnsafeBufferPointer { inp in
             raw.withUnsafeBufferPointer { bands in
                 out.withUnsafeMutableBufferPointer { res in
-                    ally_fx_process(inp.baseAddress, Int32(inp.count), Int32(rate), pitch, formant,
+                    ally_fx_process(inp.baseAddress, Int32(inp.count), Int32(rate), pitch, formant, stretch, range,
                                     bands.baseAddress, Int32(bands.count), res.baseAddress)
                 }
             }
