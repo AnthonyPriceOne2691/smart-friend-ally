@@ -3,7 +3,7 @@
 **Date:** 2026-10-30
 **Verifier:** process:ci
 **asserts_reviewed_by:** n/a (все утверждения ведут к примерам спеки T1–T14 — дайджест ниже; примеры подписаны родителем 2026-10-30 до кода ядра)
-**CI run:** CI_RUN_URL
+**CI run:** https://github.com/AnthonyPriceOne2691/smart-friend-ally/actions/runs/41110535528 (PR #96, коммит cc64f0b: `delivery`, `gates`, `swift` — зелёные с первого прогона, ветка без конфликтов с main 2a8a39f)
 **Commit:** спека и STATUS — ffa26d6, план и журналы — 3142310, подпись родителя — 8b99056 (все до кода); контракт — 89694d7; ядро AllyCore — 093f1b1; сжатие и незакрытая скобка — abe2d23
 
 ## Shape oracles
@@ -16,7 +16,7 @@
 - [x] PASS — `okf_validate.py` и `okf_sync_gate.py --base origin/main`: 0 ошибок (54 файла), 20 концептов, 0 предупреждений.
 
 ## Behavior oracles
-- [x] PASS — `swift test` на Mac (Xcode 27): Discipline — 63 теста, 1 пропущен (паритет с локальным корпусом вне git); AllyCore — 180 из 180. Новые: `StoryContractTests` (9), `StoryTests` (17). Покрытие — в CI на Linux, порог 70%.
+- [x] PASS — `swift test` на Mac (Xcode 27): Discipline — 63 теста, 1 пропущен (паритет с локальным корпусом вне git); AllyCore — 180 из 180. Новые: `StoryContractTests` (9), `StoryTests` (17). Покрытие в CI на Linux: Discipline — 1368 из 1415 строк, 96%; AllyCore — 2737 из 2834, 96% (порог 70%).
 - [x] PASS — мутации в ту же сессию, файл восстанавливался после каждой:
   - Discipline: D1–D12, 12 из 12 убиты;
   - AllyCore: 31 из 31 убит; C11, C12, C28, C31 краснели зависанием — в тесте остановки модели теперь предел настоящего времени (L72).
@@ -78,7 +78,7 @@
 | rework_after_done | 0 (handoff not declared yet) |
 | harness_hardened | yes — Packages/AllyCore/Tests/AllyCoreTests/StoryTests.swift (новый оракул), Packages/AllyDiscipline/Tests/DisciplineTests/StoryContractTests.swift (новый оракул) |
 | implement_retries | 2 — находки SwiftLint на первых коммитах; сжатие под предохранитель (904 → 798) |
-| verify_fails_before_green | CI_FAILS |
+| verify_fails_before_green | 0 — первый прогон CI на PR #96 зелёный |
 | est_token_or_cost | n/a |
 
 ## Assertion digest (ревью ожиданий, не кода)
@@ -214,4 +214,7 @@ asserts_without_example: 0
 
 ## Verdict
 
-VERDICT_TEXT
+Verify сделан, CI на PR #96 зелёный с первого прогона. Ядро режима сказки готово и в продукте не работает, пока приложение
+не передаст модель сказки: это `story-model`, там же настоящие сказки E4B и R1–R4.
+
+- [x] READY FOR HANDOFF

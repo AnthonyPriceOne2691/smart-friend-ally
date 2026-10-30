@@ -19,4 +19,4 @@
   правки слов по ответу — до PR
 - [x] 11: слияние свежего main, `swift test` Discipline и AllyCore, строгий
   `delivery_check --require-ci --diff-base origin/main`, verify-report, PR, CI зелёный
-- [ ] 12: сдача — архив, INDEX (уроки L177–L180), строка `delivery/OBSERVATIONS.md`, доклад «готово к мержу»
+- [x] 12: сдача — архив, INDEX (уроки L177–L180), строка `delivery/OBSERVATIONS.md`, доклад «готово к мержу»
