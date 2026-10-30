@@ -29,6 +29,9 @@ implementation:
   - Packages/AllyLlama/Sources/AllyLlama/LlamaModel.swift
   - Packages/AllyLlama/Sources/AllyLlama/LlamaSettings.swift
   - Packages/AllyLlama/Sources/AllyLlama/Resources/lines.json
+  - App/Sources/MacFilesButton.swift
+  - scripts/mac_files.py
+  - scripts/mac_app.sh
 ---
 
 # Purpose
@@ -323,6 +326,47 @@ xcrun devicectl device info files --device <UDID> --domain-type systemCrashLogs
 `phys_footprint` 690 МБ, на старте доступно 6134 МБ, KV 448 МиБ; первый запуск — веса 6,9 с, префикс 4,3 с, второй —
 префикс из файла 0,03 с. Перемер после правки кадров, авиарежим и экран — в первую сессию теста (решение родителя).
 
+# Элли на Mac (sim-app)
+
+То же приложение для iPhone, устройство «My Mac (Designed for iPhone)»: диктовка ru-RU, Metal M5 и эхоподавление
+macOS — свои у Mac, модель — официальный слайс `ios-arm64`. Почему не симулятор и почему так — решение
+[Mac run](/engineering/mac-run.md). Агент приложение на Mac не запускает и в его контейнер не заглядывает: macOS не
+пускает туда оболочку агентов, а запуск вне Xcode Gatekeeper убивает и показывает родителю окно.
+
+```bash
+python3 scripts/mac_files.py     # сверка и папка ~/models/ally-mac: Models/, Voice/, manifest.json — клоны APFS
+bash scripts/mac_app.sh          # проект заново и в Xcode; дальше родитель: схема Ally, «My Mac (Designed for iPhone)», ⌘R
+```
+
+- **Первый запуск:** экран загрузки, затем консоль с причиной — «модели нет: скопируй с Mac» (child-open: Элли не
+  показана, пока не может говорить). Кнопка «Файлы с Mac…» (только на Mac, только пока Элли спит) → системное окно →
+  папка `~/models/ally-mac`. Приложение сверяет список с реестрами бандла, копирует каждый файл под временным именем,
+  сверяет размер и sha256 и ставит на место; строка под кнопкой — «файлы с Mac на месте: 28, 5,50 ГБ» или причина
+  отказа («чужой файл в списке: …», «файл не тот: …»). После успешной копии прогрев запуска идёт заново — снова экран
+  загрузки, затем Элли; macOS спросит микрофон — «Разрешить» нажимает родитель.
+- **Проверка синтетикой — только консольная сессия:** значок стопа в углу детского экрана → консоль → «Разбудить».
+  Консоль — сессия взрослого: фразы `say` не попадают ни в память, ни в чёрный ящик (их пишет только сессия детского
+  экрана при родителе).
+- **Звук на Mac — полудуплекс** (2026-10-30): voice processing у приложения для iPhone на Mac не включается — macOS
+  гонит его DSP на 24 000 Гц при устройстве 48 000 Гц и меняет конфигурацию движка, а приложение под неё не
+  переподключается: Silero не видел речи («не расслышала»), голос шёл ускоренным, журнал VP — ошибки `ProcessDownlinkAudio`.
+  Консоль пишет «звук: полудуплекс (нет overlap)», след — `audio: half`; перебить Элли на Mac можно тапом и стопом, не
+  голосом. Телефон — дуплекс, как прежде.
+- **Новая версия и подпись на 7 дней** — тот же ⌘R; файлы в контейнере остаются. Повтор `mac_files.py` пишет «без
+  изменений: 28», кнопку жать снова — только после смены файлов (тогда строка просит ⌘R).
+- **Ход в журнале:** строка следа без слов — и в системном журнале, категория `turn`:
+
+  ```bash
+  /usr/bin/log show --last 10m --style compact \
+    --predicate 'subsystem == "com.anthonypriceone.ally" AND category == "turn"'
+  ```
+
+  (в zsh `log` — встроенная команда, поэтому полный путь). Консоль пишет «модель: Metal — Apple M5» или «модель:
+  CPU — нет Metal»; та же версия — `metal` в следе.
+- **Данные дочки на Mac** — в контейнере `~/Library/Containers/com.anthonypriceone.ally/Data/Library/…`: память, след,
+  чёрный ящик. Агенты их не читают и не копируют (macOS и правило); снимков экрана Mac нет.
+- **Откат на Mac** — удалить приложение (контейнер уходит с ним) и папку `~/models/ally-mac`; телефон не затронут.
+
 # Как откатить и кого звать
 
 Откат — удалить приложение с телефона (веса и журнал уходят вместе с контейнером); код — revert коммита поставки. Решения
@@ -334,3 +378,4 @@ xcrun devicectl device info files --device <UDID> --domain-type systemCrashLogs
 - [Turn detector](/engineering/turn-detector.md) — конец реплики ядра.
 - [Safety below the model](/engineering/safety-below-model.md) — контракт хода и реестр правил персоны.
 - [App architecture](/engineering/app-architecture.md) — ADR: слои приложения и отклонённые варианты.
+- [Mac run](/engineering/mac-run.md) — ADR: Элли на Mac — приложение для iPhone из Xcode, файлы через приложение.
