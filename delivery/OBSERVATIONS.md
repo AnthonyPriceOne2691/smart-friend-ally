@@ -81,3 +81,4 @@
 - `app-icon`
 - `memory-block-form`
 - `sim-app`
+- `mouth-sync`
