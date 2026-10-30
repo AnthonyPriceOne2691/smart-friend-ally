@@ -16,6 +16,9 @@ final class VoiceLoop: ObservableObject {
     struct Screen { var lines: [String] = [], heard = "", said = "", ready = false }
     @Published private(set) var screen = Screen()
     @Published private(set) var talk = TalkState()  // the session for a screen: phase, pose, why the last one ended
+    /// Her voice sounds now, from a phrase's start to its end (mouth-sync): the child screen's mouth goes by this — the
+    /// session says «speaking» while the first phrase is still being made.
+    @Published private(set) var sounding = false
     private var conversation: Conversation?
     // The child mode (R, R2): who may talk on the child screen, whether it is shown, an exception in the container, the
     // acceptance's line; its own session (audience `supervised`, or `child` once the acceptance holds) and the last
@@ -165,7 +168,8 @@ final class VoiceLoop: ObservableObject {
 
     /// Her voice: Supertonic when the files of voice.json are on the phone (V4b2), else Milena — the console says why.
     private func makeVoice(_ registry: ModelRegistry, rate: Double) -> any HerVoice {
-        let milena = SystemVoice(identifier: registry.voice, rate: Float(rate))
+        let sounds: @Sendable (Bool) -> Void = { [weak self] now in Task { @MainActor in self?.sounding = now } }
+        let milena = SystemVoice(identifier: registry.voice, rate: Float(rate), sounds: sounds)
         do {
             let settings = try VoiceSettings.decode(Data(contentsOf: Bundle.main.bundleURL
                 .appendingPathComponent("voice.json")))
@@ -184,8 +188,13 @@ final class VoiceLoop: ObservableObject {
             let renderer = try SupertonicRenderer(settings: settings, folder: folder, placer: accent.placer)
             _ = try renderer.render("Привет!", first: true)  // child-open: one phrase without sound warms her voice
             let audio = audio
-            let player = SoundingPlayer(EnginePlayer(engine: audio.engine, rate: renderer.rate),
-                                        began: { audio.voiceStarted() }, ended: { audio.voiceEnded(at: $0) })
+            let player = SoundingPlayer(EnginePlayer(engine: audio.engine, rate: renderer.rate), began: {
+                audio.voiceStarted()
+                sounds(true)
+            }, ended: {
+                audio.voiceEnded(at: $0)
+                sounds(false)
+            })
             let spoken = SpokenVoice(renderer: renderer, player: player, gap: 0.45 / settings.preset.speed)
             return SupertonicVoice(spoken, preset: settings.preset)
         } catch {
@@ -366,6 +375,10 @@ final class VoiceLoop: ObservableObject {
         talk = conversation?.state ?? TalkState()
     }
 
+}
+
+/// The record's and the console's small helpers, out of the class body (its limit is 300 lines).
+extension VoiceLoop {
     /// What the iOS memory limit counts (L22): footprint now and its lifetime peak, headroom left; conversation tokens.
     nonisolated private static func memory(_ model: LlamaModel) -> [String: Int] {
         var info = task_vm_info_data_t()

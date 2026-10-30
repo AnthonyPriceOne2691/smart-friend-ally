@@ -64,7 +64,8 @@ final class SnapshotTests: XCTestCase {
         XCTAssertLessThanOrEqual(closed.area(in: face) { luminance($0) < 0.06 }, 500)
         XCTAssertGreaterThanOrEqual(open.area(in: face) { luminance($0) < 0.06 }, 1000)
         XCTAssertGreaterThanOrEqual(yawn.area(in: mouth) { near($0, 0x7A2F57, 24) }, 150)
-        XCTAssertNotNil(ImageRenderer(content: LiveScene(phase: .asleep).frame(width: 440, height: 956)).cgImage)
+        XCTAssertNotNil(ImageRenderer(content: LiveScene(phase: .asleep, sounding: false)
+            .frame(width: 440, height: 956)).cgImage)
     }
 
     /// The whole child screen for the parent's eye: each phase at 2 s with the crown and the adult's corner; probes by
@@ -92,7 +93,7 @@ final class SnapshotTests: XCTestCase {
         let bare = try XCTUnwrap(Pixels(try XCTUnwrap(render(screen(.asleep, label: nil)))))
         XCTAssertLessThanOrEqual(bare.area(in: plate, where: white), 100)
         XCTAssertGreaterThanOrEqual(bare.area(in: stop, where: plum), 500)
-        let live = ChildShell(talk: TalkState(), until: nil, onTap: {}, onStop: {})
+        let live = ChildShell(talk: TalkState(), sounding: false, until: nil, onTap: {}, onStop: {})
         XCTAssertNotNil(ImageRenderer(content: live.frame(width: phone.width, height: phone.height)).cgImage)
     }
 
@@ -177,7 +178,7 @@ final class SnapshotTests: XCTestCase {
         for moment in moments {
             while time < moment - 1e-9 {
                 let phase = script.last { $0.at <= time + 1e-9 }?.phase ?? .asleep
-                shots.append(motion.step(step, phase: phase))
+                shots.append(motion.step(step, phase: phase, sound: TalkState(phase: phase).pose == .speaks))
                 time += step
             }
         }
